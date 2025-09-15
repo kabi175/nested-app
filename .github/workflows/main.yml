@@ -32,7 +32,7 @@ jobs:
 
       # 4. Build Spring Boot JAR
       - name: Build JAR with Gradle
-        run: ./gradlew clean build -x test
+        run: ./server/gradlew clean build -x test
 
       # 5. Configure AWS credentials
       - name: Configure AWS credentials
@@ -50,6 +50,7 @@ jobs:
       # 7. Build and push Docker image
       - name: Build and push Docker image
         run: |
+          cd server
           docker buildx create --use
           docker buildx build \
             --platform linux/amd64 \
