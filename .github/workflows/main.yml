@@ -34,11 +34,6 @@ jobs:
       - name: Build JAR with Gradle
         working-directory: server
         run: ./gradlew clean build -x test
-
-      - name: Debug AWS secrets
-        run: |
-          echo "AWS_ACCESS_KEY_ID=${{ secrets.AWS_ACCESS_KEY }}"
-          echo "AWS_SECRET_ACCESS_KEY=${{ secrets.AWS_SECRET_KEY }}" | sed 's/./*/g'
      
       # 5. Configure AWS credentials
       - name: Configure AWS credentials
@@ -72,6 +67,10 @@ jobs:
           username: ec2-user
           key: ${{ secrets.EC2_SSH_KEY }}
           script: |
+            # Login to ECR
+            aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin ${{ steps.login-ecr.outputs.registry }}
+
+            # Pull & run
             docker pull ${{ steps.login-ecr.outputs.registry }}/nested:latest
             docker stop nested-server || true
             docker rm nested-server || true
