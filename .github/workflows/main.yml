@@ -32,7 +32,8 @@ jobs:
 
       # 4. Build Spring Boot JAR
       - name: Build JAR with Gradle
-        run: ./server/gradlew clean build -x test
+        working-directory: server
+        run: ./gradlew clean build -x test
 
       # 5. Configure AWS credentials
       - name: Configure AWS credentials
