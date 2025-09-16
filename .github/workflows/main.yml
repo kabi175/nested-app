@@ -24,9 +24,9 @@ jobs:
         uses: actions/cache@v4
         with:
           path: |
-            ~./server/.gradle/caches
-            ~./server/.gradle/wrapper
-          key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
+            server/.gradle/caches
+            server/.gradle/wrapper
+          key: ${{ runner.os }}-gradle-${{ hashFiles('server/**/*.gradle*', 'server/**/gradle-wrapper.properties') }}
           restore-keys: |
             ${{ runner.os }}-gradle-
 
