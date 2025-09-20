@@ -85,13 +85,8 @@ public class AesEncryptor {
         random.nextBytes(saltBytes);
         String saltHex = bytesToHex(saltBytes);
 
-        System.out.println("IV  = " + ivHex);
-        System.out.println("Salt= " + saltHex);
-
         AesEncryptor aes = new AesEncryptor(128, 1000);
         String cipherText = aes.encrypt(saltHex, ivHex, apiKeyMember, plainText);
-
-        System.out.println("Ciphertext = " + cipherText);
 
         String aesPassword = ivHex + "::" + saltHex + "::" + cipherText;
         return Base64.getEncoder().encodeToString(aesPassword.getBytes(StandardCharsets.UTF_8));
