@@ -12,6 +12,7 @@ import lombok.Data;
 import java.time.LocalDateTime;
 import java.util.List;
 
+@Data
 @Entity
 @Table(name = "clients")
 public class Client {
@@ -20,8 +21,11 @@ public class Client {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @Column(nullable = false)
     private String firstName;
+
     private String lastName;
+
     private String middleName;
 
     @Column(nullable = false)

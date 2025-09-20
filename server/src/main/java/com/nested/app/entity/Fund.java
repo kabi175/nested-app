@@ -6,33 +6,46 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
-import jakarta.validation.constraints.Email;
 import lombok.Data;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "users")
+@Table(name = "clients")
 @Data
-public class User {
+public class Fund {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    private String nickname;
+    @Column(nullable = false, unique = true)
+    private String label;
 
-    @Column(unique = true, nullable = false)
-    @Email(message = "Invalid email format")
-    private String email;
+    private String description;
 
-    @Column(unique = true, nullable = false)
-    private String phoneNumber;
+    private String name;
 
-    @Column(unique = true, nullable = false)
-    private String firebaseUid;
+    private String nav;
+
+    private Double mimPurchaseAmount;
+
+    private Double maxPurchaseAmount;
+
+    private Double mimAdditionalPurchaseAmount;
+
+    private Double maxAdditionalPurchaseAmount;
+
+    private boolean isActive = true;
+
+    private String isinCode;
+
+    private String schemeCode;
+
+    private String amcCode;
 
     @CreationTimestamp
     @Column(nullable = false, updatable = false)
@@ -41,15 +54,4 @@ public class User {
     @UpdateTimestamp
     @Column(nullable = false)
     private LocalDateTime updatedAt;
-
-    @Column(nullable = false)
-    private Boolean isActive = true;
-
-    @Column(nullable = false)
-    private Role role = Role.STANDARD;
-
-    public static enum Role {
-        STANDARD,
-        ADMIN
-    }
 }
