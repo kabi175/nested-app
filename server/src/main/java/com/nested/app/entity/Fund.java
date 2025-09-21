@@ -27,7 +27,7 @@ public class Fund {
     private String name;
 
     @Column(nullable = false)
-    private String nav;
+    private Double nav;
 
     @Column(nullable = false)
     private Timestamp navDate;
@@ -58,7 +58,7 @@ public class Fund {
     @Column(nullable = false)
     private String isinCode;
 
-    @Column(nullable = false)
+    @Column(nullable = false, unique = true, updatable = false)
     private String schemeCode;
 
     @Column(nullable = false)
