@@ -37,7 +37,7 @@ public abstract class ClientService {
      *
      * @return - enum KYCStatus indicating the current status of KYC.
      */
-    abstract KYCStatus kyc();
+    abstract KYCStatus kycStatus();
 
 
     /**
