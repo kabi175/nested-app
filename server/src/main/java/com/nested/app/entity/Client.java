@@ -1,5 +1,6 @@
 package com.nested.app.entity;
 
+import com.nested.app.nse.ClientService;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -43,6 +44,8 @@ public class Client {
 
     @Column(unique = true)
     private String panNumber;
+
+    private ClientService.KYCStatus kycStatus = ClientService.KYCStatus.UNKNOWN;
 
 
     // Only Single holdingNature is currently supported

@@ -63,6 +63,6 @@ public abstract class ClientService {
 
 
     public static enum KYCStatus {
-        PENDING, COMPLETED, FAILED
+        UNKNOWN, PENDING, COMPLETED, FAILED
     }
 }
