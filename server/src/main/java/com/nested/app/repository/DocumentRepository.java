@@ -8,15 +8,15 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
-import com.nested.app.entity.DocumentEntity;
+import com.nested.app.entity.Document;
 
 @Repository
-public interface DocumentRepository extends JpaRepository<DocumentEntity, Long> {
+public interface DocumentRepository extends JpaRepository<Document, Long> {
     
-    List<DocumentEntity> findByUserId(String userid);
+    List<Document> findByUserId(String userid);
 
-    Page<DocumentEntity> findByUserId(String userid, Pageable pageable);
+    Page<Document> findByUserId(String userid, Pageable pageable);
 
-    Optional<DocumentEntity> findByIdAndUserId(Long id, String userid);
+    Optional<Document> findByIdAndUserId(Long id, String userid);
 
 }

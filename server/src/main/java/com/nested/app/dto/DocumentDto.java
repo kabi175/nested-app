@@ -1,6 +1,6 @@
 package com.nested.app.dto;
 
-import com.nested.app.entity.DocumentEntity;
+import com.nested.app.entity.Document;
 import com.nested.app.enums.DocumentVisibility;
 
 import lombok.AllArgsConstructor;
@@ -23,7 +23,7 @@ public class DocumentDto {
     private LocalDateTime updatedAt;
     private String downloadUrl;
     
-    public static DocumentDto fromEntity(DocumentEntity entity) {
+    public static DocumentDto fromEntity(Document entity) {
         return new DocumentDto(
                 entity.getId(),
                 entity.getUserId(),

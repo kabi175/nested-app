@@ -15,7 +15,7 @@ import org.springframework.web.multipart.MultipartFile;
 import com.nested.app.buckets.S3Service;
 import com.nested.app.dto.DocumentDto;
 import com.nested.app.dto.UploadResponse;
-import com.nested.app.entity.DocumentEntity;
+import com.nested.app.entity.Document;
 import com.nested.app.enums.DocumentVisibility;
 import com.nested.app.exception.DocumentNotFoundException;
 import com.nested.app.repository.DocumentRepository;
@@ -58,7 +58,7 @@ public class DocumentService {
             String s3Key = s3Service.uploadFile(file, visibility);
 
             // ---- Save metadata in DB ----
-            DocumentEntity document = new DocumentEntity();
+            Document document = new Document();
             document.setUserId(userId);
             document.setFileName(originalFileName);
             document.setS3Key(s3Key);
@@ -66,7 +66,7 @@ public class DocumentService {
             document.setFileSize(file.getSize());
             document.setVisibility(visibility);
 
-            DocumentEntity savedDocument = documentRepository.save(document);
+            Document savedDocument = documentRepository.save(document);
 
             log.info("Document uploaded successfully with ID: {}", savedDocument.getId());
 
@@ -92,7 +92,7 @@ public class DocumentService {
             throw new IllegalArgumentException("Document ID cannot be null");
         }
 
-        DocumentEntity document = documentRepository.findByIdAndUserId(documentId, userId)
+        Document document = documentRepository.findByIdAndUserId(documentId, userId)
                 .orElseThrow(() -> new DocumentNotFoundException("Document not found with ID: " + documentId));
 
         DocumentDto documentDto = DocumentDto.fromEntity(document);
@@ -117,7 +117,7 @@ public class DocumentService {
         // ---- Pagination ----
         Pageable pageable = PageRequest.of(page, pageSize);
 
-        Page<DocumentEntity> documents = Optional.ofNullable(
+        Page<Document> documents = Optional.ofNullable(
                 documentRepository.findByUserId(userId, pageable)
                 ).orElse(Page.empty());
                 
@@ -133,7 +133,7 @@ public class DocumentService {
             throw new IllegalArgumentException("Document ID cannot be null");
         }
 
-        DocumentEntity document = documentRepository.findById(documentId)
+        Document document = documentRepository.findById(documentId)
                 .orElseThrow(() -> new DocumentNotFoundException("Document not found with ID: " + documentId));
 
         try {
@@ -151,7 +151,7 @@ public class DocumentService {
         }
     }
 
-    private DocumentDto mapToDtoWithDownloadUrl(DocumentEntity document) {
+    private DocumentDto mapToDtoWithDownloadUrl(Document document) {
         DocumentDto dto = DocumentDto.fromEntity(document);
         dto.setDownloadUrl(s3Service.generatePresignedUrl(
                 document.getS3Key(),
