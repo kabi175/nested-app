@@ -10,12 +10,11 @@ import lombok.Data;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 
-@Entity
-@Table(name = "clients")
 @Data
+@Entity
+@Table(name = "funds")
 public class Fund {
 
     @Id
@@ -27,25 +26,33 @@ public class Fund {
 
     private String description;
 
+    @Column(nullable = false)
     private String name;
 
+    @Column(nullable = false)
     private String nav;
 
+    @Column(nullable = false)
     private Double mimPurchaseAmount;
 
     private Double maxPurchaseAmount;
 
+    @Column(nullable = false)
     private Double mimAdditionalPurchaseAmount;
 
+    @Column(nullable = false)
     private Double maxAdditionalPurchaseAmount;
 
-    private boolean isActive = true;
+    private boolean isActive = false;
 
+    @Column(nullable = false, unique = true)
     private String isinCode;
 
     private String schemeCode;
 
     private String amcCode;
+
+    private String schemeType;
 
     @CreationTimestamp
     @Column(nullable = false, updatable = false)
