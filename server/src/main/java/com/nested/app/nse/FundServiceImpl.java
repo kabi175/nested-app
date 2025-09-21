@@ -11,6 +11,9 @@ import reactor.core.publisher.Mono;
 
 import java.sql.Timestamp;
 import java.time.Instant;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -88,7 +91,7 @@ public class FundServiceImpl implements FundService {
             fund.setLabel(fundData[schemeNameIndex]);
             fund.setName(fundData[schemeNameIndex]);
 
-            fund.setNav("0.0");
+            fund.setNav(0.0);
             fund.setNavDate(Timestamp.from(Instant.now()));
 
             fund.setMimPurchaseAmount(Double.parseDouble(fundData[minPurchaseAmountIndex].isBlank() ? "0.0" : fundData[minPurchaseAmountIndex]));
@@ -102,5 +105,44 @@ public class FundServiceImpl implements FundService {
             fund.setSipAllowed(fundData[sipAllowedIndex].equalsIgnoreCase("Y"));
             return fund;
         }).toList();
+    }
+
+    @Override
+    @Scheduled(fixedDelay = 1000 * 60 * 60 * 24) // Refresh every 24 hours
+    public void refreshNav() {
+        var content = nseAPIBuild.build(true).post().uri(FUND_DETAILS_ENDPOINT).bodyValue(Map.of("file_type", "NAV")).retrieve().bodyToMono(String.class).block();
+        if(content == null){
+            return;
+        }
+
+        var navDateIndex = 0;
+        var schemeCodeIndex = 1;
+        var navIndex = 6;
+
+        var funds = content.lines().map(navDate -> navDate.split("\\|")).map(navData -> {
+            var fund = new Fund();
+
+            LocalDateTime navDateTime = LocalDate.parse(navData[navDateIndex], DateTimeFormatter.ofPattern("yyyy-MM-dd")).atStartOfDay();
+            fund.setNavDate(Timestamp.valueOf(navDateTime));
+            fund.setNav(Double.valueOf(navData[navIndex]));
+            fund.setSchemeCode(navData[schemeCodeIndex]);
+            return fund;
+        }).toList();
+
+        var fundsToUpdate = new ArrayList<Fund>();
+        fundsRepository.findAllBySchemeCodeIn(funds.stream().map(Fund::getSchemeCode).toList()).forEach(fundFromDB -> {
+            var fundWithNav = funds.stream().filter(fund -> fund.getSchemeCode().equals(fundFromDB.getSchemeCode())).findFirst();
+            if (fundWithNav.isPresent()) {
+                fundFromDB.setNav(fundWithNav.get().getNav());
+                fundFromDB.setNavDate(fundWithNav.get().getNavDate());
+                fundsToUpdate.add(fundFromDB);
+            }
+        });
+
+        if (fundsToUpdate.isEmpty()) {
+            return;
+        }
+
+        fundsRepository.saveAll(fundsToUpdate);
     }
 }

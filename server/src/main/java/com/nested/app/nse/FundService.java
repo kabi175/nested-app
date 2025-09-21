@@ -6,4 +6,6 @@ package com.nested.app.nse;
  */
 public interface FundService {
     void refreshDetails();
+
+    void refreshNav();
 }
