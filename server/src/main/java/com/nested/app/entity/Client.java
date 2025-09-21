@@ -8,8 +8,11 @@ import jakarta.persistence.Id;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 import lombok.Data;
+import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.UpdateTimestamp;
 
-import java.time.LocalDateTime;
+import java.sql.Timestamp;
+import java.util.Date;
 import java.util.List;
 
 @Data
@@ -34,7 +37,7 @@ public class Client {
     @Column(nullable = true)
     private Gender gender;
 
-    private LocalDateTime dateOfBirth; // YYYY-MM-DD
+    private Date dateOfBirth; // YYYY-MM-DD
 
     private Occupation occupation;
 
@@ -48,6 +51,14 @@ public class Client {
 
     @OneToMany(mappedBy="client")
     private List<BankDetail> bankDetails;
+
+    @CreationTimestamp
+    @Column(nullable = false, updatable = false)
+    private Timestamp createdAt;
+
+    @UpdateTimestamp
+    @Column(nullable = false)
+    private Timestamp updatedAt;
 
     public static enum TaxStatus {
         INDIVIDUAL,
