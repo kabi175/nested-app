@@ -47,7 +47,6 @@ public class NseAPIBuild {
             authToken = generateAuthToken();
         }
         var auth = Base64.getEncoder().encodeToString((userID + ":" + authToken).getBytes());
-        System.out.println("Generated Auth Token: " + authToken);
         builder.defaultHeader("Authorization", "Basic " + auth);
         builder.defaultHeader("memberId", memberCode);
         builder.defaultHeader("Content-Type", "application/json");
