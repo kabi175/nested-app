@@ -44,7 +44,7 @@ public class User {
     private Timestamp updatedAt;
 
     @Column(nullable = false)
-    private Boolean isActive = true;
+    private boolean isActive = true;
 
     @Column(nullable = false)
     private Role role = Role.STANDARD;

@@ -45,7 +45,7 @@ public class Client {
     @Column(unique = true)
     private String panNumber;
 
-    private ClientService.KYCStatus kycStatus = ClientService.KYCStatus.UNKNOWN;
+    private KYCStatus kycStatus = KYCStatus.UNKNOWN;
 
 
     // Only Single holdingNature is currently supported
@@ -96,4 +96,7 @@ public class Client {
         ASSOCIATION,
     }
 
+    public static enum KYCStatus {
+        UNKNOWN, PENDING, COMPLETED, FAILED
+    }
 }

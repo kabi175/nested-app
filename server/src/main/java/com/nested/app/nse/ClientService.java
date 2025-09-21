@@ -37,7 +37,7 @@ public abstract class ClientService {
      *
      * @return - enum KYCStatus indicating the current status of KYC.
      */
-    abstract KYCStatus kycStatus();
+    abstract Client.KYCStatus kycStatus();
 
 
     /**
@@ -62,7 +62,4 @@ public abstract class ClientService {
     abstract void deleteBankDetail(BankDetail bankDetail);
 
 
-    public static enum KYCStatus {
-        UNKNOWN, PENDING, COMPLETED, FAILED
-    }
 }
