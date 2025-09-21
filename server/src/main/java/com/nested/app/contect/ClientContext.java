@@ -11,6 +11,4 @@ import org.springframework.web.context.annotation.RequestScope;
 @RequestScope
 public class ClientContext {
     private Client client;
-
-    private User user;
 }
