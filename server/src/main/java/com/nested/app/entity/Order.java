@@ -1,5 +1,6 @@
 package com.nested.app.entity;
 
+import com.nested.app.annotation.ActiveFundOnly;
 import jakarta.persistence.Column;
 import jakarta.persistence.DiscriminatorColumn;
 import jakarta.persistence.DiscriminatorType;
@@ -29,6 +30,7 @@ public class Order {
     @Column(nullable = false)
     private Double amount;
 
+    @ActiveFundOnly
     @ManyToOne
     @JoinColumn(name = "fund_id", nullable = false)
     private Fund fund;
