@@ -27,8 +27,8 @@ public class Order {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(nullable = false)
-    private Double amount;
+
+    private String folioNumber;
 
     @ActiveFundOnly
     @ManyToOne
@@ -36,7 +36,7 @@ public class Order {
     private Fund fund;
 
     @Column(nullable = false)
-    private String orderID;
+    private String txnID;
 
     @ManyToOne
     @JoinColumn(name = "client_id", nullable = false)
@@ -55,4 +55,14 @@ public class Order {
     @UpdateTimestamp
     @Column(nullable = false)
     private Timestamp updatedAt;
+
+    @Column(nullable = false)
+    private OrderStatus status = OrderStatus.CREATED;
+
+    public static enum OrderStatus {
+        CREATED,
+        PLACED,
+        COMPLETED,
+        FAILED
+    }
 }

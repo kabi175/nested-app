@@ -15,6 +15,8 @@ import java.time.LocalDate;
 @DiscriminatorValue("SIP")
 @EqualsAndHashCode(callSuper = true)
 public class SIPOrder extends Order{
+    @Column(nullable = false)
+    private Double amount;
 
     @Column(nullable = false)
     private Frequency frequency;

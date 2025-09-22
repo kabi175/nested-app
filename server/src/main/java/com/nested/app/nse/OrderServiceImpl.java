@@ -6,16 +6,19 @@ import com.nested.app.annotation.KycCompletedOnly;
 import com.nested.app.contect.ClientContext;
 import com.nested.app.contect.UserContext;
 import com.nested.app.entity.BuyOrder;
+import com.nested.app.entity.Order;
 import com.nested.app.entity.SIPOrder;
 import com.nested.app.entity.SellOrder;
+import com.nested.app.repository.BuyOrderRepository;
+import com.nested.app.repository.OrderLogRepository;
 import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 
-import java.util.HashMap;
 import java.util.List;
+import java.util.Objects;
 
 @AllArgsConstructor
 public class OrderServiceImpl implements OrderService {
@@ -29,8 +32,13 @@ public class OrderServiceImpl implements OrderService {
     @ActiveUserOnly
     private UserContext userContext;
 
+    private BuyOrderRepository buyOrderRepository;
+
+    private OrderLogRepository orderLogRepository;
+
 
     private static String ORDER_ENTRY_URI = "nsemfdesk/api/v2/transaction/NORMAL";
+    private static String ORDER_ENTRY_SUCCESS_STATUS = "TRXN SUCCESS";
 
     @Override
     public void placeBuyOrder(@Valid List<BuyOrder> orders) {
@@ -38,23 +46,65 @@ public class OrderServiceImpl implements OrderService {
             var req = new BuySellDetails();
             req.setSchemeCode(order.getFund().getSchemeCode());
             req.setTransactionType("P");
-//            req.setBuySellType(order.isFresh() ? "Fresh" : "Additional");
-//            req.setClientCode(clientContext.getClient().getClientCode());
-            req.setDematOrPhysical("D");
+            req.setBuySellType(buyOrderRepository.existsByFund(order.getFund()) ? "Fresh" : "Additional");
+            req.setClientCode(clientContext.getClient().getClientCode());
             req.setOrderAmount(String.valueOf(order.getAmount()));
+            req.setRefID(order.getId().toString());
             return req;
         }).toList();
-        var content = nseAPIBuild.build(true).post().uri(ORDER_ENTRY_URI).bodyValue(new BuySellRequest(translationDetails)).retrieve().bodyToMono(BuySellRequest.class).block();
+
+        var response = makeOrderEntryRequest(new BuySellRequest(translationDetails));
+        handleOrderResponse(response, orders);
     }
 
     @Override
     public void placeSellOrder(List<SellOrder> orders) {
-        throw new UnsupportedOperationException("Not implemented yet");
+        var translationDetails = orders.stream().map(order -> {
+            var req = new BuySellDetails();
+            req.setSchemeCode(order.getFund().getSchemeCode());
+            req.setTransactionType("R");
+            req.setClientCode(clientContext.getClient().getClientCode());
+            req.setOrderQuantity(String.valueOf(order.getUnits()));
+            req.setRefID(order.getId().toString());
+            return req;
+        }).toList();
+
+        var response = makeOrderEntryRequest(new BuySellRequest(translationDetails));
+        handleOrderResponse(response, orders);
     }
 
     @Override
     public void placeSIPOrder(List<SIPOrder> orders) {
         throw new UnsupportedOperationException("Not implemented yet");
+    }
+
+    private BuySellRequest makeOrderEntryRequest(BuySellRequest request) {
+        var response = nseAPIBuild.build().post().uri(ORDER_ENTRY_URI).bodyValue(request).retrieve().bodyToMono(BuySellRequest.class).block();
+        if (response == null || response.getTransactionDetails() == null || response.getTransactionDetails().isEmpty()) {
+            throw new RuntimeException("Failed to place order");
+        }
+        return response;
+    }
+
+    private void handleOrderResponse(BuySellRequest response, List<? extends Order> orders) {
+        response.getTransactionDetails().forEach(orderDetail -> {
+            var order = orders.stream().filter(o -> Objects.equals(o.getId(), Long.parseLong(orderDetail.getRefID()))).findFirst().orElseThrow();
+            order.setTxnID(orderDetail.getTrxnOrderId());
+
+            if (Objects.equals(orderDetail.getTrxnStatus(), ORDER_ENTRY_SUCCESS_STATUS)) {
+                order.setStatus(Order.OrderStatus.PLACED);
+            } else {
+                order.setStatus(Order.OrderStatus.FAILED);
+            }
+        });
+
+        orderLogRepository.saveAll(orders.stream().map(order -> {
+            var log = new com.nested.app.entity.OrderLog();
+            log.setOrder(order);
+            log.setStatus(order.getStatus());
+            return log;
+        }).toList());
+
     }
 }
 
@@ -70,11 +120,14 @@ class BuySellRequest {
 @NoArgsConstructor
 class BuySellDetails {
 
+    @JsonProperty("order_ref_number")
+    private String refID;
+
     @JsonProperty("scheme_code")
     private String schemeCode;
 
     @JsonProperty("trxn_type")
-    private String transactionType; // BUY, SELL, SIP
+    private String transactionType; // P - Purchase, R - Redemption
 
     @JsonProperty("buy_sell_type")
     private String buySellType; // Fresh / Additional
@@ -82,11 +135,14 @@ class BuySellDetails {
     @JsonProperty("client_code")
     private String clientCode;
 
-    @JsonProperty("demat_physical")
-    private String dematOrPhysical; // D / P
-
     @JsonProperty("order_amount")
     private String orderAmount;
+
+    @JsonProperty("redemption_units")
+    private String orderQuantity;
+
+    @JsonProperty("demat_physical")
+    private String dematOrPhysical = "P"; // D / P
 
     @JsonProperty("kyc_flag")
     private String kycFlag = "Y";

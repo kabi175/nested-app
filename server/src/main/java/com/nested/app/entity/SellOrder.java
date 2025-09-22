@@ -15,8 +15,10 @@ import lombok.EqualsAndHashCode;
 @OneFieldOnly(first = "amount", second = "units",
         message = "Either amount or units must be set, but not both")
 public class SellOrder extends Order {
+    private Double amount;
 
     @Min(1)
+    @Column(nullable = false)
     private Double units;
 
     private String reason;
