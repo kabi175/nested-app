@@ -32,6 +32,9 @@ public class Client {
 
     private String middleName;
 
+    @Column(nullable = false, unique = true)
+    private String clientCode;
+
     @Column(nullable = false)
     private TaxStatus taxStatus = TaxStatus.INDIVIDUAL;
 
