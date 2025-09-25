@@ -1,6 +1,5 @@
 package com.nested.app.contect;
 
-import com.nested.app.entity.Client;
 import com.nested.app.entity.User;
 import lombok.Data;
 import org.springframework.stereotype.Component;

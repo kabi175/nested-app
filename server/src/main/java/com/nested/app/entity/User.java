@@ -2,6 +2,8 @@ package com.nested.app.entity;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
@@ -25,7 +27,6 @@ public class User {
 
     private String nickname;
 
-    @Column(unique = true, nullable = false)
     @Email(message = "Invalid email format")
     private String email;
 
@@ -46,6 +47,7 @@ public class User {
     @Column(nullable = false)
     private boolean isActive = true;
 
+    @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private Role role = Role.STANDARD;
 

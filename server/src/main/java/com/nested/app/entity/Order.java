@@ -39,8 +39,8 @@ public class Order {
     private String txnID;
 
     @ManyToOne
-    @JoinColumn(name = "client_id", nullable = false)
-    private Client client;
+    @JoinColumn(name = "investor_id", nullable = false)
+    private Investor investor;
 
     @ManyToOne
     @JoinColumn(name = "user_id", nullable = false)

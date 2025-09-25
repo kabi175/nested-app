@@ -1,7 +1,6 @@
 package com.nested.app.contect;
 
-import com.nested.app.entity.Client;
-import com.nested.app.entity.User;
+import com.nested.app.entity.Investor;
 import lombok.Data;
 import org.springframework.stereotype.Component;
 import org.springframework.web.context.annotation.RequestScope;
@@ -10,5 +9,5 @@ import org.springframework.web.context.annotation.RequestScope;
 @Component
 @RequestScope
 public class ClientContext {
-    private Client client;
+    private Investor investor;
 }

@@ -34,11 +34,11 @@ public class BankDetail {
     private boolean isPrimary;
 
     @ManyToOne
-    @JoinColumn(name = "client_id", nullable = false)
-    private Client client;
+    @JoinColumn(name = "investor_id", nullable = false)
+    private Investor investor;
 
     // Only SAVINGS & CURRENT  is currently supported
-    public static enum AccountType {
+    public enum AccountType {
         SAVINGS,
         CURRENT,
     }

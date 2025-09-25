@@ -47,7 +47,7 @@ public class OrderServiceImpl implements OrderService {
             req.setSchemeCode(order.getFund().getSchemeCode());
             req.setTransactionType("P");
             req.setBuySellType(buyOrderRepository.existsByFund(order.getFund()) ? "Fresh" : "Additional");
-            req.setClientCode(clientContext.getClient().getClientCode());
+            req.setClientCode(clientContext.getInvestor().getClientCode());
             req.setOrderAmount(String.valueOf(order.getAmount()));
             req.setRefID(order.getId().toString());
             return req;
@@ -63,7 +63,7 @@ public class OrderServiceImpl implements OrderService {
             var req = new BuySellDetails();
             req.setSchemeCode(order.getFund().getSchemeCode());
             req.setTransactionType("R");
-            req.setClientCode(clientContext.getClient().getClientCode());
+            req.setClientCode(clientContext.getInvestor().getClientCode());
             req.setOrderQuantity(String.valueOf(order.getUnits()));
             req.setRefID(order.getId().toString());
             return req;

@@ -31,7 +31,6 @@ public class FundServiceImpl implements FundService {
 
     private static final String FUND_DETAILS_ENDPOINT = "/nsemfdesk/api/v2/reports/MASTER_DOWNLOAD";
 
-    @Scheduled(fixedDelay = 1000 * 60 * 60 * 24) // Refresh every 24 hours
     @Override
     public void refreshDetails() {
         var content = nseAPIBuild.build(true).post().uri(FUND_DETAILS_ENDPOINT).bodyValue(Map.of("file_type", "SCH")).retrieve().onStatus(HttpStatus.BAD_REQUEST::equals, response ->
@@ -108,7 +107,6 @@ public class FundServiceImpl implements FundService {
     }
 
     @Override
-    @Scheduled(fixedDelay = 1000 * 60 * 60 * 24) // Refresh every 24 hours
     public void refreshNav() {
         var content = nseAPIBuild.build(true).post().uri(FUND_DETAILS_ENDPOINT).bodyValue(Map.of("file_type", "NAV")).retrieve().bodyToMono(String.class).block();
         if(content == null){

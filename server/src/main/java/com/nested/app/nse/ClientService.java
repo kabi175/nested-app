@@ -2,7 +2,7 @@ package com.nested.app.nse;
 
 import com.nested.app.contect.ClientContext;
 import com.nested.app.entity.BankDetail;
-import com.nested.app.entity.Client;
+import com.nested.app.entity.Investor;
 import org.springframework.stereotype.Service;
 
 import java.net.URL;
@@ -37,7 +37,7 @@ public abstract class ClientService {
      *
      * @return - enum KYCStatus indicating the current status of KYC.
      */
-    abstract Client.KYCStatus kycStatus();
+    abstract Investor.KYCStatus kycStatus();
 
 
     /**
@@ -45,7 +45,7 @@ public abstract class ClientService {
      *
      * @return - the registered Client object.
      */
-    abstract Client registerClient();
+    abstract Investor registerClient();
 
     /**
      * Add a bank detail to the given client in the system. Also adds the entry in DB.

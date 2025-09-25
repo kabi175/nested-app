@@ -1,7 +1,7 @@
 package com.nested.app.annotation;
 
 import com.nested.app.contect.ClientContext;
-import com.nested.app.entity.Client;
+import com.nested.app.entity.Investor;
 import jakarta.validation.Constraint;
 import jakarta.validation.ConstraintValidator;
 import jakarta.validation.ConstraintValidatorContext;
@@ -25,15 +25,15 @@ public @interface KycCompletedOnly {
 
     Class<? extends Payload>[] payload() default {};
 
-    class KycCompletedOnlyValidation implements ConstraintValidator<KycCompletedOnly, Client> {
+    class KycCompletedOnlyValidation implements ConstraintValidator<KycCompletedOnly, Investor> {
         @Override
         public void initialize(KycCompletedOnly constraintAnnotation) {
             ConstraintValidator.super.initialize(constraintAnnotation);
         }
 
         @Override
-        public boolean isValid(Client client, ConstraintValidatorContext context) {
-            return client != null && Objects.equals(client.getKycStatus(), Client.KYCStatus.COMPLETED);
+        public boolean isValid(Investor investor, ConstraintValidatorContext context) {
+            return investor != null && Objects.equals(investor.getKycStatus(), Investor.KYCStatus.COMPLETED);
         }
     }
 
@@ -49,8 +49,8 @@ public @interface KycCompletedOnly {
                 if (clientContext == null) {
                     return false;
                 }
-                Client client = clientContext.getClient();
-                return client != null && Objects.equals(client.getKycStatus(), Client.KYCStatus.COMPLETED);
+                Investor investor = clientContext.getInvestor();
+                return investor != null && Objects.equals(investor.getKycStatus(), Investor.KYCStatus.COMPLETED);
             } catch (Exception e) {
                 return false;
             }

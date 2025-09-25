@@ -1,8 +1,12 @@
 package com.nested.app.entity;
 
-import com.nested.app.nse.ClientService;
+import com.nested.app.enums.IncomeSlab;
+import com.nested.app.enums.IncomeSource;
+import com.nested.app.enums.Occupation;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
@@ -18,8 +22,8 @@ import java.util.List;
 
 @Data
 @Entity
-@Table(name = "clients")
-public class Client {
+@Table(name = "investors")
+public class Investor {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -30,32 +34,35 @@ public class Client {
 
     private String lastName;
 
-    private String middleName;
-
     @Column(nullable = false, unique = true)
     private String clientCode;
 
+    @Enumerated(EnumType.STRING)
     @Column(nullable = false)
-    private TaxStatus taxStatus = TaxStatus.INDIVIDUAL;
+    private IncomeSource incomeSource = IncomeSource.SALARY;
 
-    @Column(nullable = true)
-    private Gender gender;
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private IncomeSlab incomeSlab = IncomeSlab.BELOW_1_LAC;
+
+    private String investorType = "individual";
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private Gender gender = Gender.MALE;
 
     private Date dateOfBirth; // YYYY-MM-DD
 
-    private Occupation occupation;
+    private Occupation occupation = Occupation.PROFESSIONAL;
 
     @Column(unique = true)
     private String panNumber;
 
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
     private KYCStatus kycStatus = KYCStatus.UNKNOWN;
 
-
-    // Only Single holdingNature is currently supported
-    @Column(nullable = false)
-    private HoldingNature holdingNature = HoldingNature.SINGLE;
-
-    @OneToMany(mappedBy="client")
+    @OneToMany
     private List<BankDetail> bankDetails;
 
     @CreationTimestamp
@@ -66,40 +73,14 @@ public class Client {
     @Column(nullable = false)
     private Timestamp updatedAt;
 
-    public static enum TaxStatus {
-        INDIVIDUAL,
-        ON_BEHALF_OF_MINOR,
-        HUF,
-        CORPORATE,
-        NRE,
-        NRO
-    }
 
-    public static enum Gender {
+    public enum Gender {
         MALE,
         FEMALE,
-        OTHER,
-        TRANS,
+        TRANSGENDER,
     }
 
-    public static enum Occupation {
-        SERVICE,
-        BUSINESS,
-        PROFESSIONAL,
-        AGRICULTURE,
-        RETIRED,
-        HOUSEWIFE,
-        STUDENT,
-        OTHER
-    }
-
-    public static enum HoldingNature {
-        SINGLE,
-        JOINT,
-        ASSOCIATION,
-    }
-
-    public static enum KYCStatus {
+    public enum KYCStatus {
         UNKNOWN, PENDING, COMPLETED, FAILED
     }
 }
