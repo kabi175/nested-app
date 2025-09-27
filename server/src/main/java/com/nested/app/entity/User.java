@@ -9,16 +9,19 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import jakarta.validation.constraints.Email;
+import java.sql.Timestamp;
 import lombok.Data;
 import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.Filter;
+import org.hibernate.annotations.FilterDef;
+import org.hibernate.annotations.ParamDef;
 import org.hibernate.annotations.UpdateTimestamp;
 
-import java.sql.Timestamp;
-import java.time.LocalDateTime;
-
+@Data
 @Entity
 @Table(name = "users")
-@Data
+@FilterDef(name = "userFilter", parameters = @ParamDef(name = "userId", type = Long.class))
+@Filter(name = "userFilter", condition = "id = :userId")
 public class User {
 
     @Id
@@ -52,7 +55,7 @@ public class User {
     private Role role = Role.STANDARD;
 
     public static enum Role {
-        STANDARD,
-        ADMIN
-    }
+    STANDARD,
+    ADMIN
+  }
 }

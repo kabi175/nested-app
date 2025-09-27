@@ -1,27 +1,34 @@
-package com.nested.app.firebase;
+package com.nested.app.filter;
 
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseToken;
+import com.nested.app.utils.AppEnvironment;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import java.io.IOException;
+import java.util.Collections;
+import lombok.NonNull;
+import lombok.RequiredArgsConstructor;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
-import java.io.IOException;
-import java.util.Collections;
-
 @Component
+@RequiredArgsConstructor
 public class FirebaseAuthFilter extends OncePerRequestFilter {
 
-    @Override
-    protected void doFilterInternal(HttpServletRequest request,
-                                    HttpServletResponse response,
-                                    FilterChain filterChain) throws ServletException, IOException {
+  private final AppEnvironment appEnvironment;
+
+  @Override
+  protected void doFilterInternal(
+      @NonNull HttpServletRequest request,
+      @NonNull HttpServletResponse response,
+      @NonNull FilterChain filterChain)
+      throws ServletException, IOException {
 
         String header = request.getHeader("Authorization");
         if (header != null && header.startsWith("Bearer ")) {
@@ -29,9 +36,9 @@ public class FirebaseAuthFilter extends OncePerRequestFilter {
 
             try {
                 FirebaseToken decodedToken = FirebaseAuth.getInstance().verifyIdToken(idToken);
-                UsernamePasswordAuthenticationToken authentication =
-                        new UsernamePasswordAuthenticationToken(
-                                decodedToken.getUid(), null, Collections.emptyList());
+        UsernamePasswordAuthenticationToken authentication =
+            new UsernamePasswordAuthenticationToken(
+                decodedToken.getUid(), null, Collections.emptyList());
 
                 authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
                 SecurityContextHolder.getContext().setAuthentication(authentication);
@@ -41,6 +48,14 @@ public class FirebaseAuthFilter extends OncePerRequestFilter {
                 return;
             }
         }
+
+    if (appEnvironment.isDevelopment() && request.getHeader("X-User-UID") != null) {
+      UsernamePasswordAuthenticationToken authentication =
+          new UsernamePasswordAuthenticationToken(
+              request.getHeader("X-User-UID"), null, Collections.emptyList());
+      authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+      SecurityContextHolder.getContext().setAuthentication(authentication);
+    }
 
         filterChain.doFilter(request, response);
     }
