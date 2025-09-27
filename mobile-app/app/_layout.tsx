@@ -10,6 +10,7 @@ import "react-native-reanimated";
 
 import AuthProvider, { useAuth } from "@/components/auth";
 import { useColorScheme } from "@/hooks/useColorScheme";
+import { QueryProvider } from "@/providers/QueryProvider";
 
 export default function RootLayout() {
   const colorScheme = useColorScheme();
@@ -23,12 +24,16 @@ export default function RootLayout() {
   }
 
   return (
-    <AuthProvider>
-      <ThemeProvider value={colorScheme === "dark" ? DarkTheme : DefaultTheme}>
-        <RootNavigator />
-        <StatusBar style="auto" />
-      </ThemeProvider>
-    </AuthProvider>
+    <QueryProvider>
+      <AuthProvider>
+        <ThemeProvider
+          value={colorScheme === "dark" ? DarkTheme : DefaultTheme}
+        >
+          <RootNavigator />
+          <StatusBar style="auto" />
+        </ThemeProvider>
+      </AuthProvider>
+    </QueryProvider>
   );
 }
 

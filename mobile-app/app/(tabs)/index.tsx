@@ -25,7 +25,9 @@ export default function HomeScreen() {
           <ThemedText> Click Here to Login </ThemedText>
         </SignedOut>
         <SignedIn>
-          <ThemedText> {auth.user?.displayName ||auth.user?.phoneNumber } </ThemedText>
+          <ThemedText>
+            {auth.user?.displayName || auth.user?.phoneNumber}
+          </ThemedText>
         </SignedIn>
         <HelloWave />
       </ThemedView>
