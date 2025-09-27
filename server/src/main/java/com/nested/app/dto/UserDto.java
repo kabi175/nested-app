@@ -1,5 +1,6 @@
 package com.nested.app.dto;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.nested.app.entity.User;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -15,6 +16,7 @@ public class UserDto {
 
   private String email;
 
+  @JsonProperty("phone_number")
   private String phoneNumber;
 
   private String role;
