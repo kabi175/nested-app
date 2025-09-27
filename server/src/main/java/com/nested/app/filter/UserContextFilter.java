@@ -13,6 +13,7 @@ import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import lombok.AllArgsConstructor;
 import lombok.NonNull;
+import org.springframework.security.authentication.AnonymousAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
@@ -21,9 +22,9 @@ import org.springframework.web.filter.OncePerRequestFilter;
 @Component
 @AllArgsConstructor
 public class UserContextFilter extends OncePerRequestFilter {
-    private final UserContext userContext;
+  private final UserContext userContext;
 
-    private final UserRepository userRepository;
+  private final UserRepository userRepository;
 
   @Override
   protected void doFilterInternal(
@@ -32,30 +33,32 @@ public class UserContextFilter extends OncePerRequestFilter {
       @NonNull FilterChain filterChain)
       throws ServletException, IOException {
 
-        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-        Object principal = auth.getPrincipal(); // can be a UserDetails
-        var user = userRepository.findByFirebaseUid(principal.toString());
-        user.ifPresent(userContext::setUser);
-        if (user.isEmpty()) {
-            try {
-                userContext.setUser(createUser(auth));
-            } catch (FirebaseAuthException e) {
-                throw new RuntimeException(e);
-            }
+    Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+    if (!(auth instanceof AnonymousAuthenticationToken)) {
+      Object principal = auth.getPrincipal(); // can be a UserDetails
+      var user = userRepository.findByFirebaseUid(principal.toString());
+      user.ifPresent(userContext::setUser);
+      if (user.isEmpty()) {
+        try {
+          userContext.setUser(createUser(auth));
+        } catch (FirebaseAuthException e) {
+          throw new RuntimeException(e);
         }
-
-        filterChain.doFilter(request, response);
+      }
     }
 
-    User createUser(Authentication auth) throws FirebaseAuthException {
-        var user = new User();
-        UserRecord userRecord = FirebaseAuth.getInstance().getUser(auth.getPrincipal().toString());
-        user.setFirebaseUid(auth.getPrincipal().toString());
-        user.setEmail(userRecord.getEmail());
-        user.setPhoneNumber(userRecord.getPhoneNumber());
-        user.setNickname(userRecord.getDisplayName());
+    filterChain.doFilter(request, response);
+  }
 
-        userRepository.save(user);
-        return user;
-    }
+  User createUser(Authentication auth) throws FirebaseAuthException {
+    var user = new User();
+    UserRecord userRecord = FirebaseAuth.getInstance().getUser(auth.getPrincipal().toString());
+    user.setFirebaseUid(auth.getPrincipal().toString());
+    user.setEmail(userRecord.getEmail());
+    user.setPhoneNumber(userRecord.getPhoneNumber());
+    user.setNickname(userRecord.getDisplayName());
+
+    userRepository.save(user);
+    return user;
+  }
 }

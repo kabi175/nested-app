@@ -1,5 +1,6 @@
 package com.nested.app.filter;
 
+import com.google.common.base.Strings;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseToken;
 import com.nested.app.utils.AppEnvironment;
@@ -49,7 +50,7 @@ public class FirebaseAuthFilter extends OncePerRequestFilter {
             }
         }
 
-    if (appEnvironment.isDevelopment() && request.getHeader("X-User-UID") != null) {
+    if (appEnvironment.isDevelopment() && !Strings.isNullOrEmpty(request.getHeader("X-User-UID"))) {
       UsernamePasswordAuthenticationToken authentication =
           new UsernamePasswordAuthenticationToken(
               request.getHeader("X-User-UID"), null, Collections.emptyList());

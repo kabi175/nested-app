@@ -22,7 +22,7 @@ public class SecurityConfig {
     http.csrf(AbstractHttpConfigurer::disable) // disable CSRF for APIs
         .authorizeHttpRequests(
             auth ->
-                auth.requestMatchers("/public")
+                auth.requestMatchers("/public/**")
                     .permitAll()
                     .anyRequest()
                     .authenticated() // everything else requires auth

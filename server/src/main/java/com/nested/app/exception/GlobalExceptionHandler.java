@@ -1,20 +1,21 @@
 package com.nested.app.exception;
 
+import java.time.LocalDateTime;
+import java.util.HashMap;
+import java.util.Map;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.multipart.MaxUploadSizeExceededException;
+import org.springframework.web.servlet.NoHandlerFoundException;
+import org.springframework.web.servlet.resource.NoResourceFoundException;
 
-import java.time.LocalDateTime;
-import java.util.HashMap;
-import java.util.Map;
-
-@RestControllerAdvice
 @Slf4j
+@RestControllerAdvice
 public class GlobalExceptionHandler {
-    
+
     @ExceptionHandler(DocumentNotFoundException.class)
     public ResponseEntity<Map<String, Object>> handleDocumentNotFoundException(DocumentNotFoundException ex) {
         log.error("Document not found: {}", ex.getMessage());
@@ -38,7 +39,16 @@ public class GlobalExceptionHandler {
         log.error("Unexpected error: {}", ex.getMessage(), ex);
         return buildErrorResponse(HttpStatus.INTERNAL_SERVER_ERROR, "An unexpected error occurred");
     }
-    
+
+  @ExceptionHandler(value = {NoHandlerFoundException.class, NoResourceFoundException.class})
+  public ResponseEntity<Map<String, Object>> handleNotFound() {
+    Map<String, Object> body = new HashMap<>();
+    body.put("status", HttpStatus.NOT_FOUND.value());
+    body.put("error", "Not Found");
+    body.put("message", "The resource you are looking for does not exist");
+    return new ResponseEntity<>(body, HttpStatus.NOT_FOUND);
+  }
+
     private ResponseEntity<Map<String, Object>> buildErrorResponse(HttpStatus status, String message) {
         Map<String, Object> errorResponse = new HashMap<>();
         errorResponse.put("timestamp", LocalDateTime.now());
