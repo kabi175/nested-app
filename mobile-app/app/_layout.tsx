@@ -11,6 +11,7 @@ import "react-native-reanimated";
 import AuthProvider, { useAuth } from "@/components/auth";
 import { useColorScheme } from "@/hooks/useColorScheme";
 import { QueryProvider } from "@/providers/QueryProvider";
+import { SafeAreaProvider } from "react-native-safe-area-context";
 
 export default function RootLayout() {
   const colorScheme = useColorScheme();
@@ -29,13 +30,19 @@ export default function RootLayout() {
         <ThemeProvider
           value={colorScheme === "dark" ? DarkTheme : DefaultTheme}
         >
-          <RootNavigator />
+          <SafeAreaProvider>
+            <RootNavigator />
+          </SafeAreaProvider>
           <StatusBar style="auto" />
         </ThemeProvider>
       </AuthProvider>
     </QueryProvider>
   );
 }
+
+export const unstable_settings = {
+  initialRouteName: "(tabs)",
+};
 
 function RootNavigator() {
   const auth = useAuth();
@@ -47,7 +54,10 @@ function RootNavigator() {
       </Stack.Protected>
 
       <Stack.Protected guard={auth.isSignedIn === false}>
-        <Stack.Screen name="sign-in" />
+        <Stack.Screen
+          name="sign-in"
+          options={{ headerShown: false, presentation: "card" }}
+        />
       </Stack.Protected>
     </Stack>
   );
