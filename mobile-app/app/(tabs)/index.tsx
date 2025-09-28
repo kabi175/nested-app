@@ -1,59 +1,61 @@
-import { Image } from "expo-image";
-import { StyleSheet } from "react-native";
-
-import { SignedIn, SignedOut, useAuth, useSignOut } from "@/components/auth";
-import { HelloWave } from "@/components/HelloWave";
-import ParallaxScrollView from "@/components/ParallaxScrollView";
-import { ThemedText } from "@/components/ThemedText";
-import { ThemedView } from "@/components/ThemedView";
-import { Button } from "@react-navigation/elements";
+import EducationCostEstimator from "@/components/EducationCostEstimator";
+import InvestmentLandingScreen from "@/components/InvestmentLandingScreen";
+import React from "react";
+import { ScrollView, StyleSheet } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function HomeScreen() {
-  const auth = useAuth();
-  const { signOut } = useSignOut();
-  return (
-    <ParallaxScrollView
-      headerBackgroundColor={{ light: "#A1CEDC", dark: "#1D3D47" }}
-      headerImage={
-        <Image
-          source={require("@/assets/images/partial-react-logo.png")}
-          style={styles.reactLogo}
-        />
-      }
-    >
-      <ThemedView style={styles.titleContainer}>
-        <ThemedText type="title">Welcome!</ThemedText>
-        <SignedOut>
-          <ThemedText> Click Here to Login </ThemedText>
-        </SignedOut>
-        <SignedIn>
-          <ThemedText>
-            {auth.user?.displayName || auth.user?.phoneNumber}
-          </ThemedText>
+  const handleCourseSelect = (course: string) => {
+    console.log("Selected course:", course);
+  };
 
-          <Button onPressOut={signOut}> Sign Out </Button>
-        </SignedIn>
-        <HelloWave />
-      </ThemedView>
-    </ParallaxScrollView>
+  const handleCollegeSelect = (college: string) => {
+    console.log("Selected college:", college);
+  };
+
+  const handleTimelineChange = (years: number) => {
+    console.log("Timeline changed to:", years, "years");
+  };
+
+  const handleExploreStrategy = (strategy: string) => {
+    console.log("Explore strategy:", strategy);
+    // Navigate to strategy details or investment flow
+  };
+
+  const handleLearnMore = () => {
+    console.log("Learn more pressed");
+    // Navigate to learn more section or FAQ
+  };
+
+  return (
+    <SafeAreaView style={styles.container} edges={["top"]}>
+      <ScrollView
+        style={styles.scrollContainer}
+        showsVerticalScrollIndicator={false}
+      >
+        {/* Existing Education Cost Estimator */}
+        <EducationCostEstimator
+          onCourseSelect={handleCourseSelect}
+          onCollegeSelect={handleCollegeSelect}
+          onTimelineChange={handleTimelineChange}
+        />
+
+        {/* New Investment Landing Section */}
+        <InvestmentLandingScreen
+          onExploreStrategy={handleExploreStrategy}
+          onLearnMore={handleLearnMore}
+        />
+      </ScrollView>
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  titleContainer: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 8,
+  container: {
+    flex: 1,
+    backgroundColor: "#F8F7FF",
   },
-  stepContainer: {
-    gap: 8,
-    marginBottom: 8,
-  },
-  reactLogo: {
-    height: 178,
-    width: 290,
-    bottom: 0,
-    left: 0,
-    position: "absolute",
+  scrollContainer: {
+    flex: 1,
   },
 });

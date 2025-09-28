@@ -20,6 +20,7 @@ import {
 import { LinearGradient } from "expo-linear-gradient";
 import { useEffect, useState } from "react";
 import { Alert, ImageProps, ScrollView, StyleSheet, View } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 const LoadingIndicator = (props: ImageProps) => (
   <View
@@ -143,171 +144,192 @@ export default function SignIn() {
     : "We'll send you an OTP to verify your number";
 
   return (
-    <Layout style={styles.container}>
-      <LinearGradient
-        colors={[
-          "rgb(221, 236, 254)", // Light blue at top
-          "rgb(232, 242, 255)", // Slightly lighter blue
-          "rgb(240, 246, 255)", // Very light blue
-          "rgb(255, 255, 255)", // White
-          "rgb(255, 255, 255)", // White at bottom
-        ]}
-        locations={[0, 0.4, 0.7, 0.8, 1]}
-        start={{ x: 0.5, y: 0 }}
-        end={{ x: 0.5, y: 1 }}
-        style={styles.gradient}
-      />
+    <SafeAreaView style={styles.safeArea} edges={["top", "bottom"]}>
+      <Layout style={styles.container}>
+        <LinearGradient
+          colors={[
+            "rgb(221, 236, 254)", // Light blue at top
+            "rgb(232, 242, 255)", // Slightly lighter blue
+            "rgb(240, 246, 255)", // Very light blue
+            "rgb(255, 255, 255)", // White
+            "rgb(255, 255, 255)", // White at bottom
+          ]}
+          locations={[0, 0.4, 0.7, 0.8, 1]}
+          start={{ x: 0.5, y: 0 }}
+          end={{ x: 0.5, y: 1 }}
+          style={styles.gradient}
+        />
 
-      <ScrollView
-        style={styles.scrollView}
-        contentContainerStyle={styles.scrollContent}
-        showsVerticalScrollIndicator={false}
-      >
-        <Layout style={styles.contentContainer}>
-          {/* Title */}
-          <Layout
-            style={[styles.titleContainer, { backgroundColor: "transparent" }]}
-          >
-            <Text category="h4" style={styles.title}>
-              {title}
-            </Text>
-            <Text category="s1" appearance="hint" style={styles.subtitle}>
-              {subtitle}
-            </Text>
-          </Layout>
-
-          {/* Phone Input Row */}
-          <Layout style={[styles.inputRow, { backgroundColor: "transparent" }]}>
-            {/* Country Code Select */}
-            <Select
-              style={styles.countrySelect}
-              placeholder="Country"
-              value={countryCode}
-              selectedIndex={
-                new IndexPath(
-                  countryCodes.findIndex((item) => item.value === countryCode)
-                )
-              }
-              onSelect={(index) => {
-                const selectedIndex = Array.isArray(index) ? index[0] : index;
-                const selectedCountry = countryCodes[selectedIndex.row];
-                setCountryCode(selectedCountry.value);
-              }}
-            >
-              {countryCodes.map((country) => (
-                <SelectItem key={country.value} title={country.title} />
-              ))}
-            </Select>
-
-            {/* Phone Number Input */}
-            <Input
-              style={styles.phoneInput}
-              placeholder="Enter 10-digit mobile number"
-              value={phoneNumber}
-              onChangeText={setPhoneNumber}
-              keyboardType="phone-pad"
-              maxLength={10}
-            />
-          </Layout>
-
-          {/* OTP Input (shown after phone verification) */}
-          {confirm && (
-            <Layout
-              style={[styles.otpContainer, { backgroundColor: "transparent" }]}
-            >
-              <OtpInput
-                length={6}
-                onComplete={handleOtpComplete}
-                onChange={handleOtpChange}
-                disabled={isVerifying}
-              />
-            </Layout>
-          )}
-
-          {/* Send OTP Button */}
-          {!confirm && (
-            <Button
-              onPress={handlePhoneNumberVerification}
-              disabled={phoneNumber.length !== 10 || isLoading}
-              style={styles.sendButton}
-              size="large"
-              accessoryLeft={() => (isLoading ? <LoadingIndicator /> : <></>)}
-            >
-              {isLoading ? "Sending OTP..." : "Send OTP"}
-            </Button>
-          )}
-
-          {/* Verify OTP Button */}
-          {confirm && (
+        <ScrollView
+          style={styles.scrollView}
+          contentContainerStyle={styles.scrollContent}
+          showsVerticalScrollIndicator={false}
+        >
+          <Layout style={styles.contentContainer}>
+            {/* Title */}
             <Layout
               style={[
-                styles.buttonContainer,
+                styles.titleContainer,
                 { backgroundColor: "transparent" },
               ]}
             >
-              <Button
-                onPress={handlePhoneNumberVerification}
-                disabled={otpCode.length !== 6 || isVerifying}
-                style={styles.sendButton}
-                size="large"
-                accessoryLeft={() =>
-                  isVerifying ? <LoadingIndicator /> : <></>
-                }
-              >
-                {isVerifying ? "Verifying..." : "Verify & Continue"}
-              </Button>
-
-              <Button
-                onPress={handleResendOtp}
-                disabled={resendTimer > 0 || isLoading}
-                appearance="outline"
-                style={styles.resendButton}
-                size="large"
-              >
-                {isLoading
-                  ? "Resending..."
-                  : resendTimer > 0
-                  ? `Resend OTP in ${resendTimer}s`
-                  : "Resend OTP"}
-              </Button>
-            </Layout>
-          )}
-
-          {/* Security Info */}
-          <Layout
-            style={[
-              styles.securityContainer,
-              { backgroundColor: "transparent" },
-            ]}
-          >
-            <Layout
-              style={[styles.securityRow, { backgroundColor: "transparent" }]}
-            >
-              <Ionicons name="shield-checkmark" size={16} color="#3B82F6" />
-              <Text category="c1" appearance="hint" style={styles.securityText}>
-                Your information is secure and encrypted
+              <Text category="h4" style={styles.title}>
+                {title}
+              </Text>
+              <Text category="s1" appearance="hint" style={styles.subtitle}>
+                {subtitle}
               </Text>
             </Layout>
 
-            <Text category="c1" appearance="hint" style={styles.disclaimerText}>
-              You agree to{" "}
-              <Link href="https://expo.dev" style={styles.linkText}>
-                TnC
-              </Link>{" "}
-              and{" "}
-              <Link href="https://expo.dev" style={styles.linkText}>
-                Privacy Policy
-              </Link>{" "}
-              by proceeding.
-            </Text>
+            {/* Phone Input Row */}
+            <Layout
+              style={[styles.inputRow, { backgroundColor: "transparent" }]}
+            >
+              {/* Country Code Select */}
+              <Select
+                style={styles.countrySelect}
+                placeholder="Country"
+                value={countryCode}
+                selectedIndex={
+                  new IndexPath(
+                    countryCodes.findIndex((item) => item.value === countryCode)
+                  )
+                }
+                onSelect={(index) => {
+                  const selectedIndex = Array.isArray(index) ? index[0] : index;
+                  const selectedCountry = countryCodes[selectedIndex.row];
+                  setCountryCode(selectedCountry.value);
+                }}
+              >
+                {countryCodes.map((country) => (
+                  <SelectItem key={country.value} title={country.title} />
+                ))}
+              </Select>
+
+              {/* Phone Number Input */}
+              <Input
+                style={styles.phoneInput}
+                placeholder="Enter 10-digit mobile number"
+                value={phoneNumber}
+                onChangeText={setPhoneNumber}
+                keyboardType="phone-pad"
+                maxLength={10}
+              />
+            </Layout>
+
+            {/* OTP Input (shown after phone verification) */}
+            {confirm && (
+              <Layout
+                style={[
+                  styles.otpContainer,
+                  { backgroundColor: "transparent" },
+                ]}
+              >
+                <OtpInput
+                  length={6}
+                  onComplete={handleOtpComplete}
+                  onChange={handleOtpChange}
+                  disabled={isVerifying}
+                />
+              </Layout>
+            )}
+
+            {/* Send OTP Button */}
+            {!confirm && (
+              <Button
+                onPress={handlePhoneNumberVerification}
+                disabled={phoneNumber.length !== 10 || isLoading}
+                style={styles.sendButton}
+                size="large"
+                accessoryLeft={() => (isLoading ? <LoadingIndicator /> : <></>)}
+              >
+                {isLoading ? "Sending OTP..." : "Send OTP"}
+              </Button>
+            )}
+
+            {/* Verify OTP Button */}
+            {confirm && (
+              <Layout
+                style={[
+                  styles.buttonContainer,
+                  { backgroundColor: "transparent" },
+                ]}
+              >
+                <Button
+                  onPress={handlePhoneNumberVerification}
+                  disabled={otpCode.length !== 6 || isVerifying}
+                  style={styles.sendButton}
+                  size="large"
+                  accessoryLeft={() =>
+                    isVerifying ? <LoadingIndicator /> : <></>
+                  }
+                >
+                  {isVerifying ? "Verifying..." : "Verify & Continue"}
+                </Button>
+
+                <Button
+                  onPress={handleResendOtp}
+                  disabled={resendTimer > 0 || isLoading}
+                  appearance="outline"
+                  style={styles.resendButton}
+                  size="large"
+                >
+                  {isLoading
+                    ? "Resending..."
+                    : resendTimer > 0
+                    ? `Resend OTP in ${resendTimer}s`
+                    : "Resend OTP"}
+                </Button>
+              </Layout>
+            )}
+
+            {/* Security Info */}
+            <Layout
+              style={[
+                styles.securityContainer,
+                { backgroundColor: "transparent" },
+              ]}
+            >
+              <Layout
+                style={[styles.securityRow, { backgroundColor: "transparent" }]}
+              >
+                <Ionicons name="shield-checkmark" size={16} color="#3B82F6" />
+                <Text
+                  category="c1"
+                  appearance="hint"
+                  style={styles.securityText}
+                >
+                  Your information is secure and encrypted
+                </Text>
+              </Layout>
+
+              <Text
+                category="c1"
+                appearance="hint"
+                style={styles.disclaimerText}
+              >
+                You agree to{" "}
+                <Link href="https://expo.dev" style={styles.linkText}>
+                  TnC
+                </Link>{" "}
+                and{" "}
+                <Link href="https://expo.dev" style={styles.linkText}>
+                  Privacy Policy
+                </Link>{" "}
+                by proceeding.
+              </Text>
+            </Layout>
           </Layout>
-        </Layout>
-      </ScrollView>
-    </Layout>
+        </ScrollView>
+      </Layout>
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
+  safeArea: {
+    flex: 1,
+  },
   container: {
     flex: 1,
     justifyContent: "center",
