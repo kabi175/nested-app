@@ -4,27 +4,34 @@ import {
   getAuth,
   signInWithPhoneNumber,
 } from "@react-native-firebase/auth";
+import { Link, router } from "expo-router";
 
 import { OtpInput } from "@/components/ui/OtpInput";
-import { LinearGradient } from "expo-linear-gradient";
-import { router } from "expo-router";
-import { useEffect, useState } from "react";
 import {
-  ActivityIndicator,
-  Alert,
-  Pressable,
-  ScrollView,
-  StyleSheet,
+  Button,
+  IndexPath,
+  Input,
+  Layout,
+  Select,
+  SelectItem,
+  Spinner,
   Text,
-  TextInput,
-  TouchableOpacity,
-  View,
-} from "react-native";
+} from "@ui-kitten/components";
+import { LinearGradient } from "expo-linear-gradient";
+import { useEffect, useState } from "react";
+import { Alert, ImageProps, ScrollView, StyleSheet, View } from "react-native";
+
+const LoadingIndicator = (props: ImageProps) => (
+  <View
+    style={[props.style, { justifyContent: "center", alignItems: "center" }]}
+  >
+    <Spinner size="small" />
+  </View>
+);
 
 export default function SignIn() {
   const [phoneNumber, setPhoneNumber] = useState("");
   const [countryCode, setCountryCode] = useState("+91");
-  const [showCountryPicker, setShowCountryPicker] = useState(false);
 
   // If null, no SMS has been sent
   const [confirm, setConfirm] =
@@ -36,9 +43,9 @@ export default function SignIn() {
   const [isVerifying, setIsVerifying] = useState(false);
 
   const countryCodes = [
-    { code: "+91", country: "India", flag: "🇮🇳" },
-    { code: "+1", country: "USA", flag: "🇺🇸" },
-    { code: "+44", country: "UK", flag: "🇬🇧" },
+    { title: "🇮🇳 +91", value: "+91" },
+    { title: "🇺🇸 +1", value: "+1" },
+    { title: "🇬🇧 +44", value: "+44" },
   ];
 
   async function handlePhoneNumberVerification() {
@@ -136,7 +143,7 @@ export default function SignIn() {
     : "We'll send you an OTP to verify your number";
 
   return (
-    <View style={styles.container}>
+    <Layout style={styles.container}>
       <LinearGradient
         colors={[
           "rgb(221, 236, 254)", // Light blue at top
@@ -156,193 +163,147 @@ export default function SignIn() {
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
       >
-        <View>
+        <Layout style={styles.contentContainer}>
           {/* Title */}
-          <View style={styles.titleContainer}>
-            <Text style={styles.title}>{title}</Text>
-            <Text style={styles.subtitle}>{subtitle}</Text>
-          </View>
+          <Layout
+            style={[styles.titleContainer, { backgroundColor: "transparent" }]}
+          >
+            <Text category="h4" style={styles.title}>
+              {title}
+            </Text>
+            <Text category="s1" appearance="hint" style={styles.subtitle}>
+              {subtitle}
+            </Text>
+          </Layout>
 
           {/* Phone Input Row */}
-          <View style={styles.inputRow}>
-            {/* Country Code Picker */}
-            <View style={styles.countryPickerContainer}>
-              <TouchableOpacity
-                onPress={() => setShowCountryPicker(!showCountryPicker)}
-                style={styles.countryPicker}
-              >
-                <Text style={styles.countryCode}>{countryCode}</Text>
-                <Ionicons
-                  name={showCountryPicker ? "chevron-up" : "chevron-down"}
-                  size={16}
-                  color="#666"
-                />
-              </TouchableOpacity>
-
-              {showCountryPicker && (
-                <View style={styles.countryDropdown}>
-                  {countryCodes.map((country) => (
-                    <TouchableOpacity
-                      key={country.code}
-                      onPress={() => {
-                        setCountryCode(country.code);
-                        setShowCountryPicker(false);
-                      }}
-                      style={styles.countryOption}
-                    >
-                      <Text style={styles.flag}>{country.flag}</Text>
-                      <Text style={styles.countryCodeText}>{country.code}</Text>
-                    </TouchableOpacity>
-                  ))}
-                </View>
-              )}
-            </View>
+          <Layout style={[styles.inputRow, { backgroundColor: "transparent" }]}>
+            {/* Country Code Select */}
+            <Select
+              style={styles.countrySelect}
+              placeholder="Country"
+              value={countryCode}
+              selectedIndex={
+                new IndexPath(
+                  countryCodes.findIndex((item) => item.value === countryCode)
+                )
+              }
+              onSelect={(index) => {
+                const selectedIndex = Array.isArray(index) ? index[0] : index;
+                const selectedCountry = countryCodes[selectedIndex.row];
+                setCountryCode(selectedCountry.value);
+              }}
+            >
+              {countryCodes.map((country) => (
+                <SelectItem key={country.value} title={country.title} />
+              ))}
+            </Select>
 
             {/* Phone Number Input */}
-            <TextInput
+            <Input
               style={styles.phoneInput}
               placeholder="Enter 10-digit mobile number"
-              placeholderTextColor="#999"
               value={phoneNumber}
               onChangeText={setPhoneNumber}
               keyboardType="phone-pad"
               maxLength={10}
             />
-          </View>
+          </Layout>
 
           {/* OTP Input (shown after phone verification) */}
           {confirm && (
-            <View style={styles.otpContainer}>
+            <Layout
+              style={[styles.otpContainer, { backgroundColor: "transparent" }]}
+            >
               <OtpInput
                 length={6}
                 onComplete={handleOtpComplete}
                 onChange={handleOtpChange}
                 disabled={isVerifying}
               />
-            </View>
+            </Layout>
           )}
 
           {/* Send OTP Button */}
           {!confirm && (
-            <TouchableOpacity
+            <Button
               onPress={handlePhoneNumberVerification}
               disabled={phoneNumber.length !== 10 || isLoading}
-              style={[
-                styles.sendButton,
-                phoneNumber.length === 10 && !isLoading
-                  ? styles.sendButtonActive
-                  : styles.sendButtonDisabled,
-              ]}
+              style={styles.sendButton}
+              size="large"
+              accessoryLeft={() => (isLoading ? <LoadingIndicator /> : <></>)}
             >
-              {isLoading ? (
-                <View style={styles.loaderContainer}>
-                  <ActivityIndicator size="small" color="#ffffff" />
-                  <Text style={styles.loaderText}>Sending OTP...</Text>
-                </View>
-              ) : (
-                <Text
-                  style={[
-                    styles.sendButtonText,
-                    phoneNumber.length === 10
-                      ? styles.sendButtonTextActive
-                      : styles.sendButtonTextDisabled,
-                  ]}
-                >
-                  Send OTP
-                </Text>
-              )}
-            </TouchableOpacity>
+              {isLoading ? "Sending OTP..." : "Send OTP"}
+            </Button>
           )}
 
           {/* Verify OTP Button */}
           {confirm && (
-            <>
-              <TouchableOpacity
+            <Layout
+              style={[
+                styles.buttonContainer,
+                { backgroundColor: "transparent" },
+              ]}
+            >
+              <Button
                 onPress={handlePhoneNumberVerification}
                 disabled={otpCode.length !== 6 || isVerifying}
-                style={[
-                  styles.sendButton,
-                  otpCode.length === 6 && !isVerifying
-                    ? styles.sendButtonActive
-                    : styles.sendButtonDisabled,
-                ]}
+                style={styles.sendButton}
+                size="large"
+                accessoryLeft={() =>
+                  isVerifying ? <LoadingIndicator /> : <></>
+                }
               >
-                {isVerifying ? (
-                  <View style={styles.loaderContainer}>
-                    <ActivityIndicator size="small" color="#ffffff" />
-                    <Text style={styles.loaderText}>Verifying...</Text>
-                  </View>
-                ) : (
-                  <Text
-                    style={[
-                      styles.sendButtonText,
-                      otpCode.length === 6
-                        ? styles.sendButtonTextActive
-                        : styles.sendButtonTextDisabled,
-                    ]}
-                  >
-                    Verify & Continue
-                  </Text>
-                )}
-              </TouchableOpacity>
+                {isVerifying ? "Verifying..." : "Verify & Continue"}
+              </Button>
 
-              <TouchableOpacity
+              <Button
                 onPress={handleResendOtp}
                 disabled={resendTimer > 0 || isLoading}
-                style={[
-                  styles.resendButton,
-                  resendTimer > 0 || isLoading
-                    ? styles.resendButtonDisabled
-                    : styles.resendButtonActive,
-                ]}
+                appearance="outline"
+                style={styles.resendButton}
+                size="large"
               >
-                {isLoading ? (
-                  <View style={styles.resendLoaderContainer}>
-                    <ActivityIndicator size="small" color="#9ca3af" />
-                    <Text style={styles.resendLoaderText}>Resending...</Text>
-                  </View>
-                ) : (
-                  <Text
-                    style={[
-                      styles.resendButtonText,
-                      resendTimer > 0
-                        ? styles.resendButtonTextDisabled
-                        : styles.resendButtonTextActive,
-                    ]}
-                  >
-                    {resendTimer > 0
-                      ? `Resend OTP in ${resendTimer}s`
-                      : "Resend OTP"}
-                  </Text>
-                )}
-              </TouchableOpacity>
-            </>
+                {isLoading
+                  ? "Resending..."
+                  : resendTimer > 0
+                  ? `Resend OTP in ${resendTimer}s`
+                  : "Resend OTP"}
+              </Button>
+            </Layout>
           )}
 
           {/* Security Info */}
-          <View style={styles.securityContainer}>
-            <View style={styles.securityRow}>
+          <Layout
+            style={[
+              styles.securityContainer,
+              { backgroundColor: "transparent" },
+            ]}
+          >
+            <Layout
+              style={[styles.securityRow, { backgroundColor: "transparent" }]}
+            >
               <Ionicons name="shield-checkmark" size={16} color="#3B82F6" />
-              <Text style={styles.securityText}>
+              <Text category="c1" appearance="hint" style={styles.securityText}>
                 Your information is secure and encrypted
               </Text>
-            </View>
+            </Layout>
 
-            <Text style={styles.disclaimerText}>
+            <Text category="c1" appearance="hint" style={styles.disclaimerText}>
               You agree to{" "}
-              <Pressable onPress={() => console.log("TnC pressed")}>
-                <Text style={styles.linkText}>TnC</Text>
-              </Pressable>{" "}
+              <Link href="https://expo.dev" style={styles.linkText}>
+                TnC
+              </Link>{" "}
               and{" "}
-              <Pressable onPress={() => console.log("Privacy Policy pressed")}>
-                <Text style={styles.linkText}>Privacy Policy</Text>
-              </Pressable>{" "}
+              <Link href="https://expo.dev" style={styles.linkText}>
+                Privacy Policy
+              </Link>{" "}
               by proceeding.
             </Text>
-          </View>
-        </View>
+          </Layout>
+        </Layout>
       </ScrollView>
-    </View>
+    </Layout>
   );
 }
 
@@ -351,7 +312,6 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
-    backgroundColor: "rgb(255, 255, 255)",
   },
   gradient: {
     flex: 1,
@@ -371,187 +331,59 @@ const styles = StyleSheet.create({
     flexGrow: 1,
     justifyContent: "center",
   },
-  card: {
+  contentContainer: {
     padding: 24,
-    backgroundColor: "#ffffff",
-    borderRadius: 16,
+    backgroundColor: "transparent",
   },
   titleContainer: {
     alignItems: "center",
     marginBottom: 32,
   },
   title: {
-    fontSize: 24,
-    fontWeight: "bold",
-    color: "#1a1a1a",
     textAlign: "center",
     marginBottom: 8,
   },
   subtitle: {
-    fontSize: 14,
-    color: "#666",
     textAlign: "center",
-    lineHeight: 20,
   },
   inputRow: {
     flexDirection: "row",
     gap: 12,
     marginBottom: 24,
   },
-  countryPickerContainer: {
-    position: "relative",
-  },
-  countryPicker: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    backgroundColor: "#ffffff",
-    borderWidth: 1,
-    borderColor: "#d1d5db",
-    borderRadius: 8,
-    minWidth: 80,
-  },
-  countryCode: {
-    color: "#1a1a1a",
-    fontWeight: "500",
-  },
-  countryDropdown: {
-    position: "absolute",
-    top: "100%",
-    left: 0,
-    right: 0,
-    marginTop: 4,
-    backgroundColor: "#ffffff",
-    borderWidth: 1,
-    borderColor: "#d1d5db",
-    borderRadius: 8,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 5,
-    zIndex: 10,
-  },
-  countryOption: {
-    flexDirection: "row",
-    alignItems: "center",
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    borderBottomWidth: 1,
-    borderBottomColor: "#f3f4f6",
-  },
-  flag: {
-    fontSize: 18,
-    marginRight: 8,
-  },
-  countryCodeText: {
-    color: "#1a1a1a",
-    fontWeight: "500",
+  countrySelect: {
+    minWidth: 100,
   },
   phoneInput: {
     flex: 1,
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    backgroundColor: "#ffffff",
-    borderWidth: 1,
-    borderColor: "#d1d5db",
-    borderRadius: 8,
-    color: "#1a1a1a",
   },
   sendButton: {
-    width: "100%",
-    paddingVertical: 16,
-    borderRadius: 8,
-    marginBottom: 24,
+    marginBottom: 16,
   },
-  sendButtonActive: {
-    backgroundColor: "#3b82f6",
-  },
-  sendButtonDisabled: {
-    backgroundColor: "#d1d5db",
-  },
-  sendButtonText: {
-    textAlign: "center",
-    fontWeight: "600",
-    fontSize: 16,
-  },
-  sendButtonTextActive: {
-    color: "#ffffff",
-  },
-  sendButtonTextDisabled: {
-    color: "#9ca3af",
-  },
-  securityContainer: {
-    alignItems: "center",
+  buttonContainer: {
     gap: 12,
   },
   resendButton: {
-    width: "100%",
-    paddingVertical: 16,
-    borderRadius: 8,
-    marginBottom: 24,
-    borderWidth: 1,
+    marginBottom: 16,
   },
-  resendButtonActive: {
-    backgroundColor: "transparent",
-    borderColor: "#d1d5db",
-  },
-  resendButtonDisabled: {
-    backgroundColor: "#f9fafb",
-    borderColor: "#e5e7eb",
-  },
-  resendButtonText: {
-    textAlign: "center",
-    fontWeight: "600",
-    fontSize: 16,
-  },
-  resendButtonTextActive: {
-    color: "#374151",
-  },
-  resendButtonTextDisabled: {
-    color: "#9ca3af",
-  },
-  loaderContainer: {
-    flexDirection: "row",
+  securityContainer: {
     alignItems: "center",
-    justifyContent: "center",
-    gap: 8,
-  },
-  loaderText: {
-    color: "#ffffff",
-    fontSize: 16,
-    fontWeight: "600",
-  },
-  resendLoaderContainer: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    gap: 8,
-  },
-  resendLoaderText: {
-    color: "#9ca3af",
-    fontSize: 16,
-    fontWeight: "600",
+    marginTop: 24,
+    gap: 12,
   },
   securityRow: {
     flexDirection: "row",
     alignItems: "center",
   },
   securityText: {
-    fontSize: 12,
-    color: "#666",
     marginLeft: 8,
   },
   disclaimerText: {
-    fontSize: 12,
-    color: "#9ca3af",
     textAlign: "center",
-    lineHeight: 16,
   },
   linkText: {
-    color: "#3b82f6",
+    color: "#3B82F6",
+    textDecorationLine: "underline",
     fontSize: 12,
   },
   otpContainer: {

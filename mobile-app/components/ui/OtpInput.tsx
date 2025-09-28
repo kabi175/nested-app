@@ -1,5 +1,6 @@
+import { Input, Layout } from "@ui-kitten/components";
 import React, { useRef, useState } from "react";
-import { StyleSheet, TextInput, View } from "react-native";
+import { StyleSheet } from "react-native";
 
 interface OtpInputProps {
   length?: number;
@@ -15,7 +16,7 @@ export const OtpInput: React.FC<OtpInputProps> = ({
   disabled = false,
 }) => {
   const [code, setCode] = useState<string[]>(new Array(length).fill(""));
-  const otpRefs = useRef<TextInput[]>([]);
+  const otpRefs = useRef<any[]>([]);
 
   const handleOtpChange = (value: string, index: number) => {
     const newCode = [...code];
@@ -44,9 +45,9 @@ export const OtpInput: React.FC<OtpInputProps> = ({
   };
 
   return (
-    <View style={styles.container}>
+    <Layout style={styles.container}>
       {code.map((digit, index) => (
-        <TextInput
+        <Input
           key={index}
           ref={(ref) => {
             if (ref) otpRefs.current[index] = ref;
@@ -65,10 +66,11 @@ export const OtpInput: React.FC<OtpInputProps> = ({
           maxLength={1}
           textAlign="center"
           selectTextOnFocus
-          editable={!disabled}
+          disabled={disabled}
+          size="large"
         />
       ))}
-    </View>
+    </Layout>
   );
 };
 
@@ -76,30 +78,23 @@ const styles = StyleSheet.create({
   container: {
     flexDirection: "row",
     justifyContent: "space-between",
-    gap: 6,
+    gap: 8,
+    backgroundColor: "transparent",
   },
   otpInputBox: {
-    width: 48,
-    height: 48,
-    borderWidth: 2,
-    borderRadius: 8,
+    width: 50,
+    height: 50,
+    textAlign: "center",
     fontSize: 20,
     fontWeight: "600",
-    textAlign: "center",
   },
   otpInputBoxEmpty: {
-    borderColor: "#d1d5db",
-    backgroundColor: "#ffffff",
-    color: "#1a1a1a",
+    // UI Kitten handles default styling
   },
   otpInputBoxFilled: {
-    borderColor: "#3b82f6",
-    backgroundColor: "#f0f9ff",
-    color: "#1a1a1a",
+    // UI Kitten handles filled state styling
   },
   otpInputBoxDisabled: {
-    backgroundColor: "#f9fafb",
-    borderColor: "#e5e7eb",
-    color: "#9ca3af",
+    // UI Kitten handles disabled state styling
   },
 });
