@@ -11,6 +11,9 @@ import "react-native-reanimated";
 import AuthProvider, { useAuth } from "@/components/auth";
 import { useColorScheme } from "@/hooks/useColorScheme";
 import { QueryProvider } from "@/providers/QueryProvider";
+import * as eva from "@eva-design/eva";
+import { ApplicationProvider } from "@ui-kitten/components";
+import React from "react";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 
 export default function RootLayout() {
@@ -25,18 +28,20 @@ export default function RootLayout() {
   }
 
   return (
-    <QueryProvider>
-      <AuthProvider>
-        <ThemeProvider
-          value={colorScheme === "dark" ? DarkTheme : DefaultTheme}
-        >
-          <SafeAreaProvider>
-            <RootNavigator />
-          </SafeAreaProvider>
-          <StatusBar style="auto" />
-        </ThemeProvider>
-      </AuthProvider>
-    </QueryProvider>
+    <ApplicationProvider {...eva} theme={eva.light}>
+      <QueryProvider>
+        <AuthProvider>
+          <ThemeProvider
+            value={colorScheme === "dark" ? DarkTheme : DefaultTheme}
+          >
+            <SafeAreaProvider>
+              <RootNavigator />
+            </SafeAreaProvider>
+            <StatusBar style="auto" />
+          </ThemeProvider>
+        </AuthProvider>
+      </QueryProvider>
+    </ApplicationProvider>
   );
 }
 
