@@ -333,7 +333,7 @@ components:
             - male
             - female
             - other
-        is_minor_investor:
+        invest_under_child:
           type: boolean
         user:
           type: object
@@ -413,9 +413,6 @@ components:
         user:
           type: object
           $ref: '#/components/schemas/MinifiedUser'
-        child:
-          type: object
-          $ref: '#/components/schemas/Child'
 
     Basket:
       type: object
