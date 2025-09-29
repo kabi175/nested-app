@@ -70,14 +70,104 @@ paths:
                     type: array
                     items:
                       $ref: '#/components/schemas/MinifiedUser'
+  /children:
+    get:
+      summary: Get all children
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Child'
+    post:
+      summary: Create a new child
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                data:
+                  type: array
+                  items:
+                    $ref: '#/components/schemas/Child'
+      responses:
+        '201':
+          description: Child created
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Child'
+    put:
+      summary: Update an existing child
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                data:
+                  type: array
+                  items:
+                    $ref: '#/components/schemas/Child'
+      responses:
+        '200':
+          description: Child updated
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Child'
+
 components:
   schemas:
+    Child:
+      type: object
+      properties:
+        id:
+          type: string
+          format: number
+        first_name:
+          type: string
+        last_name:
+          type: string
+        dob:
+          type: string
+          format: date
+        gender:
+          type: string
+          enum:
+            - male
+            - female
+            - other
+        is_minor_investor:
+          type: boolean
+        user:
+          type: object
+          $ref: '#/components/schemas/MinifiedUser'
     User:
       type: object
       properties:
         id:
           type: integer
-        nickname:
+        name:
           type: string
         email:
           type: string
@@ -86,3 +176,5 @@ components:
       properties:
         id:
           type: integer
+        name:
+          type: string
