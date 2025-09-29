@@ -1,8 +1,8 @@
-package com.nested.app.services;
+package com.nested.app.client.tarrakki;
 
-import com.nested.app.dto.BankAccountRequest;
-import com.nested.app.dto.NomineeRequest;
-import com.nested.app.dto.TarrakkiInvestorRequest;
+import com.nested.app.client.tarrakki.dto.BankAccountRequest;
+import com.nested.app.client.tarrakki.dto.NomineeRequest;
+import com.nested.app.client.tarrakki.dto.TarrakkiInvestorRequest;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.*;
 import org.springframework.stereotype.Service;
@@ -11,7 +11,7 @@ import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.RestTemplate;
 
 @Service
-public class TarrakkiInvestorService {
+public class InvestorAPIClient {
   private final RestTemplate restTemplate = new RestTemplate();
 
   // TODO: handle authentication, error handling, logging, etc.

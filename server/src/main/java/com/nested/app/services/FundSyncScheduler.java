@@ -1,28 +1,26 @@
 package com.nested.app.services;
 
-import com.nested.app.dto.FundDTO;
-import com.nested.app.dto.FundResponse;
+import com.nested.app.client.tarrakki.FundAPIClient;
+import com.nested.app.client.tarrakki.dto.FundDTO;
+import com.nested.app.client.tarrakki.dto.FundResponse;
 import com.nested.app.entity.Fund;
 import com.nested.app.repository.FundRepository;
 import java.sql.Timestamp;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
+import lombok.AllArgsConstructor;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
+@AllArgsConstructor
 @Service
 public class FundSyncScheduler {
-  private final FundService fundService;
+  private final FundAPIClient fundAPIClient;
   private final FundRepository fundRepository;
-
-  public FundSyncScheduler(FundService fundService, FundRepository fundRepository) {
-    this.fundService = fundService;
-    this.fundRepository = fundRepository;
-  }
 
   @Scheduled(cron = "0 0 2 * * *") // Runs daily at 2 AM
   public void syncFunds() {
-    FundResponse response = fundService.fetchFundsList();
+    FundResponse response = fundAPIClient.fetchFundsList();
     if (response != null && response.getResults() != null) {
       for (FundDTO dto : response.getResults()) {
         Long fundId = Long.valueOf(dto.getId());

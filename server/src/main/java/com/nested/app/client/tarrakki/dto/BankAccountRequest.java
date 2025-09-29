@@ -1,4 +1,4 @@
-package com.nested.app.dto;
+package com.nested.app.client.tarrakki.dto;
 
 import lombok.Data;
 import org.springframework.web.multipart.MultipartFile;
