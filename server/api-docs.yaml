@@ -283,6 +283,35 @@ paths:
                     type: array
                     items:
                       $ref: '#/components/schemas/Order'
+  /bucket/{id}:
+    get:
+      summary: Get basket details by ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Basket details
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/Basket'
+        '404':
+          description: Basket not found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: Basket not found
 components:
   schemas:
     Child:
@@ -476,4 +505,3 @@ components:
             - active
             - completed
             - cancelled
-
