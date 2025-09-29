@@ -135,7 +135,6 @@ paths:
                     type: array
                     items:
                       $ref: '#/components/schemas/Child'
-
 components:
   schemas:
     Child:
@@ -178,3 +177,146 @@ components:
           type: integer
         name:
           type: string
+
+    Fund:
+      type: object
+      properties:
+        id:
+          type: string
+          format: number
+        code: # this fund_id from tarrakki API
+          type: string
+        name:
+          type: string
+        display_name:
+          type: string
+        description:
+          type: string
+        min_amount:
+          type: number
+          format: float
+        nav:
+          type: number
+          format: float
+        is_active:
+          type: boolean
+
+    Order:
+      type: object
+      properties:
+        id:
+          type: string
+          format: number
+        order_date:
+          type: string
+          format: date
+        amount:
+          type: number
+          format: float
+        type:
+          type: string
+          enum:
+            - buy
+            - sell
+            - sip
+        status:
+          type: string
+          enum:
+            - pending
+            - completed
+            - failed
+            - cancelled
+            - active
+        fund:
+          type: object
+          $ref: '#/components/schemas/Fund'
+        monthly_sip:
+          type: number
+          format: float
+        user:
+          type: object
+          $ref: '#/components/schemas/MinifiedUser'
+        child:
+          type: object
+          $ref: '#/components/schemas/Child'
+
+    Basket:
+      type: object
+      properties:
+        id:
+          type: string
+          format: number
+        title:
+          type: string
+        funds:
+          type: array
+          items:
+            type: object
+            properties:
+              fund:
+                type: object
+                $ref: '#/components/schemas/Fund'
+              allocation_percentage:
+                type: number
+                format: float
+
+    Holding:
+      type: object
+      properties:
+        id:
+          type: string
+          format: number
+        units:
+          type: number
+          format: float
+        invested_amount:
+          type: number
+          format: float
+        current_value:
+          type: number
+          format: float
+        order:
+          type: object
+          $ref: '#/components/schemas/Order'
+        order_allocation_percentage:
+          type: number
+          format: float
+        goal:
+          type: object
+          $ref: '#/components/schemas/Goal'
+        fund:
+          type: object
+          $ref: '#/components/schemas/Fund'
+        user:
+          type: object
+          $ref: '#/components/schemas/MinifiedUser'
+        child:
+          type: object
+          $ref: '#/components/schemas/Child'
+
+    Goal:
+      type: object
+      properties:
+        id:
+          type: string
+          format: number
+        title:
+          type: string
+        target_amount:
+          type: number
+          format: float
+        current_amount:
+          type: number
+          format: float
+        target_date:
+          type: string
+          format: date
+        basket:
+          type: object
+          $ref: '#/components/schemas/Basket'
+        user:
+          type: object
+          $ref: '#/components/schemas/MinifiedUser'
+        child:
+          type: object
+          $ref: '#/components/schemas/Child'
