@@ -33,12 +33,12 @@ public class User {
     @Email(message = "Invalid email format")
     private String email;
 
-    // we are supporting phone number update
-    @Column(unique = true, nullable = false, updatable = false)
-    private String phoneNumber;
+  // we are supporting phone number update
+  @Column(unique = true, nullable = false, updatable = false)
+  private String phoneNumber;
 
-    @Column(unique = true, nullable = false, updatable = false)
-    private String firebaseUid;
+  @Column(unique = true, nullable = false, updatable = false)
+  private String firebaseUid;
 
     @CreationTimestamp
     @Column(nullable = false, updatable = false)
@@ -48,14 +48,14 @@ public class User {
     @Column(nullable = false)
     private Timestamp updatedAt;
 
-    // admin only has write access
-    @Column(nullable = false)
-    private boolean isActive = true;
+  // admin only has write access
+  @Column(nullable = false)
+  private boolean isActive = true;
 
-    // admin only has write access
-    @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
-    private Role role = Role.STANDARD;
+  // admin only has write access
+  @Enumerated(EnumType.STRING)
+  @Column(nullable = false)
+  private Role role = Role.STANDARD;
 
     public static enum Role {
     STANDARD,
