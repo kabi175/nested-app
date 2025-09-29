@@ -28,7 +28,7 @@ public class User {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    private String nickname;
+  private String name;
 
     @Email(message = "Invalid email format")
     private String email;

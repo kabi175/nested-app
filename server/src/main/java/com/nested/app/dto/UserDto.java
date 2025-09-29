@@ -12,7 +12,7 @@ import lombok.NoArgsConstructor;
 public class UserDto {
   private String id;
 
-  private String nickname;
+  private String name;
 
   private String email;
 
@@ -24,7 +24,7 @@ public class UserDto {
   public static UserDto fromEntity(User entity) {
     return new UserDto(
         entity.getId().toString(),
-        entity.getNickname(),
+        entity.getName(),
         entity.getEmail(),
         entity.getPhoneNumber(),
         entity.getRole().name().toLowerCase());
@@ -33,7 +33,7 @@ public class UserDto {
   public static User fromDto(UserDto dto) {
     User user = new User();
     user.setId(dto.getId() != null ? Long.parseLong(dto.getId()) : null);
-    user.setNickname(dto.getNickname());
+    user.setName(dto.getName());
     user.setEmail(dto.getEmail());
     user.setPhoneNumber(dto.getPhoneNumber());
     if (dto.getRole() != null) {

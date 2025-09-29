@@ -56,7 +56,7 @@ public class UserContextFilter extends OncePerRequestFilter {
     user.setFirebaseUid(auth.getPrincipal().toString());
     user.setEmail(userRecord.getEmail());
     user.setPhoneNumber(userRecord.getPhoneNumber());
-    user.setNickname(userRecord.getDisplayName());
+    user.setName(userRecord.getDisplayName());
 
     userRepository.save(user);
     return user;

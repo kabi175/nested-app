@@ -42,7 +42,7 @@ public class UserController {
   public ResponseEntity<User> updateUser() {
     User user = new User();
     user.setId(1L);
-    user.setNickname("John Doe");
+    user.setName("John Doe");
     return ResponseEntity.ok(user);
   }
 }
