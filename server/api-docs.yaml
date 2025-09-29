@@ -1,0 +1,88 @@
+openapi: "3.0.2"
+info:
+  title: Nested REST APIs
+  version: "1.0"
+servers:
+  - url: https://api.server.test/api/v1
+paths:
+  /users:
+    get:
+      summary: Get all users
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/User'
+    post:
+      summary: Create a new user
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                data:
+                  type: array
+                  items:
+                    $ref: '#/components/schemas/User'
+      responses:
+        '201':
+          description: User created
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/MinifiedUser'
+    put:
+      summary: Update an existing user
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                data:
+                  type: array
+                  items:
+                    $ref: '#/components/schemas/User'
+      responses:
+        '200':
+          description: User updated
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/MinifiedUser'
+components:
+  schemas:
+    User:
+      type: object
+      properties:
+        id:
+          type: integer
+        nickname:
+          type: string
+        email:
+          type: string
+    MinifiedUser:
+      type: object
+      properties:
+        id:
+          type: integer
