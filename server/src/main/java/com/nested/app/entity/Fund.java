@@ -4,11 +4,10 @@ import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
+import java.sql.Timestamp;
 import lombok.Data;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
-
-import java.sql.Timestamp;
 
 @Data
 @Entity
@@ -35,25 +34,11 @@ public class Fund {
     @Column(nullable = false)
     private Double mimPurchaseAmount;
 
-    private Double maxPurchaseAmount;
-
     @Column(nullable = false)
     private Double mimAdditionalPurchaseAmount;
 
     @Column(nullable = false)
-    private Double maxAdditionalPurchaseAmount;
-
-    @Column(nullable = false)
     private boolean isActive = false;
-
-    @Column(nullable = false)
-    private boolean isAmcActive = false;
-
-    @Column(nullable = false)
-    private boolean isPurchaseAllowed = false;
-
-    @Column(nullable = false)
-    private boolean isSipAllowed = false;
 
     @Column(nullable = false)
     private String isinCode;
@@ -65,8 +50,6 @@ public class Fund {
     private String amcCode;
 
     private String schemeType;
-
-    private String settlementType;
 
     @CreationTimestamp
     @Column(nullable = false, updatable = false)
