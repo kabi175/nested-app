@@ -1,7 +1,7 @@
 package com.nested.app.controllers;
 
 import com.nested.app.dto.Entity;
-import com.nested.app.dto.UserDto;
+import com.nested.app.dto.UserDTO;
 import com.nested.app.entity.User;
 import com.nested.app.services.UserService;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -29,7 +29,7 @@ public class UserController {
   private final UserService userService;
 
   @GetMapping(produces = MediaType.APPLICATION_JSON_VALUE)
-  public ResponseEntity<Entity<UserDto>> getUsers(
+  public ResponseEntity<Entity<UserDTO>> getUsers(
       @RequestParam UserService.Type type, @PageableDefault(sort = "id") Pageable pageable) {
     var users = userService.findAllUsers(type, pageable);
     if (users.isEmpty()) {

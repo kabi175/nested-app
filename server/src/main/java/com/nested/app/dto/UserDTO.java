@@ -9,7 +9,7 @@ import lombok.NoArgsConstructor;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class UserDto {
+public class UserDTO {
   private String id;
 
   private String name;
@@ -21,8 +21,8 @@ public class UserDto {
 
   private String role;
 
-  public static UserDto fromEntity(User entity) {
-    return new UserDto(
+  public static UserDTO fromEntity(User entity) {
+    return new UserDTO(
         entity.getId().toString(),
         entity.getName(),
         entity.getEmail(),
@@ -30,7 +30,7 @@ public class UserDto {
         entity.getRole().name().toLowerCase());
   }
 
-  public static User fromDto(UserDto dto) {
+  public static User fromDto(UserDTO dto) {
     User user = new User();
     user.setId(dto.getId() != null ? Long.parseLong(dto.getId()) : null);
     user.setName(dto.getName());
