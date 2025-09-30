@@ -34,6 +34,13 @@ public class Investor {
 
     private String lastName;
 
+    @Column(nullable = false)
+    private String email;
+
+    private String birthPlace;
+
+    private String birthCountry;
+
     @Column(nullable = false, unique = true)
     private String clientCode;
 
@@ -64,6 +71,8 @@ public class Investor {
 
     @OneToMany
     private List<BankDetail> bankDetails;
+
+    private Address address;
 
     @CreationTimestamp
     @Column(nullable = false, updatable = false)

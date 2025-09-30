@@ -47,10 +47,10 @@ public class FundServiceImpl implements FundService {
             if (idVsFunds.containsKey(fund.getId())) {
                 var existingFund = idVsFunds.get(fund.getId());
                 existingFund.setIsinCode(fund.getIsinCode());
-                existingFund.setPurchaseAllowed(fund.isPurchaseAllowed());
+//                existingFund.setPurchaseAllowed(fund.isPurchaseAllowed());
                 existingFund.setMimPurchaseAmount(fund.getMimPurchaseAmount());
                 existingFund.setMimAdditionalPurchaseAmount(fund.getMimAdditionalPurchaseAmount());
-                existingFund.setMaxAdditionalPurchaseAmount(fund.getMaxAdditionalPurchaseAmount());
+//                existingFund.setMaxAdditionalPurchaseAmount(fund.getMaxAdditionalPurchaseAmount());
                 existingFund.setSchemeType(fund.getSchemeType());
                 existingFund.setAmcCode(fund.getAmcCode());
                 existingFund.setSchemeCode(fund.getSchemeCode());
@@ -95,13 +95,13 @@ public class FundServiceImpl implements FundService {
 
             fund.setMimPurchaseAmount(Double.parseDouble(fundData[minPurchaseAmountIndex].isBlank() ? "0.0" : fundData[minPurchaseAmountIndex]));
             fund.setMimAdditionalPurchaseAmount(Double.parseDouble(fundData[minAdditionalPurchaseAmountIndex].isBlank() ? "0.0" : fundData[minAdditionalPurchaseAmountIndex]));
-            fund.setMaxAdditionalPurchaseAmount(Double.parseDouble(fundData[maxAdditionalPurchaseAmountIndex].isBlank() ? "0.0" : fundData[maxAdditionalPurchaseAmountIndex]));
-            fund.setSettlementType(fundData[settlementTypeIndex]);
+//            fund.setMaxAdditionalPurchaseAmount(Double.parseDouble(fundData[maxAdditionalPurchaseAmountIndex].isBlank() ? "0.0" : fundData[maxAdditionalPurchaseAmountIndex]));
+//            fund.setSettlementType(fundData[settlementTypeIndex]);
             fund.setSchemeType(fundData[schemeTypeIndex]);
 
-            fund.setPurchaseAllowed(fundData[purchaseAllowanceIndex].equalsIgnoreCase("Y"));
-            fund.setAmcActive(fundData[amcActiveFlag].equalsIgnoreCase("Y"));
-            fund.setSipAllowed(fundData[sipAllowedIndex].equalsIgnoreCase("Y"));
+//            fund.setPurchaseAllowed(fundData[purchaseAllowanceIndex].equalsIgnoreCase("Y"));
+//            fund.setAmcActive(fundData[amcActiveFlag].equalsIgnoreCase("Y"));
+//            fund.setSipAllowed(fundData[sipAllowedIndex].equalsIgnoreCase("Y"));
             return fund;
         }).toList();
     }

@@ -89,19 +89,19 @@ public class OrderServiceImpl implements OrderService {
     private void handleOrderResponse(BuySellRequest response, List<? extends Order> orders) {
         response.getTransactionDetails().forEach(orderDetail -> {
             var order = orders.stream().filter(o -> Objects.equals(o.getId(), Long.parseLong(orderDetail.getRefID()))).findFirst().orElseThrow();
-            order.setTxnID(orderDetail.getTrxnOrderId());
+//            order.setTxnID(orderDetail.getTrxnOrderId());
 
-            if (Objects.equals(orderDetail.getTrxnStatus(), ORDER_ENTRY_SUCCESS_STATUS)) {
-                order.setStatus(Order.OrderStatus.PLACED);
-            } else {
-                order.setStatus(Order.OrderStatus.FAILED);
-            }
+//            if (Objects.equals(orderDetail.getTrxnStatus(), ORDER_ENTRY_SUCCESS_STATUS)) {
+//                order.setStatus(Order.OrderStatus.PLACED);
+//            } else {
+//                order.setStatus(Order.OrderStatus.FAILED);
+//            }
         });
 
         orderLogRepository.saveAll(orders.stream().map(order -> {
             var log = new com.nested.app.entity.OrderLog();
             log.setOrder(order);
-            log.setStatus(order.getStatus());
+//            log.setStatus(order.getStatus());
             return log;
         }).toList());
 

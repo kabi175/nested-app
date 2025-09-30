@@ -51,6 +51,10 @@ dependencies {
 	
 	testImplementation("org.springframework.boot:spring-boot-starter-test")
 	testImplementation("org.springframework.security:spring-security-test")
+	testImplementation("org.flywaydb:flyway-core")
+	testImplementation("org.flywaydb:flyway-database-postgresql")
+	testImplementation("org.postgresql:postgresql")
+	testImplementation("org.assertj:assertj-core:3.24.2")
 	testRuntimeOnly("org.junit.platform:junit-platform-launcher")
 }
 
