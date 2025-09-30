@@ -1,52 +1,39 @@
 package com.nested.app.entity;
 
-import com.nested.app.annotation.ActiveFundOnly;
-import jakarta.persistence.Column;
-import jakarta.persistence.DiscriminatorColumn;
-import jakarta.persistence.DiscriminatorType;
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.ManyToOne;
-import jakarta.persistence.Table;
+import jakarta.persistence.*;
+import java.sql.Date;
+import java.sql.Timestamp;
 import lombok.Data;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
-import java.sql.Timestamp;
-
 @Data
 @Entity
-@DiscriminatorColumn(name = "order_type", discriminatorType = DiscriminatorType.STRING)
-@Table(name = "orders")
+@Table(name = "order")
 public class Order {
+  @Id private String id;
 
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+  @Column(nullable = false)
+  private Date orderDate;
 
+  @Column(nullable = false)
+  private Double amount;
 
-    private String folioNumber;
+  @Column(nullable = false)
+  private String type;
 
-    @ActiveFundOnly
-    @ManyToOne
-    @JoinColumn(name = "fund_id", nullable = false)
-    private Fund fund;
+  @Column(nullable = false)
+  private String status;
 
-    @Column(nullable = false)
-    private String txnID;
+  @ManyToOne
+  @JoinColumn(name = "fund_id")
+  private Fund fund;
 
-    @ManyToOne
-    @JoinColumn(name = "investor_id", nullable = false)
-    private Investor investor;
+  @Column private Double monthlySip;
 
-    @ManyToOne
-    @JoinColumn(name = "user_id", nullable = false)
-    private User user;
-
-    private String paymentUrl;
+  @Column(nullable = false)
+  @JoinColumn(name = "user_id")
+  private User user;
 
     @CreationTimestamp
     @Column(nullable = false, updatable = false)
@@ -56,10 +43,9 @@ public class Order {
     @Column(nullable = false)
     private Timestamp updatedAt;
 
-    @Column(nullable = false)
-    private OrderStatus status = OrderStatus.CREATED;
+  @Column private String folio;
 
-    public static enum OrderStatus {
+  public enum OrderStatus {
         CREATED,
         PLACED,
         COMPLETED,
