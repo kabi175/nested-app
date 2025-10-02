@@ -19,7 +19,7 @@ public class TarrakkiAPI {
   @Value("${tarrakki.api.base-url}")
   private final String baseUrl;
 
-  private WebClient withAuth() {
+  public WebClient withAuth() {
     String token = tokenProvider.getToken();
     var authToken = "Bearer " + token;
     return WebClient.builder()

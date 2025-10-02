@@ -20,7 +20,7 @@ public class FundSyncScheduler {
 
   @Scheduled(cron = "0 0 2 * * *") // Runs daily at 2 AM
   public void syncFunds() {
-    FundResponse response = fundAPIClient.fetchFundsList();
+    FundResponse response = fundAPIClient.fetchFundsList().block();
     if (response != null && response.getResults() != null) {
       for (FundDTO dto : response.getResults()) {
         Long fundId = Long.valueOf(dto.getId());

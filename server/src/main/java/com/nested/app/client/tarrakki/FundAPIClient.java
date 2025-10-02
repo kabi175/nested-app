@@ -1,22 +1,20 @@
 package com.nested.app.client.tarrakki;
 
 import com.nested.app.client.tarrakki.dto.FundResponse;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.ResponseEntity;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
-import org.springframework.web.client.RestTemplate;
+import reactor.core.publisher.Mono;
 
 @Service
+@RequiredArgsConstructor
 public class FundAPIClient {
-  private final RestTemplate restTemplate = new RestTemplate();
-  @Value("${tarrakki.api.funds.url}")
-  private String fundsApiUrl;
+  private static final String fundsApiUrl = "/funds";
+
+  private final TarrakkiAPI tarrakkiAPI;
 
   // TODO: handle authentication, error handling, logging, etc.
 
-  public FundResponse fetchFundsList() {
-    ResponseEntity<FundResponse> response =
-        restTemplate.getForEntity(fundsApiUrl, FundResponse.class);
-    return response.getBody();
+  public Mono<FundResponse> fetchFundsList() {
+    return tarrakkiAPI.withAuth().get().uri(fundsApiUrl).retrieve().bodyToMono(FundResponse.class);
   }
 }
