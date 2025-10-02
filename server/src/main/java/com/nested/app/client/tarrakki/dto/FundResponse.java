@@ -9,4 +9,12 @@ public class FundResponse {
   private List<FundDTO> results;
   private String next;
   private String previous;
+
+  public boolean hasNext() {
+    return next != null && !next.isEmpty();
+  }
+
+  public boolean hasPrevious() {
+    return previous != null && !previous.isEmpty();
+  }
 }

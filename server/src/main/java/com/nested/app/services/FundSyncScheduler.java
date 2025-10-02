@@ -20,20 +20,28 @@ public class FundSyncScheduler {
 
   @Scheduled(cron = "0 0 2 * * *") // Runs daily at 2 AM
   public void syncFunds() {
-    FundResponse response = fundAPIClient.fetchFundsList().block();
-    if (response != null && response.getResults() != null) {
-      for (FundDTO dto : response.getResults()) {
-        Long fundId = Long.valueOf(dto.getId());
-        Fund fund = fundRepository.findById(fundId).orElse(null);
-        if (fund != null) {
-          // Update only nav and navDate
-          fund.setNav(dto.getNav());
-          fund.setNavDate(parseDate(dto.getNav_date()));
-        } else {
-          fund = mapToFund(dto);
+    var pageable = org.springframework.data.domain.PageRequest.of(0, 100);
+    var hasMore = true;
+    while (hasMore) {
+      FundResponse response = fundAPIClient.fetchFundsList(pageable).block();
+      hasMore = response != null && response.hasNext();
+      pageable = pageable.next();
+
+      if (response != null && response.getResults() != null) {
+        for (FundDTO dto : response.getResults()) {
+          Long fundId = Long.valueOf(dto.getId());
+          Fund fund = fundRepository.findById(fundId).orElse(null);
+          if (fund != null) {
+            // Update only nav and navDate
+            fund.setNav(dto.getNav());
+            fund.setNavDate(parseDate(dto.getNav_date()));
+            fund.setActive(dto.getStatus().equalsIgnoreCase("active"));
+          } else {
+            fund = mapToFund(dto);
+          }
+          // TODO: handle bulk save
+          fundRepository.save(fund);
         }
-        // TODO: handle bulk save
-        fundRepository.save(fund);
       }
     }
   }
