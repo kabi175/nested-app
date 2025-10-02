@@ -8,6 +8,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import lombok.RequiredArgsConstructor;
+import org.springdoc.api.OpenApiResourceNotFoundException;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
@@ -46,10 +47,19 @@ public class UserServiceImpl implements UserService {
 
   @Override
   public UserDTO updateUser(UserDTO userDTO) {
+    Long userId = userDTO.getId() != null ? Long.parseLong(userDTO.getId()) : null;
+
+    if (userId == null) {
+      throw new IllegalArgumentException("User ID must be provided for update");
+    }
+
     User user =
         userRepository
-            .findById(userDTO.getId() != null ? Long.parseLong(userDTO.getId()) : null)
-            .orElseThrow(() -> new IllegalArgumentException("User not found"));
+            .findById(userId)
+            .orElseThrow(
+                () ->
+                    new OpenApiResourceNotFoundException("User with id " + userId + " not found"));
+
     user.setName(userDTO.getName());
     user.setEmail(userDTO.getEmail());
     user.setPhoneNumber(userDTO.getPhoneNumber());

@@ -2,7 +2,6 @@ package com.nested.app.controllers;
 
 import com.nested.app.dto.Entity;
 import com.nested.app.dto.UserDTO;
-import com.nested.app.entity.User;
 import com.nested.app.services.UserService;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.AllArgsConstructor;
@@ -38,11 +37,15 @@ public class UserController {
     return ResponseEntity.ok(Entity.of(users));
   }
 
-  @PatchMapping
-  public ResponseEntity<User> updateUser() {
-    User user = new User();
-    user.setId(1L);
-    user.setName("John Doe");
-    return ResponseEntity.ok(user);
+  @PatchMapping(
+      path = "/{id}",
+      consumes = MediaType.APPLICATION_JSON_VALUE,
+      produces = MediaType.APPLICATION_JSON_VALUE)
+  public ResponseEntity<UserDTO> updateUser(
+      @RequestParam Long id,
+      @Validated @org.springframework.web.bind.annotation.RequestBody UserDTO userDTO) {
+    userDTO.setId(id.toString());
+    UserDTO updatedUser = userService.updateUser(userDTO);
+    return ResponseEntity.ok(updatedUser);
   }
 }
