@@ -1,15 +1,14 @@
 package com.nested.app.repository;
 
 import com.nested.app.entity.Investor;
+import java.util.Optional;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
-
-import java.util.List;
-import java.util.Optional;
 
 /**
  * Repository interface for Investor entity
@@ -63,13 +62,15 @@ public interface InvestorRepository extends JpaRepository<Investor, Long> {
      */
     Page<Investor> findByEmailContainingIgnoreCase(String email, Pageable pageable);
 
-    /**
-     * Custom query to find investors with their addresses and bank details
-     * @param investorId investor ID
-     * @return Optional investor with loaded relationships
-     */
-    @Query("SELECT i FROM Investor i LEFT JOIN FETCH i.addresses LEFT JOIN FETCH i.bankDetails WHERE i.id = :investorId")
-    Optional<Investor> findByIdWithDetails(@Param("investorId") Long investorId);
+  /**
+   * Custom query to find investors with their addresses and bank details
+   *
+   * @param investorId investor ID
+   * @return Optional investor with loaded relationships
+   */
+  @EntityGraph(attributePaths = {"address", "bankDetails"})
+  @Query("SELECT i FROM Investor i WHERE i.id = :id")
+  Optional<Investor> findByIdWithDetails(@Param("investorId") Long investorId);
 
     /**
      * Check if email exists for a different investor

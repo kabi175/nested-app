@@ -26,11 +26,11 @@ public class Goal {
   @JoinColumn(name = "basket_id")
   private Basket basket;
 
-  @Column(nullable = false)
+  @ManyToOne(optional = false)
   @JoinColumn(name = "user_id")
   private User user;
 
-  @Column
+  @ManyToOne
   @JoinColumn(name = "child_id")
   private Child child;
 

@@ -9,7 +9,7 @@ import org.hibernate.annotations.UpdateTimestamp;
 
 @Data
 @Entity
-@Table(name = "order")
+@Table(name = "orders")
 public class Order {
   @Id private String id;
 
@@ -31,7 +31,7 @@ public class Order {
 
   @Column private Double monthlySip;
 
-  @Column(nullable = false)
+  @ManyToOne(optional = false)
   @JoinColumn(name = "user_id")
   private User user;
 

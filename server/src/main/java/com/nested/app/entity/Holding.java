@@ -33,11 +33,11 @@ public class Holding {
   @JoinColumn(name = "fund_id")
   private Fund fund;
 
-  @Column(nullable = false)
+  @ManyToOne(optional = false)
   @JoinColumn(name = "user_id")
   private User userId;
 
-  @Column
+  @ManyToOne
   @JoinColumn(name = "child_id")
   private Child childId;
 }

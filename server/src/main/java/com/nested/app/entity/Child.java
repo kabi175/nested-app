@@ -25,7 +25,7 @@ public class Child {
   @Column(nullable = false)
   private boolean investUnderChild;
 
-  @Column(nullable = false)
+  @ManyToOne(optional = false)
   @JoinColumn(name = "user_id")
   private User user;
 }

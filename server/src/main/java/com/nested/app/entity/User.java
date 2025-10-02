@@ -24,14 +24,14 @@ import org.hibernate.annotations.UpdateTimestamp;
 @Filter(name = "userFilter", condition = "id = :userId")
 public class User {
 
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+  @Id
+  @GeneratedValue(strategy = GenerationType.IDENTITY)
+  private Long id;
 
   private String name;
 
-    @Email(message = "Invalid email format")
-    private String email;
+  @Email(message = "Invalid email format")
+  private String email;
 
   // we are supporting phone number update
   @Column(unique = true, nullable = false, updatable = false)
@@ -40,13 +40,13 @@ public class User {
   @Column(unique = true, nullable = false, updatable = false)
   private String firebaseUid;
 
-    @CreationTimestamp
-    @Column(nullable = false, updatable = false)
-    private Timestamp createdAt;
+  @CreationTimestamp
+  @Column(nullable = false, updatable = false)
+  private Timestamp createdAt;
 
-    @UpdateTimestamp
-    @Column(nullable = false)
-    private Timestamp updatedAt;
+  @UpdateTimestamp
+  @Column(nullable = false)
+  private Timestamp updatedAt;
 
   // admin only has write access
   @Column(nullable = false)
@@ -57,7 +57,7 @@ public class User {
   @Column(nullable = false)
   private Role role = Role.STANDARD;
 
-    public static enum Role {
+  public enum Role {
     STANDARD,
     ADMIN
   }

@@ -3,7 +3,6 @@ package com.nested.app.client.tarrakki;
 import com.nested.app.client.tarrakki.dto.BankAccountRequest;
 import com.nested.app.client.tarrakki.dto.NomineeRequest;
 import com.nested.app.client.tarrakki.dto.TarrakkiInvestorRequest;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.*;
 import org.springframework.stereotype.Service;
 import org.springframework.util.LinkedMultiValueMap;
@@ -15,8 +14,7 @@ public class InvestorAPIClient {
   private final RestTemplate restTemplate = new RestTemplate();
 
   // TODO: handle authentication, error handling, logging, etc.
-  @Value("${tarrakki.api.investor.url}")
-  private String investorApiUrl;
+  private static final String investorApiUrl = "/investors";
 
   public ResponseEntity<String> createInvestor(TarrakkiInvestorRequest request) {
     HttpHeaders headers = new HttpHeaders();

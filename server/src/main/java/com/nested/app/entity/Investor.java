@@ -10,15 +10,16 @@ import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
 import jakarta.persistence.OneToMany;
+import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
-import lombok.Data;
-import org.hibernate.annotations.CreationTimestamp;
-import org.hibernate.annotations.UpdateTimestamp;
-
 import java.sql.Timestamp;
 import java.util.Date;
 import java.util.List;
+import lombok.Data;
+import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.UpdateTimestamp;
 
 @Data
 @Entity
@@ -72,7 +73,9 @@ public class Investor {
     @OneToMany
     private List<BankDetail> bankDetails;
 
-    private Address address;
+  @OneToOne
+  @JoinColumn(name = "address_id")
+  private Address address;
 
     @CreationTimestamp
     @Column(nullable = false, updatable = false)
