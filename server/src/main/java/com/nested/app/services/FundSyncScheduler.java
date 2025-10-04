@@ -10,11 +10,13 @@ import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.Objects;
 import lombok.AllArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
-@AllArgsConstructor
+@Slf4j
 @Service
+@AllArgsConstructor
 public class FundSyncScheduler {
   private final FundAPIClient fundAPIClient;
   private final FundRepository fundRepository;
@@ -49,7 +51,7 @@ public class FundSyncScheduler {
             fundRepository.save(fund);
           } catch (Exception e) {
             // Log and continue
-            System.err.println("Error processing fund DTO: " + dto + ", error: " + e.getMessage());
+            log.error("Error processing fund DTO: {}, error: {}", dto, e.getMessage());
           }
         }
       }
