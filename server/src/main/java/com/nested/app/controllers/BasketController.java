@@ -1,9 +1,8 @@
 package com.nested.app.controllers;
 
-import com.nested.app.contect.UserContext;
+import com.nested.app.annotation.AdminOnly;
 import com.nested.app.dto.BasketDTO;
 import com.nested.app.dto.Entity;
-import com.nested.app.entity.User;
 import com.nested.app.services.BasketService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -42,7 +41,6 @@ import org.springframework.web.bind.annotation.RestController;
 public class BasketController {
 
     private final BasketService basketService;
-  private final UserContext userContext;
 
   /**
    * Retrieves all baskets
@@ -161,17 +159,10 @@ public class BasketController {
         @ApiResponse(responseCode = "500", description = "Internal server error")
       })
   public ResponseEntity<?> createBasket(
-      @Parameter(description = "Basket data", required = true) @Valid @RequestBody
+      @Parameter(description = "Basket data", required = true) @Valid @RequestBody @AdminOnly
           Entity<BasketDTO> request) {
 
     log.info("POST /api/v1/bucket - Creating new basket");
-
-    // Check admin role
-    if (!isAdmin()) {
-      log.warn("Access denied - Admin role required for basket creation");
-      return ResponseEntity.status(HttpStatus.FORBIDDEN)
-          .body(Map.<String, Object>of("error", "Access denied - Admin role required"));
-    }
 
     try {
       List<BasketDTO> baskets = basketService.createBaskets(request.getData());
@@ -219,17 +210,10 @@ public class BasketController {
         @ApiResponse(responseCode = "500", description = "Internal server error")
       })
   public ResponseEntity<?> updateBasket(
-      @Parameter(description = "Basket data", required = true) @Valid @RequestBody
+      @Parameter(description = "Basket data", required = true) @Valid @RequestBody @AdminOnly
           Entity<BasketDTO> request) {
 
     log.info("PATCH /api/v1/bucket - Updating basket");
-
-    // Check admin role
-    if (!isAdmin()) {
-      log.warn("Access denied - Admin role required for basket update");
-      return ResponseEntity.status(HttpStatus.FORBIDDEN)
-          .body(Map.<String, Object>of("error", "Access denied - Admin role required"));
-    }
 
     try {
       List<BasketDTO> baskets = basketService.updateBaskets(request.getData());
@@ -275,17 +259,10 @@ public class BasketController {
         @ApiResponse(responseCode = "500", description = "Internal server error")
       })
   public ResponseEntity<?> deleteBasket(
-      @Parameter(description = "Basket data", required = true) @Valid @RequestBody
+      @Parameter(description = "Basket data", required = true) @Valid @RequestBody @AdminOnly
           Entity<BasketDTO> request) {
 
     log.info("DELETE /api/v1/bucket - Deleting basket");
-
-    // Check admin role
-    if (!isAdmin()) {
-      log.warn("Access denied - Admin role required for basket deletion");
-      return ResponseEntity.status(HttpStatus.FORBIDDEN)
-          .body(Map.<String, Object>of("error", "Access denied - Admin role required"));
-    }
 
     try {
       List<BasketDTO> baskets = basketService.deleteBaskets(request.getData());
@@ -295,21 +272,6 @@ public class BasketController {
     } catch (Exception e) {
       log.error("Error deleting basket: {}", e.getMessage(), e);
       return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
-    }
-  }
-
-  /**
-   * Checks if the current user has admin role
-   *
-   * @return true if user is admin, false otherwise
-   */
-  private boolean isAdmin() {
-    try {
-      User currentUser = userContext.getUser();
-      return currentUser != null && User.Role.ADMIN.equals(currentUser.getRole());
-    } catch (Exception e) {
-      log.error("Error checking admin role: {}", e.getMessage());
-      return false;
     }
   }
 }
