@@ -6,11 +6,8 @@ import lombok.Data;
 @Data
 @Entity
 @Table(name = "basket_fund")
+@IdClass(BasketFundId.class)
 public class BasketFund {
-
-  @Id
-  @GeneratedValue(strategy = GenerationType.IDENTITY)
-  private Long id;
 
   @Id
   @ManyToOne

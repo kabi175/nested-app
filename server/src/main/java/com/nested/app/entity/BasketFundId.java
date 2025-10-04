@@ -9,6 +9,6 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class BasketFundId implements Serializable {
-  private String basket;
+  private Long basket;
   private Long fund;
 }
