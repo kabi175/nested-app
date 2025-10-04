@@ -19,9 +19,13 @@ public class FundAPIClient {
     return tarrakkiAPI
         .withAuth()
         .get()
-        .uri(fundsApiUrl)
-        .attribute("limit", pageable.getPageSize())
-        .attribute("offset", pageable.getOffset())
+        .uri(
+            uriBuilder ->
+                uriBuilder
+                    .path(fundsApiUrl)
+                    .queryParam("limit", pageable.getPageSize())
+                    .queryParam("offset", pageable.getOffset())
+                    .build())
         .retrieve()
         .bodyToMono(FundResponse.class);
   }

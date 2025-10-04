@@ -8,6 +8,7 @@ import com.nested.app.repository.FundRepository;
 import java.sql.Timestamp;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
+import java.util.Objects;
 import lombok.AllArgsConstructor;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
@@ -29,18 +30,27 @@ public class FundSyncScheduler {
 
       if (response != null && response.getResults() != null) {
         for (FundDTO dto : response.getResults()) {
-          Long fundId = Long.valueOf(dto.getId());
-          Fund fund = fundRepository.findById(fundId).orElse(null);
-          if (fund != null) {
-            // Update only nav and navDate
-            fund.setNav(dto.getNav());
-            fund.setNavDate(parseDate(dto.getNav_date()));
-            fund.setActive(dto.getStatus().equalsIgnoreCase("active"));
-          } else {
-            fund = mapToFund(dto);
+          try {
+            Long fundId = Long.valueOf(dto.getId());
+            Fund fund = fundRepository.findById(fundId).orElse(null);
+            if (fund != null) {
+              // Update only nav and navDate
+              if (dto.getNav_date() != null) {
+                fund.setNav(dto.getNav());
+                fund.setNavDate(parseDate(dto.getNav_date()));
+              }
+              if (dto.getStatus() != null) {
+                fund.setActive(Objects.equals(dto.getStatus(), "active"));
+              }
+            } else {
+              fund = mapToFund(dto);
+            }
+            // TODO: handle bulk save
+            fundRepository.save(fund);
+          } catch (Exception e) {
+            // Log and continue
+            System.err.println("Error processing fund DTO: " + dto + ", error: " + e.getMessage());
           }
-          // TODO: handle bulk save
-          fundRepository.save(fund);
         }
       }
     }
@@ -52,13 +62,23 @@ public class FundSyncScheduler {
     fund.setLabel(dto.getName());
     fund.setDescription(dto.getCategory() + " - " + dto.getSub_category());
     fund.setName(dto.getName());
-    fund.setNav(dto.getNav());
-    fund.setNavDate(parseDate(dto.getNav_date()));
-    fund.setMimPurchaseAmount(dto.getMin_initial());
-    fund.setMimAdditionalPurchaseAmount(dto.getMin_additional());
-    fund.setActive("active".equalsIgnoreCase(dto.getStatus()));
+    if (dto.getNav_date() != null) {
+      fund.setNavDate(parseDate(dto.getNav_date()));
+    }
+    if (dto.getNav() != null) {
+      fund.setNav(dto.getNav());
+    }
+    if (dto.getMin_initial() != null) {
+      fund.setMimPurchaseAmount(dto.getMin_initial());
+    }
+    if (dto.getMin_additional() != null) {
+      fund.setMimAdditionalPurchaseAmount(dto.getMin_additional());
+    }
+    if (dto.getStatus() != null) {
+      fund.setActive("active".equalsIgnoreCase(dto.getStatus()));
+    }
     fund.setIsinCode(dto.getIsin());
-    fund.setSchemeCode(dto.getAmfi_code());
+    fund.setAmcCode(dto.getAmc_id());
     return fund;
   }
 

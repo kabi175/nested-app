@@ -25,28 +25,23 @@ public class Fund {
     @Column(nullable = false)
     private String name;
 
-    @Column(nullable = false)
-    private Double nav;
+  @Column(nullable = false)
+  private Double nav = 0.0;
 
-    @Column(nullable = false)
-    private Timestamp navDate;
+  @Column(nullable = false)
+  private Timestamp navDate = new Timestamp(System.currentTimeMillis());
 
-    @Column(nullable = false)
-    private Double mimPurchaseAmount;
+  @Column(nullable = false)
+  private Double mimPurchaseAmount = 0.0;
 
-    @Column(nullable = false)
-    private Double mimAdditionalPurchaseAmount;
+  @Column(nullable = false)
+  private Double mimAdditionalPurchaseAmount = 0.0;
 
     @Column(nullable = false)
     private boolean isActive = false;
 
-    @Column(nullable = false)
     private String isinCode;
 
-    @Column(nullable = false, unique = true, updatable = false)
-    private String schemeCode;
-
-    @Column(nullable = false)
     private String amcCode;
 
     private String schemeType;
