@@ -283,6 +283,95 @@ paths:
                     type: array
                     items:
                       $ref: '#/components/schemas/Order'
+  /bucket:
+    get:
+      summary: Get all baskets
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Basket'
+    post:
+      summary: Create a new basket
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                data:
+                  type: array
+                  items:
+                    $ref: '#/components/schemas/Basket'
+      responses:
+        '201':
+          description: Basket created
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Basket'
+    patch:
+      summary: Update an existing basket
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                data:
+                  type: array
+                  items:
+                    $ref: '#/components/schemas/Basket'
+      responses:
+        '200':
+          description: Basket updated
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Basket'
+    delete:
+      summary: Delete a basket
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                data:
+                  type: array
+                  items:
+                    $ref: '#/components/schemas/Basket'
+      responses:
+        '200':
+          description: Basket deleted
+          content:
+            application/json:
+            schema:
+              type: object
+              properties:
+                data:
+                  type: array
+                  items:
+                    $ref: '#/components/schemas/Basket'
   /bucket/{id}:
     get:
       summary: Get basket details by ID

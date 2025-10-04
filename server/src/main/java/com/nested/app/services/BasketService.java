@@ -42,4 +42,36 @@ public interface BasketService {
      * @return Updated basket data
      */
     BasketDTO updateBasket(BasketDTO basketDTO);
+
+  /**
+   * Deletes a basket
+   *
+   * @param basketDTO Basket data to delete
+   * @return Deleted basket data
+   */
+  BasketDTO deleteBasket(BasketDTO basketDTO);
+
+  /**
+   * Creates multiple baskets
+   *
+   * @param baskets List of basket data to create
+   * @return List of created baskets
+   */
+  List<BasketDTO> createBaskets(List<BasketDTO> baskets);
+
+  /**
+   * Updates multiple baskets
+   *
+   * @param baskets List of basket data to update
+   * @return List of updated baskets
+   */
+  List<BasketDTO> updateBaskets(List<BasketDTO> baskets);
+
+  /**
+   * Deletes multiple baskets
+   *
+   * @param baskets List of basket data to delete
+   * @return List of deleted baskets
+   */
+  List<BasketDTO> deleteBaskets(List<BasketDTO> baskets);
 }
