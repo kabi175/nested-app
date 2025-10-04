@@ -1,17 +1,32 @@
 package com.nested.app.entity;
 
-import jakarta.persistence.*;
 import java.sql.Date;
 import java.sql.Timestamp;
-import lombok.Data;
+
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.Table;
+import lombok.Data;
+
+/**
+ * Entity representing an investment order
+ */
 @Data
 @Entity
 @Table(name = "orders")
 public class Order {
-  @Id private String id;
+  
+  @Id 
+  @GeneratedValue(strategy = GenerationType.IDENTITY)
+  private Long id;
 
   @Column(nullable = false)
   private Date orderDate;
@@ -29,21 +44,27 @@ public class Order {
   @JoinColumn(name = "fund_id")
   private Fund fund;
 
-  @Column private Double monthlySip;
+  @Column 
+  private Double monthlySip;
 
   @ManyToOne(optional = false)
   @JoinColumn(name = "user_id")
   private User user;
 
-    @CreationTimestamp
-    @Column(nullable = false, updatable = false)
-    private Timestamp createdAt;
+  @ManyToOne
+  @JoinColumn(name = "goal_id")
+  private Goal goal;
 
-    @UpdateTimestamp
-    @Column(nullable = false)
-    private Timestamp updatedAt;
+  @CreationTimestamp
+  @Column(nullable = false, updatable = false)
+  private Timestamp createdAt;
 
-  @Column private String folio;
+  @UpdateTimestamp
+  @Column(nullable = false)
+  private Timestamp updatedAt;
+
+  @Column 
+  private String folio;
 
   public enum OrderStatus {
         CREATED,
