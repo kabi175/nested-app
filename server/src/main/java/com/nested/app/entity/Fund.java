@@ -1,12 +1,10 @@
 package com.nested.app.entity;
 
+import jakarta.persistence.*;
 import java.sql.Timestamp;
-
+import lombok.Data;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
-
-import jakarta.persistence.*;
-import lombok.Data;
 
 @Data
 @Entity
@@ -14,7 +12,6 @@ import lombok.Data;
 public class Fund {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY) // Auto-increment ID
     private Long id;
 
     @Column(nullable = false)
