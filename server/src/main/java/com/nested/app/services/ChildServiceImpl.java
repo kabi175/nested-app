@@ -1,15 +1,20 @@
 package com.nested.app.services;
 
+import com.nested.app.contect.UserContext;
 import com.nested.app.dto.ChildDTO;
 import com.nested.app.entity.Child;
+import com.nested.app.entity.User;
 import com.nested.app.repository.ChildRepository;
+import com.nested.app.repository.UserRepository;
+import java.time.LocalDate;
+import java.time.ZoneId;
+import java.util.Date;
+import java.util.List;
+import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
-import java.util.List;
-import java.util.stream.Collectors;
 
 /**
  * Service implementation for managing Child entities
@@ -25,6 +30,9 @@ import java.util.stream.Collectors;
 public class ChildServiceImpl implements ChildService {
 
     private final ChildRepository childRepository;
+  private static final int MAX_CHILDREN_PER_USER = 3;
+  private final UserRepository userRepository;
+  private final UserContext userContext;
 
     /**
      * Retrieves all children from the system
@@ -62,7 +70,18 @@ public class ChildServiceImpl implements ChildService {
         log.info("Creating new child with name: {}", childDTO.getFirstName());
         
         try {
+      // Validate child data
+      validateChildData(childDTO);
+
+      // Get current user
+      User currentUser = getCurrentUser();
+
+      // Check 3-child limit
+      validateChildLimit(currentUser.getId());
+
             Child child = convertToEntity(childDTO);
+      child.setUser(currentUser);
+
             Child savedChild = childRepository.save(child);
             ChildDTO savedChildDTO = convertToDTO(savedChild);
             
@@ -123,10 +142,27 @@ public class ChildServiceImpl implements ChildService {
         log.info("Creating {} children", children.size());
         
         try {
-            List<Child> childEntities = children.stream()
-                    .map(this::convertToEntity)
-                    .collect(Collectors.toList());
-            
+      // Get current user
+      User currentUser = getCurrentUser();
+
+      // Check 3-child limit for all children
+      validateChildLimitForMultiple(currentUser.getId(), children.size());
+
+      // Validate all children data
+      for (ChildDTO childDTO : children) {
+        validateChildData(childDTO);
+      }
+
+      List<Child> childEntities =
+          children.stream()
+              .map(
+                  childDTO -> {
+                    Child child = convertToEntity(childDTO);
+                    child.setUser(currentUser);
+                    return child;
+                  })
+              .collect(Collectors.toList());
+
             List<Child> savedChildren = childRepository.saveAll(childEntities);
             List<ChildDTO> savedChildDTOs = savedChildren.stream()
                     .map(this::convertToDTO)
@@ -209,4 +245,117 @@ public class ChildServiceImpl implements ChildService {
         
         return child;
     }
+
+  /**
+   * Validates child data according to API requirements
+   *
+   * @param childDTO Child data to validate
+   * @throws IllegalArgumentException if validation fails
+   */
+  private void validateChildData(ChildDTO childDTO) {
+    if (childDTO.getFirstName() == null || childDTO.getFirstName().trim().isEmpty()) {
+      throw new IllegalArgumentException("First name is required");
+    }
+
+    if (childDTO.getLastName() == null || childDTO.getLastName().trim().isEmpty()) {
+      throw new IllegalArgumentException("Last name is required");
+    }
+
+    if (childDTO.getDateOfBirth() == null) {
+      throw new IllegalArgumentException("Date of birth is required");
+    }
+
+    if (childDTO.getGender() == null || childDTO.getGender().trim().isEmpty()) {
+      throw new IllegalArgumentException("Gender is required");
+    }
+
+    // Validate gender enum values
+    if (!isValidGender(childDTO.getGender())) {
+      throw new IllegalArgumentException("Gender must be one of: male, female, other");
+    }
+
+    // Validate date of birth is not in the future
+    if (childDTO.getDateOfBirth().after(new Date())) {
+      throw new IllegalArgumentException("Date of birth cannot be in the future");
+    }
+
+    // Validate that the child is a minor (under 18 years old)
+    LocalDate eighteenYearsAgo = LocalDate.now().minusYears(18);
+    LocalDate birthDate =
+        childDTO.getDateOfBirth().toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
+
+    if (birthDate.isAfter(eighteenYearsAgo)) {
+      throw new IllegalArgumentException("Child must be under 18 years old");
+    }
+
+    // Validate date of birth is reasonable (not more than 100 years ago)
+    LocalDate hundredYearsAgo = LocalDate.now().minusYears(100);
+
+    if (birthDate.isBefore(hundredYearsAgo)) {
+      throw new IllegalArgumentException("Date of birth cannot be more than 100 years ago");
+    }
+  }
+
+  /**
+   * Validates gender value
+   *
+   * @param gender Gender to validate
+   * @return true if valid, false otherwise
+   */
+  private boolean isValidGender(String gender) {
+    return "male".equalsIgnoreCase(gender)
+        || "female".equalsIgnoreCase(gender)
+        || "other".equalsIgnoreCase(gender);
+  }
+
+  /**
+   * Validates that user hasn't exceeded the 3-child limit
+   *
+   * @param userId User ID to check
+   * @throws IllegalArgumentException if limit exceeded
+   */
+  private void validateChildLimit(Long userId) {
+    long currentChildCount = childRepository.findByUserId(userId).size();
+
+    if (currentChildCount >= MAX_CHILDREN_PER_USER) {
+      throw new IllegalArgumentException(
+          String.format(
+              "Maximum of %d children allowed per user. Current count: %d",
+              MAX_CHILDREN_PER_USER, currentChildCount));
+    }
+  }
+
+  /**
+   * Validates that user won't exceed the 3-child limit when adding multiple children
+   *
+   * @param userId User ID to check
+   * @param newChildrenCount Number of new children to add
+   * @throws IllegalArgumentException if limit would be exceeded
+   */
+  private void validateChildLimitForMultiple(Long userId, int newChildrenCount) {
+    long currentChildCount = childRepository.findByUserId(userId).size();
+    long totalAfterAddition = currentChildCount + newChildrenCount;
+
+    if (totalAfterAddition > MAX_CHILDREN_PER_USER) {
+      throw new IllegalArgumentException(
+          String.format(
+              "Adding %d children would exceed the maximum of %d children per user. "
+                  + "Current count: %d, would become: %d",
+              newChildrenCount, MAX_CHILDREN_PER_USER, currentChildCount, totalAfterAddition));
+    }
+  }
+
+  /**
+   * Gets the current user from UserContext
+   *
+   * @return Current user
+   * @throws IllegalArgumentException if user not found
+   */
+  private User getCurrentUser() {
+    User currentUser = userContext.getUser();
+    if (currentUser == null) {
+      throw new IllegalArgumentException("User not found in context");
+    }
+    return currentUser;
+  }
 }
