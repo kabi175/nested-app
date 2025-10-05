@@ -1,10 +1,10 @@
 package com.nested.app.repository;
 
 import com.nested.app.entity.Basket;
+import java.util.List;
+import java.util.Optional;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
-
-import java.util.List;
 
 /**
  * Repository interface for Basket entity
@@ -39,4 +39,17 @@ public interface BasketRepository extends JpaRepository<Basket, Long> {
      * @return List of baskets with the specified title (case insensitive)
      */
     List<Basket> findByTitleIgnoreCase(String title);
+
+  /**
+   * Find the basket with returns closest to the given expectedFee
+   *
+   * @param expectedFee the expected fee to compare
+   * @return Basket with returns closest to expectedFee
+   */
+  @org.springframework.data.jpa.repository.Query(
+      "SELECT b FROM Basket b ORDER BY ABS(b.returns - :expectedFee) ASC LIMIT 1")
+  Optional<Basket> findClosestByReturns(
+      @org.springframework.data.repository.query.Param("expectedFee") Double expectedFee);
+
+  Basket findFirstByOrderByReturnsDesc();
 }

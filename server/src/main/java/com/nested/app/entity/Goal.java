@@ -51,6 +51,10 @@ public class Goal {
   @JoinColumn(name = "child_id")
   private Child child;
 
+  @ManyToOne(optional = false)
+  @JoinColumn(name = "education_id")
+  private Education education;
+
   @Column(nullable = false)
   @Enumerated(EnumType.STRING)
   private Status status = Status.DRAFT;

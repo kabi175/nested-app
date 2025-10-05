@@ -5,6 +5,7 @@ import com.nested.app.dto.GoalDTO;
 import com.nested.app.dto.MinifiedChildDTO;
 import com.nested.app.dto.MinifiedUserDTO;
 import com.nested.app.entity.Goal;
+import com.nested.app.repository.BasketRepository;
 import com.nested.app.repository.GoalRepository;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -27,6 +28,7 @@ import org.springframework.transaction.annotation.Transactional;
 public class GoalServiceImpl implements GoalService {
 
   private final GoalRepository goalRepository;
+  private final BasketRepository basketRepository;
   private final UserContext userContext;
 
   /**
@@ -115,7 +117,15 @@ public class GoalServiceImpl implements GoalService {
       List<Goal> goalEntities =
           goals.stream().map(this::convertToEntity).collect(Collectors.toList());
 
-      goalEntities.forEach(goal -> goal.setUser(userContext.getUser()));
+      goalEntities.forEach(
+          goal -> {
+            goal.setUser(userContext.getUser());
+            var basket =
+                basketRepository
+                    .findClosestByReturns(goal.getTargetAmount())
+                    .orElseGet(basketRepository::findFirstByOrderByReturnsDesc);
+            goal.setBasket(basket);
+          });
 
       List<Goal> savedGoals = goalRepository.saveAll(goalEntities);
       List<GoalDTO> savedGoalDTOs =
@@ -213,6 +223,8 @@ public class GoalServiceImpl implements GoalService {
       dto.setBasket(goal.getBasket());
     }
 
+    dto.setEducation(goal.getEducation());
+
     return dto;
   }
 
@@ -231,6 +243,8 @@ public class GoalServiceImpl implements GoalService {
     goal.setTargetAmount(goalDTO.getTargetAmount());
     goal.setCurrentAmount(goalDTO.getCurrentAmount());
     goal.setTargetDate(goalDTO.getTargetDate());
+
+    goal.setEducation(goalDTO.getEducation());
 
     if (goalDTO.getChild() != null) {
       goal.setChild(goalDTO.getChild().toEntity());

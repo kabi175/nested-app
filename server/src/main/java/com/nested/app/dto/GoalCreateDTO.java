@@ -2,7 +2,9 @@ package com.nested.app.dto;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.nested.app.entity.Education;
 import jakarta.validation.constraints.NotEmpty;
+import jakarta.validation.constraints.NotNull;
 import java.sql.Date;
 import lombok.Data;
 
@@ -22,6 +24,8 @@ public class GoalCreateDTO {
   @JsonProperty("current_amount")
   private Double currentAmount;
 
+  @NotNull private Education education;
+
   @NotEmpty
   @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd")
   @JsonProperty("target_date")
@@ -36,6 +40,7 @@ public class GoalCreateDTO {
     dto.setCurrentAmount(createDTO.getCurrentAmount());
     dto.setTargetDate(createDTO.getTargetDate());
     dto.setChild(createDTO.getChild());
+    dto.setEducation(createDTO.getEducation());
     return dto;
   }
 }
