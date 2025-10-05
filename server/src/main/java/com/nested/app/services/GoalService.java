@@ -1,8 +1,7 @@
 package com.nested.app.services;
 
-import java.util.List;
-
 import com.nested.app.dto.GoalDTO;
+import java.util.List;
 
 /**
  * Service interface for managing Goal entities
@@ -20,13 +19,6 @@ public interface GoalService {
      */
     List<GoalDTO> getAllGoals();
 
-    /**
-     * Creates a new goal
-     * 
-     * @param goalDTO Goal data to create
-     * @return Created goal data
-     */
-    GoalDTO createGoal(GoalDTO goalDTO);
 
     /**
      * Updates an existing goal

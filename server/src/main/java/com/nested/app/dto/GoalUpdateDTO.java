@@ -2,12 +2,8 @@ package com.nested.app.dto;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.nested.app.entity.Basket;
-import com.nested.app.entity.Child;
-import com.nested.app.entity.Goal;
 import jakarta.validation.constraints.NotEmpty;
 import java.sql.Date;
-import java.sql.Timestamp;
 import lombok.Data;
 
 /**
@@ -17,8 +13,7 @@ import lombok.Data;
  * @version 1.0
  */
 @Data
-public class GoalDTO {
-
+public class GoalUpdateDTO {
   private Long id;
   private String title;
 
@@ -29,19 +24,17 @@ public class GoalDTO {
   private Double currentAmount;
 
   @NotEmpty
-  @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd")
   @JsonProperty("target_date")
+  @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd")
   private Date targetDate;
 
-  private Basket basket;
-
-  private MinifiedUserDTO user;
-
-  private Child child;
-
-  private Goal.Status status;
-
-  private Timestamp createdAt;
-
-  private Timestamp updatedAt;
+  public static GoalDTO toGoalDTO(GoalUpdateDTO createDTO) {
+    GoalDTO dto = new GoalDTO();
+    dto.setId(createDTO.getId());
+    dto.setTitle(createDTO.getTitle());
+    dto.setTargetAmount(createDTO.getTargetAmount());
+    dto.setCurrentAmount(createDTO.getCurrentAmount());
+    dto.setTargetDate(createDTO.getTargetDate());
+    return dto;
+  }
 }

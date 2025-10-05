@@ -1,30 +1,29 @@
 package com.nested.app.entity;
 
-import java.sql.Date;
-import java.sql.Timestamp;
-
-import org.hibernate.annotations.CreationTimestamp;
-import org.hibernate.annotations.UpdateTimestamp;
-
+import com.fasterxml.jackson.annotation.JsonValue;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
+import java.sql.Date;
+import java.sql.Timestamp;
 import lombok.Data;
+import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.UpdateTimestamp;
 
-/**
- * Entity representing an investment goal
- */
+/** Entity representing an investment goal */
 @Data
 @Entity
 @Table(name = "goals")
 public class Goal {
-  
-  @Id 
+
+  @Id
   @GeneratedValue(strategy = GenerationType.IDENTITY)
   private Long id;
 
@@ -48,12 +47,13 @@ public class Goal {
   @JoinColumn(name = "user_id")
   private User user;
 
-  @ManyToOne
+  @ManyToOne(optional = false)
   @JoinColumn(name = "child_id")
   private Child child;
 
   @Column(nullable = false)
-  private String status;
+  @Enumerated(EnumType.STRING)
+  private Status status = Status.DRAFT;
 
   @CreationTimestamp
   @Column(nullable = false, updatable = false)
@@ -62,4 +62,22 @@ public class Goal {
   @UpdateTimestamp
   @Column(nullable = false)
   private Timestamp updatedAt;
+
+  public enum Status {
+    DRAFT("draft"),
+    ACTIVE("active"),
+    COMPLETED("completed"),
+    CANCELLED("cancelled");
+
+    private final String value;
+
+    Status(String value) {
+      this.value = value;
+    }
+
+    @JsonValue
+    public String getValue() {
+      return value;
+    }
+  }
 }

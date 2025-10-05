@@ -1,15 +1,16 @@
 package com.nested.app.services;
 
+import com.nested.app.contect.UserContext;
 import com.nested.app.dto.GoalDTO;
+import com.nested.app.dto.MinifiedUserDTO;
 import com.nested.app.entity.Goal;
 import com.nested.app.repository.GoalRepository;
+import java.util.List;
+import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
-import java.util.List;
-import java.util.stream.Collectors;
 
 /**
  * Service implementation for managing Goal entities
@@ -25,6 +26,7 @@ import java.util.stream.Collectors;
 public class GoalServiceImpl implements GoalService {
 
     private final GoalRepository goalRepository;
+  private final UserContext userContext;
 
     /**
      * Retrieves all goals from the system
@@ -48,30 +50,6 @@ public class GoalServiceImpl implements GoalService {
         } catch (Exception e) {
             log.error("Error retrieving goals: {}", e.getMessage(), e);
             throw new RuntimeException("Failed to retrieve goals", e);
-        }
-    }
-
-    /**
-     * Creates a new goal
-     * 
-     * @param goalDTO Goal data to create
-     * @return Created goal data
-     */
-    @Override
-    public GoalDTO createGoal(GoalDTO goalDTO) {
-        log.info("Creating new goal with title: {}", goalDTO.getTitle());
-        
-        try {
-            Goal goal = convertToEntity(goalDTO);
-            Goal savedGoal = goalRepository.save(goal);
-            GoalDTO savedGoalDTO = convertToDTO(savedGoal);
-            
-            log.info("Successfully created goal with ID: {}", savedGoal.getId());
-            return savedGoalDTO;
-            
-        } catch (Exception e) {
-            log.error("Error creating goal: {}", e.getMessage(), e);
-            throw new RuntimeException("Failed to create goal", e);
         }
     }
 
@@ -104,8 +82,7 @@ public class GoalServiceImpl implements GoalService {
             existingGoal.setTargetAmount(goalDTO.getTargetAmount());
             existingGoal.setCurrentAmount(goalDTO.getCurrentAmount());
             existingGoal.setTargetDate(goalDTO.getTargetDate());
-            existingGoal.setStatus(goalDTO.getStatus());
-            
+
             Goal updatedGoal = goalRepository.save(existingGoal);
             GoalDTO updatedGoalDTO = convertToDTO(updatedGoal);
             
@@ -132,10 +109,13 @@ public class GoalServiceImpl implements GoalService {
         log.info("Creating {} goals", goals.size());
         
         try {
+
             List<Goal> goalEntities = goals.stream()
                     .map(this::convertToEntity)
                     .collect(Collectors.toList());
-            
+
+      goalEntities.forEach(goal -> goal.setUser(userContext.getUser()));
+
             List<Goal> savedGoals = goalRepository.saveAll(goalEntities);
             List<GoalDTO> savedGoalDTOs = savedGoals.stream()
                     .map(this::convertToDTO)
@@ -217,17 +197,17 @@ public class GoalServiceImpl implements GoalService {
         
         // Set user information if available
         if (goal.getUser() != null) {
-            dto.setUserId(goal.getUser().getId());
+      dto.setUser(MinifiedUserDTO.fromEntity(goal.getUser()));
         }
         
         // Set child information if available
         if (goal.getChild() != null) {
-            dto.setChildId(goal.getChild().getId());
+      dto.setChild(goal.getChild());
         }
         
         // Set basket information if available
         if (goal.getBasket() != null) {
-            dto.setBasketId(goal.getBasket().getId());
+      dto.setBasket(goal.getBasket());
         }
         
         return dto;
@@ -248,8 +228,7 @@ public class GoalServiceImpl implements GoalService {
         goal.setTargetAmount(goalDTO.getTargetAmount());
         goal.setCurrentAmount(goalDTO.getCurrentAmount());
         goal.setTargetDate(goalDTO.getTargetDate());
-        goal.setStatus(goalDTO.getStatus());
-        
+
         return goal;
     }
 }
