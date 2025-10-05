@@ -1,25 +1,13 @@
 package com.nested.app.services;
 
-import com.google.firebase.auth.UserRecord;
-import com.nested.app.client.bulkpe.PrefilClient;
-import com.nested.app.client.bulkpe.dto.PrefilRequest;
-import com.nested.app.client.bulkpe.dto.PrefillResponse;
 import com.nested.app.dto.InvestorDto;
 import com.nested.app.entity.Investor;
-import com.nested.app.entity.User;
-import com.nested.app.exception.GlobalExceptionHandler;
 import com.nested.app.repository.InvestorRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.LocalDate;
-import java.time.ZoneId;
-import java.time.format.DateTimeFormatter;
-import java.util.Date;
 import java.util.Optional;
 
 /** Service class for Investor entity operations Handles business logic for investor management */
