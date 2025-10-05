@@ -51,11 +51,17 @@ export const unstable_settings = {
 
 function RootNavigator() {
   const auth = useAuth();
+  const hasEnteredName = auth.isSignedIn && auth.user?.displayName !== null;
+
   return (
     <Stack>
-      <Stack.Protected guard={auth.isSignedIn === true}>
+      <Stack.Protected guard={hasEnteredName === true}>
         <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
         <Stack.Screen name="+not-found" />
+      </Stack.Protected>
+
+      <Stack.Protected guard={hasEnteredName !== true}>
+        <Stack.Screen name="name-input" options={{ headerShown: false }} />
       </Stack.Protected>
 
       <Stack.Protected guard={auth.isSignedIn === false}>
