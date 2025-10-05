@@ -7,7 +7,6 @@ import com.nested.app.entity.User;
 import com.nested.app.repository.ChildRepository;
 import com.nested.app.repository.UserRepository;
 import java.time.LocalDate;
-import java.time.ZoneId;
 import java.util.Date;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -220,7 +219,7 @@ public class ChildServiceImpl implements ChildService {
         
         // Set user information if available
         if (child.getUser() != null) {
-            dto.setUserId(child.getUser().getId());
+      dto.setUserId(userContext.getUser().getId());
         }
         
         return dto;
@@ -257,22 +256,23 @@ public class ChildServiceImpl implements ChildService {
       throw new IllegalArgumentException("First name is required");
     }
 
-    if (childDTO.getLastName() == null || childDTO.getLastName().trim().isEmpty()) {
-      throw new IllegalArgumentException("Last name is required");
-    }
+    // last name is optional
+    //    if (childDTO.getLastName() == null || childDTO.getLastName().trim().isEmpty()) {
+    //      throw new IllegalArgumentException("Last name is required");
+    //    }
 
     if (childDTO.getDateOfBirth() == null) {
       throw new IllegalArgumentException("Date of birth is required");
     }
 
-    if (childDTO.getGender() == null || childDTO.getGender().trim().isEmpty()) {
+    if (childDTO.getGender() == null) {
       throw new IllegalArgumentException("Gender is required");
     }
 
     // Validate gender enum values
-    if (!isValidGender(childDTO.getGender())) {
-      throw new IllegalArgumentException("Gender must be one of: male, female, other");
-    }
+    //    if (!isValidGender(childDTO.getGender())) {
+    //      throw new IllegalArgumentException("Gender must be one of: male, female, other");
+    //    }
 
     // Validate date of birth is not in the future
     if (childDTO.getDateOfBirth().after(new Date())) {
@@ -281,18 +281,15 @@ public class ChildServiceImpl implements ChildService {
 
     // Validate that the child is a minor (under 18 years old)
     LocalDate eighteenYearsAgo = LocalDate.now().minusYears(18);
-    LocalDate birthDate =
-        childDTO.getDateOfBirth().toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
+    LocalDate birthDate = childDTO.getDateOfBirth().toLocalDate();
 
-    if (birthDate.isAfter(eighteenYearsAgo)) {
+    if (!birthDate.isAfter(eighteenYearsAgo)) {
       throw new IllegalArgumentException("Child must be under 18 years old");
     }
 
-    // Validate date of birth is reasonable (not more than 100 years ago)
-    LocalDate hundredYearsAgo = LocalDate.now().minusYears(100);
-
-    if (birthDate.isBefore(hundredYearsAgo)) {
-      throw new IllegalArgumentException("Date of birth cannot be more than 100 years ago");
+    // Validate that is the date of birth is not future
+    if (childDTO.getDateOfBirth().after(new Date())) {
+      throw new IllegalArgumentException("Date of birth cannot be in the future");
     }
   }
 

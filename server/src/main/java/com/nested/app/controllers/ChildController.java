@@ -15,6 +15,7 @@ import java.util.Map;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -24,9 +25,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 /**
- * REST Controller for managing Child entities
- * Provides endpoints for CRUD operations on children
- * 
+ * REST Controller for managing Child entities Provides endpoints for CRUD operations on children
+ *
  * @author Nested App Team
  * @version 1.0
  */
@@ -37,7 +37,7 @@ import org.springframework.web.bind.annotation.RestController;
 @Tag(name = "Children", description = "API endpoints for managing children")
 public class ChildController {
 
-    private final ChildService childService;
+  private final ChildService childService;
 
   /**
    * Retrieves all children
@@ -60,19 +60,19 @@ public class ChildController {
         @ApiResponse(responseCode = "500", description = "Internal server error")
       })
   public ResponseEntity<Entity<ChildDTO>> getAllChildren() {
-        log.info("GET /api/v1/children - Retrieving all children");
-        
-        try {
-            List<ChildDTO> children = childService.getAllChildren();
-            log.info("Successfully retrieved {} children", children.size());
+    log.info("GET /api/v1/children - Retrieving all children");
+
+    try {
+      List<ChildDTO> children = childService.getAllChildren();
+      log.info("Successfully retrieved {} children", children.size());
 
       return ResponseEntity.ok(Entity.of(children));
 
-        } catch (Exception e) {
-            log.error("Error retrieving children: {}", e.getMessage(), e);
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
-        }
+    } catch (Exception e) {
+      log.error("Error retrieving children: {}", e.getMessage(), e);
+      return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
     }
+  }
 
   /**
    * Creates a new child
@@ -80,7 +80,7 @@ public class ChildController {
    * @param requestBody Request body containing child data
    * @return ResponseEntity containing the created child
    */
-  @PostMapping
+  @PostMapping(consumes = MediaType.APPLICATION_JSON_VALUE)
   @Operation(
       summary = "Create a new child",
       description = "Creates a new child with the provided information")
@@ -97,12 +97,11 @@ public class ChildController {
         @ApiResponse(responseCode = "500", description = "Internal server error")
       })
   public ResponseEntity<?> createChild(@Valid @RequestBody Entity<ChildDTO> request) {
-
-        log.info("POST /api/v1/children - Creating new child");
-        
-        try {
+    log.info("POST /api/v1/children - Creating new child");
+    try {
       List<ChildDTO> createdChildren = childService.createChildren(request.getData());
-            log.info("Successfully created {} children", createdChildren.size());
+
+      log.info("Successfully created {} children", createdChildren.size());
 
       return ResponseEntity.status(HttpStatus.CREATED).body(Entity.of(createdChildren));
 
@@ -110,11 +109,11 @@ public class ChildController {
       log.warn("Validation error creating child: {}", e.getMessage());
       return ResponseEntity.status(HttpStatus.BAD_REQUEST)
           .body(Map.<String, Object>of("error", e.getMessage()));
-        } catch (Exception e) {
-            log.error("Error creating child: {}", e.getMessage(), e);
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
-        }
+    } catch (Exception e) {
+      log.error("Error creating child: {}", e.getMessage(), e);
+      return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
     }
+  }
 
   /**
    * Updates an existing child
@@ -141,11 +140,11 @@ public class ChildController {
       })
   public ResponseEntity<?> updateChild(@Valid @RequestBody Entity<ChildDTO> request) {
 
-        log.info("PUT /api/v1/children - Updating child");
-        
-        try {
+    log.info("PUT /api/v1/children - Updating child");
+
+    try {
       List<ChildDTO> updatedChildren = childService.updateChildren(request.getData());
-            log.info("Successfully updated {} children", updatedChildren.size());
+      log.info("Successfully updated {} children", updatedChildren.size());
 
       return ResponseEntity.ok(Entity.of(updatedChildren));
 
@@ -153,9 +152,9 @@ public class ChildController {
       log.warn("Validation error updating child: {}", e.getMessage());
       return ResponseEntity.status(HttpStatus.BAD_REQUEST)
           .body(Map.<String, Object>of("error", e.getMessage()));
-        } catch (Exception e) {
-            log.error("Error updating child: {}", e.getMessage(), e);
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
-        }
+    } catch (Exception e) {
+      log.error("Error updating child: {}", e.getMessage(), e);
+      return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
     }
+  }
 }

@@ -1,5 +1,11 @@
 package com.nested.app.dto;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.nested.app.entity.Child;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
+import jakarta.validation.constraints.NotEmpty;
 import java.sql.Date;
 import java.sql.Timestamp;
 import lombok.Data;
@@ -15,12 +21,23 @@ import lombok.Data;
 public class ChildDTO {
   
   private Long id;
-  private String firstName;
+
+  @NotEmpty private String firstName;
   private String lastName;
+
+  @NotEmpty
+  @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd")
+  @JsonProperty("date_of_birth")
   private Date dateOfBirth;
-  private String gender;
-  private boolean investUnderChild;
+
+  @Enumerated(EnumType.STRING)
+  @NotEmpty
+  private Child.Gender gender;
+
+  @NotEmpty private boolean investUnderChild = false;
   private Long userId;
+
   private Timestamp createdAt;
+
   private Timestamp updatedAt;
 }
