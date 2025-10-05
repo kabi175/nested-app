@@ -47,7 +47,7 @@ public class UserServiceImpl implements UserService {
     return UserDTO.fromEntity(savedUser);
   }
 
-
+  // TODO: sync the username & email to firebase auth as well
   @Override
   public UserDTO updateUser(UserDTO userDTO) {
     Long userId = userDTO.getId() != null ? Long.parseLong(userDTO.getId()) : null;
