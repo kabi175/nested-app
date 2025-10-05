@@ -31,14 +31,11 @@ public class UserDTO {
   }
 
   public static User fromDto(UserDTO dto) {
-    User user = new User();
-    user.setId(dto.getId() != null ? Long.parseLong(dto.getId()) : null);
-    user.setName(dto.getName());
-    user.setEmail(dto.getEmail());
-    user.setPhoneNumber(dto.getPhoneNumber());
-    if (dto.getRole() != null) {
-      user.setRole(User.Role.valueOf(dto.getRole().toUpperCase()));
-    }
-    return user;
+    return User.builder()
+        .id(dto.getId() != null ? Long.parseLong(dto.getId()) : null)
+        .name(dto.getName())
+        .email(dto.getEmail())
+        .role(dto.getRole() != null ? User.Role.valueOf(dto.getRole().toUpperCase()) : null)
+        .build();
   }
 }

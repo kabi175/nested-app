@@ -51,13 +51,15 @@ public class UserContextFilter extends OncePerRequestFilter {
   }
 
   User createUser(Authentication auth) throws FirebaseAuthException {
-    var user = new User();
     UserRecord userRecord = FirebaseAuth.getInstance().getUser(auth.getPrincipal().toString());
-    user.setFirebaseUid(auth.getPrincipal().toString());
-    user.setEmail(userRecord.getEmail());
-    user.setPhoneNumber(userRecord.getPhoneNumber());
-    user.setName(userRecord.getDisplayName());
-
+    var user =
+        User.builder()
+            .firebaseUid(auth.getPrincipal().toString())
+            .email(userRecord.getEmail())
+            .phoneNumber(userRecord.getPhoneNumber())
+            .phoneNumber(userRecord.getPhoneNumber())
+            .name(userRecord.getDisplayName())
+            .build();
     userRepository.save(user);
     return user;
   }
