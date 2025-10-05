@@ -3,7 +3,6 @@ package com.nested.app.dto;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.nested.app.entity.Basket;
-import com.nested.app.entity.Child;
 import com.nested.app.entity.Goal;
 import jakarta.validation.constraints.NotEmpty;
 import java.sql.Date;
@@ -37,7 +36,7 @@ public class GoalDTO {
 
   private MinifiedUserDTO user;
 
-  private Child child;
+  private MinifiedChildDTO child;
 
   private Goal.Status status;
 

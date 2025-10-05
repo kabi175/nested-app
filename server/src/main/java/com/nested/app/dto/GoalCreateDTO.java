@@ -27,12 +27,15 @@ public class GoalCreateDTO {
   @JsonProperty("target_date")
   private Date targetDate;
 
+  @NotEmpty private MinifiedChildDTO child;
+
   public static GoalDTO toGoalDTO(GoalCreateDTO createDTO) {
     GoalDTO dto = new GoalDTO();
     dto.setTitle(createDTO.getTitle());
     dto.setTargetAmount(createDTO.getTargetAmount());
     dto.setCurrentAmount(createDTO.getCurrentAmount());
     dto.setTargetDate(createDTO.getTargetDate());
+    dto.setChild(createDTO.getChild());
     return dto;
   }
 }
