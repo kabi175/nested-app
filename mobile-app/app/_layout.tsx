@@ -60,7 +60,9 @@ function RootNavigator() {
         <Stack.Screen name="+not-found" />
       </Stack.Protected>
 
-      <Stack.Protected guard={hasEnteredName !== true}>
+      <Stack.Protected
+        guard={auth.isSignedIn === true && hasEnteredName !== true}
+      >
         <Stack.Screen name="name-input" options={{ headerShown: false }} />
       </Stack.Protected>
 
