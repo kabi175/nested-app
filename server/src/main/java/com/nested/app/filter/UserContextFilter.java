@@ -11,8 +11,10 @@ import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
+
 import lombok.AllArgsConstructor;
 import lombok.NonNull;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.authentication.AnonymousAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -21,7 +23,9 @@ import org.springframework.web.filter.OncePerRequestFilter;
 
 @Component
 @AllArgsConstructor
+@Slf4j
 public class UserContextFilter extends OncePerRequestFilter {
+
   private final UserContext userContext;
 
   private final UserRepository userRepository;
@@ -50,8 +54,13 @@ public class UserContextFilter extends OncePerRequestFilter {
     filterChain.doFilter(request, response);
   }
 
-  User createUser(Authentication auth) throws FirebaseAuthException {
-    UserRecord userRecord = FirebaseAuth.getInstance().getUser(auth.getPrincipal().toString());
+  public User createUser(Authentication auth) throws FirebaseAuthException {
+    String firebaseUid = auth.getPrincipal().toString();
+    log.info("Starting user creation for firebaseUid={}", firebaseUid);
+
+    // Fetch Firebase user details
+    UserRecord userRecord = FirebaseAuth.getInstance().getUser(firebaseUid);
+
     var user =
         User.builder()
             .firebaseUid(auth.getPrincipal().toString())

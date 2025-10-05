@@ -4,6 +4,7 @@ import com.google.common.base.Strings;
 import com.nested.app.client.bulkpe.PrefilClient;
 import com.nested.app.client.bulkpe.dto.PrefilRequest;
 import com.nested.app.client.bulkpe.dto.PrefillResponse;
+import com.nested.app.entity.Address;
 import com.nested.app.entity.Investor;
 import com.nested.app.entity.User;
 import com.nested.app.events.UserCreatedEvent;
@@ -41,7 +42,8 @@ public record UserPreFillHandler(
 
   @EventListener
   public void afterUpdate(UserUpdateEvent event) {
-    if (Objects.equals(event.oldUser().getName(), event.newUser().getName())) {
+    if (Objects.equals(event.oldUser().getName(), event.newUser().getName())
+        || event.oldUser().getPrefillStatus().equals(User.PrefillStatus.INCOMPLETE)) {
       preFillUserData(event.newUser());
     }
   }
@@ -79,6 +81,21 @@ public record UserPreFillHandler(
             : null);
     investor.setDateOfBirth(parseDate(data.getPersonalInfo().getDob()));
 
+    if (data.getAddressInfo() != null && !data.getAddressInfo().isEmpty()) {
+      var addressInfo = data.getAddressInfo().getFirst();
+      if (addressInfo != null) {
+        Address address = new Address();
+
+        address.setAddressLine(addressInfo.getAddress());
+        address.setState(addressInfo.getState());
+        address.setCity(""); // TODO: find a way to get city
+        address.setCountry("India"); // TODO: Make configurable if needed
+        address.setPinCode(addressInfo.getPostal());
+
+        investor.setAddress(address);
+      }
+    }
+
     return investor;
   }
 
@@ -106,7 +123,7 @@ public record UserPreFillHandler(
     // generate unique reference
     prefilRequest.setReference("ref-" + generateRefId());
 
-    // Step 3: Call Prefill API
+    // Call Prefill API
     PrefillResponse response = prefilClient.fetchFullDetailsForTheUser(prefilRequest).block();
 
     if (response == null) {
@@ -117,8 +134,8 @@ public record UserPreFillHandler(
       return;
     }
 
-    // Step 4: Subscribe async OR block for now (depends on architecture)
-    if (response.isStatus()) {
+    // Subscribe async OR block for now (depends on architecture)
+    if (response.isStatus() && response.getStatusCode() == 200) {
       log.info(
           "Prefill successful for userId={} reference={}",
           user.getId(),
@@ -134,13 +151,29 @@ public record UserPreFillHandler(
           "Investor saved for userId={} with clientCode={}",
           user.getId(),
           investor.getClientCode());
-    } else {
-      // TODO: handle different failure reasons & update the user.prefillStatus accordingly
+    }
+    else {
       log.warn(
-          "Prefill failed for userId={} reference={} message={}",
-          user.getId(),
-          prefilRequest.getReference(),
-          response.getMessage());
+              "Prefill failed for userId={} reference={} message={}",
+              user.getId(),
+              prefilRequest.getReference(),
+              response.getMessage()
+      );
+
+      User.PrefillStatus status = mapPrefillFailureStatus(response);
+      userRepository.save(user.withPrefillStatus(status));
     }
   }
+
+  private User.PrefillStatus mapPrefillFailureStatus(PrefillResponse response) {
+    if (response.getStatusCode() == 400) {
+      return switch (response.getMessage()) {
+        case "Data not found in Bureau" -> User.PrefillStatus.FAILED_WITH_INVALID_NAME_OR_PHONE_NUMBER;
+        case "Input payload validation failed" -> User.PrefillStatus.FAILED_WITH_INVALID_PHONE_NUMBER_FORAMATE;
+        default -> User.PrefillStatus.UNKNOWN_FAILURE;
+      };
+    }
+    return User.PrefillStatus.UNKNOWN_FAILURE;
+  }
+
 }
