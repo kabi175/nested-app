@@ -11,10 +11,14 @@ import com.nested.app.events.UserUpdateEvent;
 import com.nested.app.repository.InvestorRepository;
 import com.nested.app.repository.UserRepository;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeParseException;
 import java.util.Date;
+import java.util.List;
 import java.util.Objects;
+import java.util.concurrent.ThreadLocalRandom;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
@@ -27,6 +31,9 @@ public record UserPreFillHandler(
     InvestorRepository investorRepository,
     UserRepository userRepository) {
 
+  private static final List<DateTimeFormatter> FORMATTERS =
+      List.of(DateTimeFormatter.ofPattern("yyyy-MM-dd"), DateTimeFormatter.ofPattern("dd-MM-yyyy"));
+
   @TransactionalEventListener
   public void afterCreate(UserCreatedEvent event) {
     preFillUserData(event.getUser());
@@ -37,6 +44,42 @@ public record UserPreFillHandler(
     if (Objects.equals(event.oldUser().getName(), event.newUser().getName())) {
       preFillUserData(event.newUser());
     }
+  }
+
+  public static String generateRefId() {
+    String timestamp = DateTimeFormatter.ofPattern("yyyyMMddHHmmss").format(LocalDateTime.now());
+    int randomNum = ThreadLocalRandom.current().nextInt(1000, 9999);
+    return "REF-" + timestamp + "-" + randomNum;
+  }
+
+  // TODO: mohan recheck this
+  public static Date parseDate(String dateStr) {
+      for (DateTimeFormatter formatter : FORMATTERS) {
+          try {
+              LocalDate localDate = LocalDate.parse(dateStr, formatter);
+              return Date.from(localDate.atStartOfDay(ZoneId.systemDefault()).toInstant());
+          } catch (DateTimeParseException ignored) {}
+      }
+      throw new IllegalArgumentException("Invalid date format: " + dateStr);
+  }
+
+  /** Helper to map PrefilResponse JSON into Investor entity. */
+  private Investor mapToInvestor(PrefillResponse response, User savedUser) {
+    Investor investor = new Investor();
+    var data = response.getData();
+
+    investor.setFirstName(data.getName()); // you may want to split name
+    investor.setEmail(savedUser.getEmail());
+    investor.setClientCode(data.getReference());
+    investor.setPanNumber(
+        data.getIdentityInfo() != null
+                && data.getIdentityInfo().getPanNumber() != null
+                && !data.getIdentityInfo().getPanNumber().isEmpty()
+            ? data.getIdentityInfo().getPanNumber().getFirst().getIdNumber()
+            : null);
+    investor.setDateOfBirth(parseDate(data.getPersonalInfo().getDob()));
+
+    return investor;
   }
 
   void preFillUserData(User user) {
@@ -60,7 +103,8 @@ public record UserPreFillHandler(
       phoneNumber = phoneNumber.substring(2);
     }
     prefilRequest.setMobile(phoneNumber);
-    prefilRequest.setReference("ref-" + user.getId()); // generate unique reference
+    // generate unique reference
+    prefilRequest.setReference("ref-" + generateRefId());
 
     // Step 3: Call Prefill API
     PrefillResponse response = prefilClient.fetchFullDetailsForTheUser(prefilRequest).block();
@@ -98,33 +142,5 @@ public record UserPreFillHandler(
           prefilRequest.getReference(),
           response.getMessage());
     }
-  }
-
-  /** Helper to map PrefilResponse JSON into Investor entity. */
-  private Investor mapToInvestor(PrefillResponse response, User savedUser) {
-    Investor investor = new Investor();
-    var data = response.getData();
-
-    investor.setFirstName(data.getName()); // you may want to split name
-    investor.setEmail(savedUser.getEmail());
-    investor.setClientCode(data.getReference());
-    investor.setPanNumber(
-        data.getIdentityInfo() != null
-                && data.getIdentityInfo().getPanNumber() != null
-                && !data.getIdentityInfo().getPanNumber().isEmpty()
-            ? data.getIdentityInfo().getPanNumber().getFirst().getIdNumber()
-            : null);
-    investor.setDateOfBirth(parseDate(data.getPersonalInfo().getDob()));
-
-    return investor;
-  }
-
-  // TODO: mohan recheck this
-  public Date parseDate(String dateStr) {
-    if (dateStr == null || dateStr.isEmpty()) {
-      return null;
-    }
-    LocalDate localDate = LocalDate.parse(dateStr, DateTimeFormatter.ISO_LOCAL_DATE);
-    return Date.from(localDate.atStartOfDay(ZoneId.systemDefault()).toInstant());
   }
 }
