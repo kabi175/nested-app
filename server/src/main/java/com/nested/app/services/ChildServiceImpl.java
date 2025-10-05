@@ -216,12 +216,7 @@ public class ChildServiceImpl implements ChildService {
         dto.setDateOfBirth(child.getDateOfBirth());
         dto.setGender(child.getGender());
         dto.setInvestUnderChild(child.isInvestUnderChild());
-        
-        // Set user information if available
-        if (child.getUser() != null) {
-      dto.setUserId(userContext.getUser().getId());
-        }
-        
+
         return dto;
     }
 
@@ -241,7 +236,8 @@ public class ChildServiceImpl implements ChildService {
         child.setDateOfBirth(childDTO.getDateOfBirth());
         child.setGender(childDTO.getGender());
         child.setInvestUnderChild(childDTO.isInvestUnderChild());
-        
+    child.setUser(userContext.getUser());
+
         return child;
     }
 

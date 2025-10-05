@@ -1,5 +1,6 @@
 package com.nested.app.entity;
 
+import com.fasterxml.jackson.annotation.JsonValue;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -16,15 +17,13 @@ import lombok.Data;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
-/**
- * Entity representing a child associated with a user
- */
+/** Entity representing a child associated with a user */
 @Data
 @Entity
 @Table(name = "children")
 public class Child {
-  
-  @Id 
+
+  @Id
   @GeneratedValue(strategy = GenerationType.IDENTITY)
   private Long id;
 
@@ -56,8 +55,18 @@ public class Child {
   private Timestamp updatedAt;
 
   public enum Gender {
-    MALE,
-    FEMALE,
-    OTHER
+    MALE("male"),
+    FEMALE("female"),
+    OTHER("other");
+    private final String value;
+
+    Gender(String value) {
+      this.value = value.toLowerCase();
+    }
+
+    @JsonValue
+    public String toValue() {
+      return value.toLowerCase();
+    }
   }
 }

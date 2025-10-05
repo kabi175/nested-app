@@ -35,7 +35,6 @@ public class ChildDTO {
   private Child.Gender gender;
 
   @NotEmpty private boolean investUnderChild = false;
-  private Long userId;
 
   private Timestamp createdAt;
 
