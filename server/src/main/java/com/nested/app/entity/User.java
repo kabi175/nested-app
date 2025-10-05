@@ -1,7 +1,9 @@
 package com.nested.app.entity;
 
+import com.nested.app.listeners.UserEntityListener;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EntityListeners;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
@@ -22,12 +24,14 @@ import org.hibernate.annotations.UpdateTimestamp;
 @Table(name = "users")
 @FilterDef(name = "userFilter", parameters = @ParamDef(name = "userId", type = Long.class))
 @Filter(name = "userFilter", condition = "id = :userId")
+@EntityListeners(UserEntityListener.class)
 public class User {
 
   @Id
   @GeneratedValue(strategy = GenerationType.IDENTITY)
   private Long id;
 
+  @Column(nullable = false)
   private String name;
 
   @Email(message = "Invalid email format")

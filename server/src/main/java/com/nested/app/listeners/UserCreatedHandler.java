@@ -1,28 +1,35 @@
 package com.nested.app.listeners;
 
+import com.google.common.base.Strings;
 import com.nested.app.client.bulkpe.PrefilClient;
 import com.nested.app.client.bulkpe.dto.PrefilRequest;
 import com.nested.app.client.bulkpe.dto.PrefillResponse;
 import com.nested.app.entity.Investor;
 import com.nested.app.entity.User;
+import com.nested.app.events.UserCreatedEvent;
 import com.nested.app.repository.InvestorRepository;
-import com.nested.app.services.UserService;
-import jakarta.persistence.PostPersist;
 import java.time.LocalDate;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.Date;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Component;
+import org.springframework.transaction.event.TransactionalEventListener;
 
 @Slf4j
-public record UserEntityListener(PrefilClient prefilClient, InvestorRepository investorRepository) {
+@Component
+public record UserCreatedHandler(PrefilClient prefilClient, InvestorRepository investorRepository) {
 
-  @PostPersist
-  public void afterCreate(User user) {
-    preFillUserData(user);
+  @TransactionalEventListener
+  public void afterCreate(UserCreatedEvent event) {
+    preFillUserData(event.getUser());
   }
 
   void preFillUserData(User user) {
+    if (Strings.isNullOrEmpty(user.getName())) {
+      log.warn("User name is empty for userId={}, skipping prefill", user.getId());
+      return;
+    }
     log.info("Starting prefill for userId={}", user.getId());
     PrefilRequest prefilRequest = new PrefilRequest();
     prefilRequest.setName(user.getName());

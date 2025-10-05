@@ -14,7 +14,7 @@ public interface UserService {
 
   UserDTO updateUser(UserDTO userDTO);
 
-  public enum Type {
+  enum Type {
     CURRENT_USER,
     ALL,
     ACTIVE,
