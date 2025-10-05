@@ -69,7 +69,7 @@ public class UserServiceImpl implements UserService {
       updatedUser = originalUser.withEmail(userDTO.getEmail());
     }
 
-    if (Strings.isNullOrEmpty(userDTO.getName())
+    if (!Strings.isNullOrEmpty(userDTO.getName())
         && !Objects.equals(userDTO.getName(), originalUser.getName())) {
       updatedUser = originalUser.withName(userDTO.getName());
     }
