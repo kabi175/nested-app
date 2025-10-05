@@ -15,9 +15,9 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function NameInputScreen() {
-  const [name, setName] = useState("");
-  const [isLoading, setIsLoading] = useState(false);
   const auth = useAuth();
+  const [name, setName] = useState(auth.user?.displayName || "");
+  const [isLoading, setIsLoading] = useState(false);
 
   const handleSubmit = async () => {
     if (!name.trim()) {
