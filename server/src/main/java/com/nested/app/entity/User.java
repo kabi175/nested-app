@@ -12,8 +12,11 @@ import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import jakarta.validation.constraints.Email;
 import java.sql.Timestamp;
+import lombok.AccessLevel;
+import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 import lombok.With;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.Filter;
@@ -28,6 +31,8 @@ import org.hibernate.annotations.UpdateTimestamp;
 @FilterDef(name = "userFilter", parameters = @ParamDef(name = "userId", type = Long.class))
 @Filter(name = "userFilter", condition = "id = :userId")
 @EntityListeners(UserEntityListener.class)
+@NoArgsConstructor(access = AccessLevel.PROTECTED) // required by JPA
+@AllArgsConstructor
 public class User {
 
   @Id
