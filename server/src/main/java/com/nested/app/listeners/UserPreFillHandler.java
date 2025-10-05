@@ -65,40 +65,6 @@ public record UserPreFillHandler(
       throw new IllegalArgumentException("Invalid date format: " + dateStr);
   }
 
-  /** Helper to map PrefilResponse JSON into Investor entity. */
-  private Investor mapToInvestor(PrefillResponse response, User savedUser) {
-    Investor investor = new Investor();
-    var data = response.getData();
-
-    investor.setFirstName(data.getName()); // you may want to split name
-    investor.setEmail(savedUser.getEmail());
-    investor.setClientCode(data.getReference());
-    investor.setPanNumber(
-        data.getIdentityInfo() != null
-                && data.getIdentityInfo().getPanNumber() != null
-                && !data.getIdentityInfo().getPanNumber().isEmpty()
-            ? data.getIdentityInfo().getPanNumber().getFirst().getIdNumber()
-            : null);
-    investor.setDateOfBirth(parseDate(data.getPersonalInfo().getDob()));
-
-    if (data.getAddressInfo() != null && !data.getAddressInfo().isEmpty()) {
-      var addressInfo = data.getAddressInfo().getFirst();
-      if (addressInfo != null) {
-        Address address = new Address();
-
-        address.setAddressLine(addressInfo.getAddress());
-        address.setState(addressInfo.getState());
-        address.setCity(""); // TODO: find a way to get city
-        address.setCountry("India"); // TODO: Make configurable if needed
-        address.setPinCode(addressInfo.getPostal());
-
-        investor.setAddress(address);
-      }
-    }
-
-    return investor;
-  }
-
   void preFillUserData(User user) {
     if (Strings.isNullOrEmpty(user.getName())) {
       log.warn("User name is empty for userId={}, skipping prefill", user.getId());
@@ -142,15 +108,14 @@ public record UserPreFillHandler(
           prefilRequest.getReference());
 
       // Step 5: Map PrefillResponse → Investor entity
-      Investor investor = mapToInvestor(response, user);
+      mapToUser(response, user);
 
-      // Step 6: Save investor
-      investorRepository.save(investor);
-      userRepository.save(user.withPrefillStatus(User.PrefillStatus.COMPLETED));
+      userRepository.save(user);
+
       log.info(
-          "Investor saved for userId={} with clientCode={}",
+          "Prefill data saved for userId={} with clientCode={}",
           user.getId(),
-          investor.getClientCode());
+          user.getClientCode());
     }
     else {
       log.warn(
@@ -159,7 +124,6 @@ public record UserPreFillHandler(
               prefilRequest.getReference(),
               response.getMessage()
       );
-
       User.PrefillStatus status = mapPrefillFailureStatus(response);
       userRepository.save(user.withPrefillStatus(status));
     }
@@ -174,6 +138,39 @@ public record UserPreFillHandler(
       };
     }
     return User.PrefillStatus.UNKNOWN_FAILURE;
+  }
+
+  /** Helper to map PrefilResponse JSON into Investor entity. */
+  private void mapToUser(PrefillResponse response, User savedUser) {
+    var data = response.getData();
+
+    savedUser.setFirstName(data.getName()); // you may want to split name
+    savedUser.setEmail(data.getEmailInfo().getFirst().getEmailAddress().toLowerCase());
+    savedUser.setClientCode(data.getReference());
+    savedUser.setPanNumber(
+            data.getIdentityInfo() != null
+                    && data.getIdentityInfo().getPanNumber() != null
+                    && !data.getIdentityInfo().getPanNumber().isEmpty()
+                    ? data.getIdentityInfo().getPanNumber().getFirst().getIdNumber()
+                    : null);
+    savedUser.setDateOfBirth(parseDate(data.getPersonalInfo().getDob()));
+
+    if (data.getAddressInfo() != null && !data.getAddressInfo().isEmpty()) {
+      var addressInfo = data.getAddressInfo().getFirst();
+      if (addressInfo != null) {
+        Address address = new Address();
+
+        address.setAddressLine(addressInfo.getAddress());
+        address.setState(addressInfo.getState());
+        address.setCity(""); // TODO: find a way to get city
+        address.setCountry("India"); // TODO: Make configurable if needed
+        address.setPinCode(addressInfo.getPostal());
+
+        savedUser.setAddress(address);
+      }
+    }
+
+    savedUser.setPrefillStatus(User.PrefillStatus.COMPLETED);
   }
 
 }

@@ -1,7 +1,7 @@
 package com.nested.app.annotation;
 
-import com.nested.app.contect.ClientContext;
-import com.nested.app.entity.Investor;
+import com.nested.app.contect.UserContext;
+import com.nested.app.entity.User;
 import jakarta.validation.Constraint;
 import jakarta.validation.ConstraintValidator;
 import jakarta.validation.ConstraintValidatorContext;
@@ -19,43 +19,42 @@ import java.util.Objects;
 @Constraint(validatedBy = {KycCompletedOnly.KycCompletedOnlyValidation.class})
 @Documented
 public @interface KycCompletedOnly {
-    String message() default "User must be active";
+  String message() default "User must be active";
 
-    Class<?>[] groups() default {};
+  Class<?>[] groups() default {};
 
-    Class<? extends Payload>[] payload() default {};
+  Class<? extends Payload>[] payload() default {};
 
-    class KycCompletedOnlyValidation implements ConstraintValidator<KycCompletedOnly, Investor> {
-        @Override
-        public void initialize(KycCompletedOnly constraintAnnotation) {
-            ConstraintValidator.super.initialize(constraintAnnotation);
-        }
-
-        @Override
-        public boolean isValid(Investor investor, ConstraintValidatorContext context) {
-            return investor != null && Objects.equals(investor.getKycStatus(), Investor.KYCStatus.COMPLETED);
-        }
+  class KycCompletedOnlyValidation implements ConstraintValidator<KycCompletedOnly, User> {
+    @Override
+    public void initialize(KycCompletedOnly constraintAnnotation) {
+      ConstraintValidator.super.initialize(constraintAnnotation);
     }
 
-    class KycCompletedOnlyClientContentValidation implements ConstraintValidator<KycCompletedOnly, ClientContext> {
-        @Override
-        public void initialize(KycCompletedOnly constraintAnnotation) {
-            ConstraintValidator.super.initialize(constraintAnnotation);
-        }
+    @Override
+    public boolean isValid(User user, ConstraintValidatorContext context) {
+      return user != null && Objects.equals(user.getKycStatus(), User.KYCStatus.COMPLETED);
+    }
+  }
 
-        @Override
-        public boolean isValid(ClientContext clientContext, ConstraintValidatorContext context) {
-            try {
-                if (clientContext == null) {
-                    return false;
-                }
-                Investor investor = clientContext.getInvestor();
-                return investor != null && Objects.equals(investor.getKycStatus(), Investor.KYCStatus.COMPLETED);
-            } catch (Exception e) {
-                return false;
-            }
-        }
+  class KycCompletedOnlyClientContentValidation
+      implements ConstraintValidator<KycCompletedOnly, UserContext> {
+    @Override
+    public void initialize(KycCompletedOnly constraintAnnotation) {
+      ConstraintValidator.super.initialize(constraintAnnotation);
     }
 
+    @Override
+    public boolean isValid(UserContext userContext, ConstraintValidatorContext context) {
+      try {
+        if (userContext == null) {
+          return false;
+        }
+        User user = userContext.getUser();
+        return user != null && Objects.equals(user.getKycStatus(), User.KYCStatus.COMPLETED);
+      } catch (Exception e) {
+        return false;
+      }
+    }
+  }
 }
-

@@ -1,17 +1,15 @@
 package com.nested.app.entity;
 
+import com.nested.app.enums.IncomeSlab;
+import com.nested.app.enums.IncomeSource;
+import com.nested.app.enums.Occupation;
 import com.nested.app.listeners.UserEntityListener;
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.EntityListeners;
-import jakarta.persistence.EnumType;
-import jakarta.persistence.Enumerated;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.Table;
+import jakarta.persistence.*;
 import jakarta.validation.constraints.Email;
 import java.sql.Timestamp;
+import java.util.Date;
+import java.util.List;
+
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -54,6 +52,25 @@ public class User {
   @Column(unique = true, nullable = false, updatable = false)
   private String firebaseUid;
 
+  @Column(unique = true)
+  private String panNumber;
+
+  @OneToMany private List<BankDetail> bankDetails;
+
+  private Date dateOfBirth;
+
+  @Enumerated(EnumType.STRING)
+  private Gender gender;
+
+  @OneToOne
+  @JoinColumn(name = "address_id")
+  private Address address;
+
+  @With
+  @Builder.Default
+  @Enumerated(EnumType.STRING)
+  private KYCStatus kycStatus = KYCStatus.UNKNOWN;
+
   @CreationTimestamp
   @Column(nullable = false, updatable = false)
   private Timestamp createdAt;
@@ -67,6 +84,14 @@ public class User {
   @Builder.Default
   private boolean isActive = true;
 
+  private String firstName;
+
+  private String lastName;
+
+  private String birthPlace;
+
+  private String birthCountry;
+
   // admin only has write access
   @With
   @Builder.Default
@@ -74,12 +99,47 @@ public class User {
   @Column(nullable = false)
   private Role role = Role.STANDARD;
 
+  @Column(unique = true)
+  private String clientCode;
+
+  @With
+  @Builder.Default
+  @Enumerated(EnumType.STRING)
+  private IncomeSource incomeSource = IncomeSource.SALARY;
+
+  @With
+  @Builder.Default
+  @Enumerated(EnumType.STRING)
+  private IncomeSlab incomeSlab = IncomeSlab.ABOVE_5_LAC_UPTO_10_LAC;
+
+  @With
+  @Builder.Default
+  @Enumerated(EnumType.STRING)
+  private Occupation occupation = Occupation.PROFESSIONAL;
+
+  @OneToOne
+  @JoinColumn(name = "investor_id")
+  private Investor investor;
+
   // admin only has write access
   @With
   @Builder.Default
   @Enumerated(EnumType.STRING)
   @Column(nullable = false)
   private PrefillStatus prefillStatus = PrefillStatus.INCOMPLETE;
+
+  public enum Gender {
+    MALE,
+    FEMALE,
+    TRANSGENDER,
+  }
+
+  public enum KYCStatus {
+    UNKNOWN,
+    PENDING,
+    COMPLETED,
+    FAILED
+  }
 
   public enum Role {
     STANDARD,

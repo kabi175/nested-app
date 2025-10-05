@@ -26,73 +26,19 @@ import org.hibernate.annotations.UpdateTimestamp;
 @Table(name = "investors")
 public class Investor {
 
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+  @Id
+  @GeneratedValue(strategy = GenerationType.IDENTITY)
+  private Long id;
 
-    @Column(nullable = false)
-    private String firstName;
+  private String investorStatus;
+  private String tarakkiInvestorRef;
+  private String investorType; // Indiviadual, minor
 
-    private String lastName;
+  @CreationTimestamp
+  @Column(nullable = false, updatable = false)
+  private Timestamp createdAt;
 
-    @Column(nullable = false)
-    private String email;
-
-    private String birthPlace;
-
-    private String birthCountry;
-
-    @Column(nullable = false, unique = true)
-    private String clientCode;
-
-    @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
-    private IncomeSource incomeSource = IncomeSource.SALARY;
-
-    @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
-    private IncomeSlab incomeSlab = IncomeSlab.BELOW_1_LAC;
-
-    private String investorType = "individual";
-
-    @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
-    private Gender gender = Gender.MALE;
-
-    private Date dateOfBirth; // YYYY-MM-DD
-
-    private Occupation occupation = Occupation.PROFESSIONAL;
-
-    @Column(unique = true)
-    private String panNumber;
-
-    @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
-    private KYCStatus kycStatus = KYCStatus.UNKNOWN;
-
-    @OneToMany
-    private List<BankDetail> bankDetails;
-
-  @OneToOne
-  @JoinColumn(name = "address_id")
-  private Address address;
-
-    @CreationTimestamp
-    @Column(nullable = false, updatable = false)
-    private Timestamp createdAt;
-
-    @UpdateTimestamp
-    @Column(nullable = false)
-    private Timestamp updatedAt;
-
-
-    public enum Gender {
-        MALE,
-        FEMALE,
-        TRANSGENDER,
-    }
-
-    public enum KYCStatus {
-        UNKNOWN, PENDING, COMPLETED, FAILED
-    }
+  @UpdateTimestamp
+  @Column(nullable = false)
+  private Timestamp updatedAt;
 }
