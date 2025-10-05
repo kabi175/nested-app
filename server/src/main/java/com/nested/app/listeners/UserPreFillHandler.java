@@ -7,22 +7,35 @@ import com.nested.app.client.bulkpe.dto.PrefillResponse;
 import com.nested.app.entity.Investor;
 import com.nested.app.entity.User;
 import com.nested.app.events.UserCreatedEvent;
+import com.nested.app.events.UserUpdateEvent;
 import com.nested.app.repository.InvestorRepository;
+import com.nested.app.repository.UserRepository;
 import java.time.LocalDate;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.Date;
+import java.util.Objects;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.event.TransactionalEventListener;
 
 @Slf4j
 @Component
-public record UserCreatedHandler(PrefilClient prefilClient, InvestorRepository investorRepository) {
+public record UserPreFillHandler(
+    PrefilClient prefilClient,
+    InvestorRepository investorRepository,
+    UserRepository userRepository) {
 
   @TransactionalEventListener
   public void afterCreate(UserCreatedEvent event) {
     preFillUserData(event.getUser());
+  }
+
+  @TransactionalEventListener
+  public void afterUpdate(UserUpdateEvent event) {
+    if (Objects.equals(event.oldUser().getName(), event.newUser().getName())) {
+      preFillUserData(event.newUser());
+    }
   }
 
   void preFillUserData(User user) {
@@ -30,6 +43,12 @@ public record UserCreatedHandler(PrefilClient prefilClient, InvestorRepository i
       log.warn("User name is empty for userId={}, skipping prefill", user.getId());
       return;
     }
+
+    if (Objects.equals(user.getPrefillStatus(), User.PrefillStatus.COMPLETED)) {
+      log.info("Prefill already completed for userId={}, skipping prefill", user.getId());
+      return;
+    }
+
     log.info("Starting prefill for userId={}", user.getId());
     PrefilRequest prefilRequest = new PrefilRequest();
     prefilRequest.setName(user.getName());
@@ -59,11 +78,13 @@ public record UserCreatedHandler(PrefilClient prefilClient, InvestorRepository i
 
       // Step 6: Save investor
       investorRepository.save(investor);
+      userRepository.save(user.withPrefillStatus(User.PrefillStatus.COMPLETED));
       log.info(
           "Investor saved for userId={} with clientCode={}",
           user.getId(),
           investor.getClientCode());
     } else {
+      // TODO: handle different failure reasons & update the user.prefillStatus accordingly
       log.warn(
           "Prefill failed for userId={} reference={} message={}",
           user.getId(),

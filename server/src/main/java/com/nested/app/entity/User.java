@@ -12,7 +12,9 @@ import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import jakarta.validation.constraints.Email;
 import java.sql.Timestamp;
+import lombok.Builder;
 import lombok.Data;
+import lombok.With;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.Filter;
 import org.hibernate.annotations.FilterDef;
@@ -21,6 +23,7 @@ import org.hibernate.annotations.UpdateTimestamp;
 
 @Data
 @Entity
+@Builder
 @Table(name = "users")
 @FilterDef(name = "userFilter", parameters = @ParamDef(name = "userId", type = Long.class))
 @Filter(name = "userFilter", condition = "id = :userId")
@@ -31,9 +34,11 @@ public class User {
   @GeneratedValue(strategy = GenerationType.IDENTITY)
   private Long id;
 
+  @With
   @Column(nullable = false)
   private String name;
 
+  @With
   @Email(message = "Invalid email format")
   private String email;
 
@@ -54,15 +59,32 @@ public class User {
 
   // admin only has write access
   @Column(nullable = false)
+  @Builder.Default
   private boolean isActive = true;
 
   // admin only has write access
+  @With
+  @Builder.Default
   @Enumerated(EnumType.STRING)
   @Column(nullable = false)
   private Role role = Role.STANDARD;
 
+  // admin only has write access
+  @With
+  @Builder.Default
+  @Enumerated(EnumType.STRING)
+  @Column(nullable = false)
+  private PrefillStatus prefillStatus = PrefillStatus.INCOMPLETE;
+
   public enum Role {
     STANDARD,
     ADMIN
+  }
+
+  public enum PrefillStatus {
+    INCOMPLETE,
+    FAILED_WITH_INVALID_NAME,
+    UNKNOWN_FAILURE,
+    COMPLETED
   }
 }
