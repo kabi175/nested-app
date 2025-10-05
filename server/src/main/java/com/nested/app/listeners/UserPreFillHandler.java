@@ -16,6 +16,7 @@ import java.time.format.DateTimeFormatter;
 import java.util.Date;
 import java.util.Objects;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.event.TransactionalEventListener;
 
@@ -31,7 +32,7 @@ public record UserPreFillHandler(
     preFillUserData(event.getUser());
   }
 
-  @TransactionalEventListener
+  @EventListener
   public void afterUpdate(UserUpdateEvent event) {
     if (Objects.equals(event.oldUser().getName(), event.newUser().getName())) {
       preFillUserData(event.newUser());
