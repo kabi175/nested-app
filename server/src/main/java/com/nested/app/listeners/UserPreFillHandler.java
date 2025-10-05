@@ -54,9 +54,9 @@ public record UserPreFillHandler(
     PrefilRequest prefilRequest = new PrefilRequest();
     prefilRequest.setName(user.getName());
     var phoneNumber = user.getPhoneNumber();
-    if(phoneNumber != null && phoneNumber.startsWith("+91")) {
+    if (phoneNumber != null && phoneNumber.startsWith("+91")) {
       phoneNumber = phoneNumber.substring(3);
-    }else if(phoneNumber != null && phoneNumber.startsWith("91")) {
+    } else if (phoneNumber != null && phoneNumber.startsWith("91")) {
       phoneNumber = phoneNumber.substring(2);
     }
     prefilRequest.setMobile(phoneNumber);
