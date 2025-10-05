@@ -53,7 +53,13 @@ public record UserPreFillHandler(
     log.info("Starting prefill for userId={}", user.getId());
     PrefilRequest prefilRequest = new PrefilRequest();
     prefilRequest.setName(user.getName());
-    prefilRequest.setMobile(user.getPhoneNumber());
+    var phoneNumber = user.getPhoneNumber();
+    if(phoneNumber != null && phoneNumber.startsWith("+91")) {
+      phoneNumber = phoneNumber.substring(3);
+    }else if(phoneNumber != null && phoneNumber.startsWith("91")) {
+      phoneNumber = phoneNumber.substring(2);
+    }
+    prefilRequest.setMobile(phoneNumber);
     prefilRequest.setReference("ref-" + user.getId()); // generate unique reference
 
     // Step 3: Call Prefill API
