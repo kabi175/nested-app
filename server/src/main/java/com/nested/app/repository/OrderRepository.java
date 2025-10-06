@@ -1,10 +1,9 @@
 package com.nested.app.repository;
 
 import com.nested.app.entity.Order;
+import java.util.List;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
-
-import java.util.List;
 
 /**
  * Repository interface for Order entity
@@ -47,15 +46,7 @@ public interface OrderRepository extends JpaRepository<Order, Long> {
      * @return List of orders with the specified status
      */
     List<Order> findByStatus(String status);
-    
-    /**
-     * Find orders by type
-     * 
-     * @param type Order type (buy, sell, sip)
-     * @return List of orders with the specified type
-     */
-    List<Order> findByType(String type);
-    
+
     /**
      * Find orders by folio number
      * 

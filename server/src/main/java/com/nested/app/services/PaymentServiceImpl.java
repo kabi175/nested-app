@@ -1,0 +1,458 @@
+package com.nested.app.services;
+
+import com.nested.app.client.tarrakki.MandateApiClient;
+import com.nested.app.client.tarrakki.OtpApiClient;
+import com.nested.app.client.tarrakki.dto.CreateMandateRequest;
+import com.nested.app.client.tarrakki.dto.OtpRequest;
+import com.nested.app.client.tarrakki.dto.OtpVerifyRequest;
+import com.nested.app.dto.OrderDTO;
+import com.nested.app.dto.PaymentDTO;
+import com.nested.app.dto.PlaceOrderDTO;
+import com.nested.app.dto.PlaceOrderPostDTO;
+import com.nested.app.dto.VerifyOrderDTO;
+import com.nested.app.entity.BuyOrder;
+import com.nested.app.entity.Child;
+import com.nested.app.entity.Goal;
+import com.nested.app.entity.Order;
+import com.nested.app.entity.Payment;
+import com.nested.app.entity.SIPOrder;
+import com.nested.app.entity.User;
+import com.nested.app.repository.ChildRepository;
+import com.nested.app.repository.GoalRepository;
+import com.nested.app.repository.PaymentRepository;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Optional;
+import java.util.stream.Collectors;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+/**
+ * Service implementation for managing Payment entities Provides business logic for payment-related
+ * operations
+ *
+ * @author Nested App Team
+ * @version 1.0
+ */
+@Slf4j
+@Service
+@RequiredArgsConstructor
+@Transactional
+public class PaymentServiceImpl implements PaymentService {
+
+  private final PaymentRepository paymentRepository;
+  private final GoalRepository goalRepository;
+  private final ChildRepository childRepository;
+
+  private final OtpApiClient otpApiClient;
+  private final MandateApiClient mandateApiClient;
+
+  private static CreateMandateRequest getCreateMandateRequest(Payment payment) {
+    var mandateRequest = new CreateMandateRequest();
+    mandateRequest.setInvestor_id(payment.getInvestor().getTarakkiInvestorRef());
+    mandateRequest.setBank_id(payment.getBank().getRefId());
+    if (payment.getPaymentType() == PlaceOrderPostDTO.PaymentMethod.UPI) {
+      mandateRequest.setMandate_type(CreateMandateRequest.MandateType.UPI);
+      mandateRequest.setUpi_id(payment.getUpiId());
+    } else {
+      mandateRequest.setMandate_type(CreateMandateRequest.MandateType.ENACH);
+    }
+    return mandateRequest;
+  }
+
+  /**
+   * Creates a payment with multiple orders for a child
+   *
+   * @param childId Child ID to create payment for
+   * @param placeOrderRequest Order placement request data
+   * @return Created payment with orders
+   */
+  @Override
+  public PlaceOrderDTO createPaymentWithOrders(Long childId, PlaceOrderPostDTO placeOrderRequest) {
+    log.info("Creating payment with orders for child ID: {}", childId);
+
+    try {
+      // Get child and user information
+      Child child =
+          childRepository
+              .findById(childId)
+              .orElseThrow(
+                  () -> new IllegalArgumentException("Child not found with ID: " + childId));
+
+      User user = child.getUser();
+
+      // Get active goals for the child
+      List<Goal> activeGoals =
+          goalRepository.findByChildIdAndStatus(childId, Goal.Status.ACTIVE.name());
+
+      if (activeGoals.isEmpty()) {
+        throw new IllegalArgumentException("No active goals found for child ID: " + childId);
+      }
+
+      // Create payment entity
+      Payment payment = new Payment();
+      payment.setStatus(Payment.PaymentStatus.PENDING);
+      payment.setVerificationStatus(Payment.VerificationStatus.PENDING);
+      payment.setUser(user);
+      payment.setChild(child);
+      payment.setInvestor(child.getInvestor());
+
+      // Set mandate information
+      payment.setPaymentType(placeOrderRequest.getPaymentMethod());
+      if (placeOrderRequest.getPaymentMethod() == PlaceOrderPostDTO.PaymentMethod.UPI) {
+        payment.setUpiId(placeOrderRequest.getUpiID());
+      }
+
+      // Create orders for each order request
+      List<Order> orders = new ArrayList<>();
+      for (PlaceOrderPostDTO.OrderRequestDTO orderRequest : placeOrderRequest.getOrders()) {
+        Goal goal =
+            activeGoals.stream()
+                .filter(g -> g.getId().equals(orderRequest.getGoal().getId()))
+                .findFirst()
+                .orElseThrow(
+                    () ->
+                        new IllegalArgumentException(
+                            "Goal not found or not active: " + orderRequest.getGoal().getId()));
+
+        if (orderRequest.getBuyOrder() != null) {
+          goal.getBasket().getBasketFunds().stream()
+              .map(
+                  basketFund -> {
+                    var buyOrder = new BuyOrder();
+                    var totalAmount = orderRequest.getBuyOrder().getAmount();
+                    var fundAmount = (totalAmount * basketFund.getAllocationPercentage()) / 100;
+                    buyOrder.setGoal(goal);
+                    buyOrder.setUser(user);
+                    buyOrder.setPayment(payment);
+                    buyOrder.setFund(basketFund.getFund());
+                    buyOrder.setAmount(fundAmount);
+                    return buyOrder;
+                  })
+              .forEach(orders::add);
+        }
+
+        if (orderRequest.getSipOrder() != null) {
+          goal.getBasket().getBasketFunds().stream()
+              .map(
+                  basketFund -> {
+                    var sipOrder = new SIPOrder();
+                    var totalAmount = orderRequest.getBuyOrder().getAmount();
+                    var fundAmount = (totalAmount * basketFund.getAllocationPercentage()) / 100;
+                    sipOrder.setGoal(goal);
+                    sipOrder.setUser(user);
+                    sipOrder.setPayment(payment);
+                    sipOrder.setFund(basketFund.getFund());
+                    sipOrder.setAmount(fundAmount);
+                    return sipOrder;
+                  })
+              .forEach(orders::add);
+        }
+      }
+
+      var otpRequest = new OtpRequest();
+      otpRequest.setInvestor_id(payment.getInvestor().getTarakkiInvestorRef());
+      if (orders.size() > 1) {
+        otpRequest.setOtp_type(OtpRequest.Type.BULK_ORDERS);
+      } else {
+        otpRequest.setOtp_type(OtpRequest.Type.BUY_ORDER);
+      }
+
+      var otpResp = otpApiClient.sendOtp(otpRequest).block();
+      if (otpResp == null) {
+        throw new RuntimeException("Failed to get OTP from MF provider");
+      }
+      payment.setVerificationRef(otpResp.getOtp_id());
+
+      payment.setOrders(orders);
+
+      // Save payment and orders
+      Payment savedPayment = paymentRepository.save(payment);
+
+      // Convert to DTO
+      PlaceOrderDTO placeOrderDTO = convertPaymentToPlaceOrderDTO(savedPayment);
+
+      log.info(
+          "Successfully created payment with {} orders for child ID: {}", orders.size(), childId);
+      return placeOrderDTO;
+
+    } catch (Exception e) {
+      log.error(
+          "Error creating payment with orders for child ID {}: {}", childId, e.getMessage(), e);
+      throw new RuntimeException("Failed to create payment with orders", e);
+    }
+  }
+
+  /**
+   * Verifies a payment using verification code
+   *
+   * @param verifyOrderRequest Payment verification request data
+   * @return Verified payment data
+   */
+  @Override
+  public PlaceOrderDTO verifyPayment(VerifyOrderDTO verifyOrderRequest) {
+    log.info(
+        "Verifying payment with verification code: {}", verifyOrderRequest.getVerificationCode());
+
+    try {
+      Optional<Payment> paymentOpt = paymentRepository.findById(verifyOrderRequest.getId());
+
+      if (paymentOpt.isEmpty()) {
+        throw new IllegalArgumentException(
+            "Payment not found with verification code: "
+                + verifyOrderRequest.getVerificationCode());
+      }
+
+      Payment payment = paymentOpt.get();
+
+      // Verify the verification code
+      var verifyReq = new OtpVerifyRequest();
+      // TODO: determine otp type based on order types
+      verifyReq.setOtp_type(OtpRequest.Type.BULK_ORDERS);
+      verifyReq.setOtp(verifyOrderRequest.getVerificationCode());
+      var isValidOtp = otpApiClient.verifyOtp(payment.getVerificationRef(), verifyReq).block();
+      if (Boolean.FALSE.equals(isValidOtp)) {
+        throw new IllegalArgumentException("Invalid verification code provided");
+      }
+
+      // TODO: use setup amount to compute this properly
+      var mandateAmount =
+          payment.getOrders().stream()
+              .filter(order -> order instanceof SIPOrder)
+              .map(SIPOrder.class::cast)
+              .map(SIPOrder::getAmount)
+              .reduce(Double::sum);
+      // Verification successful
+      payment.setVerificationStatus(Payment.VerificationStatus.VERIFIED);
+
+      if (mandateAmount.isPresent() && mandateAmount.get() > 0) {
+        // TODO: handle the CreateMandateRequest properly
+        var mandateRequest = getCreateMandateRequest(payment);
+        mandateRequest.setAuto_debit_limit(mandateAmount.get());
+        var mandateResponse = mandateApiClient.create(mandateRequest).block();
+
+        if (mandateResponse == null) {
+          throw new RuntimeException("Failed to create mandate with MF provider");
+        }
+
+        payment.setMandateConfirmationUrl(mandateResponse.getRedirection_url());
+      }
+      Payment savedPayment = paymentRepository.save(payment);
+
+      PlaceOrderDTO verifiedPayment = convertPaymentToPlaceOrderDTO(savedPayment);
+
+      log.info("Successfully verified payment with ID: {}", payment.getId());
+      return verifiedPayment;
+
+    } catch (Exception e) {
+      log.error("Error verifying payment: {}", e.getMessage(), e);
+      throw new RuntimeException("Failed to verify payment", e);
+    }
+  }
+
+  /**
+   * Retrieves all payments
+   *
+   * @return List of all payments
+   */
+  @Override
+  @Transactional(readOnly = true)
+  public List<PaymentDTO> getAllPayments() {
+    log.info("Retrieving all payments from database");
+
+    try {
+      List<Payment> payments = paymentRepository.findAll();
+      List<PaymentDTO> paymentDTOs =
+          payments.stream().map(this::convertPaymentToDTO).collect(Collectors.toList());
+
+      log.info("Successfully retrieved {} payments", paymentDTOs.size());
+      return paymentDTOs;
+
+    } catch (Exception e) {
+      log.error("Error retrieving all payments: {}", e.getMessage(), e);
+      throw new RuntimeException("Failed to retrieve payments", e);
+    }
+  }
+
+  /**
+   * Retrieves payment by ID
+   *
+   * @param paymentId Payment ID
+   * @return Payment data
+   */
+  @Override
+  @Transactional(readOnly = true)
+  public PaymentDTO getPaymentById(Long paymentId) {
+    log.info("Retrieving payment with ID: {}", paymentId);
+
+    try {
+      Payment payment =
+          paymentRepository
+              .findById(paymentId)
+              .orElseThrow(
+                  () -> new IllegalArgumentException("Payment not found with ID: " + paymentId));
+
+      PaymentDTO paymentDTO = convertPaymentToDTO(payment);
+
+      log.info("Successfully retrieved payment with ID: {}", paymentId);
+      return paymentDTO;
+
+    } catch (Exception e) {
+      log.error("Error retrieving payment with ID {}: {}", paymentId, e.getMessage(), e);
+      throw new RuntimeException("Failed to retrieve payment", e);
+    }
+  }
+
+  /**
+   * Retrieves payments by child ID
+   *
+   * @param childId Child ID
+   * @return List of payments for the specified child
+   */
+  @Override
+  @Transactional(readOnly = true)
+  public List<PaymentDTO> getPaymentsByChildId(Long childId) {
+    log.info("Retrieving payments for child ID: {}", childId);
+
+    try {
+      List<Payment> payments = paymentRepository.findByChildId(childId);
+      List<PaymentDTO> paymentDTOs =
+          payments.stream().map(this::convertPaymentToDTO).collect(Collectors.toList());
+
+      log.info("Successfully retrieved {} payments for child ID: {}", paymentDTOs.size(), childId);
+      return paymentDTOs;
+
+    } catch (Exception e) {
+      log.error("Error retrieving payments for child ID {}: {}", childId, e.getMessage(), e);
+      throw new RuntimeException("Failed to retrieve payments for child", e);
+    }
+  }
+
+  /**
+   * Retrieves payments by user ID
+   *
+   * @param userId User ID
+   * @return List of payments for the specified user
+   */
+  @Override
+  @Transactional(readOnly = true)
+  public List<PaymentDTO> getPaymentsByUserId(Long userId) {
+    log.info("Retrieving payments for user ID: {}", userId);
+
+    try {
+      List<Payment> payments = paymentRepository.findByUserId(userId);
+      List<PaymentDTO> paymentDTOs =
+          payments.stream().map(this::convertPaymentToDTO).collect(Collectors.toList());
+
+      log.info("Successfully retrieved {} payments for user ID: {}", paymentDTOs.size(), userId);
+      return paymentDTOs;
+
+    } catch (Exception e) {
+      log.error("Error retrieving payments for user ID {}: {}", userId, e.getMessage(), e);
+      throw new RuntimeException("Failed to retrieve payments for user", e);
+    }
+  }
+
+  /**
+   * Converts Payment entity to PaymentDTO
+   *
+   * @param payment Payment entity
+   * @return PaymentDTO
+   */
+  private PaymentDTO convertPaymentToDTO(Payment payment) {
+    log.debug("Converting Payment entity to DTO for ID: {}", payment.getId());
+
+    PaymentDTO dto = new PaymentDTO();
+    dto.setId(payment.getId());
+    dto.setStatus(PaymentDTO.PaymentStatus.valueOf(payment.getStatus().name()));
+    dto.setVerificationStatus(
+        PaymentDTO.VerificationStatus.valueOf(payment.getVerificationStatus().name()));
+    dto.setPaymentUrl(payment.getPaymentUrl());
+    dto.setVerificationRef(payment.getVerificationRef());
+    dto.setMandateType(PaymentDTO.MandateType.valueOf(payment.getPaymentType().name()));
+    dto.setUpiId(payment.getUpiId());
+    dto.setConfirmationUrl(payment.getMandateConfirmationUrl());
+    dto.setUserId(payment.getUser().getId());
+    dto.setChildId(payment.getChild().getId());
+    dto.setCreatedAt(payment.getCreatedAt());
+    dto.setUpdatedAt(payment.getUpdatedAt());
+
+    // Convert orders
+    if (payment.getOrders() != null) {
+      List<OrderDTO> orderDTOs =
+          payment.getOrders().stream().map(this::convertOrderToDTO).collect(Collectors.toList());
+      dto.setOrders(orderDTOs);
+    }
+
+    return dto;
+  }
+
+  /**
+   * Converts Payment entity to PlaceOrderDTO
+   *
+   * @param payment Payment entity
+   * @return PlaceOrderDTO
+   */
+  private PlaceOrderDTO convertPaymentToPlaceOrderDTO(Payment payment) {
+    log.debug("Converting Payment entity to PlaceOrderDTO for ID: {}", payment.getId());
+
+    PlaceOrderDTO dto = new PlaceOrderDTO();
+    dto.setId(payment.getId());
+    dto.setVerificationStatus(
+        PaymentDTO.VerificationStatus.valueOf(payment.getVerificationStatus().name()));
+    dto.setStatus(PaymentDTO.PaymentStatus.valueOf(payment.getStatus().name()));
+    dto.setPaymentUrl(payment.getPaymentUrl());
+    dto.setPaymentMethod(payment.getPaymentType());
+
+    // Set mandate information
+    PlaceOrderDTO.MandateDTO mandate = new PlaceOrderDTO.MandateDTO();
+    mandate.setUpiId(payment.getUpiId());
+    mandate.setConfirmationUrl(payment.getMandateConfirmationUrl());
+    dto.setMandate(mandate);
+
+    // Convert orders
+    if (payment.getOrders() != null) {
+      List<OrderDTO> orderDTOs =
+          payment.getOrders().stream().map(this::convertOrderToDTO).collect(Collectors.toList());
+      dto.setOrders(orderDTOs);
+    }
+
+    return dto;
+  }
+
+  /**
+   * Converts Order entity to OrderDTO
+   *
+   * @param order Order entity
+   * @return OrderDTO
+   */
+  private OrderDTO convertOrderToDTO(Order order) {
+    log.debug("Converting Order entity to DTO for ID: {}", order.getId());
+
+    OrderDTO dto = new OrderDTO();
+    dto.setId(order.getId());
+    dto.setAmount(order.getAmount());
+    dto.setStatus(order.getStatus());
+    dto.setMonthlySip(order.getMonthlySip());
+    dto.setFolio(order.getFolio());
+    dto.setCreatedAt(order.getCreatedAt());
+    dto.setUpdatedAt(order.getUpdatedAt());
+
+    // Set related entity IDs if available
+    if (order.getFund() != null) {
+      dto.setFundId(order.getFund().getId());
+    }
+
+    if (order.getUser() != null) {
+      dto.setUserId(order.getUser().getId());
+    }
+
+    if (order.getGoal() != null) {
+      dto.setGoalId(order.getGoal().getId());
+    }
+
+    return dto;
+  }
+}

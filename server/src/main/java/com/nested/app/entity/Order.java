@@ -1,20 +1,19 @@
 package com.nested.app.entity;
 
-import java.sql.Date;
-import java.sql.Timestamp;
-
-import org.hibernate.annotations.CreationTimestamp;
-import org.hibernate.annotations.UpdateTimestamp;
-
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
+import java.sql.Timestamp;
 import lombok.Data;
+import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.UpdateTimestamp;
 
 /**
  * Entity representing an investment order
@@ -23,29 +22,23 @@ import lombok.Data;
 @Entity
 @Table(name = "orders")
 public class Order {
-  
-  @Id 
+
+  @Id
   @GeneratedValue(strategy = GenerationType.IDENTITY)
   private Long id;
 
   @Column(nullable = false)
-  private Date orderDate;
-
-  @Column(nullable = false)
   private Double amount;
 
+  @Enumerated(EnumType.STRING)
   @Column(nullable = false)
-  private String type;
+  private OrderStatus status = OrderStatus.NOT_PLACED;
 
-  @Column(nullable = false)
-  private String status;
-
-  @ManyToOne
+  @ManyToOne(optional = false)
   @JoinColumn(name = "fund_id")
   private Fund fund;
 
-  @Column 
-  private Double monthlySip;
+  @Column private Double monthlySip;
 
   @ManyToOne(optional = false)
   @JoinColumn(name = "user_id")
@@ -55,6 +48,10 @@ public class Order {
   @JoinColumn(name = "goal_id")
   private Goal goal;
 
+  @ManyToOne(optional = false)
+  @JoinColumn(name = "payment_id")
+  private Payment payment;
+
   @CreationTimestamp
   @Column(nullable = false, updatable = false)
   private Timestamp createdAt;
@@ -63,13 +60,13 @@ public class Order {
   @Column(nullable = false)
   private Timestamp updatedAt;
 
-  @Column 
-  private String folio;
+  @Column private String folio;
 
   public enum OrderStatus {
-        CREATED,
+    NOT_PLACED,
         PLACED,
         COMPLETED,
-        FAILED
-    }
+    FAILED,
+    CANCELLED
+  }
 }

@@ -35,9 +35,13 @@ public class BankDetail {
     @Column(nullable = false)
     private boolean isPrimary;
 
-    @ManyToOne
-    @JoinColumn(name = "investor_id", nullable = false)
-    private Investor investor;
+  // this is the reference id returned by the tarrakki when the bank is added
+  @Column(nullable = false, unique = true, updatable = false)
+  private String refId;
+
+  @ManyToOne(optional = false)
+  @JoinColumn(name = "investor_id", nullable = false)
+  private Investor investor;
 
     // Only SAVINGS & CURRENT  is currently supported
     public enum AccountType {

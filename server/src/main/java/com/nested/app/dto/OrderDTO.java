@@ -1,5 +1,6 @@
 package com.nested.app.dto;
 
+import com.nested.app.entity.Order;
 import java.sql.Date;
 import java.sql.Timestamp;
 import lombok.Data;
@@ -18,7 +19,7 @@ public class OrderDTO {
   private Date orderDate;
   private Double amount;
   private String type;
-  private String status;
+  private Order.OrderStatus status;
   private Long fundId;
   private Double monthlySip;
   private Long userId;

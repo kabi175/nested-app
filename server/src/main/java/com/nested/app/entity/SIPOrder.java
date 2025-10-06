@@ -5,24 +5,26 @@ import jakarta.persistence.DiscriminatorValue;
 import jakarta.persistence.Embeddable;
 import jakarta.persistence.Embedded;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
+import java.time.LocalDate;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
-
-import java.time.LocalDate;
 
 @Data
 @Entity
 @DiscriminatorValue("SIP")
 @EqualsAndHashCode(callSuper = true)
 public class SIPOrder extends Order{
-    @Column(nullable = false)
-    private Double amount;
+  @Column(nullable = false)
+  private Double monthlySip;
 
-    @Column(nullable = false)
-    private Frequency frequency;
+  @Enumerated(EnumType.STRING)
+  @Column(nullable = false)
+  private Frequency frequency = Frequency.MONTHLY;
 
-    @Column(nullable = false)
-    private boolean isActive = true;
+  @Column(nullable = false)
+  private boolean isActive = false;
 
     @Column(nullable = false)
     private String mandateID;
@@ -36,13 +38,8 @@ public class SIPOrder extends Order{
     @Embedded
     private SIPStepUp sipStepUp;
 
-    public static enum Frequency {
-        DAILY,
-        WEEKLY,
+  public enum Frequency {
         MONTHLY,
-        QUARTERLY,
-        HALF_YEARLY,
-        YEARLY
     }
 
     @Data
@@ -54,11 +51,10 @@ public class SIPOrder extends Order{
 
         private LocalDate stepUpEndDate;
 
-        private SIPStepUp.Frequency stepUpFrequency;
-
+    @Enumerated(EnumType.STRING)
+    private SIPStepUp.Frequency stepUpFrequency = Frequency.YEARLY;
 
         public static enum Frequency {
-            HALF_YEARLY,
             YEARLY
         }
 

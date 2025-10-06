@@ -4,6 +4,6 @@ import lombok.Data;
 
 @Data
 public class OtpVerifyRequest {
-  private String otp_type;
+  private OtpRequest.Type otp_type;
   private String otp;
 }

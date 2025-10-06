@@ -1,10 +1,9 @@
 package com.nested.app.repository;
 
 import com.nested.app.entity.Goal;
+import java.util.List;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
-
-import java.util.List;
 
 /**
  * Repository interface for Goal entity
@@ -54,4 +53,13 @@ public interface GoalRepository extends JpaRepository<Goal, Long> {
      * @return List of active goals
      */
     List<Goal> findByStatus(String status);
+
+  /**
+   * Find goals by child ID and status
+   *
+   * @param childId Child ID
+   * @param status Goal status
+   * @return List of goals for the specified child with the specified status
+   */
+  List<Goal> findByChildIdAndStatus(Long childId, String status);
 }

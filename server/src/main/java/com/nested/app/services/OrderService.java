@@ -1,8 +1,7 @@
 package com.nested.app.services;
 
-import java.util.List;
-
 import com.nested.app.dto.OrderDTO;
+import java.util.List;
 
 /**
  * Service interface for managing Order entities
@@ -30,34 +29,9 @@ public interface OrderService {
     List<OrderDTO> getOrdersByGoalId(String goalId);
 
     /**
-     * Creates orders for a specific goal
-     * 
-     * @param goalId Goal ID to associate orders with
-     * @param orders List of order data to create
-     * @return List of created orders
-     */
-    List<OrderDTO> createOrdersForGoal(String goalId, List<OrderDTO> orders);
-    
-    /**
      * Retrieves all orders
      * 
      * @return List of all orders
      */
     List<OrderDTO> getAllOrders();
-    
-    /**
-     * Creates a new order
-     * 
-     * @param orderDTO Order data to create
-     * @return Created order data
-     */
-    OrderDTO createOrder(OrderDTO orderDTO);
-    
-    /**
-     * Updates an existing order
-     * 
-     * @param orderDTO Order data to update
-     * @return Updated order data
-     */
-    OrderDTO updateOrder(OrderDTO orderDTO);
 }

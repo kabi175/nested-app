@@ -210,6 +210,58 @@ paths:
                   error:
                     type: string
                     example: Cannot update goal when an order exists for this goal
+  /children/{child_id}/actions/place_order:
+    post:
+      summary: Place orders for all active goals
+      requestBody:
+        description: Orders placed
+        content:
+          application/json:
+            schema:
+              type: object
+              $ref: '#/components/schemas/PlaceOrderPost'
+      responses:
+        '201':
+          description: Orders placed
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/PlaceOrder'
+  /children/{child_id}/actions/verifiy_order:
+    post:
+      summary: Verify placed orders
+      requestBody:
+        description: Verification details
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                id:
+                  type: string
+                verification_code:
+                  type: string
+      responses:
+        '200':
+          description: Orders verified
+          content:
+            application/json:
+              schema:
+                type: object
+                $ref: '#/components/schemas/PlaceOrder'
+
+        '400':
+          description: Orders verification failed
+          content:
+            application/json:
+              schema:
+                type: object
+                $ref: '#/components/schemas/PlaceOrder'
   /goals/{goalId}/holdings:
     get:
       summary: Get holdings for a goal
@@ -563,6 +615,107 @@ components:
           type: object
           $ref: '#/components/schemas/Child'
 
+    PlaceOrder:
+      type: object
+      properties:
+        id:
+          type: string
+          format: number
+        verification_status:
+          type: string
+          enum:
+            - pending
+            - verified
+            - failed
+        status:
+          type: string
+          enum:
+            - pending
+            - completed
+            - failed
+            - cancelled
+        payment_url:
+          type: string
+          format: url
+        mandate:
+          type: object
+          properties:
+            type:
+              type: string
+              enum:
+                - net_banking
+                - upi
+            upi_id:
+              type: string
+            confirmation_url:
+              type: string
+
+
+    PlaceOrderPost:
+      type: object
+      properties:
+        orders:
+          type: array
+          items:
+            type: object
+            properties:
+              goal:
+                type: object
+                $ref: '#/components/schemas/MinifiedGoal'
+              BuyOrder:
+                type: object
+                $ref: '#/components/schemas/BuyOrder'
+              SipOrder:
+                type: object
+                $ref: '#/components/schemas/SipOrder'
+        payment_method:
+          type: string
+          enum:
+            - net_banking
+            - upi
+
+    BuyOrder:
+      type: object
+      required:
+        - amount
+      properties:
+        amount:
+          type: number
+          format: float
+
+    SipOrder:
+      type: object
+      required:
+        - amount
+      properties:
+        amount:
+          type: number
+          format: float
+        setup_option:
+          type: object
+          required:
+            - amount
+            - frequency
+          properties:
+            amount:
+              type: number
+              format: float
+            frequency:
+              type: string
+              enum:
+                - monthly
+                - quarterly
+                - half-yearly
+                - yearly
+
+
+
+    MinifiedGoal:
+      type: object
+      properties:
+        id:
+          type: string
+          format: number
     Goal:
       type: object
       properties:
