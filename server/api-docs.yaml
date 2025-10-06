@@ -365,13 +365,13 @@ paths:
           description: Basket deleted
           content:
             application/json:
-            schema:
-              type: object
-              properties:
-                data:
-                  type: array
-                  items:
-                    $ref: '#/components/schemas/Basket'
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Basket'
   /bucket/{id}:
     get:
       summary: Get basket details by ID
