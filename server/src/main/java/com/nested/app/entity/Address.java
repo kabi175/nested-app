@@ -38,10 +38,6 @@ public class Address {
   @Column(nullable = false, length = 6)
   private String pinCode;
 
-  @OneToOne
-  @JoinColumn(name = "investor_id", nullable = false)
-  private Investor investor;
-
   @CreationTimestamp
   @Column(nullable = false, updatable = false)
   private Timestamp createdAt;

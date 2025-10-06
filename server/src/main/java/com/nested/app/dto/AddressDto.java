@@ -69,7 +69,6 @@ public class AddressDto {
     public static AddressDto fromEntity(Address entity) {
         AddressDto dto = new AddressDto();
         dto.setId(entity.getId());
-        dto.setInvestorId(entity.getInvestor() != null ? entity.getInvestor().getId() : null);
         dto.setAddressLine(entity.getAddressLine());
         dto.setCity(entity.getCity());
         dto.setState(entity.getState());

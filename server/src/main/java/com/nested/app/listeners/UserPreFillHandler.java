@@ -23,6 +23,7 @@ import java.util.concurrent.ThreadLocalRandom;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.event.TransactionPhase;
 import org.springframework.transaction.event.TransactionalEventListener;
 
 @Slf4j
@@ -35,7 +36,7 @@ public record UserPreFillHandler(
   private static final List<DateTimeFormatter> FORMATTERS =
       List.of(DateTimeFormatter.ofPattern("yyyy-MM-dd"), DateTimeFormatter.ofPattern("dd-MM-yyyy"));
 
-  @TransactionalEventListener
+  @TransactionalEventListener(phase = TransactionPhase.BEFORE_COMMIT)
   public void afterCreate(UserCreatedEvent event) {
     preFillUserData(event.getUser());
   }

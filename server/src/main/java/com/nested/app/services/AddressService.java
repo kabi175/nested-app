@@ -44,8 +44,7 @@ public class AddressService {
                 .orElseThrow(() -> new IllegalArgumentException("Investor not found with ID: " + investorId));
             
             Address address = AddressDto.toEntity(addressDto);
-            address.setInvestor(investor);
-            
+
             Address savedAddress = addressRepository.save(address);
             
             log.info("Successfully created address with ID: {} for investor ID: {}", 
@@ -104,35 +103,6 @@ public class AddressService {
     }
 
     /**
-     * Get all addresses for a specific investor
-     * @param investorId investor ID
-     * @return list of address DTOs
-     */
-    @Transactional(readOnly = true)
-    public List<AddressDto> getAddressesByInvestorId(Long investorId) {
-        log.debug("Fetching addresses for investor ID: {}", investorId);
-        
-        List<Address> addresses = addressRepository.findByInvestorId(investorId);
-        return addresses.stream()
-            .map(AddressDto::fromEntity)
-            .collect(Collectors.toList());
-    }
-
-    /**
-     * Get addresses for a specific investor with pagination
-     * @param investorId investor ID
-     * @param pageable pagination information
-     * @return page of address DTOs
-     */
-    @Transactional(readOnly = true)
-    public Page<AddressDto> getAddressesByInvestorId(Long investorId, Pageable pageable) {
-        log.debug("Fetching addresses for investor ID: {} with pagination", investorId);
-        
-        Page<Address> addresses = addressRepository.findByInvestorId(investorId, pageable);
-        return addresses.map(AddressDto::fromEntity);
-    }
-
-    /**
      * Get all addresses with pagination
      * @param pageable pagination information
      * @return page of address DTOs
@@ -144,82 +114,6 @@ public class AddressService {
         
         Page<Address> addresses = addressRepository.findAll(pageable);
         return addresses.map(AddressDto::fromEntity);
-    }
-
-    /**
-     * Search addresses by criteria
-     * @param investorId investor ID (optional)
-     * @param city city (optional)
-     * @param state state (optional)
-     * @param country country (optional)
-     * @param pageable pagination information
-     * @return page of address DTOs
-     */
-    @Transactional(readOnly = true)
-    public Page<AddressDto> searchAddresses(Long investorId, String city, String state, 
-                                          String country, Pageable pageable) {
-        log.debug("Searching addresses with criteria - investorId: {}, city: {}, state: {}, country: {}", 
-                 investorId, city, state, country);
-        
-        Page<Address> addresses = addressRepository.findByCriteria(investorId, city, state, country, pageable);
-        return addresses.map(AddressDto::fromEntity);
-    }
-
-    /**
-     * Get addresses by city
-     * @param city city name
-     * @param pageable pagination information
-     * @return page of address DTOs
-     */
-    @Transactional(readOnly = true)
-    public Page<AddressDto> getAddressesByCity(String city, Pageable pageable) {
-        log.debug("Fetching addresses by city: {}", city);
-        
-        Page<Address> addresses = addressRepository.findByCityContainingIgnoreCase(city, pageable);
-        return addresses.map(AddressDto::fromEntity);
-    }
-
-    /**
-     * Get addresses by state
-     * @param state state name
-     * @param pageable pagination information
-     * @return page of address DTOs
-     */
-    @Transactional(readOnly = true)
-    public Page<AddressDto> getAddressesByState(String state, Pageable pageable) {
-        log.debug("Fetching addresses by state: {}", state);
-        
-        Page<Address> addresses = addressRepository.findByStateContainingIgnoreCase(state, pageable);
-        return addresses.map(AddressDto::fromEntity);
-    }
-
-    /**
-     * Get addresses by country
-     * @param country country name
-     * @param pageable pagination information
-     * @return page of address DTOs
-     */
-    @Transactional(readOnly = true)
-    public Page<AddressDto> getAddressesByCountry(String country, Pageable pageable) {
-        log.debug("Fetching addresses by country: {}", country);
-        
-        Page<Address> addresses = addressRepository.findByCountryContainingIgnoreCase(country, pageable);
-        return addresses.map(AddressDto::fromEntity);
-    }
-
-    /**
-     * Get addresses by pin code
-     * @param pinCode pin code
-     * @return list of address DTOs
-     */
-    @Transactional(readOnly = true)
-    public List<AddressDto> getAddressesByPinCode(String pinCode) {
-        log.debug("Fetching addresses by pin code: {}", pinCode);
-        
-        List<Address> addresses = addressRepository.findByPinCode(pinCode);
-        return addresses.stream()
-            .map(AddressDto::fromEntity)
-            .collect(Collectors.toList());
     }
 
     /**
@@ -245,24 +139,6 @@ public class AddressService {
     }
 
     /**
-     * Delete all addresses for a specific investor
-     * @param investorId investor ID
-     */
-    public void deleteAddressesByInvestorId(Long investorId) {
-        log.info("Deleting all addresses for investor ID: {}", investorId);
-        
-        try {
-            addressRepository.deleteByInvestorId(investorId);
-            log.info("Successfully deleted all addresses for investor ID: {}", investorId);
-            
-        } catch (Exception e) {
-            log.error("Failed to delete addresses for investor ID: {}. Error: {}", 
-                     investorId, e.getMessage());
-            throw e;
-        }
-    }
-
-    /**
      * Check if address exists by ID
      * @param addressId address ID
      * @return true if address exists
@@ -270,17 +146,6 @@ public class AddressService {
     @Transactional(readOnly = true)
     public boolean existsById(Long addressId) {
         return addressRepository.existsById(addressId);
-    }
-
-    /**
-     * Get count of addresses for a specific investor
-     * @param investorId investor ID
-     * @return count of addresses
-     */
-    @Transactional(readOnly = true)
-    public long getCountByInvestorId(Long investorId) {
-        log.debug("Getting count of addresses for investor ID: {}", investorId);
-        return addressRepository.countByInvestorId(investorId);
     }
 
     /**
