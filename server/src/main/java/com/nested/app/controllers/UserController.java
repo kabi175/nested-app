@@ -25,7 +25,8 @@ public class UserController {
 
   @GetMapping(produces = MediaType.APPLICATION_JSON_VALUE)
   public ResponseEntity<Entity<UserDTO>> getUsers(
-      @RequestParam UserService.Type type, @PageableDefault(sort = "id") Pageable pageable) {
+      @RequestParam(defaultValue = "CURRENT_USER") UserService.Type type,
+      @PageableDefault(sort = "id") Pageable pageable) {
     var users = userService.findAllUsers(type, pageable);
     if (users.isEmpty()) {
       return ResponseEntity.noContent().build();
