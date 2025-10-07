@@ -17,6 +17,7 @@ public class TarrakkiInvestorRequest {
   private String email_declaration;
   private String mobile_declaration;
   private FatcaDetailDTO fatca_detail;
+
   public enum InvestorType {
     INDIVIDUAL,
     MINOR

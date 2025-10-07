@@ -1,6 +1,7 @@
 package com.nested.app.client.tarrakki.dto;
 
 import com.fasterxml.jackson.annotation.JsonValue;
+
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -17,6 +18,7 @@ public class OtpRequest {
     BUY_ORDER("buy_order"),
     SELL_ORDER("sell_order"),
     SIP_ORDER("sip_order"),
+    NOMINEE("nominee"),
     ;
 
     private final String value;

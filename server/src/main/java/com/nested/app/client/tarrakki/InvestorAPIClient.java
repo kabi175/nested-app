@@ -1,61 +1,120 @@
 package com.nested.app.client.tarrakki;
 
-import com.nested.app.client.tarrakki.dto.BankAccountRequest;
-import com.nested.app.client.tarrakki.dto.NomineeRequest;
-import com.nested.app.client.tarrakki.dto.TarrakkiInvestorRequest;
-import org.springframework.http.*;
+import org.springframework.http.MediaType;
+import org.springframework.http.client.MultipartBodyBuilder;
 import org.springframework.stereotype.Service;
-import org.springframework.util.LinkedMultiValueMap;
-import org.springframework.util.MultiValueMap;
-import org.springframework.web.client.RestTemplate;
+import org.springframework.web.multipart.MultipartFile;
+
+import com.nested.app.client.tarrakki.dto.BankResponse;
+import com.nested.app.client.tarrakki.dto.InvestorResponse;
+import com.nested.app.client.tarrakki.dto.NomineeRequest;
+import com.nested.app.client.tarrakki.dto.NomineeResponse;
+import com.nested.app.client.tarrakki.dto.TarrakkiInvestorRequest;
+
+import lombok.RequiredArgsConstructor;
+import reactor.core.publisher.Mono;
 
 @Service
+@RequiredArgsConstructor
 public class InvestorAPIClient {
-  private final RestTemplate restTemplate = new RestTemplate();
+  private final TarrakkiAPI tarrakkiAPI;
 
-  // TODO: handle authentication, error handling, logging, etc.
-  private static final String investorApiUrl = "/investors";
+  private static final String INVESTOR_API_URL = "/investors";
 
-  public ResponseEntity<String> createInvestor(TarrakkiInvestorRequest request) {
-    HttpHeaders headers = new HttpHeaders();
-    headers.setContentType(MediaType.APPLICATION_JSON);
-    // Add authorization if needed: headers.set("Authorization", "Bearer <token>");
-    HttpEntity<TarrakkiInvestorRequest> entity = new HttpEntity<>(request, headers);
-    return restTemplate.exchange(investorApiUrl, HttpMethod.POST, entity, String.class);
+  public Mono<InvestorResponse> createInvestor(TarrakkiInvestorRequest request) {
+    return tarrakkiAPI
+        .withAuth()
+        .post()
+        .uri(INVESTOR_API_URL)
+        .bodyValue(request)
+        .retrieve()
+        .bodyToMono(InvestorResponse.class);
   }
 
-  public ResponseEntity<String> updateInvestor(Long investorId, TarrakkiInvestorRequest request) {
-    HttpHeaders headers = new HttpHeaders();
-    headers.setContentType(MediaType.APPLICATION_JSON);
-    // Add authorization if needed: headers.set("Authorization", "Bearer <token>");
-    String url = investorApiUrl + "/" + investorId;
-    HttpEntity<TarrakkiInvestorRequest> entity = new HttpEntity<>(request, headers);
-    return restTemplate.exchange(url, HttpMethod.PATCH, entity, String.class);
+  /**
+   * Adds a bank account for an investor
+   *
+   * @param investorRef Tarrakki investor reference ID
+   * @param accountType Account type (savings/current)
+   * @param accountNumber Bank account number
+   * @param ifsc IFSC code
+   * @param verificationDocument Document type (cancelled_cheque, bank_statement, etc.)
+   * @param file File to upload
+   * @return BankResponse with bank_id
+   */
+  public Mono<BankResponse> addBankForInvestor(
+      String investorRef,
+      String accountType,
+      String accountNumber,
+      String ifsc,
+      String verificationDocument,
+      MultipartFile file) {
+
+    try {
+      MultipartBodyBuilder builder = new MultipartBodyBuilder();
+      builder.part("account_type", accountType);
+      builder.part("account_number", accountNumber);
+      builder.part("ifsc", ifsc);
+      builder.part("verification_document", verificationDocument);
+      builder.part("file", file.getResource());
+
+      return tarrakkiAPI
+          .withAuth()
+          .post()
+          .uri(INVESTOR_API_URL + "/" + investorRef + "/banks")
+          .contentType(MediaType.MULTIPART_FORM_DATA)
+          .bodyValue(builder.build())
+          .retrieve()
+          .bodyToMono(BankResponse.class);
+    } catch (Exception e) {
+      return Mono.error(new RuntimeException("Failed to upload bank document", e));
+    }
   }
 
-  public ResponseEntity<String> addBankForInvestor(Long investorId, BankAccountRequest request) {
-    HttpHeaders headers = new HttpHeaders();
-    headers.setContentType(MediaType.MULTIPART_FORM_DATA);
-    // Add authorization if needed: headers.set("Authorization", "Bearer <token>");
-    String url = investorApiUrl + "/" + investorId + "/bank";
+  /**
+   * Uploads a document for an investor
+   *
+   * @param investorRef Tarrakki investor reference ID
+   * @param documentType Document type (signature, photo, etc.)
+   * @param file File to upload
+   * @return Empty Mono on success
+   */
+  public Mono<Void> uploadDocumentForInvestor(
+      String investorRef, String documentType, MultipartFile file) {
 
-    MultiValueMap<String, Object> body = new LinkedMultiValueMap<>();
-    body.add("account_type", request.getAccount_type().name().toLowerCase());
-    body.add("account_number", request.getAccount_number());
-    body.add("ifsc", request.getIfsc());
-    body.add("verification_document", request.getVerification_document().name().toLowerCase());
-    body.add("file", request.getFile());
+    try {
+      MultipartBodyBuilder builder = new MultipartBodyBuilder();
+      builder.part("document_type", documentType);
+      builder.part("file", file.getResource());
 
-    HttpEntity<MultiValueMap<String, Object>> entity = new HttpEntity<>(body, headers);
-    return restTemplate.exchange(url, HttpMethod.POST, entity, String.class);
+      return tarrakkiAPI
+          .withAuth()
+          .post()
+          .uri(INVESTOR_API_URL + "/" + investorRef + "/documents")
+          .contentType(MediaType.MULTIPART_FORM_DATA)
+          .bodyValue(builder.build())
+          .retrieve()
+          .bodyToMono(Void.class);
+    } catch (Exception e) {
+      return Mono.error(new RuntimeException("Failed to upload document", e));
+    }
   }
 
-  public ResponseEntity<String> addNomineesForInvestor(Long investorId, NomineeRequest request) {
-    HttpHeaders headers = new HttpHeaders();
-    headers.setContentType(MediaType.APPLICATION_JSON);
-    // Add authorization if needed: headers.set("Authorization", "Bearer <token>");
-    String url = investorApiUrl + "/" + investorId + "/nominees";
-    HttpEntity<NomineeRequest> entity = new HttpEntity<>(request, headers);
-    return restTemplate.exchange(url, HttpMethod.POST, entity, String.class);
+  /**
+   * Adds nominees for an investor
+   *
+   * @param investorRef Tarrakki investor reference ID
+   * @param request Nominee request with nominees list and auth_ref (OTP ID)
+   * @return NomineeResponse with nominee_id
+   */
+  public Mono<NomineeResponse> addNomineesForInvestor(String investorRef, NomineeRequest request) {
+    return tarrakkiAPI
+        .withAuth()
+        .post()
+        .uri(INVESTOR_API_URL + "/" + investorRef + "/nominees")
+        .contentType(MediaType.APPLICATION_JSON)
+        .bodyValue(request)
+        .retrieve()
+        .bodyToMono(NomineeResponse.class);
   }
 }
