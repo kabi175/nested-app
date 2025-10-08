@@ -10,6 +10,7 @@ import com.nested.app.client.tarrakki.dto.OtpRequest;
 import com.nested.app.client.tarrakki.dto.OtpResponse;
 import com.nested.app.client.tarrakki.dto.OtpVerifyRequest;
 import com.nested.app.client.tarrakki.dto.TarrakkiInvestorRequest;
+import com.nested.app.dto.BankAccountDto;
 import com.nested.app.entity.Child;
 import com.nested.app.entity.Investor;
 import com.nested.app.entity.User;
@@ -367,20 +368,9 @@ public class InvestorServiceImpl {
    * Adds a bank account for an investor
    *
    * @param investorId Investor ID
-   * @param accountType Account type (savings/current)
-   * @param accountNumber Bank account number
-   * @param ifsc IFSC code
-   * @param verificationDocument Document type
-   * @param file Verification document file
    * @return Bank ID from Tarrakki
    */
-  public String addBankAccount(
-      Long investorId,
-      String accountType,
-      String accountNumber,
-      String ifsc,
-      String verificationDocument,
-      MultipartFile file) {
+  public String addBankAccount(Long investorId, BankAccountDto bankAccountDto) {
     log.info("Adding bank account for investor ID: {}", investorId);
 
     Investor investor =
@@ -394,9 +384,10 @@ public class InvestorServiceImpl {
     }
 
     // Validate file
-    if (file == null || file.isEmpty()) {
-      throw new IllegalArgumentException("Verification document file is required");
-    }
+    // TODO: handle file upload properly
+    //    if (file == null || file.isEmpty()) {
+    //      throw new IllegalArgumentException("Verification document file is required");
+    //    }
 
     // Call Tarrakki API
     BankResponse response;
@@ -405,11 +396,9 @@ public class InvestorServiceImpl {
           investorAPIClient
               .addBankForInvestor(
                   investor.getTarakkiInvestorRef(),
-                  accountType.toLowerCase(),
-                  accountNumber,
-                  ifsc,
-                  verificationDocument.toLowerCase(),
-                  file)
+                  bankAccountDto.getAccountType().getValue(),
+                  bankAccountDto.getAccountNumber(),
+                  bankAccountDto.getIfsc())
               .block();
 
       if (response == null || response.getBank_id() == null) {

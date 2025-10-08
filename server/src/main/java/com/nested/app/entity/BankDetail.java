@@ -1,8 +1,10 @@
 package com.nested.app.entity;
 
-
+import com.fasterxml.jackson.annotation.JsonValue;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
@@ -26,8 +28,9 @@ public class BankDetail {
     @Column(nullable = false)
     private String accountNumber;
 
-    @Column(nullable = false)
-    private AccountType accountType;
+  @Column(nullable = false)
+  @Enumerated(EnumType.STRING)
+  private AccountType accountType;
 
     @Column(nullable = false)
     private String ifscCode;
@@ -46,6 +49,11 @@ public class BankDetail {
     // Only SAVINGS & CURRENT  is currently supported
     public enum AccountType {
         SAVINGS,
-        CURRENT,
+    CURRENT;
+
+    @JsonValue
+    public String getValue() {
+      return name().toLowerCase();
+    }
     }
 }

@@ -1,17 +1,15 @@
 package com.nested.app.client.tarrakki;
 
-import org.springframework.http.MediaType;
-import org.springframework.http.client.MultipartBodyBuilder;
-import org.springframework.stereotype.Service;
-import org.springframework.web.multipart.MultipartFile;
-
 import com.nested.app.client.tarrakki.dto.BankResponse;
 import com.nested.app.client.tarrakki.dto.InvestorResponse;
 import com.nested.app.client.tarrakki.dto.NomineeRequest;
 import com.nested.app.client.tarrakki.dto.NomineeResponse;
 import com.nested.app.client.tarrakki.dto.TarrakkiInvestorRequest;
-
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.MediaType;
+import org.springframework.http.client.MultipartBodyBuilder;
+import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 import reactor.core.publisher.Mono;
 
 @Service
@@ -37,26 +35,20 @@ public class InvestorAPIClient {
    * @param investorRef Tarrakki investor reference ID
    * @param accountType Account type (savings/current)
    * @param accountNumber Bank account number
-   * @param ifsc IFSC code
-   * @param verificationDocument Document type (cancelled_cheque, bank_statement, etc.)
-   * @param file File to upload
+   * @param ifsc IFSC code // * @param verificationDocument Document type (cancelled_cheque,
+   *     bank_statement, etc.) // * @param file File to upload
    * @return BankResponse with bank_id
    */
   public Mono<BankResponse> addBankForInvestor(
-      String investorRef,
-      String accountType,
-      String accountNumber,
-      String ifsc,
-      String verificationDocument,
-      MultipartFile file) {
+      String investorRef, String accountType, String accountNumber, String ifsc) {
 
     try {
       MultipartBodyBuilder builder = new MultipartBodyBuilder();
       builder.part("account_type", accountType);
       builder.part("account_number", accountNumber);
       builder.part("ifsc", ifsc);
-      builder.part("verification_document", verificationDocument);
-      builder.part("file", file.getResource());
+      //      builder.part("verification_document", verificationDocument);
+      //      builder.part("file", file.getResource());
 
       return tarrakkiAPI
           .withAuth()

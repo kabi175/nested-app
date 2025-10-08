@@ -1,5 +1,6 @@
 package com.nested.app.controllers;
 
+import com.nested.app.dto.BankAccountDto;
 import com.nested.app.dto.Entity;
 import com.nested.app.dto.UserDTO;
 import com.nested.app.entity.Investor;
@@ -77,7 +78,9 @@ public class UserController {
                 @Content(
                     mediaType = "application/json",
                     schema = @Schema(implementation = Map.class))),
-        @ApiResponse(responseCode = "400", description = "Invalid input data or missing required fields"),
+        @ApiResponse(
+            responseCode = "400",
+            description = "Invalid input data or missing required fields"),
         @ApiResponse(responseCode = "404", description = "User not found"),
         @ApiResponse(responseCode = "409", description = "Investor already exists for this user"),
         @ApiResponse(responseCode = "500", description = "Internal server error")
@@ -109,8 +112,7 @@ public class UserController {
 
     } catch (IllegalArgumentException e) {
       log.warn("Validation error creating investor for user {}: {}", userId, e.getMessage());
-      return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-          .body(Map.of("error", e.getMessage()));
+      return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of("error", e.getMessage()));
     } catch (IllegalStateException e) {
       log.warn("State error creating investor for user {}: {}", userId, e.getMessage());
       return ResponseEntity.status(HttpStatus.CONFLICT).body(Map.of("error", e.getMessage()));
@@ -118,6 +120,52 @@ public class UserController {
       log.error("Error creating investor for user {}: {}", userId, e.getMessage(), e);
       return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
           .body(Map.of("error", "Failed to create investor: " + e.getMessage()));
+    }
+  }
+
+  @PostMapping(value = "/{user_id}/banks", consumes = MediaType.APPLICATION_JSON_VALUE)
+  @Operation(summary = "Add bank account for User", description = "Adds a bank account to User")
+  @ApiResponses(
+      value = {
+        @ApiResponse(
+            responseCode = "201",
+            description = "Bank account added successfully",
+            content =
+                @Content(
+                    mediaType = "application/json",
+                    schema = @Schema(implementation = Map.class))),
+        @ApiResponse(
+            responseCode = "400",
+            description = "Invalid input data or missing required fields"),
+        @ApiResponse(responseCode = "404", description = "User not found"),
+        @ApiResponse(responseCode = "500", description = "Internal server error")
+      })
+  public ResponseEntity<?> addBankAccount(
+      @Parameter(description = "User ID", required = true) @PathVariable("user_id") Long userID,
+      @Validated @org.springframework.web.bind.annotation.RequestBody
+          BankAccountDto bankAccountDto) {
+
+    log.info("POST /api/v1/users/{}/banks - Adding bank account for User", userID);
+
+    try {
+      String bankId = investorService.addBankAccount(userID, bankAccountDto);
+
+      log.info(
+          "Successfully added bank account for investor ID: {} with bank_id: {}", userID, bankId);
+
+      return ResponseEntity.status(HttpStatus.CREATED)
+          .body(Map.of("message", "Bank account added successfully", "bank_id", bankId));
+
+    } catch (IllegalArgumentException e) {
+      log.warn("Validation error adding bank account for investor {}: {}", userID, e.getMessage());
+      return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of("error", e.getMessage()));
+    } catch (IllegalStateException e) {
+      log.warn("State error adding bank account for investor {}: {}", userID, e.getMessage());
+      return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of("error", e.getMessage()));
+    } catch (Exception e) {
+      log.error("Error adding bank account for investor {}: {}", userID, e.getMessage(), e);
+      return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+          .body(Map.of("error", "Failed to add bank account: " + e.getMessage()));
     }
   }
 }

@@ -1,6 +1,7 @@
 package com.nested.app.services;
 
 import com.google.common.base.Strings;
+import com.nested.app.client.tarrakki.InvestorAPIClient;
 import com.nested.app.contect.UserContext;
 import com.nested.app.dto.AddressDto;
 import com.nested.app.dto.UserDTO;
@@ -28,6 +29,7 @@ public class UserServiceImpl implements UserService {
 
   private final UserRepository userRepository;
   private final AddressRepository addressRepository;
+  private final InvestorAPIClient investorAPIClient;
   private final UserContext userContext;
   private final ApplicationEventPublisher publisher;
 
@@ -153,4 +155,5 @@ public class UserServiceImpl implements UserService {
       address.setPinCode(addressDto.getPinCode());
     }
   }
+
 }

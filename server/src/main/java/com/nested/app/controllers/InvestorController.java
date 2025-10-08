@@ -1,22 +1,8 @@
 package com.nested.app.controllers;
 
-import java.util.Map;
-
-import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
-import org.springframework.web.multipart.MultipartFile;
-
 import com.nested.app.client.tarrakki.dto.NomineeRequest;
 import com.nested.app.client.tarrakki.dto.OtpResponse;
 import com.nested.app.services.InvestorServiceImpl;
-
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -25,8 +11,17 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
+import java.util.Map;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.multipart.MultipartFile;
 
 /**
  * REST Controller for managing Investor operations
@@ -36,77 +31,11 @@ import lombok.extern.slf4j.Slf4j;
  * @version 1.0
  */
 @Slf4j
-@RestController
-@RequestMapping("/api/v1/investors")
 @RequiredArgsConstructor
 @Tag(name = "Investor Management", description = "APIs for managing investor operations")
 public class InvestorController {
 
   private final InvestorServiceImpl investorService;
-
-  @PostMapping(value = "/{investor_id}/banks", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-  @Operation(
-      summary = "Add bank account for investor",
-      description = "Adds a bank account to investor profile in Tarrakki")
-  @ApiResponses(
-      value = {
-        @ApiResponse(
-            responseCode = "201",
-            description = "Bank account added successfully",
-            content =
-                @Content(
-                    mediaType = "application/json",
-                    schema = @Schema(implementation = Map.class))),
-        @ApiResponse(responseCode = "400", description = "Invalid input data or missing required fields"),
-        @ApiResponse(responseCode = "404", description = "Investor not found"),
-        @ApiResponse(responseCode = "500", description = "Internal server error")
-      })
-  public ResponseEntity<?> addBankAccount(
-      @Parameter(description = "Investor ID", required = true) @PathVariable("investor_id")
-          Long investorId,
-      @Parameter(description = "Account type (savings/current)", required = true)
-          @RequestParam("account_type")
-          String accountType,
-      @Parameter(description = "Bank account number", required = true)
-          @RequestParam("account_number")
-          String accountNumber,
-      @Parameter(description = "IFSC code", required = true) @RequestParam("ifsc") String ifsc,
-      @Parameter(description = "Verification document type (e.g., cancelled_cheque)", required = true)
-          @RequestParam("verification_document")
-          String verificationDocument,
-      @Parameter(description = "Verification document file", required = true) @RequestParam("file")
-          MultipartFile file) {
-
-    log.info(
-        "POST /api/v1/investors/{}/banks - Adding bank account for investor", investorId);
-
-    try {
-      String bankId =
-          investorService.addBankAccount(
-              investorId, accountType, accountNumber, ifsc, verificationDocument, file);
-
-      log.info(
-          "Successfully added bank account for investor ID: {} with bank_id: {}",
-          investorId,
-          bankId);
-
-      return ResponseEntity.status(HttpStatus.CREATED)
-          .body(Map.of("message", "Bank account added successfully", "bank_id", bankId));
-
-    } catch (IllegalArgumentException e) {
-      log.warn("Validation error adding bank account for investor {}: {}", investorId, e.getMessage());
-      return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-          .body(Map.of("error", e.getMessage()));
-    } catch (IllegalStateException e) {
-      log.warn("State error adding bank account for investor {}: {}", investorId, e.getMessage());
-      return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-          .body(Map.of("error", e.getMessage()));
-    } catch (Exception e) {
-      log.error("Error adding bank account for investor {}: {}", investorId, e.getMessage(), e);
-      return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-          .body(Map.of("error", "Failed to add bank account: " + e.getMessage()));
-    }
-  }
 
   @PostMapping(value = "/{investor_id}/documents", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
   @Operation(
@@ -121,7 +50,9 @@ public class InvestorController {
                 @Content(
                     mediaType = "application/json",
                     schema = @Schema(implementation = Map.class))),
-        @ApiResponse(responseCode = "400", description = "Invalid input data or missing required fields"),
+        @ApiResponse(
+            responseCode = "400",
+            description = "Invalid input data or missing required fields"),
         @ApiResponse(responseCode = "404", description = "Investor not found"),
         @ApiResponse(responseCode = "500", description = "Internal server error")
       })
