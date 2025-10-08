@@ -5,7 +5,6 @@ import com.nested.app.client.bulkpe.PrefilClient;
 import com.nested.app.client.bulkpe.dto.PrefilRequest;
 import com.nested.app.client.bulkpe.dto.PrefillResponse;
 import com.nested.app.entity.Address;
-import com.nested.app.entity.Investor;
 import com.nested.app.entity.User;
 import com.nested.app.events.UserCreatedEvent;
 import com.nested.app.events.UserUpdateEvent;
@@ -43,7 +42,7 @@ public record UserPreFillHandler(
 
   @EventListener
   public void afterUpdate(UserUpdateEvent event) {
-    if (Objects.equals(event.oldUser().getName(), event.newUser().getName())
+    if (Objects.equals(event.oldUser().getFirstName(), event.newUser().getFirstName())
         || event.oldUser().getPrefillStatus().equals(User.PrefillStatus.INCOMPLETE)) {
       preFillUserData(event.newUser());
     }
@@ -67,7 +66,7 @@ public record UserPreFillHandler(
   }
 
   void preFillUserData(User user) {
-    if (Strings.isNullOrEmpty(user.getName())) {
+    if (Strings.isNullOrEmpty(user.getFirstName())) {
       log.warn("User name is empty for userId={}, skipping prefill", user.getId());
       return;
     }
@@ -79,7 +78,7 @@ public record UserPreFillHandler(
 
     log.info("Starting prefill for userId={}", user.getId());
     PrefilRequest prefilRequest = new PrefilRequest();
-    prefilRequest.setName(user.getName());
+    prefilRequest.setName(user.getFirstName());
     var phoneNumber = user.getPhoneNumber();
     if (phoneNumber != null && phoneNumber.startsWith("+91")) {
       phoneNumber = phoneNumber.substring(3);

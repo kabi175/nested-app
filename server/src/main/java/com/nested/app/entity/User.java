@@ -40,10 +40,6 @@ public class User {
   private Long id;
 
   @With
-  @Column(nullable = false)
-  private String name;
-
-  @With
   @Email(message = "Invalid email format")
   private String email;
 

@@ -23,10 +23,11 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.reactive.function.client.WebClientResponseException;
 
 /**
- * Service implementation for managing Investor entities
- * Handles business logic for investor creation and management
+ * Service implementation for managing Investor entities Handles business logic for investor
+ * creation and management
  */
 @Slf4j
 @Service
@@ -73,6 +74,10 @@ public class InvestorServiceImpl {
       if (response == null) {
         throw new RuntimeException("Failed to create investor: null response from Tarrakki API");
       }
+    } catch (WebClientResponseException e) {
+      log.error(
+          "Error calling Tarrakki API for user {}: {}", userId, e.getResponseBodyAsString(), e);
+      throw new RuntimeException("Failed to create investor in Tarrakki", e);
     } catch (Exception e) {
       log.error("Error calling Tarrakki API for user {}: {}", userId, e.getMessage(), e);
       throw new RuntimeException("Failed to create investor in Tarrakki", e);
@@ -136,6 +141,10 @@ public class InvestorServiceImpl {
       if (response == null) {
         throw new RuntimeException("Failed to create investor: null response from Tarrakki API");
       }
+    } catch (WebClientResponseException e) {
+      log.error(
+          "Error calling Tarrakki API for child {}: {}", childId, e.getResponseBodyAsString(), e);
+      throw new RuntimeException("Failed to create investor in Tarrakki", e);
     } catch (Exception e) {
       log.error("Error calling Tarrakki API for child {}: {}", childId, e.getMessage(), e);
       throw new RuntimeException("Failed to create investor in Tarrakki", e);
@@ -161,12 +170,13 @@ public class InvestorServiceImpl {
     return savedInvestor;
   }
 
-  /**
-   * Validates that user has all required fields for investor creation
-   */
+  /** Validates that user has all required fields for investor creation */
   private void validateUserForInvestorCreation(User user) {
-    if (user.getName() == null || user.getName().isEmpty()) {
+    if (user.getFirstName() == null || user.getFirstName().isEmpty()) {
       throw new IllegalArgumentException("User name is required");
+    }
+    if (user.getLastName() == null || user.getLastName().length() < 2) {
+      throw new IllegalArgumentException("User last name is required");
     }
     if (user.getDateOfBirth() == null) {
       throw new IllegalArgumentException("User date of birth is required");
@@ -194,9 +204,7 @@ public class InvestorServiceImpl {
     }
   }
 
-  /**
-   * Validates that child and parent have all required fields for investor creation
-   */
+  /** Validates that child and parent have all required fields for investor creation */
   private void validateChildForInvestorCreation(Child child, User parentUser) {
     if (child.getFirstName() == null || child.getFirstName().isEmpty()) {
       throw new IllegalArgumentException("Child first name is required");
@@ -232,26 +240,22 @@ public class InvestorServiceImpl {
     }
   }
 
-  /**
-   * Builds Tarrakki investor request from User entity
-   */
+  /** Builds Tarrakki investor request from User entity */
   private TarrakkiInvestorRequest buildInvestorRequestFromUser(User user) {
     TarrakkiInvestorRequest request = new TarrakkiInvestorRequest();
 
     request.setInvestor_type(TarrakkiInvestorRequest.InvestorType.INDIVIDUAL);
 
     // Split name into first and last name
-    String[] nameParts = user.getName().split(" ", 2);
-    request.setFirst_name(nameParts[0]);
-    request.setLast_name(nameParts.length > 1 ? nameParts[1] : "");
+    request.setFirst_name(user.getFirstName());
+    request.setLast_name(user.getLastName());
 
     // Convert Date to LocalDate
-    LocalDate dob =
-        user.getDateOfBirth().toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
+    LocalDate dob = user.getDateOfBirth().toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
     request.setDob(dob);
 
     // Map gender
-    request.setGender(mapGenderToTarrakki(user.getGender().name()));
+    request.setGender(mapGenderToTarrakki(user.getGender()));
 
     request.setPan(user.getPanNumber());
     request.setEmail(user.getEmail());
@@ -286,9 +290,7 @@ public class InvestorServiceImpl {
     return request;
   }
 
-  /**
-   * Builds Tarrakki investor request from Child entity (using parent's data for most fields)
-   */
+  /** Builds Tarrakki investor request from Child entity (using parent's data for most fields) */
   private TarrakkiInvestorRequest buildInvestorRequestFromChild(Child child, User parentUser) {
     TarrakkiInvestorRequest request = new TarrakkiInvestorRequest();
 
@@ -299,12 +301,11 @@ public class InvestorServiceImpl {
     request.setLast_name(child.getLastName() != null ? child.getLastName() : "");
 
     // Convert Date to LocalDate
-    LocalDate dob =
-        child.getDateOfBirth().toLocalDate();
+    LocalDate dob = child.getDateOfBirth().toLocalDate();
     request.setDob(dob);
 
     // Map child's gender
-    request.setGender(mapGenderToTarrakki(child.getGender().name()));
+    request.setGender(mapGenderToTarrakki(child.getGender()));
 
     // Use parent's data for remaining fields
     request.setPan(parentUser.getPanNumber());
@@ -339,20 +340,16 @@ public class InvestorServiceImpl {
     return request;
   }
 
-  /**
-   * Maps User.Gender enum to Tarrakki Gender enum
-   */
-  private TarrakkiInvestorRequest.Gender mapGenderToTarrakki(String gender) {
-    return switch (gender.toUpperCase()) {
-      case "MALE" -> TarrakkiInvestorRequest.Gender.MALE;
-      case "FEMALE" -> TarrakkiInvestorRequest.Gender.FEMALE;
-      default -> TarrakkiInvestorRequest.Gender.OTHER;
+  /** Maps User.Gender enum to Tarrakki Gender enum */
+  private TarrakkiInvestorRequest.Gender mapGenderToTarrakki(User.Gender gender) {
+    return switch (gender) {
+      case User.Gender.MALE -> TarrakkiInvestorRequest.Gender.MALE;
+      case User.Gender.FEMALE -> TarrakkiInvestorRequest.Gender.FEMALE;
+      default -> TarrakkiInvestorRequest.Gender.TRANSGENDER;
     };
   }
 
-  /**
-   * Formats phone number by removing country code prefix
-   */
+  /** Formats phone number by removing country code prefix */
   private String formatPhoneNumber(String phoneNumber) {
     if (phoneNumber == null) {
       return "";

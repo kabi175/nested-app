@@ -69,14 +69,20 @@ public class UserServiceImpl implements UserService {
                     new OpenApiResourceNotFoundException("User with id " + userId + " not found"));
 
     User updatedUser = originalUser;
+
+    if (!Strings.isNullOrEmpty(userDTO.getFirstName())
+        && !Objects.equals(userDTO.getFirstName(), originalUser.getFirstName())) {
+      updatedUser = originalUser.withFirstName(userDTO.getFirstName());
+    }
+
+    if (!Strings.isNullOrEmpty(userDTO.getLastName())
+        && !Objects.equals(userDTO.getLastName(), originalUser.getLastName())) {
+      updatedUser = originalUser.withLastName(userDTO.getLastName());
+    }
+
     if (!Strings.isNullOrEmpty(userDTO.getEmail())
         && !Objects.equals(userDTO.getEmail(), originalUser.getEmail())) {
       updatedUser = originalUser.withEmail(userDTO.getEmail());
-    }
-
-    if (!Strings.isNullOrEmpty(userDTO.getName())
-        && !Objects.equals(userDTO.getName(), originalUser.getName())) {
-      updatedUser = originalUser.withName(userDTO.getName());
     }
 
     if (userDTO.getRole() != null

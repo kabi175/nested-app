@@ -11,7 +11,6 @@ import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
-
 import lombok.AllArgsConstructor;
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
@@ -67,7 +66,7 @@ public class UserContextFilter extends OncePerRequestFilter {
             .email(userRecord.getEmail())
             .phoneNumber(userRecord.getPhoneNumber())
             .phoneNumber(userRecord.getPhoneNumber())
-            .name(userRecord.getDisplayName())
+            .firstName(userRecord.getDisplayName())
             .build();
     userRepository.save(user);
     return user;

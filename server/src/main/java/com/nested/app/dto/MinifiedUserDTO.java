@@ -10,7 +10,7 @@ public class MinifiedUserDTO {
   public static MinifiedUserDTO fromEntity(com.nested.app.entity.User user) {
     MinifiedUserDTO dto = new MinifiedUserDTO();
     dto.setId(user.getId());
-    dto.setName(user.getName());
+    dto.setName(user.getFirstName());
     return dto;
   }
 }

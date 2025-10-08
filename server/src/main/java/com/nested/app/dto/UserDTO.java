@@ -16,7 +16,13 @@ import lombok.NoArgsConstructor;
 public class UserDTO {
   private Long id;
 
-  private String name;
+  @NotNull
+  @JsonProperty("first_name")
+  private String firstName;
+
+  @NotNull
+  @JsonProperty("last_name")
+  private String lastName;
 
   private String email;
 
@@ -43,7 +49,8 @@ public class UserDTO {
   public static UserDTO fromEntity(User entity) {
     return new UserDTO(
         entity.getId(),
-        entity.getName(),
+        entity.getFirstName(),
+        entity.getLastName(),
         entity.getEmail(),
         entity.getPhoneNumber(),
         entity.getRole().name().toLowerCase(),
@@ -57,7 +64,8 @@ public class UserDTO {
   public static User fromDto(UserDTO dto) {
     return User.builder()
         .id(dto.getId())
-        .name(dto.getName())
+        .firstName(dto.getFirstName())
+        .lastName(dto.getLastName())
         .email(dto.getEmail())
         .role(dto.getRole() != null ? User.Role.valueOf(dto.getRole().toUpperCase()) : null)
         .address(AddressDto.toEntity(dto.getAddress()))

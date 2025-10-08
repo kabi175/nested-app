@@ -102,8 +102,6 @@ public class UserController {
                   "Investor created successfully",
                   "investor_id",
                   investor.getId(),
-                  "tarrakki_investor_ref",
-                  investor.getTarakkiInvestorRef(),
                   "investor_type",
                   investor.getInvestorType(),
                   "status",
