@@ -14,6 +14,9 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class UserDTO {
+  // TODO: annotate all the DTO PK with @JsonFormat(shape = JsonFormat
+  //  .Shape.STRING)
+  @JsonFormat(shape = JsonFormat.Shape.STRING)
   private Long id;
 
   @NotNull
