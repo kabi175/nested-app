@@ -1,5 +1,6 @@
 package com.nested.app.entity;
 
+import com.fasterxml.jackson.annotation.JsonValue;
 import com.nested.app.enums.IncomeSlab;
 import com.nested.app.enums.IncomeSource;
 import com.nested.app.enums.Occupation;
@@ -9,12 +10,13 @@ import jakarta.validation.constraints.Email;
 import java.sql.Timestamp;
 import java.util.Date;
 import java.util.List;
-
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.RequiredArgsConstructor;
 import lombok.With;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.Filter;
@@ -45,22 +47,23 @@ public class User {
   @Email(message = "Invalid email format")
   private String email;
 
-  // we are supporting phone number update
+  // we not are supporting phone number update
   @Column(unique = true, nullable = false, updatable = false)
   private String phoneNumber;
 
   @Column(unique = true, nullable = false, updatable = false)
   private String firebaseUid;
 
-  @Column(unique = true)
   private String panNumber;
 
   @OneToMany private List<BankDetail> bankDetails;
 
-  private Date dateOfBirth;
+  @With private Date dateOfBirth;
 
+  @With
+  @Builder.Default
   @Enumerated(EnumType.STRING)
-  private Gender gender;
+  private Gender gender = Gender.MALE;
 
   @OneToOne(cascade = CascadeType.ALL)
   @JoinColumn(name = "address_id")
@@ -84,13 +87,13 @@ public class User {
   @Builder.Default
   private boolean isActive = true;
 
-  private String firstName;
+  @With private String firstName;
 
-  private String lastName;
+  @With private String lastName;
 
-  private String birthPlace;
+  @With private String birthPlace;
 
-  private String birthCountry;
+  @With @Builder.Default private String birthCountry = "India";
 
   // admin only has write access
   @With
@@ -128,17 +131,22 @@ public class User {
   @Column(nullable = false)
   private PrefillStatus prefillStatus = PrefillStatus.INCOMPLETE;
 
+  @RequiredArgsConstructor
   public enum Gender {
-    MALE,
-    FEMALE,
-    TRANSGENDER,
+    MALE("male"),
+    FEMALE("female"),
+    TRANSGENDER("transgender");
+
+    @JsonValue @Getter private final String value;
   }
 
+  @RequiredArgsConstructor
   public enum KYCStatus {
-    UNKNOWN,
-    PENDING,
-    COMPLETED,
-    FAILED
+    UNKNOWN("unknown"),
+    PENDING("pending"),
+    COMPLETED("completed"),
+    FAILED("failed");
+    @JsonValue @Getter private final String value;
   }
 
   public enum Role {

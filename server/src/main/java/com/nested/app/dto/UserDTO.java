@@ -1,7 +1,11 @@
 package com.nested.app.dto;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.nested.app.entity.User;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
+import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -21,13 +25,33 @@ public class UserDTO {
 
   private String role;
 
+  private AddressDto address;
+
+  @NotNull(message = "Date of Birth is required")
+  @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd")
+  @JsonProperty("date_of_birth")
+  private java.util.Date dateOfBirth;
+
+  @NotNull(message = "Gender is required")
+  @Enumerated(EnumType.STRING)
+  private User.Gender gender;
+
+  private String panNumber;
+
+  private InvestorDto investor;
+
   public static UserDTO fromEntity(User entity) {
     return new UserDTO(
         entity.getId().toString(),
         entity.getName(),
         entity.getEmail(),
         entity.getPhoneNumber(),
-        entity.getRole().name().toLowerCase());
+        entity.getRole().name().toLowerCase(),
+        AddressDto.fromEntity(entity.getAddress()),
+        entity.getDateOfBirth(),
+        entity.getGender(),
+        entity.getPanNumber(),
+        InvestorDto.fromEntity(entity.getInvestor()));
   }
 
   public static User fromDto(UserDTO dto) {
@@ -36,6 +60,10 @@ public class UserDTO {
         .name(dto.getName())
         .email(dto.getEmail())
         .role(dto.getRole() != null ? User.Role.valueOf(dto.getRole().toUpperCase()) : null)
+        .address(AddressDto.toEntity(dto.getAddress()))
+        .dateOfBirth(dto.getDateOfBirth())
+        .gender(dto.getGender())
+        .panNumber(dto.getPanNumber())
         .build();
   }
 }

@@ -1,12 +1,5 @@
 package com.nested.app.services;
 
-import java.time.LocalDate;
-import java.time.ZoneId;
-
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.multipart.MultipartFile;
-
 import com.nested.app.client.tarrakki.InvestorAPIClient;
 import com.nested.app.client.tarrakki.OtpApiClient;
 import com.nested.app.client.tarrakki.dto.BankResponse;
@@ -23,9 +16,13 @@ import com.nested.app.entity.User;
 import com.nested.app.repository.ChildRepository;
 import com.nested.app.repository.InvestorRepository;
 import com.nested.app.repository.UserRepository;
-
+import java.time.LocalDate;
+import java.time.ZoneId;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
 /**
  * Service implementation for managing Investor entities
@@ -60,7 +57,7 @@ public class InvestorServiceImpl {
 
     // Check if investor already exists
     if (user.getInvestor() != null) {
-      throw new IllegalStateException("Investor already exists for user ID: " + userId);
+      return user.getInvestor();
     }
 
     // Validate required fields
@@ -85,7 +82,7 @@ public class InvestorServiceImpl {
     Investor investor = new Investor();
     investor.setInvestorType("individual");
     investor.setTarakkiInvestorRef(response.getId());
-    investor.setInvestorStatus(response.getStatus());
+    investor.setInvestorStatus(Investor.Status.fromValue(response.getStatus()));
 
     Investor savedInvestor = investorRepository.save(investor);
 
@@ -148,7 +145,7 @@ public class InvestorServiceImpl {
     Investor investor = new Investor();
     investor.setInvestorType("minor");
     investor.setTarakkiInvestorRef(response.getId());
-    investor.setInvestorStatus(response.getStatus());
+    investor.setInvestorStatus(Investor.Status.fromValue(response.getStatus()));
 
     Investor savedInvestor = investorRepository.save(investor);
 

@@ -1,16 +1,16 @@
 package com.nested.app.dto;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.nested.app.entity.Address;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
+import java.util.Date;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-
-import java.util.Date;
 
 /**
  * Data Transfer Object for Address entity
@@ -25,8 +25,9 @@ public class AddressDto {
     @Schema(description = "Unique identifier of the address", example = "1")
     private Long id;
 
-    @Schema(description = "Investor ID associated with this address", example = "1")
-    private Long investorId;
+  @Schema(description = "Investor ID associated with this address", example = "1")
+  @JsonIgnore
+  private Long investorId;
 
     @NotBlank(message = "Address line is required")
     @Size(max = 255, message = "Address line cannot exceed 255 characters")
@@ -67,6 +68,9 @@ public class AddressDto {
      * @return AddressDto
      */
     public static AddressDto fromEntity(Address entity) {
+    if (entity == null) {
+      return null;
+    }
         AddressDto dto = new AddressDto();
         dto.setId(entity.getId());
         dto.setAddressLine(entity.getAddressLine());
@@ -85,6 +89,10 @@ public class AddressDto {
      * @return Address entity
      */
     public static Address toEntity(AddressDto dto) {
+    if (dto == null) {
+      return null;
+    }
+
         Address entity = new Address();
         entity.setId(dto.getId());
         entity.setAddressLine(dto.getAddressLine());

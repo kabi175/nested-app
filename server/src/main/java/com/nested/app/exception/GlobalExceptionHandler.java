@@ -3,9 +3,11 @@ package com.nested.app.exception;
 import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.multipart.MaxUploadSizeExceededException;
@@ -58,4 +60,19 @@ public class GlobalExceptionHandler {
         
         return new ResponseEntity<>(errorResponse, status);
     }
+
+  @ExceptionHandler(MethodArgumentNotValidException.class)
+  public ResponseEntity<com.nested.app.dto.ErrorResponse> handleValidationException(
+      MethodArgumentNotValidException ex) {
+    var fieldErrors =
+        ex.getBindingResult().getFieldErrors().stream()
+            .map(
+                error ->
+                    new com.nested.app.dto.ErrorResponse.FieldError(
+                        error.getField(), error.getDefaultMessage()))
+            .collect(Collectors.toList());
+
+    var response = new com.nested.app.dto.ErrorResponse("Validation failed", fieldErrors);
+    return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
+  }
 }

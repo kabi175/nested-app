@@ -1,8 +1,6 @@
 package com.nested.app.entity;
 
-import com.fasterxml.jackson.annotation.JsonValue;
 import jakarta.persistence.*;
-
 import java.sql.Date;
 import java.sql.Timestamp;
 import lombok.Data;
@@ -29,7 +27,7 @@ public class Child {
 
   @Enumerated(EnumType.STRING)
   @Column(nullable = false)
-  private Gender gender = Gender.MALE;
+  private User.Gender gender = User.Gender.MALE;
 
   @Column(nullable = false)
   private boolean investUnderChild = true;
@@ -49,20 +47,4 @@ public class Child {
   @OneToOne
   @JoinColumn(name = "investor_id")
   private Investor investor;
-
-  public enum Gender {
-    MALE("male"),
-    FEMALE("female"),
-    OTHER("other");
-    private final String value;
-
-    Gender(String value) {
-      this.value = value.toLowerCase();
-    }
-
-    @JsonValue
-    public String toValue() {
-      return value.toLowerCase();
-    }
-  }
 }

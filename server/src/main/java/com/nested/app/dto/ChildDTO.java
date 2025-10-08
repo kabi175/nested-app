@@ -2,7 +2,7 @@ package com.nested.app.dto;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.nested.app.entity.Child;
+import com.nested.app.entity.User;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
 import jakarta.validation.constraints.NotEmpty;
@@ -30,9 +30,9 @@ public class ChildDTO {
   @JsonProperty("date_of_birth")
   private Date dateOfBirth;
 
-  @Enumerated(EnumType.STRING)
   @NotEmpty
-  private Child.Gender gender;
+  @Enumerated(EnumType.STRING)
+  private User.Gender gender;
 
   @NotEmpty private boolean investUnderChild = false;
 
