@@ -2,9 +2,12 @@ package com.nested.app.services;
 
 import com.google.common.base.Strings;
 import com.nested.app.contect.UserContext;
+import com.nested.app.dto.AddressDto;
 import com.nested.app.dto.UserDTO;
+import com.nested.app.entity.Address;
 import com.nested.app.entity.User;
 import com.nested.app.events.UserUpdateEvent;
+import com.nested.app.repository.AddressRepository;
 import com.nested.app.repository.UserRepository;
 import java.util.List;
 import java.util.Objects;
@@ -17,13 +20,14 @@ import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
-//TODO: Refer this update to update all other serives
+// TODO: Refer this update to update all other serives
 @Slf4j
 @Service
 @RequiredArgsConstructor
 public class UserServiceImpl implements UserService {
 
   private final UserRepository userRepository;
+  private final AddressRepository addressRepository;
   private final UserContext userContext;
   private final ApplicationEventPublisher publisher;
 
@@ -51,7 +55,7 @@ public class UserServiceImpl implements UserService {
   // TODO: sync the username & email to firebase auth as well
   @Override
   public UserDTO updateUser(UserDTO userDTO) {
-    Long userId = userDTO.getId() != null ? Long.parseLong(userDTO.getId()) : null;
+    Long userId = userDTO.getId();
 
     if (userId == null) {
       throw new IllegalArgumentException("User ID must be provided for update");
@@ -81,6 +85,41 @@ public class UserServiceImpl implements UserService {
       updatedUser = originalUser.withRole(User.Role.valueOf(userDTO.getRole().toUpperCase()));
     }
 
+    if (userDTO.getAddress() != null) {
+      if (originalUser.getAddress() == null) {
+        var newAddress = new Address();
+        updateAddressFields(newAddress, userDTO.getAddress());
+        addressRepository.save(newAddress);
+        updatedUser = updatedUser.withAddress(newAddress);
+      } else {
+        var oldAddress = originalUser.getAddress();
+        updateAddressFields(oldAddress, userDTO.getAddress());
+        addressRepository.save(oldAddress);
+        updatedUser = updatedUser.withAddress(oldAddress);
+      }
+
+      if (updatedUser.getAddress().getCity() != null) {
+        updatedUser = updatedUser.withBirthPlace(updatedUser.getAddress().getCity());
+      }
+    }
+
+    if (userDTO.getDateOfBirth() != null) {
+      if (!Objects.equals(userDTO.getDateOfBirth(), originalUser.getDateOfBirth())) {
+        updatedUser = updatedUser.withDateOfBirth(userDTO.getDateOfBirth());
+      }
+    }
+
+    if (userDTO.getGender() != null) {
+      if (!Objects.equals(userDTO.getGender(), originalUser.getGender())) {
+        updatedUser = updatedUser.withGender(userDTO.getGender());
+      }
+    }
+
+    if (!Strings.isNullOrEmpty(userDTO.getPanNumber())
+        && !Objects.equals(userDTO.getPanNumber(), originalUser.getPanNumber())) {
+      updatedUser = updatedUser.withPanNumber(userDTO.getPanNumber());
+    }
+
     if (updatedUser == originalUser) {
       log.info("No changes detected for userId={}, skipping update", userId);
       return UserDTO.fromEntity(originalUser);
@@ -91,5 +130,21 @@ public class UserServiceImpl implements UserService {
     return UserDTO.fromEntity(updated);
   }
 
-
+  private void updateAddressFields(Address address, AddressDto addressDto) {
+    if (addressDto.getAddressLine() != null) {
+      address.setAddressLine(addressDto.getAddressLine());
+    }
+    if (addressDto.getCity() != null) {
+      address.setCity(addressDto.getCity());
+    }
+    if (addressDto.getState() != null) {
+      address.setState(addressDto.getState());
+    }
+    if (addressDto.getCountry() != null) {
+      address.setCountry(addressDto.getCountry());
+    }
+    if (addressDto.getPinCode() != null) {
+      address.setPinCode(addressDto.getPinCode());
+    }
+  }
 }

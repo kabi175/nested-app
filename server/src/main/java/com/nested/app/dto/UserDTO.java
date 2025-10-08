@@ -14,7 +14,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class UserDTO {
-  private String id;
+  private Long id;
 
   private String name;
 
@@ -42,7 +42,7 @@ public class UserDTO {
 
   public static UserDTO fromEntity(User entity) {
     return new UserDTO(
-        entity.getId().toString(),
+        entity.getId(),
         entity.getName(),
         entity.getEmail(),
         entity.getPhoneNumber(),
@@ -56,7 +56,7 @@ public class UserDTO {
 
   public static User fromDto(UserDTO dto) {
     return User.builder()
-        .id(dto.getId() != null ? Long.parseLong(dto.getId()) : null)
+        .id(dto.getId())
         .name(dto.getName())
         .email(dto.getEmail())
         .role(dto.getRole() != null ? User.Role.valueOf(dto.getRole().toUpperCase()) : null)

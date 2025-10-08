@@ -54,7 +54,7 @@ public class User {
   @Column(unique = true, nullable = false, updatable = false)
   private String firebaseUid;
 
-  private String panNumber;
+  @With private String panNumber;
 
   @OneToMany private List<BankDetail> bankDetails;
 
@@ -65,6 +65,7 @@ public class User {
   @Enumerated(EnumType.STRING)
   private Gender gender = Gender.MALE;
 
+  @With
   @OneToOne(cascade = CascadeType.ALL)
   @JoinColumn(name = "address_id")
   private Address address;

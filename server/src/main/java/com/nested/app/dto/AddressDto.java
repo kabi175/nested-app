@@ -1,7 +1,7 @@
 package com.nested.app.dto;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
-import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.nested.app.entity.Address;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotBlank;
@@ -25,14 +25,11 @@ public class AddressDto {
     @Schema(description = "Unique identifier of the address", example = "1")
     private Long id;
 
-  @Schema(description = "Investor ID associated with this address", example = "1")
-  @JsonIgnore
-  private Long investorId;
-
-    @NotBlank(message = "Address line is required")
-    @Size(max = 255, message = "Address line cannot exceed 255 characters")
-    @Schema(description = "Address line", example = "123 Main Street, Apartment 4B", required = true)
-    private String addressLine;
+  @NotBlank(message = "Address line is required")
+  @Size(max = 255, message = "Address line cannot exceed 255 characters")
+  @Schema(description = "Address line", example = "123 Main Street, Apartment 4B", required = true)
+  @JsonProperty("address_line")
+  private String addressLine;
 
     @NotBlank(message = "City is required")
     @Size(max = 100, message = "City name cannot exceed 100 characters")
@@ -49,10 +46,11 @@ public class AddressDto {
     @Schema(description = "Country name", example = "India", required = true)
     private String country;
 
-    @NotBlank(message = "Pin code is required")
-    @Pattern(regexp = "^[0-9]{6}$", message = "Pin code must be 6 digits")
-    @Schema(description = "Pin code", example = "400001", required = true)
-    private String pinCode;
+  @NotBlank(message = "Pin code is required")
+  @Pattern(regexp = "^[0-9]{6}$", message = "Pin code must be 6 digits")
+  @Schema(description = "Pin code", example = "400001", required = true)
+  @JsonProperty("pin_code")
+  private String pinCode;
 
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd HH:mm:ss")
     @Schema(description = "Creation timestamp", example = "2023-01-15 10:30:00")
