@@ -325,8 +325,8 @@ public class InvestorServiceImpl {
     address.setPincode(parentUser.getAddress().getPinCode());
     request.setAddress(address);
 
-    request.setEmail_declaration("self");
-    request.setMobile_declaration("self");
+    request.setEmail_declaration("guardian");
+    request.setMobile_declaration("guardian");
 
     // Map parent's FATCA details
     TarrakkiInvestorRequest.FatcaDetailDTO fatca = new TarrakkiInvestorRequest.FatcaDetailDTO();
