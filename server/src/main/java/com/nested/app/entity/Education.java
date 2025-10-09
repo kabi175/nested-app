@@ -32,6 +32,15 @@ public class Education {
   private Double expectedFee;
 
   @Column(nullable = false)
+  private Double projectTimeLineLt10Yr;
+
+  @Column(nullable = false)
+  private Double projectTimeLineGt10Yr;
+
+  @Column(nullable = false)
+  private Double lastYearFee;
+
+  @Column(nullable = false)
   @Enumerated(EnumType.STRING)
   private Type type = Type.INSTITUTION;
 
