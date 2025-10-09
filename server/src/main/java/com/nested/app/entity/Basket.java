@@ -27,11 +27,12 @@ public class Basket {
   @Column(nullable = false)
   private String title;
 
-  @Column(nullable = false)
   private Double returns;
 
   @OneToMany(mappedBy = "basket", cascade = CascadeType.ALL)
   private List<BasketFund> basketFunds;
+
+  private Double years;
 
   @CreationTimestamp
   @Column(nullable = false, updatable = false)
