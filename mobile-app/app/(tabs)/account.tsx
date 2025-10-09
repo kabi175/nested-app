@@ -1,5 +1,5 @@
-import { useAuth, useSignOut } from "@/components/auth";
 import { ThemedText } from "@/components/ThemedText";
+import { useAuth, useSignOut } from "@/hooks/auth";
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import { router } from "expo-router";

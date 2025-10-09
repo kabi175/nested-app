@@ -1,14 +1,10 @@
+import { defaultAuthState, FirebaseAuthContext, useAuth } from "@/hooks/auth";
 import {
   FirebaseAuthTypes,
   getAuth,
   onAuthStateChanged,
 } from "@react-native-firebase/auth";
-import { createContext, useContext, useEffect, useState } from "react";
-
-export function useAuth(): AuthState {
-  const auth = useContext(FirebaseAuthContext);
-  return auth;
-}
+import { useEffect, useState } from "react";
 
 export function AuthLoaded({
   children,
@@ -58,20 +54,6 @@ export function SignedOut({
   return <>{fallback}</>;
 }
 
-export interface AuthState {
-  isSignedIn: boolean | undefined;
-  isLoaded: boolean;
-  user: FirebaseAuthTypes.User | null | undefined;
-}
-
-const defaultAuthState: AuthState = {
-  isLoaded: false,
-  isSignedIn: undefined,
-  user: undefined,
-};
-
-export const FirebaseAuthContext = createContext<AuthState>(defaultAuthState);
-
 export default function AuthProvider({
   children,
 }: {
@@ -96,12 +78,4 @@ export default function AuthProvider({
   return (
     <FirebaseAuthContext value={authState}>{children}</FirebaseAuthContext>
   );
-}
-
-export function useSignOut() {
-  const signOut = async () => {
-    await getAuth().signOut();
-    console.log("signed out");
-  };
-  return { signOut };
 }

@@ -8,7 +8,8 @@ import { Stack } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import "react-native-reanimated";
 
-import AuthProvider, { useAuth } from "@/components/auth";
+import AuthProvider from "@/components/auth";
+import { useAuth } from "@/hooks/auth";
 import { useColorScheme } from "@/hooks/useColorScheme";
 import { QueryProvider } from "@/providers/QueryProvider";
 import * as eva from "@eva-design/eva";

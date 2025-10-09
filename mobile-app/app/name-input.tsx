@@ -1,6 +1,6 @@
-import { useAuth } from "@/components/auth";
 import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
+import { useAuth } from "@/hooks/auth";
 import { updateProfile } from "@react-native-firebase/auth";
 import { router } from "expo-router";
 import React, { useState } from "react";
