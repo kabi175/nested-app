@@ -1,5 +1,8 @@
-import { Link, useLocation } from 'react-router-dom';
-import { LayoutDashboard, Users, GraduationCap, Package, BarChart3 } from 'lucide-react';
+"use client";
+
+import Link from "next/link";
+import { usePathname } from "next/navigation"; // Next.js hook to get current path
+import { LayoutDashboard, Users, GraduationCap, Package, BarChart3 } from "lucide-react";
 import {
   Sidebar,
   SidebarContent,
@@ -10,17 +13,17 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
   SidebarHeader,
-} from '@/components/ui/sidebar';
+} from "@/components/ui/sidebar";
 
 const menuItems = [
-  { title: 'Dashboard', url: '/', icon: LayoutDashboard },
-  { title: 'Users', url: '/users', icon: Users },
-  { title: 'Colleges', url: '/colleges', icon: GraduationCap },
-  { title: 'Baskets', url: '/baskets', icon: Package },
+  { title: "Dashboard", url: "/", icon: LayoutDashboard },
+  { title: "Users", url: "/users", icon: Users },
+  { title: "Colleges", url: "/colleges", icon: GraduationCap },
+  { title: "Baskets", url: "/baskets", icon: Package },
 ];
 
 export function AppSidebar() {
-  const location = useLocation();
+  const pathname = usePathname(); // Next.js way to get current route
 
   return (
     <Sidebar>
@@ -30,17 +33,18 @@ export function AppSidebar() {
           <h2 className="text-lg font-semibold text-sidebar-foreground">Admin Portal</h2>
         </div>
       </SidebarHeader>
+
       <SidebarContent>
         <SidebarGroup>
           <SidebarGroupLabel>Navigation</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
               {menuItems.map((item) => {
-                const isActive = location.pathname === item.url;
+                const isActive = pathname === item.url;
                 return (
                   <SidebarMenuItem key={item.title}>
                     <SidebarMenuButton asChild isActive={isActive}>
-                      <Link to={item.url}>
+                      <Link href={item.url} className="flex items-center gap-2">
                         <item.icon className="h-4 w-4" />
                         <span>{item.title}</span>
                       </Link>

@@ -1,80 +1,92 @@
 "use client";
 
-import { useState } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { useEffect, useState } from 'react';
+import { motion } from 'framer-motion';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { Skeleton } from '@/components/ui/skeleton';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { 
   Search, 
-  UserPlus, 
-  Download, 
-  MoreHorizontal,
-  Mail,
-  Phone,
-  Calendar,
+  Users as UsersIcon, 
+  Mail, 
+  Phone, 
+  Calendar, 
   MapPin,
-  Users,
-  Package
-} from "lucide-react";
+  TrendingUp,
+  ArrowUpRight,
+  ArrowDownRight,
+  Eye,
+  Sparkles,
+  Filter,
+  Download,
+  UserPlus
+} from 'lucide-react';
 
-// Mock data - replace with actual API calls
-const users = [
-  {
-    id: "1",
-    name: "John Doe",
-    email: "john@example.com",
-    phone: "+1234567890",
-    totalFunds: 50000,
-    activeGoals: 3,
-    joinedDate: "2024-01-15",
-    kycStatus: "approved",
-    role: "user",
-    location: "New York, NY",
-  },
-  {
-    id: "2",
-    name: "Jane Smith",
-    email: "jane@example.com",
-    phone: "+1234567891",
-    totalFunds: 75000,
-    activeGoals: 2,
-    joinedDate: "2024-02-20",
-    kycStatus: "pending",
-    role: "user",
-    location: "Los Angeles, CA",
-  },
-  {
-    id: "3",
-    name: "Mike Johnson",
-    email: "mike@example.com",
-    phone: "+1234567892",
-    totalFunds: 120000,
-    activeGoals: 4,
-    joinedDate: "2024-01-05",
-    kycStatus: "approved",
-    role: "premium",
-    location: "Chicago, IL",
-  },
-];
+interface User {
+  id: string;
+  name: string;
+  email: string;
+  phone: string;
+  totalFunds: number;
+  activeGoals: number;
+  joinedDate: string;
+  kycStatus: 'approved' | 'pending' | 'rejected';
+}
 
 export default function UsersPage() {
-  const [searchTerm, setSearchTerm] = useState("");
-  const [kycFilter, setKycFilter] = useState("all");
-  const [roleFilter, setRoleFilter] = useState("all");
-  const [selectedUser, setSelectedUser] = useState(null);
+  const [users, setUsers] = useState<User[]>([]);
+  const [search, setSearch] = useState('');
+  const [loading, setLoading] = useState(false);
 
-  const filteredUsers = users.filter(user => {
-    const matchesSearch = user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         user.email.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesKyc = kycFilter === "all" || user.kycStatus === kycFilter;
-    const matchesRole = roleFilter === "all" || user.role === roleFilter;
+  // Mock data for demonstration
+  useEffect(() => {
+    const mockUsers: User[] = [
+      {
+        id: '1',
+        name: 'John Doe2',
+        email: 'john.doe@example.com',
+        phone: '+1 (555) 123-4567',
+        totalFunds: 25000,
+        activeGoals: 3,
+        joinedDate: '2024-01-15',
+        kycStatus: 'approved'
+      },
+      {
+        id: '2',
+        name: 'Jane Smith3',
+        email: 'jane.smith@example.com',
+        phone: '+1 (555) 234-5678',
+        totalFunds: 45000,
+        activeGoals: 2,
+        joinedDate: '2024-02-20',
+        kycStatus: 'pending'
+      },
+      {
+        id: '3',
+        name: 'Mike Johnson',
+        email: 'mike.johnson@example.com',
+        phone: '+1 (555) 345-6789',
+        totalFunds: 18000,
+        activeGoals: 1,
+        joinedDate: '2024-03-10',
+        kycStatus: 'approved'
+      }
+    ];
     
-    return matchesSearch && matchesKyc && matchesRole;
-  });
+    setLoading(true);
+    setTimeout(() => {
+      setUsers(mockUsers);
+      setLoading(false);
+    }, 1000);
+  }, []);
+
+  const filteredUsers = users.filter(user =>
+    user.name.toLowerCase().includes(search.toLowerCase()) ||
+    user.email.toLowerCase().includes(search.toLowerCase())
+  );
 
   const stats = {
     total: users.length,
@@ -83,293 +95,306 @@ export default function UsersPage() {
     pendingKyc: users.filter(u => u.kycStatus === "pending").length,
   };
 
+  const LoadingSkeleton = () => (
+    <>
+      {[...Array(5)].map((_, i) => (
+        <TableRow key={i}>
+          <TableCell><Skeleton className="h-4 w-32" /></TableCell>
+          <TableCell><Skeleton className="h-4 w-48" /></TableCell>
+          <TableCell><Skeleton className="h-4 w-28" /></TableCell>
+          <TableCell><Skeleton className="h-4 w-24" /></TableCell>
+          <TableCell><Skeleton className="h-4 w-16" /></TableCell>
+          <TableCell><Skeleton className="h-4 w-24" /></TableCell>
+        </TableRow>
+      ))}
+    </>
+  );
+
   return (
-    <div className="space-y-8">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-4xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
-            User Management
-          </h1>
-          <p className="text-muted-foreground mt-2">Manage and monitor user accounts</p>
-        </div>
-        <div className="flex items-center gap-3">
-          <Button variant="outline" size="sm">
-            <Download className="w-4 h-4 mr-2" />
-            Export
-          </Button>
-          <Button>
-            <UserPlus className="w-4 h-4 mr-2" />
-            Add User
-          </Button>
-        </div>
-      </div>
-
-      {/* Stats Overview */}
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Users</CardTitle>
-            <Users className="h-4 w-4 text-blue-600" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{stats.total}</div>
-            <p className="text-xs text-muted-foreground">+12% from last month</p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Active Users</CardTitle>
-            <Badge variant="secondary" className="bg-green-100 text-green-800">Active</Badge>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{stats.active}</div>
-            <p className="text-xs text-muted-foreground">KYC approved</p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">KYC Approved</CardTitle>
-            <Badge variant="secondary" className="bg-blue-100 text-blue-800">Verified</Badge>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{stats.kycApproved}</div>
-            <p className="text-xs text-muted-foreground">85% approval rate</p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Pending KYC</CardTitle>
-            <Badge variant="secondary" className="bg-yellow-100 text-yellow-800">Pending</Badge>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{stats.pendingKyc}</div>
-            <p className="text-xs text-muted-foreground">Awaiting review</p>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Search & Filters */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Search & Filters</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="flex flex-col sm:flex-row gap-4">
-            <div className="relative flex-1">
-              <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-              <Input
-                placeholder="Search by name or email..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-10"
-              />
-            </div>
-            <Select value={kycFilter} onValueChange={setKycFilter}>
-              <SelectTrigger className="w-full sm:w-[180px]">
-                <SelectValue placeholder="KYC Status" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All KYC Status</SelectItem>
-                <SelectItem value="approved">Approved</SelectItem>
-                <SelectItem value="pending">Pending</SelectItem>
-                <SelectItem value="rejected">Rejected</SelectItem>
-              </SelectContent>
-            </Select>
-            <Select value={roleFilter} onValueChange={setRoleFilter}>
-              <SelectTrigger className="w-full sm:w-[180px]">
-                <SelectValue placeholder="User Role" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Roles</SelectItem>
-                <SelectItem value="user">User</SelectItem>
-                <SelectItem value="premium">Premium</SelectItem>
-                <SelectItem value="admin">Admin</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Users Table */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Users ({filteredUsers.length})</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="rounded-md border">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>User</TableHead>
-                  <TableHead>Contact</TableHead>
-                  <TableHead>Total Funds</TableHead>
-                  <TableHead>Active Goals</TableHead>
-                  <TableHead>KYC Status</TableHead>
-                  <TableHead>Joined</TableHead>
-                  <TableHead className="text-right">Actions</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {filteredUsers.map((user) => (
-                  <TableRow key={user.id} className="cursor-pointer hover:bg-muted/50">
-                    <TableCell>
-                      <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-full bg-gradient-to-r from-blue-500 to-purple-500 flex items-center justify-center text-white font-semibold">
-                          {user.name.split(' ').map(n => n[0]).join('')}
-                        </div>
-                        <div>
-                          <div className="font-medium">{user.name}</div>
-                          <div className="text-sm text-muted-foreground">{user.location}</div>
-                        </div>
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <div className="space-y-1">
-                        <div className="flex items-center gap-2 text-sm">
-                          <Mail className="h-3 w-3" />
-                          {user.email}
-                        </div>
-                        <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                          <Phone className="h-3 w-3" />
-                          {user.phone}
-                        </div>
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <div className="font-medium">${user.totalFunds.toLocaleString()}</div>
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex items-center gap-2">
-                        <Package className="h-4 w-4 text-muted-foreground" />
-                        <span className="font-medium">{user.activeGoals}</span>
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <Badge 
-                        variant={user.kycStatus === "approved" ? "default" : "secondary"}
-                        className={
-                          user.kycStatus === "approved" 
-                            ? "bg-green-100 text-green-800" 
-                            : "bg-yellow-100 text-yellow-800"
-                        }
-                      >
-                        {user.kycStatus}
-                      </Badge>
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                        <Calendar className="h-3 w-3" />
-                        {new Date(user.joinedDate).toLocaleDateString()}
-                      </div>
-                    </TableCell>
-                    <TableCell className="text-right">
-                      <Button 
-                        variant="ghost" 
-                        size="icon"
-                        onClick={() => setSelectedUser(user)}
-                      >
-                        <MoreHorizontal className="h-4 w-4" />
-                      </Button>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* User Details Dialog */}
-      <Dialog open={!!selectedUser} onOpenChange={() => setSelectedUser(null)}>
-        <DialogContent className="max-w-2xl">
-          <DialogHeader>
-            <DialogTitle>User Details</DialogTitle>
-          </DialogHeader>
-          {selectedUser && (
-            <div className="space-y-6">
-              {/* Profile Header */}
-              <div className="flex items-center gap-4 p-4 bg-muted/50 rounded-lg">
-                <div className="w-16 h-16 rounded-full bg-gradient-to-r from-blue-500 to-purple-500 flex items-center justify-center text-white font-semibold text-xl">
-                  {selectedUser.name.split(' ').map(n => n[0]).join('')}
-                </div>
-                <div>
-                  <h3 className="text-xl font-semibold">{selectedUser.name}</h3>
-                  <p className="text-muted-foreground">{selectedUser.email}</p>
-                  <Badge 
-                    variant={selectedUser.kycStatus === "approved" ? "default" : "secondary"}
-                    className="mt-1"
-                  >
-                    {selectedUser.kycStatus}
-                  </Badge>
-                </div>
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-100/50 dark:from-slate-950 dark:via-slate-900 dark:to-slate-950/50">
+      <div className="space-y-8 p-6">
+        {/* Modern Header with Glassmorphism */}
+        <motion.div 
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6 }}
+          className="flex flex-col lg:flex-row lg:items-center justify-between gap-6"
+        >
+          <div className="space-y-2">
+            <div className="flex items-center gap-3">
+              <div className="p-2 rounded-xl bg-gradient-to-r from-blue-500/10 to-indigo-500/10 border border-blue-200/20 dark:border-blue-800/20">
+                <UsersIcon className="h-6 w-6 text-blue-600 dark:text-blue-400" />
               </div>
-
-              {/* Basic Information */}
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <h4 className="font-medium">Contact Information</h4>
-                  <div className="space-y-1 text-sm text-muted-foreground">
-                    <div className="flex items-center gap-2">
-                      <Mail className="h-4 w-4" />
-                      {selectedUser.email}
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <Phone className="h-4 w-4" />
-                      {selectedUser.phone}
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <MapPin className="h-4 w-4" />
-                      {selectedUser.location}
-                    </div>
-                  </div>
-                </div>
-                <div className="space-y-2">
-                  <h4 className="font-medium">Account Details</h4>
-                  <div className="space-y-1 text-sm text-muted-foreground">
-                    <div>Total Funds: <span className="font-medium text-foreground">${selectedUser.totalFunds.toLocaleString()}</span></div>
-                    <div>Active Goals: <span className="font-medium text-foreground">{selectedUser.activeGoals}</span></div>
-                    <div>Role: <span className="font-medium text-foreground capitalize">{selectedUser.role}</span></div>
-                    <div>Joined: <span className="font-medium text-foreground">{new Date(selectedUser.joinedDate).toLocaleDateString()}</span></div>
-                  </div>
-                </div>
-              </div>
-
-              {/* Mock Investment Goals */}
-              <div className="space-y-3">
-                <h4 className="font-medium">Investment Goals</h4>
-                <div className="space-y-2">
-                  {["Education Fund", "Retirement Plan", "Home Purchase"].map((goal, index) => (
-                    <div key={goal} className="flex items-center justify-between p-3 bg-muted/30 rounded-lg">
-                      <div>
-                        <div className="font-medium">{goal}</div>
-                        <div className="text-sm text-muted-foreground">Target: ${(50000 + index * 25000).toLocaleString()}</div>
-                      </div>
-                      <div className="text-right">
-                        <div className="font-medium">${(15000 + index * 8000).toLocaleString()}</div>
-                        <div className="text-sm text-muted-foreground">{30 + index * 20}% funded</div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              {/* Mock Holdings */}
-              <div className="space-y-3">
-                <h4 className="font-medium">Current Holdings</h4>
-                <div className="grid grid-cols-2 gap-3">
-                  {["Tech Growth Fund", "Balanced Portfolio", "International Fund", "Bond Fund"].map((holding, index) => (
-                    <div key={holding} className="p-3 bg-muted/30 rounded-lg">
-                      <div className="font-medium text-sm">{holding}</div>
-                      <div className="text-xs text-muted-foreground">${(5000 + index * 2000).toLocaleString()}</div>
-                    </div>
-                  ))}
-                </div>
+              <div>
+                <h1 className="text-4xl lg:text-5xl font-bold bg-gradient-to-r from-slate-900 via-blue-900 to-purple-900 dark:from-slate-100 dark:via-blue-100 dark:to-purple-100 bg-clip-text text-transparent">
+                  User Management
+                </h1>
+                <p className="text-slate-600 dark:text-slate-400 text-lg font-medium">
+                  Manage and monitor user accounts with precision
+                </p>
               </div>
             </div>
-          )}
-        </DialogContent>
-      </Dialog>
+          </div>
+          <div className="flex items-center gap-3">
+            <Button 
+              variant="outline" 
+              size="sm"
+              className="bg-white/80 dark:bg-slate-900/80 backdrop-blur-sm border-slate-200/50 dark:border-slate-700/50 hover:bg-white dark:hover:bg-slate-900 transition-all duration-200 rounded-xl px-4 py-2"
+            >
+              <Download className="w-4 h-4 mr-2" />
+              Export
+            </Button>
+            <Button className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white border-0 shadow-lg hover:shadow-xl transition-all duration-200 rounded-xl px-6 py-2">
+              <UserPlus className="w-4 h-4 mr-2" />
+              Add User
+            </Button>
+          </div>
+        </motion.div>
+
+        {/* Premium Stats Grid with Glassmorphism */}
+        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: 0.1 }}
+          >
+            <Card className="group relative overflow-hidden border-0 shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 rounded-2xl backdrop-blur-sm bg-gradient-to-br from-blue-50/50 to-indigo-50/50 dark:from-blue-950/20 dark:to-indigo-950/20 border border-blue-200/50 dark:border-blue-800/30">
+              <div className="absolute inset-0 bg-white/40 dark:bg-slate-900/40 backdrop-blur-sm" />
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3 relative z-10">
+                <CardTitle className="text-sm font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-wide">Total Users</CardTitle>
+                <div className="p-3 rounded-xl bg-gradient-to-br from-blue-500/20 to-indigo-500/20 border border-white/20 dark:border-slate-700/30 group-hover:scale-110 transition-transform duration-200">
+                  <UsersIcon className="h-5 w-5 text-blue-600 dark:text-blue-400" />
+                </div>
+              </CardHeader>
+              <CardContent className="relative z-10 space-y-3">
+                <div className="text-3xl lg:text-4xl font-bold text-slate-900 dark:text-slate-100">{stats.total}</div>
+                <div className="flex items-center gap-2 text-sm">
+                  <div className="flex items-center gap-1 px-2 py-1 rounded-full bg-emerald-50 dark:bg-emerald-950/30 text-emerald-700 dark:text-emerald-300">
+                    <TrendingUp className="h-3 w-3" />
+                    <span className="font-semibold">+12%</span>
+                  </div>
+                  <span className="text-slate-500 dark:text-slate-400 text-xs">from last month</span>
+                </div>
+              </CardContent>
+            </Card>
+          </motion.div>
+
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: 0.2 }}
+          >
+            <Card className="group relative overflow-hidden border-0 shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 rounded-2xl backdrop-blur-sm bg-gradient-to-br from-emerald-50/50 to-teal-50/50 dark:from-emerald-950/20 dark:to-teal-950/20 border border-emerald-200/50 dark:border-emerald-800/30">
+              <div className="absolute inset-0 bg-white/40 dark:bg-slate-900/40 backdrop-blur-sm" />
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3 relative z-10">
+                <CardTitle className="text-sm font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-wide">Active Users</CardTitle>
+                <Badge className="bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800">Active</Badge>
+              </CardHeader>
+              <CardContent className="relative z-10 space-y-3">
+                <div className="text-3xl lg:text-4xl font-bold text-slate-900 dark:text-slate-100">{stats.active}</div>
+                <p className="text-slate-500 dark:text-slate-400 text-xs">KYC approved</p>
+              </CardContent>
+            </Card>
+          </motion.div>
+
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: 0.3 }}
+          >
+            <Card className="group relative overflow-hidden border-0 shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 rounded-2xl backdrop-blur-sm bg-gradient-to-br from-violet-50/50 to-purple-50/50 dark:from-violet-950/20 dark:to-purple-950/20 border border-violet-200/50 dark:border-violet-800/30">
+              <div className="absolute inset-0 bg-white/40 dark:bg-slate-900/40 backdrop-blur-sm" />
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3 relative z-10">
+                <CardTitle className="text-sm font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-wide">KYC Approved</CardTitle>
+                <Badge className="bg-violet-100 dark:bg-violet-900/30 text-violet-700 dark:text-violet-300 border-violet-200 dark:border-violet-800">Verified</Badge>
+              </CardHeader>
+              <CardContent className="relative z-10 space-y-3">
+                <div className="text-3xl lg:text-4xl font-bold text-slate-900 dark:text-slate-100">{stats.kycApproved}</div>
+                <p className="text-slate-500 dark:text-slate-400 text-xs">85% approval rate</p>
+              </CardContent>
+            </Card>
+          </motion.div>
+
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: 0.4 }}
+          >
+            <Card className="group relative overflow-hidden border-0 shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 rounded-2xl backdrop-blur-sm bg-gradient-to-br from-amber-50/50 to-orange-50/50 dark:from-amber-950/20 dark:to-orange-950/20 border border-amber-200/50 dark:border-amber-800/30">
+              <div className="absolute inset-0 bg-white/40 dark:bg-slate-900/40 backdrop-blur-sm" />
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3 relative z-10">
+                <CardTitle className="text-sm font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-wide">Pending KYC</CardTitle>
+                <Badge className="bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300 border-amber-200 dark:border-amber-800">Pending</Badge>
+              </CardHeader>
+              <CardContent className="relative z-10 space-y-3">
+                <div className="text-3xl lg:text-4xl font-bold text-slate-900 dark:text-slate-100">{stats.pendingKyc}</div>
+                <p className="text-slate-500 dark:text-slate-400 text-xs">Awaiting review</p>
+              </CardContent>
+            </Card>
+          </motion.div>
+        </div>
+
+        {/* Search & Filters */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6, delay: 0.5 }}
+        >
+          <Card className="border-0 shadow-xl rounded-2xl backdrop-blur-sm bg-white/80 dark:bg-slate-900/80 border-slate-200/50 dark:border-slate-700/50">
+            <CardHeader className="pb-4">
+              <CardTitle className="flex items-center gap-3 text-xl font-bold text-slate-900 dark:text-slate-100">
+                <div className="p-2 rounded-xl bg-gradient-to-r from-blue-500/10 to-indigo-500/10 border border-blue-200/20 dark:border-blue-800/20">
+                  <Filter className="h-5 w-5 text-blue-600 dark:text-blue-400" />
+                </div>
+                Search & Filters
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="relative">
+                <Search className="absolute left-3 top-3 h-4 w-4 text-slate-400" />
+                <Input
+                  placeholder="Search by name or email..."
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                  className="pl-10 bg-white/80 dark:bg-slate-900/80 border-slate-200/50 dark:border-slate-700/50 rounded-xl"
+                />
+              </div>
+            </CardContent>
+          </Card>
+        </motion.div>
+
+        {/* Users Table */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6, delay: 0.6 }}
+        >
+          <Card className="border-0 shadow-xl rounded-2xl backdrop-blur-sm bg-white/80 dark:bg-slate-900/80 border-slate-200/50 dark:border-slate-700/50">
+            <CardHeader className="pb-4">
+              <CardTitle className="flex items-center justify-between">
+                <div className="flex items-center gap-3 text-xl font-bold text-slate-900 dark:text-slate-100">
+                  <div className="p-2 rounded-xl bg-gradient-to-r from-blue-500/10 to-indigo-500/10 border border-blue-200/20 dark:border-blue-800/20">
+                    <UsersIcon className="h-5 w-5 text-blue-600 dark:text-blue-400" />
+                  </div>
+                  Users ({filteredUsers.length})
+                </div>
+                <Button variant="ghost" size="sm" className="text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100">
+                  <Eye className="w-4 h-4 mr-2" />
+                  View All
+                </Button>
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="rounded-xl border border-slate-200/50 dark:border-slate-700/50 overflow-hidden">
+                <Table>
+                  <TableHeader>
+                    <TableRow className="bg-slate-50/50 dark:bg-slate-800/50">
+                      <TableHead className="text-slate-700 dark:text-slate-300 font-semibold">User</TableHead>
+                      <TableHead className="text-slate-700 dark:text-slate-300 font-semibold">Contact</TableHead>
+                      <TableHead className="text-slate-700 dark:text-slate-300 font-semibold">Funds</TableHead>
+                      <TableHead className="text-slate-700 dark:text-slate-300 font-semibold">Goals</TableHead>
+                      <TableHead className="text-slate-700 dark:text-slate-300 font-semibold">Status</TableHead>
+                      <TableHead className="text-slate-700 dark:text-slate-300 font-semibold">Joined</TableHead>
+                      <TableHead className="text-right text-slate-700 dark:text-slate-300 font-semibold">Actions</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {loading ? (
+                      <LoadingSkeleton />
+                    ) : filteredUsers.length === 0 ? (
+                      <TableRow>
+                        <TableCell colSpan={7} className="text-center py-12">
+                          <div className="flex flex-col items-center gap-4">
+                            <div className="w-16 h-16 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center">
+                              <UsersIcon className="h-8 w-8 text-slate-400" />
+                            </div>
+                            <div>
+                              <p className="text-slate-600 dark:text-slate-400 font-medium">No users found</p>
+                              <p className="text-slate-500 dark:text-slate-500 text-sm">Try adjusting your search criteria</p>
+                            </div>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    ) : (
+                      filteredUsers.map((user, index) => (
+                        <motion.tr 
+                          key={user.id}
+                          initial={{ opacity: 0, y: 10 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          transition={{ duration: 0.4, delay: index * 0.05 }}
+                          className="cursor-pointer hover:bg-slate-50/80 dark:hover:bg-slate-800/50 transition-all duration-200 border-b border-slate-200/50 dark:border-slate-700/50"
+                        >
+                          <TableCell>
+                            <div className="flex items-center gap-3">
+                              <div className="w-10 h-10 rounded-xl bg-gradient-to-r from-blue-500 to-purple-500 flex items-center justify-center text-white font-bold text-sm shadow-lg">
+                                {user.name.split(' ').map(n => n[0]).join('').toUpperCase()}
+                              </div>
+                              <div>
+                                <div className="font-semibold text-slate-900 dark:text-slate-100">{user.name}</div>
+                                <div className="text-sm text-slate-500 dark:text-slate-400">ID: {user.id}</div>
+                              </div>
+                            </div>
+                          </TableCell>
+                          <TableCell>
+                            <div className="space-y-1">
+                              <div className="flex items-center gap-2 text-sm">
+                                <Mail className="h-3 w-3 text-slate-400" />
+                                <span className="text-slate-600 dark:text-slate-400">{user.email}</span>
+                              </div>
+                              <div className="flex items-center gap-2 text-sm">
+                                <Phone className="h-3 w-3 text-slate-400" />
+                                <span className="text-slate-600 dark:text-slate-400">{user.phone}</span>
+                              </div>
+                            </div>
+                          </TableCell>
+                          <TableCell>
+                            <div className="flex items-center gap-2">
+                              <span className="font-semibold text-slate-900 dark:text-slate-100">${user.totalFunds.toLocaleString()}</span>
+                            </div>
+                          </TableCell>
+                          <TableCell>
+                            <Badge variant="secondary" className="bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 border-blue-200 dark:border-blue-800">
+                              {user.activeGoals} active
+                            </Badge>
+                          </TableCell>
+                          <TableCell>
+                            <Badge 
+                              className={
+                                user.kycStatus === "approved" 
+                                  ? "bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800"
+                                  : user.kycStatus === "pending"
+                                  ? "bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300 border-amber-200 dark:border-amber-800"
+                                  : "bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300 border-red-200 dark:border-red-800"
+                              }
+                            >
+                              {user.kycStatus}
+                            </Badge>
+                          </TableCell>
+                          <TableCell>
+                            <div className="flex items-center gap-2 text-sm text-slate-600 dark:text-slate-400">
+                              <Calendar className="h-3 w-3" />
+                              {new Date(user.joinedDate).toLocaleDateString()}
+                            </div>
+                          </TableCell>
+                          <TableCell className="text-right">
+                            <Button 
+                              variant="ghost" 
+                              size="sm"
+                              className="hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg"
+                            >
+                              <Eye className="h-4 w-4" />
+                            </Button>
+                          </TableCell>
+                        </motion.tr>
+                      ))
+                    )}
+                  </TableBody>
+                </Table>
+              </div>
+            </CardContent>
+          </Card>
+        </motion.div>
+      </div>
     </div>
   );
 }

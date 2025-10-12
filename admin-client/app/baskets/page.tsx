@@ -11,79 +11,98 @@ import {
   Plus, 
   Pencil, 
   Trash2, 
-  Building,
-  MapPin,
-  DollarSign,
-  BookOpen,
+  Package,
   TrendingUp,
+  DollarSign,
+  BarChart3,
+  Target,
   Filter,
   Sparkles,
   Eye,
   Clock,
   ArrowUpRight,
-  GraduationCap,
-  Target,
+  TrendingDown,
+  Zap,
   Download
 } from 'lucide-react';
 
-interface College {
-  id: string;
-  name: string;
-  location: string;
-  fees: number;
-  course: string;
-  duration: number;
-  type: 'University' | 'College' | 'Institute';
+interface BasketFund {
+  fundId: string;
+  fundName: string;
+  percentage: number;
 }
 
-export default function CollegesPage() {
-  const [colleges, setColleges] = useState<College[]>([]);
+interface Basket {
+  id: string;
+  name: string;
+  category: string;
+  duration: number;
+  funds: BasketFund[];
+  totalPercentage: number;
+  createdAt: string;
+}
+
+export default function BasketsPage() {
+  const [baskets, setBaskets] = useState<Basket[]>([]);
   const [loading, setLoading] = useState(false);
 
   // Mock data for demonstration
   useEffect(() => {
-    const mockColleges: College[] = [
+    const mockBaskets: Basket[] = [
       {
         id: '1',
-        name: 'MIT',
-        location: 'Cambridge, MA',
-        fees: 75000,
-        course: 'Computer Science',
-        duration: 4,
-        type: 'University'
+        name: 'Tech Innovators',
+        category: 'High Risk',
+        duration: 5,
+        funds: [
+          { fundId: '1', fundName: 'Tech Growth Fund', percentage: 40 },
+          { fundId: '2', fundName: 'Innovation ETF', percentage: 35 },
+          { fundId: '3', fundName: 'Startup Ventures', percentage: 25 }
+        ],
+        totalPercentage: 100,
+        createdAt: '2024-01-15'
       },
       {
         id: '2',
-        name: 'Stanford University',
-        location: 'Stanford, CA',
-        fees: 78000,
-        course: 'Engineering',
-        duration: 4,
-        type: 'University'
+        name: 'Conservative Portfolio',
+        category: 'Low Risk',
+        duration: 3,
+        funds: [
+          { fundId: '4', fundName: 'Government Bonds', percentage: 50 },
+          { fundId: '5', fundName: 'Blue Chip Stocks', percentage: 30 },
+          { fundId: '6', fundName: 'Dividend ETF', percentage: 20 }
+        ],
+        totalPercentage: 100,
+        createdAt: '2024-02-20'
       },
       {
         id: '3',
-        name: 'Harvard University',
-        location: 'Cambridge, MA',
-        fees: 82000,
-        course: 'Business Administration',
+        name: 'Balanced Growth',
+        category: 'Medium Risk',
         duration: 4,
-        type: 'University'
+        funds: [
+          { fundId: '7', fundName: 'S&P 500 Index', percentage: 40 },
+          { fundId: '8', fundName: 'International Fund', percentage: 30 },
+          { fundId: '9', fundName: 'REIT Fund', percentage: 20 },
+          { fundId: '10', fundName: 'Bond Fund', percentage: 10 }
+        ],
+        totalPercentage: 100,
+        createdAt: '2024-03-10'
       }
     ];
     
     setLoading(true);
     setTimeout(() => {
-      setColleges(mockColleges);
+      setBaskets(mockBaskets);
       setLoading(false);
     }, 1000);
   }, []);
 
   const stats = {
-    total: colleges.length,
-    universities: colleges.filter(c => c.type === "University").length,
-    courses: new Set(colleges.map(c => c.course)).size,
-    avgFees: Math.round(colleges.reduce((sum, c) => sum + c.fees, 0) / colleges.length),
+    total: baskets.length,
+    totalValue: baskets.reduce((sum, b) => sum + (b.funds?.length || 0) * 10000, 0),
+    avgReturn: 9.2,
+    highPerformers: baskets.filter(b => (b.funds?.length || 0) > 3).length,
   };
 
   const LoadingSkeleton = () => (
@@ -91,10 +110,10 @@ export default function CollegesPage() {
       {[...Array(5)].map((_, i) => (
         <TableRow key={i}>
           <TableCell><Skeleton className="h-4 w-32" /></TableCell>
-          <TableCell><Skeleton className="h-4 w-28" /></TableCell>
           <TableCell><Skeleton className="h-4 w-24" /></TableCell>
           <TableCell><Skeleton className="h-4 w-16" /></TableCell>
           <TableCell><Skeleton className="h-4 w-20" /></TableCell>
+          <TableCell><Skeleton className="h-4 w-16" /></TableCell>
           <TableCell><Skeleton className="h-4 w-16" /></TableCell>
         </TableRow>
       ))}
@@ -113,15 +132,15 @@ export default function CollegesPage() {
         >
           <div className="space-y-2">
             <div className="flex items-center gap-3">
-              <div className="p-2 rounded-xl bg-gradient-to-r from-emerald-500/10 to-teal-500/10 border border-emerald-200/20 dark:border-emerald-800/20">
-                <GraduationCap className="h-6 w-6 text-emerald-600 dark:text-emerald-400" />
+              <div className="p-2 rounded-xl bg-gradient-to-r from-violet-500/10 to-purple-500/10 border border-violet-200/20 dark:border-violet-800/20">
+                <Package className="h-6 w-6 text-violet-600 dark:text-violet-400" />
               </div>
               <div>
-                <h1 className="text-4xl lg:text-5xl font-bold bg-gradient-to-r from-slate-900 via-emerald-900 to-teal-900 dark:from-slate-100 dark:via-emerald-100 dark:to-teal-100 bg-clip-text text-transparent">
-                  College Management
+                <h1 className="text-4xl lg:text-5xl font-bold bg-gradient-to-r from-slate-900 via-violet-900 to-purple-900 dark:from-slate-100 dark:via-violet-100 dark:to-purple-100 bg-clip-text text-transparent">
+                  Basket Management
                 </h1>
                 <p className="text-slate-600 dark:text-slate-400 text-lg font-medium">
-                  Manage colleges and educational institutions
+                  Create and manage investment baskets with precision
                 </p>
               </div>
             </div>
@@ -136,10 +155,10 @@ export default function CollegesPage() {
               Export
             </Button>
             <Button 
-              className="bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white border-0 shadow-lg hover:shadow-xl transition-all duration-200 rounded-xl px-6 py-2"
+              className="bg-gradient-to-r from-violet-600 to-purple-600 hover:from-violet-700 hover:to-purple-700 text-white border-0 shadow-lg hover:shadow-xl transition-all duration-200 rounded-xl px-6 py-2"
             >
               <Plus className="w-4 h-4 mr-2" />
-              Add College
+              Create Basket
             </Button>
           </div>
         </motion.div>
@@ -154,9 +173,9 @@ export default function CollegesPage() {
             <Card className="group relative overflow-hidden border-0 shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 rounded-2xl backdrop-blur-sm bg-gradient-to-br from-blue-50/50 to-indigo-50/50 dark:from-blue-950/20 dark:to-indigo-950/20 border border-blue-200/50 dark:border-blue-800/30">
               <div className="absolute inset-0 bg-white/40 dark:bg-slate-900/40 backdrop-blur-sm" />
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3 relative z-10">
-                <CardTitle className="text-sm font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-wide">Total Colleges</CardTitle>
+                <CardTitle className="text-sm font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-wide">Total Baskets</CardTitle>
                 <div className="p-3 rounded-xl bg-gradient-to-br from-blue-500/20 to-indigo-500/20 border border-white/20 dark:border-slate-700/30 group-hover:scale-110 transition-transform duration-200">
-                  <Building className="h-5 w-5 text-blue-600 dark:text-blue-400" />
+                  <Package className="h-5 w-5 text-blue-600 dark:text-blue-400" />
                 </div>
               </CardHeader>
               <CardContent className="relative z-10 space-y-3">
@@ -164,9 +183,9 @@ export default function CollegesPage() {
                 <div className="flex items-center gap-2 text-sm">
                   <div className="flex items-center gap-1 px-2 py-1 rounded-full bg-emerald-50 dark:bg-emerald-950/30 text-emerald-700 dark:text-emerald-300">
                     <TrendingUp className="h-3 w-3" />
-                    <span className="font-semibold">+8%</span>
+                    <span className="font-semibold">+15%</span>
                   </div>
-                  <span className="text-slate-500 dark:text-slate-400 text-xs">from last month</span>
+                  <span className="text-slate-500 dark:text-slate-400 text-xs">this month</span>
                 </div>
               </CardContent>
             </Card>
@@ -180,14 +199,14 @@ export default function CollegesPage() {
             <Card className="group relative overflow-hidden border-0 shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 rounded-2xl backdrop-blur-sm bg-gradient-to-br from-emerald-50/50 to-teal-50/50 dark:from-emerald-950/20 dark:to-teal-950/20 border border-emerald-200/50 dark:border-emerald-800/30">
               <div className="absolute inset-0 bg-white/40 dark:bg-slate-900/40 backdrop-blur-sm" />
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3 relative z-10">
-                <CardTitle className="text-sm font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-wide">Universities</CardTitle>
+                <CardTitle className="text-sm font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-wide">Total AUM</CardTitle>
                 <div className="p-3 rounded-xl bg-gradient-to-br from-emerald-500/20 to-teal-500/20 border border-white/20 dark:border-slate-700/30 group-hover:scale-110 transition-transform duration-200">
-                  <BookOpen className="h-5 w-5 text-emerald-600 dark:text-emerald-400" />
+                  <DollarSign className="h-5 w-5 text-emerald-600 dark:text-emerald-400" />
                 </div>
               </CardHeader>
               <CardContent className="relative z-10 space-y-3">
-                <div className="text-3xl lg:text-4xl font-bold text-slate-900 dark:text-slate-100">{stats.universities}</div>
-                <p className="text-slate-500 dark:text-slate-400 text-xs">Higher education</p>
+                <div className="text-3xl lg:text-4xl font-bold text-slate-900 dark:text-slate-100">${(stats.totalValue / 1000000).toFixed(1)}M</div>
+                <p className="text-slate-500 dark:text-slate-400 text-xs">Assets under management</p>
               </CardContent>
             </Card>
           </motion.div>
@@ -200,14 +219,14 @@ export default function CollegesPage() {
             <Card className="group relative overflow-hidden border-0 shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 rounded-2xl backdrop-blur-sm bg-gradient-to-br from-violet-50/50 to-purple-50/50 dark:from-violet-950/20 dark:to-purple-950/20 border border-violet-200/50 dark:border-violet-800/30">
               <div className="absolute inset-0 bg-white/40 dark:bg-slate-900/40 backdrop-blur-sm" />
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3 relative z-10">
-                <CardTitle className="text-sm font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-wide">Courses</CardTitle>
+                <CardTitle className="text-sm font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-wide">Avg Return</CardTitle>
                 <div className="p-3 rounded-xl bg-gradient-to-br from-violet-500/20 to-purple-500/20 border border-white/20 dark:border-slate-700/30 group-hover:scale-110 transition-transform duration-200">
-                  <TrendingUp className="h-5 w-5 text-violet-600 dark:text-violet-400" />
+                  <BarChart3 className="h-5 w-5 text-violet-600 dark:text-violet-400" />
                 </div>
               </CardHeader>
               <CardContent className="relative z-10 space-y-3">
-                <div className="text-3xl lg:text-4xl font-bold text-slate-900 dark:text-slate-100">{stats.courses}</div>
-                <p className="text-slate-500 dark:text-slate-400 text-xs">Different programs</p>
+                <div className="text-3xl lg:text-4xl font-bold text-slate-900 dark:text-slate-100">{stats.avgReturn.toFixed(1)}%</div>
+                <p className="text-slate-500 dark:text-slate-400 text-xs">Annual return</p>
               </CardContent>
             </Card>
           </motion.div>
@@ -220,20 +239,20 @@ export default function CollegesPage() {
             <Card className="group relative overflow-hidden border-0 shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 rounded-2xl backdrop-blur-sm bg-gradient-to-br from-amber-50/50 to-orange-50/50 dark:from-amber-950/20 dark:to-orange-950/20 border border-amber-200/50 dark:border-amber-800/30">
               <div className="absolute inset-0 bg-white/40 dark:bg-slate-900/40 backdrop-blur-sm" />
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3 relative z-10">
-                <CardTitle className="text-sm font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-wide">Average Fees</CardTitle>
+                <CardTitle className="text-sm font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-wide">High Performers</CardTitle>
                 <div className="p-3 rounded-xl bg-gradient-to-br from-amber-500/20 to-orange-500/20 border border-white/20 dark:border-slate-700/30 group-hover:scale-110 transition-transform duration-200">
-                  <DollarSign className="h-5 w-5 text-amber-600 dark:text-amber-400" />
+                  <Target className="h-5 w-5 text-amber-600 dark:text-amber-400" />
                 </div>
               </CardHeader>
               <CardContent className="relative z-10 space-y-3">
-                <div className="text-3xl lg:text-4xl font-bold text-slate-900 dark:text-slate-100">${stats.avgFees.toLocaleString()}</div>
-                <p className="text-slate-500 dark:text-slate-400 text-xs">Annual tuition</p>
+                <div className="text-3xl lg:text-4xl font-bold text-slate-900 dark:text-slate-100">{stats.highPerformers}</div>
+                <p className="text-slate-500 dark:text-slate-400 text-xs">&gt;10% return</p>
               </CardContent>
             </Card>
           </motion.div>
         </div>
 
-        {/* Colleges Table */}
+        {/* Baskets Table */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -243,10 +262,10 @@ export default function CollegesPage() {
             <CardHeader className="pb-4">
               <CardTitle className="flex items-center justify-between">
                 <div className="flex items-center gap-3 text-xl font-bold text-slate-900 dark:text-slate-100">
-                  <div className="p-2 rounded-xl bg-gradient-to-r from-emerald-500/10 to-teal-500/10 border border-emerald-200/20 dark:border-emerald-800/20">
-                    <GraduationCap className="h-5 w-5 text-emerald-600 dark:text-emerald-400" />
+                  <div className="p-2 rounded-xl bg-gradient-to-r from-violet-500/10 to-purple-500/10 border border-violet-200/20 dark:border-violet-800/20">
+                    <Package className="h-5 w-5 text-violet-600 dark:text-violet-400" />
                   </div>
-                  Colleges ({colleges.length})
+                  Investment Baskets ({baskets.length})
                 </div>
                 <Button variant="ghost" size="sm" className="text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100">
                   <Eye className="w-4 h-4 mr-2" />
@@ -259,35 +278,35 @@ export default function CollegesPage() {
                 <Table>
                   <TableHeader>
                     <TableRow className="bg-slate-50/50 dark:bg-slate-800/50">
-                      <TableHead className="text-slate-700 dark:text-slate-300 font-semibold">College</TableHead>
-                      <TableHead className="text-slate-700 dark:text-slate-300 font-semibold">Location</TableHead>
-                      <TableHead className="text-slate-700 dark:text-slate-300 font-semibold">Course</TableHead>
+                      <TableHead className="text-slate-700 dark:text-slate-300 font-semibold">Basket</TableHead>
+                      <TableHead className="text-slate-700 dark:text-slate-300 font-semibold">Category</TableHead>
                       <TableHead className="text-slate-700 dark:text-slate-300 font-semibold">Duration</TableHead>
-                      <TableHead className="text-slate-700 dark:text-slate-300 font-semibold">Fees</TableHead>
+                      <TableHead className="text-slate-700 dark:text-slate-300 font-semibold">Funds</TableHead>
+                      <TableHead className="text-slate-700 dark:text-slate-300 font-semibold">Allocation</TableHead>
                       <TableHead className="text-right text-slate-700 dark:text-slate-300 font-semibold">Actions</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
                     {loading ? (
                       <LoadingSkeleton />
-                    ) : colleges.length === 0 ? (
+                    ) : baskets.length === 0 ? (
                       <TableRow>
                         <TableCell colSpan={6} className="text-center py-12">
                           <div className="flex flex-col items-center gap-4">
                             <div className="w-16 h-16 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center">
-                              <GraduationCap className="h-8 w-8 text-slate-400" />
+                              <Package className="h-8 w-8 text-slate-400" />
                             </div>
                             <div>
-                              <p className="text-slate-600 dark:text-slate-400 font-medium">No colleges found</p>
-                              <p className="text-slate-500 dark:text-slate-500 text-sm">Add your first college to get started</p>
+                              <p className="text-slate-600 dark:text-slate-400 font-medium">No baskets found</p>
+                              <p className="text-slate-500 dark:text-slate-500 text-sm">Create your first investment basket</p>
                             </div>
                           </div>
                         </TableCell>
                       </TableRow>
                     ) : (
-                      colleges.map((college, index) => (
+                      baskets.map((basket, index) => (
                         <motion.tr 
-                          key={college.id}
+                          key={basket.id}
                           initial={{ opacity: 0, y: 10 }}
                           animate={{ opacity: 1, y: 0 }}
                           transition={{ duration: 0.4, delay: index * 0.05 }}
@@ -295,36 +314,50 @@ export default function CollegesPage() {
                         >
                           <TableCell>
                             <div className="flex items-center gap-3">
-                              <div className="w-10 h-10 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-500 flex items-center justify-center text-white font-bold text-sm shadow-lg">
-                                {college.name.split(' ').map(n => n[0]).join('').toUpperCase()}
+                              <div className="w-12 h-12 rounded-xl bg-gradient-to-r from-violet-500 to-purple-500 flex items-center justify-center text-white font-bold text-lg shadow-lg">
+                                {basket.name.split(' ').map(n => n[0]).join('').toUpperCase()}
                               </div>
                               <div>
-                                <div className="font-semibold text-slate-900 dark:text-slate-100">{college.name}</div>
-                                <div className="text-sm text-slate-500 dark:text-slate-400">{college.type}</div>
+                                <div className="font-semibold text-slate-900 dark:text-slate-100">{basket.name}</div>
+                                <div className="text-sm text-slate-500 dark:text-slate-400">{basket.funds?.length || 0} funds</div>
                               </div>
                             </div>
                           </TableCell>
                           <TableCell>
-                            <div className="flex items-center gap-2 text-sm text-slate-600 dark:text-slate-400">
-                              <MapPin className="h-3 w-3" />
-                              {college.location}
-                            </div>
-                          </TableCell>
-                          <TableCell>
-                            <Badge variant="secondary" className="bg-violet-100 dark:bg-violet-900/30 text-violet-700 dark:text-violet-300 border-violet-200 dark:border-violet-800">
-                              {college.course}
+                            <Badge 
+                              className={
+                                basket.category === "High Risk" 
+                                  ? "bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300 border-red-200 dark:border-red-800"
+                                  : basket.category === "Medium Risk"
+                                  ? "bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-300 border-yellow-200 dark:border-yellow-800"
+                                  : "bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800"
+                              }
+                            >
+                              {basket.category}
                             </Badge>
                           </TableCell>
                           <TableCell>
                             <div className="flex items-center gap-2">
                               <Clock className="h-4 w-4 text-slate-400" />
-                              <span className="font-medium text-slate-900 dark:text-slate-100">{college.duration} years</span>
+                              <span className="font-medium text-slate-900 dark:text-slate-100">{basket.duration} years</span>
                             </div>
                           </TableCell>
                           <TableCell>
                             <div className="flex items-center gap-2">
                               <DollarSign className="h-4 w-4 text-emerald-600" />
-                              <span className="font-semibold text-slate-900 dark:text-slate-100">${college.fees.toLocaleString()}</span>
+                              <span className="font-semibold text-slate-900 dark:text-slate-100">{basket.funds?.length || 0}</span>
+                            </div>
+                          </TableCell>
+                          <TableCell>
+                            <div className="flex items-center gap-2">
+                              {basket.totalPercentage === 100 ? (
+                                <TrendingUp className="h-4 w-4 text-emerald-600" />
+                              ) : (
+                                <TrendingDown className="h-4 w-4 text-red-600" />
+                              )}
+                              <span className={`font-semibold ${basket.totalPercentage === 100 ? "text-emerald-600" : "text-red-600"}`}>
+                                {basket.totalPercentage}%
+                              </span>
                             </div>
                           </TableCell>
                           <TableCell className="text-right">
