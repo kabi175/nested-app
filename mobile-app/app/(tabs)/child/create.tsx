@@ -78,7 +78,7 @@ export default function CreateChild() {
 
   const handleBack = () => {
     animateExit(() => {
-      router.back();
+      router.push("/child");
     });
   };
 
@@ -95,7 +95,7 @@ export default function CreateChild() {
         <TopNavigation
           accessoryLeft={BackAction}
           title="Invest for Future"
-          style={styles.topNav}
+          // style={styles.topNav}
         />
 
         <ScrollView
