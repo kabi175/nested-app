@@ -68,12 +68,7 @@ export const ChildForm: React.FC<ChildFormProps> = ({
             size="large"
           />
 
-          <Animated.View
-            style={[
-              styles.checkboxContainer,
-              checkboxRotation && { transform: [{ rotate: checkboxRotation }] },
-            ]}
-          >
+          <Animated.View style={[styles.checkboxContainer]}>
             <CheckBox
               checked={values.investUnderChildName}
               onChange={onCheckboxChange}
