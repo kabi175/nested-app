@@ -11,18 +11,22 @@ import java.sql.Timestamp;
 import lombok.Data;
 
 /**
- * Data Transfer Object for Child entity
- * Used for API requests and responses to transfer child data
- * 
+ * Data Transfer Object for Child entity Used for API requests and responses to transfer child data
+ *
  * @author Nested App Team
  * @version 1.0
  */
 @Data
 public class ChildDTO {
-  
+
+  @JsonFormat(shape = JsonFormat.Shape.STRING)
   private Long id;
 
-  @NotEmpty private String firstName;
+  @NotEmpty
+  @JsonProperty("first_name")
+  private String firstName;
+
+  @JsonProperty("last_name")
   private String lastName;
 
   @NotEmpty
@@ -34,7 +38,9 @@ public class ChildDTO {
   @Enumerated(EnumType.STRING)
   private User.Gender gender;
 
-  @NotEmpty private boolean investUnderChild = false;
+  @JsonProperty("invest_under_child")
+  @NotEmpty
+  private boolean investUnderChild = false;
 
   private Timestamp createdAt;
 
