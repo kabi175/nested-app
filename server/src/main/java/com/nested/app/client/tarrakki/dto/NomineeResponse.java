@@ -7,3 +7,4 @@ public class NomineeResponse {
   private String nominee_id;
 }
 
+
