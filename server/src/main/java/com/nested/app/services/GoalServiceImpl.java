@@ -2,10 +2,13 @@ package com.nested.app.services;
 
 import com.nested.app.contect.UserContext;
 import com.nested.app.dto.GoalDTO;
+import com.nested.app.dto.MinifiedBasketDto;
 import com.nested.app.dto.MinifiedChildDTO;
+import com.nested.app.dto.MinifiedEducationDto;
 import com.nested.app.dto.MinifiedUserDTO;
 import com.nested.app.entity.Goal;
 import com.nested.app.repository.BasketRepository;
+import com.nested.app.repository.EducationRepository;
 import com.nested.app.repository.GoalRepository;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -29,6 +32,7 @@ public class GoalServiceImpl implements GoalService {
 
   private final GoalRepository goalRepository;
   private final BasketRepository basketRepository;
+  private final EducationRepository educationRepository;
   private final UserContext userContext;
 
   /**
@@ -125,6 +129,12 @@ public class GoalServiceImpl implements GoalService {
                     .findClosestByReturns(goal.getTargetAmount())
                     .orElseGet(basketRepository::findFirstByOrderByReturnsDesc);
             goal.setBasket(basket);
+
+            var education = educationRepository.findById(goal.getEducation().getId());
+            education.ifPresent(goal::setEducation);
+
+            goal.setTargetAmount(goal.getEducation().getExpectedFee());
+            goal.setCurrentAmount(0.0);
           });
 
       List<Goal> savedGoals = goalRepository.saveAll(goalEntities);
@@ -220,10 +230,10 @@ public class GoalServiceImpl implements GoalService {
 
     // Set basket information if available
     if (goal.getBasket() != null) {
-      dto.setBasket(goal.getBasket());
+      dto.setBasket(new MinifiedBasketDto(goal.getBasket().getId()));
     }
 
-    dto.setEducation(goal.getEducation());
+    dto.setEducation(new MinifiedEducationDto(goal.getEducation().getId()));
 
     return dto;
   }
@@ -244,7 +254,7 @@ public class GoalServiceImpl implements GoalService {
     goal.setCurrentAmount(goalDTO.getCurrentAmount());
     goal.setTargetDate(goalDTO.getTargetDate());
 
-    goal.setEducation(goalDTO.getEducation());
+    goal.setEducation(goalDTO.getEducation().toEntity());
 
     if (goalDTO.getChild() != null) {
       goal.setChild(goalDTO.getChild().toEntity());

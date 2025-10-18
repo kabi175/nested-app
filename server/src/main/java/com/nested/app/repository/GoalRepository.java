@@ -61,5 +61,5 @@ public interface GoalRepository extends JpaRepository<Goal, Long> {
    * @param status Goal status
    * @return List of goals for the specified child with the specified status
    */
-  List<Goal> findByChildIdAndStatus(Long childId, String status);
+  List<Goal> findByChildIdAndStatus(Long childId, Goal.Status status);
 }

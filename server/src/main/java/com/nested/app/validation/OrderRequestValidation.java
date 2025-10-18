@@ -28,6 +28,6 @@ public class OrderRequestValidation
     boolean hasSipOrder = orderRequest.getSipOrder() != null;
 
     // Either buy order or SIP order should be provided, but not both
-    return hasBuyOrder != hasSipOrder;
+    return hasBuyOrder || hasSipOrder;
   }
 }

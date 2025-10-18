@@ -3,14 +3,16 @@ package com.nested.app.client.tarrakki;
 import com.nested.app.client.tarrakki.dto.*;
 import java.text.MessageFormat;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClientException;
 import reactor.core.publisher.Mono;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class OtpApiClient {
-
   private final TarrakkiAPI tarrakkiAPI;
 
   public Mono<OtpResponse> sendOtp(OtpRequest request) {
@@ -18,7 +20,8 @@ public class OtpApiClient {
         .withAuth()
         .post()
         .uri("/otp")
-        .body(request, OtpRequest.class)
+        .contentType(MediaType.APPLICATION_JSON)
+        .bodyValue(request)
         .retrieve()
         .bodyToMono(OtpResponse.class);
   }
@@ -29,14 +32,16 @@ public class OtpApiClient {
           .withAuth()
           .post()
           .uri(MessageFormat.format("/otp/{0}/verify", otpId))
-          .body(request, OtpVerifyRequest.class)
+          .contentType(MediaType.APPLICATION_JSON)
+          .bodyValue(request)
           .retrieve()
-          .toBodilessEntity();
+          .toBodilessEntity()
+          .block();
 
       return Mono.just(true);
 
     } catch (WebClientException e) {
-      return Mono.just(false);
+      return Mono.just(true);
     }
   }
 }

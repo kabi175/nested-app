@@ -34,7 +34,7 @@ public class Goal {
   private Double targetAmount;
 
   @Column(nullable = false)
-  private Double currentAmount;
+  private Double currentAmount = 0.0;
 
   @Column(nullable = false)
   private Date targetDate;

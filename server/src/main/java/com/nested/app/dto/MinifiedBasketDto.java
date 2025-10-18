@@ -1,4 +1,4 @@
-package com.nested.app.client.tarrakki.dto;
+package com.nested.app.dto;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -7,7 +7,6 @@ import lombok.NoArgsConstructor;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class OtpVerifyRequest {
-  private OtpRequest.Type otp_type;
-  private String otp;
+public class MinifiedBasketDto {
+  private Long id;
 }

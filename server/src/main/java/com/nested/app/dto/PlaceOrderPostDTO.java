@@ -3,6 +3,7 @@ package com.nested.app.dto;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonValue;
 import com.nested.app.annotation.ValidOrderRequest;
+import com.nested.app.entity.SIPOrder;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.DecimalMin;
 import jakarta.validation.constraints.NotEmpty;
@@ -85,24 +86,7 @@ public class PlaceOrderPostDTO {
       private Double amount;
 
       @NotNull(message = "Frequency is required")
-      private Frequency frequency;
-
-      public enum Frequency {
-        MONTHLY("monthly"),
-        QUARTERLY("quarterly"),
-        HALF_YEARLY("half-yearly"),
-        YEARLY("yearly");
-
-        private final String value;
-
-        Frequency(String value) {
-          this.value = value;
-        }
-
-        public String getValue() {
-          return value;
-        }
-      }
+      private SIPOrder.SIPStepUp.Frequency frequency;
     }
   }
 }

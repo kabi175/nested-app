@@ -16,7 +16,7 @@ public class MandateApiClient {
         .withAuth()
         .post()
         .uri("/bank-mandates")
-        .body(request, CreateMandateRequest.class)
+        .bodyValue(request)
         .retrieve()
         .bodyToMono(MandateResponse.class)
         .map(m -> get(m.getMandate_id()))

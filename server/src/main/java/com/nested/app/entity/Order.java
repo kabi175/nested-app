@@ -15,9 +15,7 @@ import lombok.Data;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
-/**
- * Entity representing an investment order
- */
+/** Entity representing an investment order */
 @Data
 @Entity
 @Table(name = "orders")
@@ -64,8 +62,8 @@ public class Order {
 
   public enum OrderStatus {
     NOT_PLACED,
-        PLACED,
-        COMPLETED,
+    PLACED,
+    COMPLETED,
     FAILED,
     CANCELLED
   }

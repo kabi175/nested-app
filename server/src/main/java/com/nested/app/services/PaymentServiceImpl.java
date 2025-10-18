@@ -2,6 +2,7 @@ package com.nested.app.services;
 
 import com.nested.app.client.tarrakki.MandateApiClient;
 import com.nested.app.client.tarrakki.OtpApiClient;
+import com.nested.app.client.tarrakki.dto.BulkOrderOtpRequest;
 import com.nested.app.client.tarrakki.dto.CreateMandateRequest;
 import com.nested.app.client.tarrakki.dto.OtpRequest;
 import com.nested.app.client.tarrakki.dto.OtpVerifyRequest;
@@ -10,8 +11,12 @@ import com.nested.app.dto.PaymentDTO;
 import com.nested.app.dto.PlaceOrderDTO;
 import com.nested.app.dto.PlaceOrderPostDTO;
 import com.nested.app.dto.VerifyOrderDTO;
+import com.nested.app.entity.BankDetail;
+import com.nested.app.entity.Basket;
+import com.nested.app.entity.BasketFund;
 import com.nested.app.entity.BuyOrder;
 import com.nested.app.entity.Child;
+import com.nested.app.entity.Fund;
 import com.nested.app.entity.Goal;
 import com.nested.app.entity.Order;
 import com.nested.app.entity.Payment;
@@ -20,6 +25,7 @@ import com.nested.app.entity.User;
 import com.nested.app.repository.ChildRepository;
 import com.nested.app.repository.GoalRepository;
 import com.nested.app.repository.PaymentRepository;
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -28,6 +34,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.reactive.function.client.WebClientResponseException;
 
 /**
  * Service implementation for managing Payment entities Provides business logic for payment-related
@@ -84,8 +91,7 @@ public class PaymentServiceImpl implements PaymentService {
       User user = child.getUser();
 
       // Get active goals for the child
-      List<Goal> activeGoals =
-          goalRepository.findByChildIdAndStatus(childId, Goal.Status.ACTIVE.name());
+      List<Goal> activeGoals = goalRepository.findByChildIdAndStatus(childId, Goal.Status.DRAFT);
 
       if (activeGoals.isEmpty()) {
         throw new IllegalArgumentException("No active goals found for child ID: " + childId);
@@ -104,6 +110,9 @@ public class PaymentServiceImpl implements PaymentService {
       if (placeOrderRequest.getPaymentMethod() == PlaceOrderPostDTO.PaymentMethod.UPI) {
         payment.setUpiId(placeOrderRequest.getUpiID());
       }
+      var bankDetail = new BankDetail();
+      bankDetail.setId(placeOrderRequest.getBankID());
+      payment.setBank(bankDetail);
 
       // Create orders for each order request
       List<Order> orders = new ArrayList<>();
@@ -146,17 +155,47 @@ public class PaymentServiceImpl implements PaymentService {
                     sipOrder.setPayment(payment);
                     sipOrder.setFund(basketFund.getFund());
                     sipOrder.setAmount(fundAmount);
+                    sipOrder.setEndDate(goal.getTargetDate().toLocalDate());
+                    sipOrder.setStartDate(LocalDate.now());
+
+                    if (orderRequest.getSipOrder().getSetupOption() != null) {
+                      var option = orderRequest.getSipOrder().getSetupOption();
+                      var stepUp = new SIPOrder.SIPStepUp();
+                      stepUp.setStepUpAmount(option.getAmount());
+                      stepUp.setStepUpStartDate(LocalDate.now().plusMonths(12));
+                      stepUp.setStepUpEndDate(goal.getTargetDate().toLocalDate());
+                      stepUp.setStepUpFrequency(option.getFrequency());
+                      sipOrder.setSipStepUp(stepUp);
+                    }
+
                     return sipOrder;
                   })
               .forEach(orders::add);
         }
       }
 
-      var otpRequest = new OtpRequest();
-      otpRequest.setInvestor_id(payment.getInvestor().getTarakkiInvestorRef());
+      OtpRequest otpRequest;
       if (orders.size() > 1) {
-        otpRequest.setOtp_type(OtpRequest.Type.BULK_ORDERS);
+        var otpDetails =
+            orders.stream()
+                .map(Order::getGoal)
+                .map(Goal::getBasket)
+                .map(Basket::getBasketFunds)
+                .flatMap(List::stream)
+                .map(BasketFund::getFund)
+                .map(Fund::getId)
+                .distinct()
+                .mapToInt(Long::intValue)
+                .mapToObj(Long::toString)
+                .map(BulkOrderOtpRequest::getDetail)
+                .toList();
+
+        otpRequest =
+            BulkOrderOtpRequest.getInstance(
+                payment.getInvestor().getTarakkiInvestorRef(), otpDetails);
       } else {
+        otpRequest = new OtpRequest();
+        otpRequest.setInvestor_id(payment.getInvestor().getTarakkiInvestorRef());
         otpRequest.setOtp_type(OtpRequest.Type.BUY_ORDER);
       }
 
@@ -178,6 +217,14 @@ public class PaymentServiceImpl implements PaymentService {
           "Successfully created payment with {} orders for child ID: {}", orders.size(), childId);
       return placeOrderDTO;
 
+    } catch (WebClientResponseException e) {
+      log.error(
+          " Error from MF provider while creating payment with orders for child ID {}: {}",
+          childId,
+          e.getResponseBodyAsString(),
+          e);
+
+      throw new RuntimeException(e);
     } catch (Exception e) {
       log.error(
           "Error creating payment with orders for child ID {}: {}", childId, e.getMessage(), e);

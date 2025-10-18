@@ -40,7 +40,10 @@ public class GoalCreateDTO {
     dto.setCurrentAmount(createDTO.getCurrentAmount());
     dto.setTargetDate(createDTO.getTargetDate());
     dto.setChild(createDTO.getChild());
-    dto.setEducation(createDTO.getEducation());
+
+    var educationDto = new MinifiedEducationDto(createDTO.getEducation().getId());
+
+    dto.setEducation(educationDto);
     return dto;
   }
 }

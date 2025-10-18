@@ -1,62 +1,65 @@
 package com.nested.app.entity;
 
-import jakarta.persistence.Column;
+import com.fasterxml.jackson.annotation.JsonValue;
 import jakarta.persistence.DiscriminatorValue;
 import jakarta.persistence.Embeddable;
 import jakarta.persistence.Embedded;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotNull;
 import java.time.LocalDate;
+import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
+import lombok.Getter;
 
 @Data
+@Valid
 @Entity
 @DiscriminatorValue("SIP")
 @EqualsAndHashCode(callSuper = true)
-public class SIPOrder extends Order{
-  @Column(nullable = false)
-  private Double monthlySip;
-
+public class SIPOrder extends Order {
+  @NotNull
   @Enumerated(EnumType.STRING)
-  @Column(nullable = false)
   private Frequency frequency = Frequency.MONTHLY;
 
-  @Column(nullable = false)
-  private boolean isActive = false;
+  @NotNull private boolean isActive = false;
 
-    @Column(nullable = false)
-    private String mandateID;
+  private String mandateID;
 
-    @Column(nullable = false)
-    private LocalDate startDate;
+  @NotNull private LocalDate startDate;
 
-    @Column(nullable = false)
-    private LocalDate endDate;
+  @NotNull private LocalDate endDate;
 
-    @Embedded
-    private SIPStepUp sipStepUp;
+  @Embedded private SIPStepUp sipStepUp;
 
   public enum Frequency {
-        MONTHLY,
-    }
+    MONTHLY,
+  }
 
-    @Data
-    @Embeddable
-    public static class SIPStepUp {
-        private Double stepUpAmount;
+  @Data
+  @Embeddable
+  public static class SIPStepUp {
+    @NotNull private Double stepUpAmount;
 
-        private LocalDate stepUpStartDate;
+    @NotNull private LocalDate stepUpStartDate;
 
-        private LocalDate stepUpEndDate;
+    @NotNull private LocalDate stepUpEndDate;
 
+    @NotNull
     @Enumerated(EnumType.STRING)
     private SIPStepUp.Frequency stepUpFrequency = Frequency.YEARLY;
 
-        public static enum Frequency {
-            YEARLY
-        }
+    @AllArgsConstructor
+    public enum Frequency {
+      MONTHLY("monthly"),
+      QUARTERLY("quarterly"),
+      HALF_YEARLY("half-yearly"),
+      YEARLY("yearly");
 
+      @JsonValue @Getter private final String value;
     }
+  }
 }

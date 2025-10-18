@@ -1,7 +1,8 @@
 package com.nested.app.dto;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import lombok.Data;
 
 /**
@@ -13,10 +14,11 @@ import lombok.Data;
 @Data
 public class VerifyOrderDTO {
 
-  @NotBlank(message = "Order ID is required")
+  @NotNull(message = "Order ID is required")
+  @JsonFormat(shape = JsonFormat.Shape.STRING)
   private Long id;
 
-  @NotBlank(message = "Verification code is required")
+  @NotNull(message = "Verification code is required")
   @JsonProperty("verification_code")
   private String verificationCode;
 }
