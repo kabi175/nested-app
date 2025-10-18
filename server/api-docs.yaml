@@ -453,6 +453,124 @@ paths:
                   error:
                     type: string
                     example: Basket not found
+  /colleges:
+    get:
+      summary: Get all colleges
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/College'
+    post:
+      summary: Create a new college
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                data:
+                  type: array
+                  items:
+                    $ref: '#/components/schemas/College'
+      responses:
+        '201':
+          description: College created
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/College'
+    patch:
+      summary: Update an existing college
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                data:
+                  type: array
+                  items:
+                    $ref: '#/components/schemas/College'
+      responses:
+        '200':
+          description: College updated
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/College'
+    delete:
+      summary: Delete a college
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                data:
+                  type: array
+                  items:
+                    $ref: '#/components/schemas/College'
+      responses:
+        '200':
+          description: College deleted
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/College'
+  /colleges/{id}:
+    get:
+      summary: Get college details by ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: College details
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/College'
+        '404':
+          description: College not found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: College not found
 components:
   schemas:
     Child:
@@ -750,3 +868,33 @@ components:
             - active
             - completed
             - cancelled
+    
+    College:
+      type: object
+      properties:
+        id:
+          type: string
+          format: number
+        name:
+          type: string
+        location:
+          type: string
+        fees:
+          type: number
+          format: float
+        course:
+          type: string
+        duration:
+          type: integer
+        type:
+          type: string
+          enum:
+            - UNIVERSITY
+            - COLLEGE
+            - INSTITUTE
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
