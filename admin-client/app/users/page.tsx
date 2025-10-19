@@ -32,7 +32,9 @@ import {
   Filter,
   Download,
   UserPlus,
-  X
+  X,
+  ShieldCheck,
+  Loader2
 } from 'lucide-react';
 import {
   Dialog,
@@ -41,10 +43,14 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
-import { getUsers, User } from '@/lib/api';
+import { getUsers, User, createAdminUser } from '@/lib/api';
 import { exportToCSV } from '@/lib/export-utils';
 import { useToast } from '@/hooks/use-toast';
 import type { PageInfo } from '@/lib/api-client';
+import { Label } from '@/components/ui/label';
+import {
+  DialogFooter,
+} from '@/components/ui/dialog';
 
 export default function UsersPage() {
   const { toast } = useToast();
@@ -57,6 +63,14 @@ export default function UsersPage() {
   const [currentPage, setCurrentPage] = useState(0);
   const [pageSize, setPageSize] = useState(10);
   const [pageInfo, setPageInfo] = useState<PageInfo | null>(null);
+
+  // Create Admin User states
+  const [isCreateAdminOpen, setIsCreateAdminOpen] = useState(false);
+  const [adminEmail, setAdminEmail] = useState('');
+  const [adminFirebaseUid, setAdminFirebaseUid] = useState('');
+  const [adminFirstName, setAdminFirstName] = useState('');
+  const [adminLastName, setAdminLastName] = useState('');
+  const [creatingAdmin, setCreatingAdmin] = useState(false);
 
   // Fetch users from API
   useEffect(() => {
@@ -91,6 +105,64 @@ export default function UsersPage() {
   const handleViewUser = (user: User) => {
     setSelectedUser(user);
     setIsUserDetailsOpen(true);
+  };
+
+  const handleCreateAdmin = async () => {
+    if (!adminEmail && !adminFirebaseUid) {
+      toast({
+        title: 'Error',
+        description: 'Please provide either email or Firebase UID',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    setCreatingAdmin(true);
+    try {
+      const response = await createAdminUser({
+        email: adminEmail || undefined,
+        firebaseUid: adminFirebaseUid || undefined,
+        firstName: adminFirstName || undefined,
+        lastName: adminLastName || undefined,
+      });
+
+      if (response.success) {
+        toast({
+          title: 'Success',
+          description: response.message,
+        });
+        
+        // Reset form
+        setAdminEmail('');
+        setAdminFirebaseUid('');
+        setAdminFirstName('');
+        setAdminLastName('');
+        setIsCreateAdminOpen(false);
+        
+        // Refresh users list
+        const refreshResponse = await getUsers('ALL', {
+          page: currentPage,
+          size: pageSize,
+          sort: 'id',
+        });
+        setUsers(refreshResponse.users);
+        setPageInfo(refreshResponse.pageInfo || null);
+      } else {
+        toast({
+          title: 'Error',
+          description: response.error || 'Failed to create admin user',
+          variant: 'destructive',
+        });
+      }
+    } catch (err) {
+      toast({
+        title: 'Error',
+        description: err instanceof Error ? err.message : 'Failed to create admin user',
+        variant: 'destructive',
+      });
+    } finally {
+      setCreatingAdmin(false);
+    }
   };
 
   const handleExport = () => {
@@ -181,6 +253,14 @@ export default function UsersPage() {
             >
               <Download className="w-4 h-4 mr-2" />
               Export Users
+            </Button>
+            <Button 
+              size="sm"
+              className="bg-gradient-to-r from-violet-600 to-purple-600 hover:from-violet-700 hover:to-purple-700 text-white border-0 shadow-lg hover:shadow-xl transition-all duration-200 rounded-xl px-4 py-2"
+              onClick={() => setIsCreateAdminOpen(true)}
+            >
+              <ShieldCheck className="w-4 h-4 mr-2" />
+              Create Admin
             </Button>
           </div>
         </motion.div>
@@ -662,6 +742,145 @@ export default function UsersPage() {
               </div>
             )}
           </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Create Admin User Dialog */}
+      <Dialog open={isCreateAdminOpen} onOpenChange={setIsCreateAdminOpen}>
+        <DialogContent className="sm:max-w-[500px]">
+          <DialogHeader>
+            <div className="flex items-center gap-3 mb-2">
+              <div className="p-2 rounded-xl bg-gradient-to-r from-violet-500/10 to-purple-500/10 border border-violet-200/20 dark:border-violet-800/20">
+                <ShieldCheck className="h-6 w-6 text-violet-600 dark:text-violet-400" />
+              </div>
+              <DialogTitle className="text-2xl font-bold">Create Admin User</DialogTitle>
+            </div>
+            <DialogDescription>
+              Create a new admin user or promote an existing user to admin. Provide either email or Firebase UID.
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-4 py-4">
+            {/* Email Input */}
+            <div className="space-y-2">
+              <Label htmlFor="admin-email" className="text-sm font-medium">
+                Email Address
+              </Label>
+              <Input
+                id="admin-email"
+                type="email"
+                placeholder="admin@example.com"
+                value={adminEmail}
+                onChange={(e) => setAdminEmail(e.target.value)}
+                disabled={creatingAdmin}
+                className="h-11 rounded-xl"
+              />
+              <p className="text-xs text-slate-500 dark:text-slate-400">
+                Email of the user to promote to admin
+              </p>
+            </div>
+
+            <div className="relative">
+              <div className="absolute inset-0 flex items-center">
+                <span className="w-full border-t" />
+              </div>
+              <div className="relative flex justify-center text-xs uppercase">
+                <span className="bg-white dark:bg-slate-900 px-2 text-slate-500">Or</span>
+              </div>
+            </div>
+
+            {/* Firebase UID Input */}
+            <div className="space-y-2">
+              <Label htmlFor="admin-uid" className="text-sm font-medium">
+                Firebase UID
+              </Label>
+              <Input
+                id="admin-uid"
+                type="text"
+                placeholder="abc123xyz789"
+                value={adminFirebaseUid}
+                onChange={(e) => setAdminFirebaseUid(e.target.value)}
+                disabled={creatingAdmin}
+                className="h-11 rounded-xl"
+              />
+              <p className="text-xs text-slate-500 dark:text-slate-400">
+                Firebase user ID (if you know it)
+              </p>
+            </div>
+
+            {/* Optional: First Name */}
+            <div className="space-y-2">
+              <Label htmlFor="admin-firstname" className="text-sm font-medium">
+                First Name <span className="text-slate-400">(Optional)</span>
+              </Label>
+              <Input
+                id="admin-firstname"
+                type="text"
+                placeholder="John"
+                value={adminFirstName}
+                onChange={(e) => setAdminFirstName(e.target.value)}
+                disabled={creatingAdmin}
+                className="h-11 rounded-xl"
+              />
+            </div>
+
+            {/* Optional: Last Name */}
+            <div className="space-y-2">
+              <Label htmlFor="admin-lastname" className="text-sm font-medium">
+                Last Name <span className="text-slate-400">(Optional)</span>
+              </Label>
+              <Input
+                id="admin-lastname"
+                type="text"
+                placeholder="Doe"
+                value={adminLastName}
+                onChange={(e) => setAdminLastName(e.target.value)}
+                disabled={creatingAdmin}
+                className="h-11 rounded-xl"
+              />
+            </div>
+
+            <div className="p-4 rounded-xl bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800/30">
+              <p className="text-sm text-amber-800 dark:text-amber-400">
+                <strong>Note:</strong> The user must exist in Firebase Authentication. 
+                They will be granted admin privileges and custom claims will be set automatically.
+              </p>
+            </div>
+          </div>
+
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => {
+                setIsCreateAdminOpen(false);
+                setAdminEmail('');
+                setAdminFirebaseUid('');
+                setAdminFirstName('');
+                setAdminLastName('');
+              }}
+              disabled={creatingAdmin}
+              className="rounded-xl"
+            >
+              Cancel
+            </Button>
+            <Button
+              onClick={handleCreateAdmin}
+              disabled={creatingAdmin || (!adminEmail && !adminFirebaseUid)}
+              className="bg-gradient-to-r from-violet-600 to-purple-600 hover:from-violet-700 hover:to-purple-700 text-white rounded-xl"
+            >
+              {creatingAdmin ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Creating...
+                </>
+              ) : (
+                <>
+                  <ShieldCheck className="mr-2 h-4 w-4" />
+                  Create Admin
+                </>
+              )}
+            </Button>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
     </div>
