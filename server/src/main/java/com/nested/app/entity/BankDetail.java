@@ -18,25 +18,25 @@ import lombok.Data;
 @Data
 public class BankDetail {
 
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+  @Id
+  @GeneratedValue(strategy = GenerationType.IDENTITY)
+  private Long id;
 
-    @Column(nullable = false)
-    private String bankName;
+  @Column(nullable = false)
+  private String bankName;
 
-    @Column(nullable = false)
-    private String accountNumber;
+  @Column(nullable = false)
+  private String accountNumber;
 
   @Column(nullable = false)
   @Enumerated(EnumType.STRING)
   private AccountType accountType;
 
-    @Column(nullable = false)
-    private String ifscCode;
+  @Column(nullable = false)
+  private String ifscCode;
 
-    @Column(nullable = false)
-    private boolean isPrimary;
+  @Column(nullable = false)
+  private boolean isPrimary;
 
   // this is the reference id returned by the tarrakki when the bank is added
   @Column(nullable = false, unique = true, updatable = false)
@@ -46,14 +46,14 @@ public class BankDetail {
   @JoinColumn(name = "investor_id", nullable = false)
   private Investor investor;
 
-    // Only SAVINGS & CURRENT  is currently supported
-    public enum AccountType {
-        SAVINGS,
+  // Only SAVINGS & CURRENT  is currently supported
+  public enum AccountType {
+    SAVINGS,
     CURRENT;
 
     @JsonValue
     public String getValue() {
       return name().toLowerCase();
     }
-    }
+  }
 }

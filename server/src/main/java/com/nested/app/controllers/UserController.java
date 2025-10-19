@@ -16,12 +16,15 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.nested.app.contect.UserContext;
 import com.nested.app.dto.BankAccountDto;
 import com.nested.app.dto.Entity;
 import com.nested.app.dto.UserDTO;
 import com.nested.app.entity.Investor;
+import com.nested.app.entity.User;
 import com.nested.app.services.InvestorServiceImpl;
 import com.nested.app.services.UserService;
+import com.nested.app.utils.AppEnvironment;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -43,11 +46,33 @@ public class UserController {
 
   private final UserService userService;
   private final InvestorServiceImpl investorService;
+  private final UserContext userContext;
+  private final AppEnvironment appEnvironment;
 
   @GetMapping(produces = MediaType.APPLICATION_JSON_VALUE)
-  public ResponseEntity<Entity<UserDTO>> getUsers(
+  @Operation(summary = "Get users", description = "Get current user or all users (admin only for ALL)")
+  @ApiResponses(
+      value = {
+        @ApiResponse(responseCode = "200", description = "Successfully retrieved users"),
+        @ApiResponse(responseCode = "204", description = "No users found"),
+        @ApiResponse(responseCode = "403", description = "Access denied - Admin role required for type ALL")
+      })
+  public ResponseEntity<?> getUsers(
       @RequestParam(defaultValue = "CURRENT_USER") UserService.Type type,
       @PageableDefault(sort = "id") Pageable pageable) {
+    
+    // Check if user is trying to access ALL users without admin role
+    // Skip check in development mode
+    if (!appEnvironment.isDevelopment() && 
+        (type == UserService.Type.ALL || type == UserService.Type.ACTIVE || type == UserService.Type.INACTIVE)) {
+      User currentUser = userContext.getUser();
+      if (currentUser == null || !User.Role.ADMIN.equals(currentUser.getRole())) {
+        log.warn("Non-admin user attempted to access all users");
+        return ResponseEntity.status(HttpStatus.FORBIDDEN)
+            .body(Map.of("error", "Access denied - Admin role required"));
+      }
+    }
+    
     var users = userService.findAllUsers(type, pageable);
     if (users.isEmpty()) {
       return ResponseEntity.noContent().build();

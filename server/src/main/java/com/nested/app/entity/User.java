@@ -44,7 +44,7 @@ public class User {
   private String email;
 
   // we not are supporting phone number update
-  @Column(unique = true, nullable = false, updatable = false)
+  @Column(unique = true, nullable = true)
   private String phoneNumber;
 
   @Column(unique = true, nullable = false, updatable = false)

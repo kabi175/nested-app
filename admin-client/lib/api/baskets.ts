@@ -3,32 +3,52 @@
  * Handles all basket-related API calls
  */
 
-import { apiClient, ApiResponse } from '../api-client';
+import { apiClient, ApiResponse, PaginationParams, PageInfo } from '../api-client';
 
 export interface BasketFund {
-  fund: {
+  fundId?: number;
+  fund?: {
     id: string;
     code?: string;
     name: string;
-    display_name?: string;
+    displayName?: string;
     description?: string;
-    min_amount?: number;
+    minAmount?: number;
     nav?: number;
-    is_active?: boolean;
+    isActive?: boolean;
   };
-  allocation_percentage: number;
+  allocationPercentage: number;
 }
 
 export interface BasketDTO {
   id: string;
   title: string;
+  years?: number;
   funds: BasketFund[];
+}
+
+export interface CreateBasketDTO {
+  title: string;
+  years?: number;
+  funds: {
+    fundId: number;
+    allocationPercentage: number;
+  }[];
+}
+
+export interface UpdateBasketDTO {
+  id: string;
+  title: string;
+  years?: number;
+  funds: {
+    fundId: number;
+    allocationPercentage: number;
+  }[];
 }
 
 export interface Basket {
   id: string;
   name: string;
-  category: string;
   duration: number;
   funds: {
     fundId: string;
@@ -41,32 +61,60 @@ export interface Basket {
 
 /**
  * Fetch all baskets
- * @returns Promise with list of baskets
+ * @param pagination - Pagination parameters
+ * @returns Promise with list of baskets and pagination info
  */
-export async function getBaskets(): Promise<Basket[]> {
+export async function getBaskets(
+  pagination?: PaginationParams
+): Promise<{ baskets: Basket[]; pageInfo?: PageInfo }> {
   try {
-    const response = await apiClient.get<ApiResponse<BasketDTO>>('/bucket');
+    const params: Record<string, any> = {};
+    if (pagination) {
+      if (pagination.page !== undefined) params.page = pagination.page;
+      if (pagination.size !== undefined) params.size = pagination.size;
+      if (pagination.sort) params.sort = pagination.sort;
+    }
+    
+    const response = await apiClient.get<ApiResponse<BasketDTO>>('/bucket', params);
+    
+    // Handle empty or undefined response
+    if (!response || !response.data || !Array.isArray(response.data)) {
+      return { baskets: [], pageInfo: undefined };
+    }
     
     // Map backend response to frontend Basket interface
-    return response.data.map(basket => {
-      const funds = basket.funds?.map(f => ({
-        fundId: f.fund.id,
-        fundName: f.fund.display_name || f.fund.name,
-        percentage: f.allocation_percentage,
-      })) || [];
-      
-      const totalPercentage = funds.reduce((sum, f) => sum + f.percentage, 0);
-      
-      return {
-        id: basket.id,
-        name: basket.title,
-        category: determineCategoryByAllocation(totalPercentage),
-        duration: 0, // Not provided by backend
-        funds,
-        totalPercentage,
-        createdAt: new Date().toISOString(),
-      };
-    });
+    const baskets = response.data
+      .filter(basket => basket && basket.id && basket.title) // Filter out invalid baskets
+      .map(basket => {
+        const funds = basket.funds?.map(f => {
+          // Handle both new structure (fundId) and old structure (fund.id)
+          const id = f.fund?.id || (f.fundId ? String(f.fundId) : '');
+          const name = f.fund?.displayName || f.fund?.name || 'Unknown Fund';
+          const percentage = f.allocationPercentage || 0;
+          
+          return {
+            fundId: id,
+            fundName: name,
+            percentage: percentage,
+          };
+        }).filter(f => f.fundId) || []; // Filter out invalid funds
+        
+        const totalPercentage = funds.reduce((sum, f) => sum + f.percentage, 0);
+        
+        return {
+          id: String(basket.id),
+          name: basket.title,
+          duration: basket.years || 0,
+          funds,
+          totalPercentage,
+          createdAt: new Date().toISOString(),
+        };
+      });
+    
+    return {
+      baskets,
+      pageInfo: response.page,
+    };
   } catch (error) {
     console.error('Error fetching baskets:', error);
     throw error;
@@ -83,19 +131,29 @@ export async function getBasketById(id: string): Promise<Basket> {
     const response = await apiClient.get<ApiResponse<BasketDTO>>(`/bucket/${id}`);
     const basket = response.data[0];
     
-    const funds = basket.funds?.map(f => ({
-      fundId: f.fund.id,
-      fundName: f.fund.display_name || f.fund.name,
-      percentage: f.allocation_percentage,
-    })) || [];
+    if (!basket) {
+      throw new Error('Basket not found');
+    }
+    
+    const funds = basket.funds?.map(f => {
+      // Handle both new structure (fundId) and old structure (fund.id)
+      const fundId = f.fund?.id || (f.fundId ? String(f.fundId) : '');
+      const fundName = f.fund?.displayName || f.fund?.name || 'Unknown Fund';
+      const percentage = f.allocationPercentage || 0;
+      
+      return {
+        fundId,
+        fundName,
+        percentage,
+      };
+    }).filter(f => f.fundId) || [];
     
     const totalPercentage = funds.reduce((sum, f) => sum + f.percentage, 0);
     
     return {
-      id: basket.id,
+      id: String(basket.id),
       name: basket.title,
-      category: determineCategoryByAllocation(totalPercentage),
-      duration: 0,
+      duration: basket.years || 0,
       funds,
       totalPercentage,
       createdAt: new Date().toISOString(),
@@ -111,12 +169,11 @@ export async function getBasketById(id: string): Promise<Basket> {
  * @param data - Basket data
  * @returns Promise with created basket
  */
-export async function createBasket(data: Partial<BasketDTO>): Promise<BasketDTO> {
+export async function createBasket(data: CreateBasketDTO): Promise<BasketDTO> {
   try {
-    const response = await apiClient.post<ApiResponse<BasketDTO>>('/bucket', {
-      data: [data],
-    });
-    return response.data[0];
+    // Send basket directly (not wrapped in data array)
+    const response = await apiClient.post<BasketDTO>('/bucket', data);
+    return response;
   } catch (error) {
     console.error('Error creating basket:', error);
     throw error;
@@ -128,12 +185,11 @@ export async function createBasket(data: Partial<BasketDTO>): Promise<BasketDTO>
  * @param data - Basket data with ID
  * @returns Promise with updated basket
  */
-export async function updateBasket(data: BasketDTO): Promise<BasketDTO> {
+export async function updateBasket(data: UpdateBasketDTO): Promise<BasketDTO> {
   try {
-    const response = await apiClient.patch<ApiResponse<BasketDTO>>('/bucket', {
-      data: [data],
-    });
-    return response.data[0];
+    // Send basket directly (not wrapped in data array)
+    const response = await apiClient.patch<BasketDTO>('/bucket', data);
+    return response;
   } catch (error) {
     console.error('Error updating basket:', error);
     throw error;
@@ -156,14 +212,4 @@ export async function deleteBasket(id: string): Promise<BasketDTO> {
     throw error;
   }
 }
-
-/**
- * Helper function to determine category based on allocation
- */
-function determineCategoryByAllocation(totalPercentage: number): string {
-  if (totalPercentage >= 90) return 'High Risk';
-  if (totalPercentage >= 60) return 'Medium Risk';
-  return 'Low Risk';
-}
-
 

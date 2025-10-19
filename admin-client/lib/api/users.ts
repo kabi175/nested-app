@@ -3,45 +3,88 @@
  * Handles all user-related API calls
  */
 
-import { apiClient, ApiResponse } from '../api-client';
+import { apiClient, ApiResponse, PaginationParams, PageInfo } from '../api-client';
+
+export interface Address {
+  id?: number;
+  address_line?: string;
+  city?: string;
+  state?: string;
+}
+
+export interface Investor {
+  id?: number;
+  status?: 'incomplete_detail' | 'incomplete_kyc_details' | 'pending_nominee_authentication' | 'under_review' | 'ready_to_invest';
+}
 
 export interface User {
   id: number;
-  name: string;
+  firstName: string;
+  lastName: string;
   email?: string;
-  phone?: string;
-  totalFunds?: number;
-  activeGoals?: number;
-  joinedDate?: string;
-  kycStatus?: 'approved' | 'pending' | 'rejected';
+  phoneNumber?: string;
+  role?: string;
+  address?: Address;
+  dateOfBirth?: string;
+  gender?: 'male' | 'female' | 'transgender';
+  panNumber?: string;
+  investor?: Investor;
+  createdAt?: string;
 }
 
 export interface UserDTO {
   id: number;
-  name: string;
+  first_name: string;
+  last_name: string;
   email?: string;
+  phone_number?: string;
+  role?: string;
+  address?: Address;
+  date_of_birth?: string;
+  gender?: 'male' | 'female' | 'transgender';
+  panNumber?: string;
+  investor?: Investor;
 }
 
 /**
  * Fetch all users
  * @param type - Type of users to fetch (CURRENT_USER by default)
- * @returns Promise with list of users
+ * @param pagination - Pagination parameters
+ * @returns Promise with list of users and pagination info
  */
-export async function getUsers(type: 'CURRENT_USER' | 'ALL' = 'CURRENT_USER'): Promise<User[]> {
+export async function getUsers(
+  type: 'CURRENT_USER' | 'ALL' = 'ALL',
+  pagination?: PaginationParams
+): Promise<{ users: User[]; pageInfo?: PageInfo }> {
   try {
-    const response = await apiClient.get<ApiResponse<UserDTO>>(`/users?type=${type}`);
+    const params: Record<string, any> = { type };
+    if (pagination) {
+      if (pagination.page !== undefined) params.page = pagination.page;
+      if (pagination.size !== undefined) params.size = pagination.size;
+      if (pagination.sort) params.sort = pagination.sort;
+    }
+    
+    const response = await apiClient.get<ApiResponse<UserDTO>>('/users', params);
     
     // Map backend response to frontend User interface
-    return response.data.map(user => ({
+    const users = response.data.map(user => ({
       id: user.id,
-      name: user.name,
-      email: user.email || '',
-      phone: '',
-      totalFunds: 0,
-      activeGoals: 0,
-      joinedDate: new Date().toISOString(),
-      kycStatus: 'pending' as const,
+      firstName: user.first_name,
+      lastName: user.last_name,
+      email: user.email,
+      phoneNumber: user.phone_number,
+      role: user.role,
+      address: user.address,
+      dateOfBirth: user.date_of_birth,
+      gender: user.gender,
+      panNumber: user.panNumber,
+      investor: user.investor,
     }));
+    
+    return {
+      users,
+      pageInfo: response.page,
+    };
   } catch (error) {
     console.error('Error fetching users:', error);
     throw error;

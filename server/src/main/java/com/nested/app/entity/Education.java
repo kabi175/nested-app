@@ -22,29 +22,29 @@ public class Education {
   @Column(nullable = false)
   private String name;
 
-  @Column(nullable = false)
+  @Column(nullable = true)
   private String category;
 
   @Column(nullable = false)
   private String country;
 
   @Column(nullable = false)
+  private Double lastYearFee;
+
+  @Column(nullable = false)
   private Double expectedFee;
 
   @Column(nullable = false)
-  private Double projectTimeLineLt10Yr;
+  private Double expectedIncreasePercentLt10Yr;
 
   @Column(nullable = false)
-  private Double projectTimeLineGt10Yr;
-
-  @Column(nullable = false)
-  private Double lastYearFee;
+  private Double expectedIncreasePercentGt10Yr;
 
   @Column(nullable = false)
   @Enumerated(EnumType.STRING)
   private Type type = Type.INSTITUTION;
 
-  enum Type {
+  public enum Type {
     INSTITUTION,
     COURSE
   }

@@ -22,7 +22,7 @@ const missingVars = Object.entries(requiredEnvVars)
   .map(([key]) => key);
 
 if (missingVars.length > 0) {
-  console.error('❌ Firebase Configuration Error:');
+  console.error('Firebase Configuration Error:');
   console.error('Missing or invalid environment variables:', missingVars.join(', '));
   console.error('\n📝 To fix this:');
   console.error('1. Go to https://console.firebase.google.com/');
