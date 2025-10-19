@@ -20,7 +20,8 @@ import {
   ArrowUpRight,
   TrendingDown,
   Zap,
-  Download
+  Download,
+  X
 } from 'lucide-react';
 import { getBaskets, createBasket, updateBasket, deleteBasket, Basket, getActiveFunds, Fund } from '@/lib/api';
 import { useToast } from '@/hooks/use-toast';
@@ -350,6 +351,14 @@ export default function BasketsPage() {
     total: pageInfo?.totalElements || baskets.length,
   };
 
+  // Check if basket name already exists (case-insensitive)
+  const isBasketNameTaken = (name: string, excludeId?: string): boolean => {
+    if (!name.trim()) return false;
+    return baskets.some(
+      basket => basket.name.toLowerCase() === name.trim().toLowerCase() && basket.id !== excludeId
+    );
+  };
+
   const LoadingSkeleton = () => (
     <>
       {[...Array(5)].map((_, i) => (
@@ -588,7 +597,14 @@ export default function BasketsPage() {
                 placeholder="e.g., Conservative Growth Portfolio"
                 value={basketName}
                 onChange={(e) => setBasketName(e.target.value)}
+                className={isBasketNameTaken(basketName) ? 'border-red-500 focus-visible:ring-red-500' : ''}
               />
+              {isBasketNameTaken(basketName) && (
+                <p className="text-sm text-red-600 dark:text-red-400 flex items-center gap-1">
+                  <X className="h-3 w-3" />
+                  This basket name is already taken
+                </p>
+              )}
             </div>
 
             <div className="grid gap-2">
@@ -745,6 +761,7 @@ export default function BasketsPage() {
               disabled={
                 isSubmitting || 
                 !basketName.trim() || 
+                isBasketNameTaken(basketName) ||
                 selectedFunds.length === 0 ||
                 Math.abs(getTotalPercentage() - 100) > 0.01 ||
                 selectedFunds.some(f => !f.fundId)
@@ -768,13 +785,17 @@ export default function BasketsPage() {
           </DialogHeader>
           <div className="grid gap-6 py-4">
             <div className="grid gap-2">
-              <Label htmlFor="edit-basketName">Basket Name *</Label>
+              <Label htmlFor="edit-basketName">Basket Name</Label>
               <Input
                 id="edit-basketName"
                 placeholder="e.g., Conservative Growth Portfolio"
                 value={basketName}
-                onChange={(e) => setBasketName(e.target.value)}
+                disabled
+                className="bg-slate-50 dark:bg-slate-800/50 cursor-not-allowed opacity-60"
               />
+              <p className="text-xs text-slate-500 dark:text-slate-400">
+                Basket name cannot be changed after creation
+              </p>
             </div>
 
             <div className="grid gap-2">
@@ -928,7 +949,6 @@ export default function BasketsPage() {
               onClick={handleEditBasket}
               disabled={
                 isSubmitting || 
-                !basketName.trim() || 
                 selectedFunds.length === 0 ||
                 Math.abs(getTotalPercentage() - 100) > 0.01 ||
                 selectedFunds.some(f => !f.fundId)
