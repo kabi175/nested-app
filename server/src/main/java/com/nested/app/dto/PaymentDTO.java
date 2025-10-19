@@ -1,9 +1,12 @@
 package com.nested.app.dto;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonValue;
 import java.sql.Timestamp;
 import java.util.List;
+import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.Getter;
 
 /**
  * Data Transfer Object for Payment entity Used for API requests and responses to transfer payment
@@ -52,51 +55,30 @@ public class PaymentDTO {
   @JsonProperty("updated_at")
   private Timestamp updatedAt;
 
+  @AllArgsConstructor
   public enum PaymentStatus {
     PENDING("pending"),
     COMPLETED("completed"),
     FAILED("failed"),
     CANCELLED("cancelled");
 
-    private final String value;
-
-    PaymentStatus(String value) {
-      this.value = value;
-    }
-
-    public String getValue() {
-      return value;
-    }
+    @JsonValue @Getter private final String value;
   }
 
+  @AllArgsConstructor
   public enum VerificationStatus {
     PENDING("pending"),
     VERIFIED("verified"),
     FAILED("failed");
 
-    private final String value;
-
-    VerificationStatus(String value) {
-      this.value = value;
-    }
-
-    public String getValue() {
-      return value;
-    }
+    @JsonValue @Getter private final String value;
   }
 
+  @AllArgsConstructor
   public enum MandateType {
-    NET_BANKING("net_banking"),
+    NET_BANKING("enach"),
     UPI("upi");
 
-    private final String value;
-
-    MandateType(String value) {
-      this.value = value;
-    }
-
-    public String getValue() {
-      return value;
-    }
+    @JsonValue @Getter private final String value;
   }
 }
