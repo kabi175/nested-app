@@ -1,10 +1,12 @@
 package com.nested.app.client.tarrakki.dto;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonValue;
 import lombok.Data;
 
 @Data
+@JsonInclude(JsonInclude.Include.NON_NULL)
 public class CreateMandateRequest {
   private String investor_id;
   private String bank_id;
