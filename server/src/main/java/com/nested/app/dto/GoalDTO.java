@@ -17,7 +17,9 @@ import lombok.Data;
 @Data
 public class GoalDTO {
 
+  @JsonFormat(shape = JsonFormat.Shape.STRING)
   private Long id;
+
   private String title;
 
   @JsonProperty("target_amount")
