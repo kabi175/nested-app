@@ -3,7 +3,7 @@ import { useGoalCreation } from "@/hooks/useGoalCreation";
 import { Ionicons } from "@expo/vector-icons";
 import * as Haptics from "expo-haptics";
 import { LinearGradient } from "expo-linear-gradient";
-import { router } from "expo-router";
+import { router, usePathname } from "expo-router";
 import {
   ChevronDown,
   ChevronUp,
@@ -32,6 +32,12 @@ interface Goal {
   targetYear: number;
   futureCost: number;
   selectionMode: "course" | "college";
+  education?: Education;
+}
+
+export interface Education {
+  id: string;
+  name: string;
 }
 
 const DEGREE_OPTIONS = {
@@ -94,6 +100,8 @@ const COST_ESTIMATES = {
 };
 
 export default function CreateGoalScreen() {
+  const childId = usePathname();
+
   const createGoalMutation = useGoalCreation();
   const [goals, setGoals] = useState<Goal[]>([
     {
@@ -105,6 +113,7 @@ export default function CreateGoalScreen() {
       targetYear: 2030,
       futureCost: 4500000,
       selectionMode: "course",
+      education: null,
     },
   ]);
 
@@ -302,18 +311,18 @@ export default function CreateGoalScreen() {
     ]).start();
 
     try {
-      // Save each goal
-      for (const goal of goals) {
-        await createGoalMutation.mutateAsync({
-          childId: "1", // TODO: Get from route params
-          title: `${goal.degree} - ${goal.college}`,
-          description: `${goal.type} education goal`,
-          targetAmount: goal.futureCost,
-          targetDate: new Date(goal.targetYear, 5, 1), // June 1st of target year
-        });
-      }
+      const data = goals.map((goal) => ({
+        childId,
+        education: { id: "", name: goal.degree },
+        title: `${goal.degree} - ${goal.college}`,
+        targetAmount: goal.futureCost,
+        targetDate: new Date(goal.targetYear, 5, 1),
+      }));
 
-      router.push(`/child/1/goal/customize`);
+      await createGoalMutation.mutateAsync(data);
+
+      //TODO: redirect to
+      router.push(`/child/${childId}/goal/customize`);
     } catch (error) {
       console.error("Error saving goals:", error);
       // TODO: Show error message to user

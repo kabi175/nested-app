@@ -1,3 +1,4 @@
+import { Education } from "@/app/(tabs)/child/[child_id]/goal/create";
 import type { Child, Goal, User } from "@/types/user";
 import { api } from "./client";
 
@@ -62,31 +63,26 @@ export const getGoals = async (): Promise<Goal[]> => {
   return goals;
 };
 
-export const createGoal = async (payload: {
-  childId: string;
-  title: string;
-  description: string;
-  targetAmount: number;
-  targetDate: Date;
-}): Promise<Goal> => {
-  // For now, return mock data since the goals API doesn't exist yet
-  // TODO: Replace with actual API call when backend is ready
-  return new Promise((resolve) => {
-    setTimeout(() => {
-      const newGoal: Goal = {
-        id: Date.now().toString(),
-        childId: payload.childId,
-        title: payload.title,
-        targetAmount: payload.targetAmount,
-        currentAmount: 0,
-        targetDate: payload.targetDate,
-        status: "active",
-        createdAt: new Date(),
-        updatedAt: new Date(),
-      };
-      resolve(newGoal);
-    }, 500);
-  });
+export const createGoal = async (
+  payload: {
+    childId: string;
+    education: Education;
+    title: string;
+    targetAmount: number;
+    targetDate: Date;
+  }[]
+): Promise<Goal> => {
+  const { data } = await api.post("/goals", { data: payload });
+
+  return data.map((goal: any) => ({
+    child: { id: goal.childId },
+    education: {
+      id: goal.education.id,
+    },
+    target_amount: goal.targetAmount,
+    target_date: goal.targetDate.toLocaleDateString("en-CA"),
+    title: goal.title,
+  }));
 };
 
 type ChildDTO = {
