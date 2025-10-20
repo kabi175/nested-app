@@ -1,5 +1,6 @@
 package com.nested.app.dto;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonValue;
 import java.sql.Timestamp;
@@ -47,7 +48,7 @@ public class PaymentDTO {
 
   private Long childId;
 
-  private List<OrderDTO> orders;
+  @JsonIgnore private List<OrderDTO> orders;
 
   @JsonProperty("created_at")
   private Timestamp createdAt;

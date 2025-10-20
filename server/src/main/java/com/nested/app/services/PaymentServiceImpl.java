@@ -1,11 +1,18 @@
 package com.nested.app.services;
 
 import com.nested.app.client.tarrakki.MandateApiClient;
+import com.nested.app.client.tarrakki.OrderApiClient;
 import com.nested.app.client.tarrakki.OtpApiClient;
+import com.nested.app.client.tarrakki.PaymentsAPIClient;
 import com.nested.app.client.tarrakki.dto.BulkOrderOtpRequest;
+import com.nested.app.client.tarrakki.dto.BulkOrderRequest;
 import com.nested.app.client.tarrakki.dto.CreateMandateRequest;
+import com.nested.app.client.tarrakki.dto.OrderDetail;
 import com.nested.app.client.tarrakki.dto.OtpRequest;
 import com.nested.app.client.tarrakki.dto.OtpVerifyRequest;
+import com.nested.app.client.tarrakki.dto.PaymentsOrder;
+import com.nested.app.client.tarrakki.dto.PaymentsRequest;
+import com.nested.app.client.tarrakki.dto.SipOrderDetail;
 import com.nested.app.dto.OrderDTO;
 import com.nested.app.dto.PaymentDTO;
 import com.nested.app.dto.PlaceOrderDTO;
@@ -55,6 +62,8 @@ public class PaymentServiceImpl implements PaymentService {
 
   private final OtpApiClient otpApiClient;
   private final MandateApiClient mandateApiClient;
+  private final PaymentsAPIClient paymentsAPIClient;
+  private final OrderApiClient orderApiClient;
 
   private static CreateMandateRequest getCreateMandateRequest(Payment payment) {
     var mandateRequest = new CreateMandateRequest();
@@ -65,6 +74,7 @@ public class PaymentServiceImpl implements PaymentService {
       mandateRequest.setUpi_id(payment.getUpiId());
     } else {
       mandateRequest.setMandate_type(CreateMandateRequest.MandateType.ENACH);
+      mandateRequest.setCallback_url("https://nested.com/api/payments/mandate-callback");
     }
     return mandateRequest;
   }
@@ -174,30 +184,23 @@ public class PaymentServiceImpl implements PaymentService {
         }
       }
 
-      OtpRequest otpRequest;
-      if (orders.size() > 1) {
-        var otpDetails =
-            orders.stream()
-                .map(Order::getGoal)
-                .map(Goal::getBasket)
-                .map(Basket::getBasketFunds)
-                .flatMap(List::stream)
-                .map(BasketFund::getFund)
-                .map(Fund::getId)
-                .distinct()
-                .mapToInt(Long::intValue)
-                .mapToObj(Long::toString)
-                .map(BulkOrderOtpRequest::getDetail)
-                .toList();
+      var otpDetails =
+          orders.stream()
+              .map(Order::getGoal)
+              .map(Goal::getBasket)
+              .map(Basket::getBasketFunds)
+              .flatMap(List::stream)
+              .map(BasketFund::getFund)
+              .map(Fund::getId)
+              .distinct()
+              .mapToInt(Long::intValue)
+              .mapToObj(Long::toString)
+              .map(BulkOrderOtpRequest::getDetail)
+              .toList();
 
-        otpRequest =
-            BulkOrderOtpRequest.getInstance(
-                payment.getInvestor().getTarakkiInvestorRef(), otpDetails);
-      } else {
-        otpRequest = new OtpRequest();
-        otpRequest.setInvestor_id(payment.getInvestor().getTarakkiInvestorRef());
-        otpRequest.setOtp_type(OtpRequest.Type.BUY_ORDER);
-      }
+      OtpRequest otpRequest =
+          BulkOrderOtpRequest.getInstance(
+              payment.getInvestor().getTarakkiInvestorRef(), otpDetails);
 
       var otpResp = otpApiClient.sendOtp(otpRequest).block();
       if (otpResp == null) {
@@ -297,6 +300,81 @@ public class PaymentServiceImpl implements PaymentService {
       log.error("Error verifying payment: {}", e.getMessage(), e);
       throw new RuntimeException("Failed to verify payment", e);
     }
+  }
+
+  @Override
+  @Transactional
+  public PaymentDTO iniatePayment(Long paymentID, String ipAddress) {
+    try {
+      var payment = paymentRepository.findById(paymentID).orElseThrow();
+
+      var bulkOrderRequest =
+          BulkOrderRequest.builder()
+              .investor_id(payment.getInvestor().getTarakkiInvestorRef())
+              .auth_ref(payment.getVerificationRef())
+              .investorIP(ipAddress)
+              .detail(payment.getOrders().stream().map(this::convertOrderToOrderDetail).toList())
+              .build();
+      var orderResponse = orderApiClient.placeBulkOrder(bulkOrderRequest).block();
+      if (orderResponse == null) {
+        throw new RuntimeException("Failed to place bulk order with MF provider");
+      }
+      payment.setOrderRef(orderResponse.getBulk_order_id());
+      paymentRepository.save(payment);
+
+      var totalAmount =
+          payment.getOrders().stream().map(Order::getAmount).reduce(Double::sum).orElseThrow();
+
+      var paymentMethod =
+          payment.getPaymentType() == PlaceOrderPostDTO.PaymentMethod.UPI
+              ? PaymentsRequest.PaymentMethod.UPI
+              : PaymentsRequest.PaymentMethod.NET_BANKING;
+
+      var paymentRequest =
+          PaymentsRequest.builder()
+              .investor_id(payment.getInvestor().getTarakkiInvestorRef())
+              .bank_id(payment.getBank().getRefId())
+              .payment_method(paymentMethod)
+              .upi_id(payment.getUpiId())
+              .amount(totalAmount)
+              .orders(List.of(new PaymentsOrder(payment.getOrderRef())))
+              .build();
+
+      var paymentResponse = paymentsAPIClient.createPayment(paymentRequest).block();
+      if (paymentResponse == null) {
+        throw new RuntimeException("Failed to initiate payment with MF provider");
+      }
+      payment.setPaymentUrl(paymentResponse.getRedirect_url());
+      paymentRepository.save(payment);
+
+      return convertPaymentToDTO(payment);
+    } catch (WebClientResponseException e) {
+      log.error(
+          "Error from MF provider while initiating payment for ID {}: {}",
+          paymentID,
+          e.getResponseBodyAsString(),
+          e);
+      throw new RuntimeException(e);
+    } catch (Exception e) {
+      log.error("Error initiating payment: {}", e.getMessage(), e);
+      throw new RuntimeException("Failed to initiate payment", e);
+    }
+  }
+
+  OrderDetail convertOrderToOrderDetail(Order order) {
+    if (order instanceof SIPOrder sipOrder) {
+      return SipOrderDetail.builder()
+          .fundID(order.getFund().getId().toString())
+          .amount(order.getAmount())
+          .mandateID(sipOrder.getMandateID())
+          .startDate(sipOrder.getStartDate())
+          .firstOrderToday(false)
+          .build();
+    }
+    return OrderDetail.builder()
+        .fundID(order.getFund().getId().toString())
+        .amount(order.getAmount())
+        .build();
   }
 
   /**

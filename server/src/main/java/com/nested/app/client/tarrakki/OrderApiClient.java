@@ -16,7 +16,7 @@ public class OrderApiClient {
         .withAuth()
         .post()
         .uri("/bulk-orders")
-        .body(request, BulkOrderRequest.class)
+        .bodyValue(request)
         .retrieve()
         .bodyToMono(OrderResponse.class);
   }

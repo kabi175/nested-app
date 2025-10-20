@@ -41,4 +41,21 @@ public class Basket {
   @UpdateTimestamp
   @Column(nullable = false)
   private Timestamp updatedAt;
+
+  public Double computeGoalMinInvestment() {
+    double goalMinInvestment = 0.0;
+
+    for (var fund : basketFunds) {
+      double allocationFraction = fund.getAllocationPercentage() / 100.0;
+
+      var minInvestment = fund.getFund().getMimPurchaseAmount();
+      if (minInvestment <= 0) {
+        continue;
+      }
+      double requiredInvestment = minInvestment / allocationFraction;
+      goalMinInvestment = Math.max(goalMinInvestment, requiredInvestment);
+    }
+
+    return goalMinInvestment;
+  }
 }

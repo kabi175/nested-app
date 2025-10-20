@@ -32,6 +32,8 @@ public interface PaymentService {
    */
   PlaceOrderDTO verifyPayment(VerifyOrderDTO verifyOrderRequest);
 
+  PaymentDTO iniatePayment(Long paymentID, String ipAddress);
+
   /**
    * Retrieves all payments
    *

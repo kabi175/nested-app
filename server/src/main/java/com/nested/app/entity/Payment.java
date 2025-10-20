@@ -6,6 +6,7 @@ import jakarta.persistence.*;
 import java.sql.Timestamp;
 import java.util.List;
 import lombok.Data;
+import org.checkerframework.common.aliasing.qual.Unique;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
@@ -60,6 +61,8 @@ public class Payment {
 
   @OneToMany(mappedBy = "payment", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
   private List<Order> orders;
+
+  @Unique private String orderRef;
 
   @CreationTimestamp
   @Column(nullable = false, updatable = false)
