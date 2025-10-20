@@ -8,8 +8,7 @@ export default function ChildLayout() {
         headerShown: false,
       }}
     >
-      <Stack.Screen name="index" />
-      <Stack.Screen name="create" />
+      <Stack.Screen name="goal/create" />
     </Stack>
   );
 }

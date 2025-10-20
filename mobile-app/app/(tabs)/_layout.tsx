@@ -31,21 +31,21 @@ export default function TabLayout() {
         name="index"
         options={{
           title: "Home",
-          tabBarIcon: ({ color }) => <House color={color} />,
+          tabBarIcon: ({ color }) => <House size={24} color={color} />,
         }}
       />
       <Tabs.Screen
         name="child"
         options={{
           title: "Goals",
-          tabBarIcon: ({ color }) => <Goal color={color} />,
+          tabBarIcon: ({ color }) => <Goal size={24} color={color} />,
         }}
       />
       <Tabs.Screen
         name="account"
         options={{
           title: "Account",
-          tabBarIcon: ({ color }) => <UserCog color={color} />,
+          tabBarIcon: ({ color }) => <UserCog size={24} color={color} />,
         }}
       />
     </Tabs>

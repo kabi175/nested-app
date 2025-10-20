@@ -1,8 +1,9 @@
+import { createChild } from "@/api/userApi";
 import { ChildForm } from "@/components/child/ChildForm";
 import { FormHeader } from "@/components/child/FormHeader";
 import { useFormAnimation } from "@/hooks/useFormAnimation";
+import { Child } from "@/types/user";
 import {
-  ChildFormValues,
   childSchema,
   defaultChildFormErrors,
   defaultChildFormValues,
@@ -21,7 +22,7 @@ import { Animated, ScrollView, StyleSheet } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function CreateChild() {
-  const [values, setValues] = useState<ChildFormValues>(defaultChildFormValues);
+  const [values, setValues] = useState<Child>(defaultChildFormValues);
   const [errors, setErrors] = useState(defaultChildFormErrors);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -35,7 +36,7 @@ export default function CreateChild() {
     animateExit,
   } = useFormAnimation();
 
-  const handleFieldChange = (field: keyof ChildFormValues, value: any) => {
+  const handleFieldChange = (field: keyof Child, value: any) => {
     setValues({ ...values, [field]: value });
     animateFieldChange();
 
@@ -46,11 +47,11 @@ export default function CreateChild() {
   };
 
   const handleCheckboxChange = (value: boolean) => {
-    handleFieldChange("investUnderChildName", value);
+    handleFieldChange("investUnderChild", value);
     animateCheckbox();
   };
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     animateButtonPress();
 
     const { isValid, errors: validationErrors } = validateForm(
@@ -68,11 +69,53 @@ export default function CreateChild() {
       setErrors(defaultChildFormErrors);
       setIsSubmitting(true);
 
-      animateSuccess(() => {
-        // Navigate to next screen
-        // router.push("/next-screen");
+      try {
+        await createChild(values);
+        animateSuccess(() => router.push("/child"));
+      } catch (error: any) {
+        console.error("Error creating child:", error);
+
+        // Handle different types of errors
+        if (error.response?.status === 400) {
+          // Bad request - validation errors from server
+          const serverErrors = error.response.data?.errors || {};
+          setErrors({
+            ...defaultChildFormErrors,
+            ...serverErrors,
+          });
+          animateError();
+        } else if (error.response?.status === 401) {
+          // Unauthorized
+          setErrors({
+            ...defaultChildFormErrors,
+            firstName: "Please log in to continue",
+          });
+          animateError();
+        } else if (error.response?.status === 409) {
+          // Conflict - child already exists
+          setErrors({
+            ...defaultChildFormErrors,
+            firstName: "A child with this name already exists",
+          });
+          animateError();
+        } else if (error.response?.status >= 500) {
+          // Server error
+          setErrors({
+            ...defaultChildFormErrors,
+            firstName: "Server error. Please try again later.",
+          });
+          animateError();
+        } else {
+          // Network or other errors
+          setErrors({
+            ...defaultChildFormErrors,
+            firstName: "Network error. Please check your connection.",
+          });
+          animateError();
+        }
+      } finally {
         setIsSubmitting(false);
-      });
+      }
     }
   };
 

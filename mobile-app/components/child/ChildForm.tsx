@@ -1,9 +1,11 @@
-import { ChildFormValues } from "@/utils/validation";
+import { Child } from "@/types/user";
 import {
   Card,
   CheckBox,
   Datepicker,
   Input,
+  Radio,
+  RadioGroup,
   Text,
   TextProps,
 } from "@ui-kitten/components";
@@ -12,11 +14,11 @@ import React from "react";
 import { Animated, StyleSheet, View } from "react-native";
 
 interface ChildFormProps {
-  values: ChildFormValues;
+  values: Child;
   errors: Record<string, string>;
   animationStyle?: any;
   checkboxRotation?: any;
-  onFieldChange: (field: keyof ChildFormValues, value: any) => void;
+  onFieldChange: (field: keyof Child, value: any) => void;
   onCheckboxChange: (value: boolean) => void;
 }
 
@@ -68,11 +70,41 @@ export const ChildForm: React.FC<ChildFormProps> = ({
             size="large"
           />
 
+          <View style={styles.genderContainer}>
+            <Text category="label" style={styles.genderLabel}>
+              Gender
+            </Text>
+            <RadioGroup
+              selectedIndex={
+                values.gender === "male"
+                  ? 0
+                  : values.gender === "female"
+                  ? 1
+                  : 2
+              }
+              onChange={(index) => {
+                const gender =
+                  index === 0 ? "male" : index === 1 ? "female" : "other";
+                onFieldChange("gender", gender);
+              }}
+              style={styles.radioGroup}
+            >
+              <Radio>Male</Radio>
+              <Radio>Female</Radio>
+              <Radio>Other</Radio>
+            </RadioGroup>
+            {errors.gender && (
+              <Text category="c1" status="danger" style={styles.errorText}>
+                {errors.gender}
+              </Text>
+            )}
+          </View>
+
           <Animated.View style={[styles.checkboxContainer]}>
             <CheckBox
-              checked={values.investUnderChildName}
+              checked={values.investUnderChild}
               onChange={onCheckboxChange}
-              status={errors.investUnderChildName ? "danger" : "basic"}
+              status={errors.investUnderChild ? "danger" : "basic"}
               style={styles.checkbox}
             >
               {(
@@ -113,6 +145,23 @@ const styles = StyleSheet.create({
   },
   input: {
     marginBottom: 8,
+  },
+  genderContainer: {
+    marginBottom: 8,
+  },
+  genderLabel: {
+    marginBottom: 8,
+    fontSize: 16,
+    fontWeight: "500",
+    color: "#374151",
+  },
+  radioGroup: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 16,
+  },
+  errorText: {
+    marginTop: 4,
   },
   checkboxContainer: {
     marginTop: 8,

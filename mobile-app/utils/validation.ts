@@ -1,3 +1,4 @@
+import { Child } from "@/types/user";
 import Joi from "joi";
 
 // Generic validation function
@@ -20,34 +21,34 @@ export const validateForm = <T extends Record<string, any>>(
 
 // Child form schema
 export const childSchema = Joi.object({
+  id: Joi.string().optional().allow("").label("ID"),
   firstName: Joi.string().required().label("First Name"),
   lastName: Joi.string().required().label("Last Name"),
   dateOfBirth: Joi.date().required().label("Date of Birth"),
-  investUnderChildName: Joi.boolean()
+  gender: Joi.string()
+    .valid("male", "female", "other")
+    .required()
+    .label("Gender"),
+  investUnderChild: Joi.boolean()
     .required()
     .default(false)
     .label("Invest under child's name"),
 });
 
-// Type for child form values
-export interface ChildFormValues {
-  firstName: string;
-  lastName: string;
-  dateOfBirth: Date | null;
-  investUnderChildName: boolean;
-}
-
 // Default values
-export const defaultChildFormValues: ChildFormValues = {
+export const defaultChildFormValues: Child = {
+  id: "",
   firstName: "",
   lastName: "",
-  dateOfBirth: null,
-  investUnderChildName: false,
+  gender: "male",
+  dateOfBirth: new Date(),
+  investUnderChild: false,
 };
 
 export const defaultChildFormErrors = {
   firstName: "",
   lastName: "",
   dateOfBirth: "",
-  investUnderChildName: "",
+  gender: "",
+  investUnderChild: "",
 };

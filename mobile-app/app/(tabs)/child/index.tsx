@@ -1,17 +1,49 @@
 import { ThemedText } from "@/components/ThemedText";
-import { ThemedView } from "@/components/ThemedView";
-import { Ionicons } from "@expo/vector-icons";
-import { LinearGradient } from "expo-linear-gradient";
+import {
+  EmptyGoalState,
+  GoalHeader,
+  GoalsList,
+  TotalSavedCard,
+} from "@/components/goal";
+import { useChildren } from "@/hooks/useChildren";
+import { useGoals } from "@/hooks/useGoals";
 import { router } from "expo-router";
-import { Goal } from "lucide-react-native";
-import React from "react";
-import { ScrollView, StyleSheet, TouchableOpacity, View } from "react-native";
+import React, { useCallback } from "react";
+import { ActivityIndicator, ScrollView, StyleSheet, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function GoalScreen() {
-  const handleCreateChild = () => {
+  const { data: children, isLoading: childrenLoading } = useChildren();
+  const { data: goals, isLoading: goalsLoading } = useGoals();
+
+  const handleCreateChild = useCallback(() => {
     router.push("/child/create");
+  }, []);
+
+  const handleCreateGoal = () => {
+    if (firstChild) {
+      router.push(`/child/${firstChild.id}/goal/create`);
+    }
   };
+
+  const isLoading = childrenLoading || goalsLoading;
+  const hasChildren = Boolean(children && children.length > 0);
+  const hasGoals = Boolean(goals && goals.length > 0);
+  const firstChild = hasChildren && children ? children[0] : null;
+
+  if (isLoading) {
+    return (
+      <SafeAreaView style={styles.container}>
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="large" color="#2563EB" />
+          <ThemedText style={styles.loadingText}>Loading goals...</ThemedText>
+        </View>
+      </SafeAreaView>
+    );
+  }
+
+  const totalSaved =
+    goals?.reduce((sum, goal) => sum + goal.currentAmount, 0) || 0;
 
   return (
     <SafeAreaView style={styles.container}>
@@ -19,44 +51,21 @@ export default function GoalScreen() {
         style={styles.scrollContainer}
         showsVerticalScrollIndicator={false}
       >
-        {/* Header Section */}
-        <LinearGradient
-          colors={["#F8F7FF", "#E8E3FF"]}
-          style={styles.headerSection}
-        >
-          <View style={styles.headerContent}>
-            {/* <Ionicons name="target" size={48} color="#" /> */}
-            <Goal size={48} color="#2563EB" />
-            <ThemedText style={styles.headerTitle}>
-              Educational Goals
-            </ThemedText>
-            <ThemedText style={styles.headerSubtitle}>
-              Plan and invest for your child's educational future
-            </ThemedText>
+        <GoalHeader onAddGoal={handleCreateGoal} />
+
+        {hasGoals && goals ? (
+          <View style={styles.contentContainer}>
+            <TotalSavedCard totalAmount={totalSaved} />
+            <GoalsList goals={goals} />
           </View>
-        </LinearGradient>
-
-        <ThemedView style={styles.mainCard}>
-          <View style={styles.cardContent}>
-            <ThemedText style={styles.sectionTitle}>Start Planning</ThemedText>
-
-            <ThemedText style={styles.description}>
-              Create educational goals for your children and start investing
-              towards their future.
-            </ThemedText>
-
-            <TouchableOpacity
-              style={styles.createChildButton}
-              onPress={handleCreateChild}
-            >
-              <Ionicons name="person-add" size={24} color="#FFFFFF" />
-              <ThemedText style={styles.createChildButtonText}>
-                Add Child & Create Goals
-              </ThemedText>
-              <Ionicons name="arrow-forward" size={20} color="#FFFFFF" />
-            </TouchableOpacity>
-          </View>
-        </ThemedView>
+        ) : (
+          <EmptyGoalState
+            hasChildren={hasChildren}
+            firstChild={firstChild}
+            onCreateChild={handleCreateChild}
+            onCreateGoal={handleCreateGoal}
+          />
+        )}
       </ScrollView>
     </SafeAreaView>
   );
@@ -70,80 +79,18 @@ const styles = StyleSheet.create({
   scrollContainer: {
     flex: 1,
   },
-  headerSection: {
-    paddingTop: 20,
-    paddingBottom: 40,
+  contentContainer: {
     paddingHorizontal: 20,
-    minHeight: 200,
+    paddingBottom: 20,
   },
-  headerContent: {
-    alignItems: "center",
-  },
-  headerTitle: {
-    fontSize: 28,
-    fontWeight: "bold",
-    textAlign: "center",
-    marginBottom: 12,
-    marginTop: 20,
-    color: "#1F2937",
-  },
-  headerSubtitle: {
-    fontSize: 16,
-    textAlign: "center",
-    color: "#6B7280",
-    lineHeight: 24,
-    paddingHorizontal: 20,
-  },
-  mainCard: {
-    marginHorizontal: 20,
-    marginTop: -20,
-    borderRadius: 16,
-    shadowColor: "#000",
-    shadowOffset: {
-      width: 0,
-      height: 4,
-    },
-    shadowOpacity: 0.1,
-    shadowRadius: 12,
-    elevation: 8,
-    backgroundColor: "#FFFFFF",
-  },
-  cardContent: {
-    padding: 24,
-  },
-  sectionTitle: {
-    fontSize: 20,
-    fontWeight: "600",
-    marginBottom: 16,
-    color: "#1F2937",
-  },
-  description: {
-    fontSize: 16,
-    color: "#6B7280",
-    lineHeight: 24,
-    marginBottom: 32,
-  },
-  createChildButton: {
-    backgroundColor: "#2563EB",
-    borderRadius: 16,
-    paddingVertical: 20,
-    paddingHorizontal: 24,
-    flexDirection: "row",
+  loadingContainer: {
+    flex: 1,
     justifyContent: "center",
     alignItems: "center",
-    shadowColor: "#000",
-    shadowOffset: {
-      width: 0,
-      height: 4,
-    },
-    shadowOpacity: 0.1,
-    shadowRadius: 12,
-    elevation: 8,
   },
-  createChildButtonText: {
-    color: "#FFFFFF",
-    fontSize: 18,
-    fontWeight: "600",
-    marginHorizontal: 12,
+  loadingText: {
+    marginTop: 16,
+    fontSize: 16,
+    color: "#6B7280",
   },
 });

@@ -188,7 +188,6 @@ export default function AccountScreen() {
               onPress={item.onPress}
               activeOpacity={0.8}
             >
-              {/* Gradient Border */}
               <LinearGradient
                 colors={item.gradientColors}
                 start={{ x: 0, y: 0 }}

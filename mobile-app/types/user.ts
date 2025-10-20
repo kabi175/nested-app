@@ -1,11 +1,33 @@
 type User = {
   id: string;
-  nickname: string | null;
+  firstName: string;
+  lastName: string;
   email: string | null;
   phone_number: string;
-  role: 'admin' | 'user';
+  role: "admin" | "investor";
   created_at: Date;
   updated_at: Date | null;
 };
 
-export type { User };
+type Child = {
+  id: string;
+  firstName: string;
+  lastName: string;
+  dateOfBirth: Date;
+  gender: "male" | "female" | "other";
+  investUnderChild: boolean;
+};
+
+type Goal = {
+  id: string;
+  childId: string;
+  title: string;
+  targetAmount: number;
+  currentAmount: number;
+  targetDate: Date;
+  status: "draft" | "active" | "completed" | "cancelled";
+  createdAt: Date;
+  updatedAt: Date;
+};
+
+export type { Child, Goal, User };
