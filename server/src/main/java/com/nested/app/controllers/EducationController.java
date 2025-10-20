@@ -68,7 +68,7 @@ public class EducationController {
         @ApiResponse(responseCode = "403", description = "Access denied - Admin role required"),
         @ApiResponse(responseCode = "500", description = "Internal server error")
       })
-  public ResponseEntity<Entity<EducationDTO>> getAllEducation(@RequestParam Education.Type type) {
+  public ResponseEntity<Entity<EducationDTO>> getAllEducation(@RequestParam(required = false) Education.Type type) {
         log.info("GET /api/v1/education - Retrieving all education records");
 
         try {
