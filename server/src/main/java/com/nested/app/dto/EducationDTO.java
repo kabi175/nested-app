@@ -1,5 +1,6 @@
 package com.nested.app.dto;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.Data;
 
 /**
@@ -11,8 +12,9 @@ import lombok.Data;
  */
 @Data
 public class EducationDTO {
-  
+  @JsonFormat(shape = JsonFormat.Shape.STRING)
   private Long id;
+
   private String name; // College name or Course name
   private String type; // INSTITUTION or COURSE
   private String country;

@@ -1,8 +1,8 @@
 package com.nested.app.services;
 
-import java.util.List;
-
 import com.nested.app.dto.EducationDTO;
+import com.nested.app.entity.Education;
+import java.util.List;
 
 /**
  * Service interface for Education operations
@@ -12,13 +12,14 @@ import com.nested.app.dto.EducationDTO;
  * @version 1.0
  */
 public interface EducationService {
-  
+
   /**
    * Retrieve all education records
+   *
    * @return List of EducationDTO
    */
-  List<EducationDTO> getAllEducation();
-  
+  List<EducationDTO> getAllEducation(Education.Type type);
+
   /**
    * Get education record by ID
    * @param id Education ID

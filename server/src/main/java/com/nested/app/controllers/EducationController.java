@@ -1,9 +1,23 @@
 package com.nested.app.controllers;
 
+import com.nested.app.annotation.AdminOnly;
+import com.nested.app.dto.EducationDTO;
+import com.nested.app.dto.Entity;
+import com.nested.app.entity.Education;
+import com.nested.app.services.EducationService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
-
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -13,23 +27,8 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
-
-import com.nested.app.annotation.AdminOnly;
-import com.nested.app.dto.EducationDTO;
-import com.nested.app.dto.Entity;
-import com.nested.app.services.EducationService;
-
-import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.Parameter;
-import io.swagger.v3.oas.annotations.media.Content;
-import io.swagger.v3.oas.annotations.media.Schema;
-import io.swagger.v3.oas.annotations.responses.ApiResponse;
-import io.swagger.v3.oas.annotations.responses.ApiResponses;
-import io.swagger.v3.oas.annotations.tags.Tag;
-import jakarta.validation.Valid;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 
 /**
  * REST Controller for managing Education entities
@@ -47,31 +46,33 @@ public class EducationController {
 
     private final EducationService educationService;
 
-    /**
-     * Retrieves all education records
-     *
-     * @return ResponseEntity containing list of education records
-     */
-    @GetMapping
-    @AdminOnly
-    @Operation(summary = "Get all education records (Admin only)", description = "Retrieves all colleges and courses")
-    @ApiResponses(
-        value = {
-          @ApiResponse(
-              responseCode = "200",
-              description = "Successfully retrieved education records",
-              content =
-                  @Content(
-                      mediaType = "application/json",
-                      schema = @Schema(implementation = Map.class))),
-          @ApiResponse(responseCode = "403", description = "Access denied - Admin role required"),
-          @ApiResponse(responseCode = "500", description = "Internal server error")
-        })
-    public ResponseEntity<Entity<EducationDTO>> getAllEducation() {
+  /**
+   * Retrieves all education records
+   *
+   * @return ResponseEntity containing list of education records
+   */
+  @GetMapping
+  @AdminOnly
+  @Operation(
+      summary = "Get all education records (Admin only)",
+      description = "Retrieves all colleges and courses")
+  @ApiResponses(
+      value = {
+        @ApiResponse(
+            responseCode = "200",
+            description = "Successfully retrieved education records",
+            content =
+                @Content(
+                    mediaType = "application/json",
+                    schema = @Schema(implementation = Map.class))),
+        @ApiResponse(responseCode = "403", description = "Access denied - Admin role required"),
+        @ApiResponse(responseCode = "500", description = "Internal server error")
+      })
+  public ResponseEntity<Entity<EducationDTO>> getAllEducation(@RequestParam Education.Type type) {
         log.info("GET /api/v1/education - Retrieving all education records");
 
         try {
-            List<EducationDTO> education = educationService.getAllEducation();
+      List<EducationDTO> education = educationService.getAllEducation(type);
             log.info("Successfully retrieved {} education records", education.size());
             return ResponseEntity.ok(Entity.of(education));
         } catch (Exception e) {
