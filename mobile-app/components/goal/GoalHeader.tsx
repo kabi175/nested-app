@@ -1,13 +1,10 @@
 import { ThemedText } from "@/components/ThemedText";
-import { Ionicons } from "@expo/vector-icons";
+import { router } from "expo-router";
+import { Plus } from "lucide-react-native";
 import React from "react";
 import { StyleSheet, TouchableOpacity, View } from "react-native";
 
-interface GoalHeaderProps {
-  onAddGoal?: () => void;
-}
-
-export function GoalHeader({ onAddGoal }: GoalHeaderProps) {
+export function GoalHeader() {
   return (
     <View style={styles.headerSection}>
       <View style={styles.headerContent}>
@@ -17,11 +14,12 @@ export function GoalHeader({ onAddGoal }: GoalHeaderProps) {
             Building your future, one goal at a time
           </ThemedText>
         </View>
-        {onAddGoal && (
-          <TouchableOpacity style={styles.addButton} onPress={onAddGoal}>
-            <Ionicons name="add" size={24} color="#FFFFFF" />
-          </TouchableOpacity>
-        )}
+        <TouchableOpacity
+          style={styles.addButton}
+          onPress={() => router.push("/child/modal")}
+        >
+          <Plus size={24} color="#FFFFFF" />
+        </TouchableOpacity>
       </View>
     </View>
   );

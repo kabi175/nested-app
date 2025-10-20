@@ -15,7 +15,6 @@ import React, { useEffect, useState } from "react";
 import {
   ActivityIndicator,
   Animated,
-  Dimensions,
   ScrollView,
   StyleSheet,
   TextInput,
@@ -23,8 +22,6 @@ import {
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-
-const { width } = Dimensions.get("window");
 
 interface Goal {
   id: string;
@@ -161,14 +158,6 @@ export default function CreateGoalScreen() {
     pulseAnimation.start();
   }, []);
 
-  const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat("en-IN", {
-      style: "currency",
-      currency: "INR",
-      maximumFractionDigits: 0,
-    }).format(amount);
-  };
-
   const calculateFutureCost = (currentCost: number, targetYear: number) => {
     const currentYear = new Date().getFullYear();
     const years = targetYear - currentYear;
@@ -293,22 +282,6 @@ export default function CreateGoalScreen() {
     }));
   };
 
-  const animateDropdown = (isExpanded: boolean) => {
-    const animValue = new Animated.Value(isExpanded ? 0 : 1);
-
-    Animated.timing(animValue, {
-      toValue: isExpanded ? 1 : 0,
-      duration: 300,
-      useNativeDriver: true,
-    }).start();
-
-    return animValue;
-  };
-
-  const getAccentColor = (type: string) => {
-    return type === "undergraduate" ? "#F59E0B" : "#10B981";
-  };
-
   const handleSave = async () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
 
@@ -399,7 +372,7 @@ export default function CreateGoalScreen() {
                 <View style={styles.goalTitleContainer}>
                   <ThemedText style={styles.goalTitle}>
                     {goal.type === "undergraduate"
-                      ? "Undergraduate"
+                      ? `Undergraduate`
                       : "Post-Graduate"}
                   </ThemedText>
                   <TouchableOpacity style={styles.editButton}>

@@ -51,7 +51,7 @@ export default function GoalScreen() {
         style={styles.scrollContainer}
         showsVerticalScrollIndicator={false}
       >
-        <GoalHeader onAddGoal={handleCreateGoal} />
+        <GoalHeader />
 
         {hasGoals && goals ? (
           <View style={styles.contentContainer}>

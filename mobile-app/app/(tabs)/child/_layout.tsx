@@ -10,6 +10,10 @@ export default function ChildLayout() {
     >
       <Stack.Screen name="index" />
       <Stack.Screen name="create" />
+      <Stack.Screen
+        name="modal"
+        options={{ presentation: "transparentModal" }}
+      />
     </Stack>
   );
 }

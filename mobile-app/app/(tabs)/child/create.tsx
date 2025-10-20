@@ -70,8 +70,8 @@ export default function CreateChild() {
       setIsSubmitting(true);
 
       try {
-        await createChild(values);
-        animateSuccess(() => router.push("/child"));
+        const child = await createChild(values);
+        animateSuccess(() => router.push(`/child/${child.id}/goal/create`));
       } catch (error: any) {
         console.error("Error creating child:", error);
 
