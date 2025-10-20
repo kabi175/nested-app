@@ -1,11 +1,9 @@
 package com.nested.app.validation;
 
+import com.nested.app.entity.User;
 import java.util.ArrayList;
 import java.util.List;
-
 import org.springframework.stereotype.Component;
-
-import com.nested.app.entity.User;
 
 /**
  * Custom validator for User entity
@@ -52,10 +50,6 @@ public class UserValidator {
 
         if (user.getFirstName() == null || user.getFirstName().isEmpty()) {
             errors.add("First name is required for standard users");
-        }
-
-        if (user.getLastName() == null || user.getLastName().isEmpty()) {
-            errors.add("Last name is required for standard users");
         }
 
         // Validate phone number format
