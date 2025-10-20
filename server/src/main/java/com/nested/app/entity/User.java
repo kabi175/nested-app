@@ -1,15 +1,35 @@
 package com.nested.app.entity;
 
+import java.sql.Timestamp;
+import java.util.Date;
+import java.util.List;
+
+import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.Filter;
+import org.hibernate.annotations.FilterDef;
+import org.hibernate.annotations.ParamDef;
+import org.hibernate.annotations.UpdateTimestamp;
+
 import com.fasterxml.jackson.annotation.JsonValue;
 import com.nested.app.enums.IncomeSlab;
 import com.nested.app.enums.IncomeSource;
 import com.nested.app.enums.Occupation;
 import com.nested.app.listeners.UserEntityListener;
-import jakarta.persistence.*;
+
+import jakarta.persistence.CascadeType;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.EntityListeners;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.OneToMany;
+import jakarta.persistence.OneToOne;
+import jakarta.persistence.Table;
 import jakarta.validation.constraints.Email;
-import java.sql.Timestamp;
-import java.util.Date;
-import java.util.List;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -18,11 +38,6 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.RequiredArgsConstructor;
 import lombok.With;
-import org.hibernate.annotations.CreationTimestamp;
-import org.hibernate.annotations.Filter;
-import org.hibernate.annotations.FilterDef;
-import org.hibernate.annotations.ParamDef;
-import org.hibernate.annotations.UpdateTimestamp;
 
 @Data
 @Entity
@@ -44,7 +59,7 @@ public class User {
   private String email;
 
   // we not are supporting phone number update
-  @Column(unique = true, nullable = false, updatable = false)
+  @Column(unique = true)
   private String phoneNumber;
 
   @Column(unique = true, nullable = false, updatable = false)

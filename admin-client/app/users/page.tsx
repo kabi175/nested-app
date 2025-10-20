@@ -8,6 +8,15 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import {
+  Pagination,
+  PaginationContent,
+  PaginationEllipsis,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+} from '@/components/ui/pagination';
 import { 
   Search, 
   Users as UsersIcon, 
@@ -22,15 +31,46 @@ import {
   Sparkles,
   Filter,
   Download,
-  UserPlus
+  UserPlus,
+  X,
+  ShieldCheck,
+  Loader2
 } from 'lucide-react';
-import { getUsers, User } from '@/lib/api';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
+import { getUsers, User, createAdminUser } from '@/lib/api';
+import { exportToCSV } from '@/lib/export-utils';
+import { useToast } from '@/hooks/use-toast';
+import type { PageInfo } from '@/lib/api-client';
+import { Label } from '@/components/ui/label';
+import {
+  DialogFooter,
+} from '@/components/ui/dialog';
 
 export default function UsersPage() {
+  const { toast } = useToast();
   const [users, setUsers] = useState<User[]>([]);
   const [search, setSearch] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [selectedUser, setSelectedUser] = useState<User | null>(null);
+  const [isUserDetailsOpen, setIsUserDetailsOpen] = useState(false);
+  const [currentPage, setCurrentPage] = useState(0);
+  const [pageSize, setPageSize] = useState(10);
+  const [pageInfo, setPageInfo] = useState<PageInfo | null>(null);
+
+  // Create Admin User states
+  const [isCreateAdminOpen, setIsCreateAdminOpen] = useState(false);
+  const [adminEmail, setAdminEmail] = useState('');
+  const [adminFirebaseUid, setAdminFirebaseUid] = useState('');
+  const [adminFirstName, setAdminFirstName] = useState('');
+  const [adminLastName, setAdminLastName] = useState('');
+  const [creatingAdmin, setCreatingAdmin] = useState(false);
 
   // Fetch users from API
   useEffect(() => {
@@ -38,8 +78,13 @@ export default function UsersPage() {
       setLoading(true);
       setError(null);
       try {
-        const data = await getUsers('ALL');
-        setUsers(data);
+        const response = await getUsers('ALL', {
+          page: currentPage,
+          size: pageSize,
+          sort: 'id',
+        });
+        setUsers(response.users);
+        setPageInfo(response.pageInfo || null);
       } catch (err) {
         console.error('Error fetching users:', err);
         setError(err instanceof Error ? err.message : 'Failed to fetch users');
@@ -49,18 +94,113 @@ export default function UsersPage() {
     };
 
     fetchUsers();
-  }, []);
+  }, [currentPage, pageSize]);
 
   const filteredUsers = users.filter(user =>
-    user.name.toLowerCase().includes(search.toLowerCase()) ||
-    (user.email?.toLowerCase() || '').includes(search.toLowerCase())
+    `${user.firstName} ${user.lastName}`.toLowerCase().includes(search.toLowerCase()) ||
+    (user.email?.toLowerCase() || '').includes(search.toLowerCase()) ||
+    (user.phoneNumber?.toLowerCase() || '').includes(search.toLowerCase())
   );
 
+  const handleViewUser = (user: User) => {
+    setSelectedUser(user);
+    setIsUserDetailsOpen(true);
+  };
+
+  const handleCreateAdmin = async () => {
+    if (!adminEmail && !adminFirebaseUid) {
+      toast({
+        title: 'Error',
+        description: 'Please provide either email or Firebase UID',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    setCreatingAdmin(true);
+    try {
+      const response = await createAdminUser({
+        email: adminEmail || undefined,
+        firebaseUid: adminFirebaseUid || undefined,
+        firstName: adminFirstName || undefined,
+        lastName: adminLastName || undefined,
+      });
+
+      if (response.success) {
+        toast({
+          title: 'Success',
+          description: response.message,
+        });
+        
+        // Reset form
+        setAdminEmail('');
+        setAdminFirebaseUid('');
+        setAdminFirstName('');
+        setAdminLastName('');
+        setIsCreateAdminOpen(false);
+        
+        // Refresh users list
+        const refreshResponse = await getUsers('ALL', {
+          page: currentPage,
+          size: pageSize,
+          sort: 'id',
+        });
+        setUsers(refreshResponse.users);
+        setPageInfo(refreshResponse.pageInfo || null);
+      } else {
+        toast({
+          title: 'Error',
+          description: response.error || 'Failed to create admin user',
+          variant: 'destructive',
+        });
+      }
+    } catch (err) {
+      toast({
+        title: 'Error',
+        description: err instanceof Error ? err.message : 'Failed to create admin user',
+        variant: 'destructive',
+      });
+    } finally {
+      setCreatingAdmin(false);
+    }
+  };
+
+  const handleExport = () => {
+    try {
+      const exportData = filteredUsers.map(user => ({
+        ID: user.id,
+        'First Name': user.firstName,
+        'Last Name': user.lastName,
+        Email: user.email || 'N/A',
+        Phone: user.phoneNumber || 'N/A',
+        Role: user.role || 'N/A',
+        Gender: user.gender || 'N/A',
+        'Date of Birth': user.dateOfBirth || 'N/A',
+        'PAN Number': user.panNumber || 'N/A',
+        'Investor Status': user.investor?.status || 'N/A',
+        Address: user.address ? `${user.address.address_line}, ${user.address.city}, ${user.address.state}` : 'N/A',
+      }));
+
+      exportToCSV(exportData, `users-${new Date().toISOString().split('T')[0]}`);
+      
+      toast({
+        title: 'Success',
+        description: 'Users data exported successfully',
+      });
+    } catch (err) {
+      toast({
+        title: 'Error',
+        description: err instanceof Error ? err.message : 'Failed to export data',
+        variant: 'destructive',
+      });
+    }
+  };
+
   const stats = {
-    total: users.length,
-    active: users.filter(u => u.kycStatus === "approved").length,
-    kycApproved: users.filter(u => u.kycStatus === "approved").length,
-    pendingKyc: users.filter(u => u.kycStatus === "pending").length,
+    total: pageInfo?.totalElements || users.length,
+    active: users.filter(u => u.investor?.status === "ready_to_invest").length,
+    admins: users.filter(u => u.role === "admin").length,
+    withInvestor: users.filter(u => u.investor !== null && u.investor !== undefined).length,
   };
 
   const LoadingSkeleton = () => (
@@ -69,10 +209,10 @@ export default function UsersPage() {
         <TableRow key={i}>
           <TableCell><Skeleton className="h-4 w-32" /></TableCell>
           <TableCell><Skeleton className="h-4 w-48" /></TableCell>
-          <TableCell><Skeleton className="h-4 w-28" /></TableCell>
-          <TableCell><Skeleton className="h-4 w-24" /></TableCell>
+          <TableCell><Skeleton className="h-4 w-20" /></TableCell>
           <TableCell><Skeleton className="h-4 w-16" /></TableCell>
-          <TableCell><Skeleton className="h-4 w-24" /></TableCell>
+          <TableCell><Skeleton className="h-4 w-32" /></TableCell>
+          <TableCell><Skeleton className="h-4 w-12" /></TableCell>
         </TableRow>
       ))}
     </>
@@ -108,13 +248,19 @@ export default function UsersPage() {
               variant="outline" 
               size="sm"
               className="bg-white/80 dark:bg-slate-900/80 backdrop-blur-sm border-slate-200/50 dark:border-slate-700/50 hover:bg-white dark:hover:bg-slate-900 transition-all duration-200 rounded-xl px-4 py-2"
+              onClick={handleExport}
+              disabled={filteredUsers.length === 0}
             >
               <Download className="w-4 h-4 mr-2" />
-              Export
+              Export Users
             </Button>
-            <Button className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white border-0 shadow-lg hover:shadow-xl transition-all duration-200 rounded-xl px-6 py-2">
-              <UserPlus className="w-4 h-4 mr-2" />
-              Add User
+            <Button 
+              size="sm"
+              className="bg-gradient-to-r from-violet-600 to-purple-600 hover:from-violet-700 hover:to-purple-700 text-white border-0 shadow-lg hover:shadow-xl transition-all duration-200 rounded-xl px-4 py-2"
+              onClick={() => setIsCreateAdminOpen(true)}
+            >
+              <ShieldCheck className="w-4 h-4 mr-2" />
+              Create Admin
             </Button>
           </div>
         </motion.div>
@@ -134,15 +280,9 @@ export default function UsersPage() {
                   <UsersIcon className="h-5 w-5 text-blue-600 dark:text-blue-400" />
                 </div>
               </CardHeader>
-              <CardContent className="relative z-10 space-y-3">
+              <CardContent className="relative z-10 space-y-3 min-h-[88px]">
                 <div className="text-3xl lg:text-4xl font-bold text-slate-900 dark:text-slate-100">{stats.total}</div>
-                <div className="flex items-center gap-2 text-sm">
-                  <div className="flex items-center gap-1 px-2 py-1 rounded-full bg-emerald-50 dark:bg-emerald-950/30 text-emerald-700 dark:text-emerald-300">
-                    <TrendingUp className="h-3 w-3" />
-                    <span className="font-semibold">+12%</span>
-                  </div>
-                  <span className="text-slate-500 dark:text-slate-400 text-xs">from last month</span>
-                </div>
+                <p className="text-slate-500 dark:text-slate-400 text-xs">Registered users</p>
               </CardContent>
             </Card>
           </motion.div>
@@ -155,12 +295,12 @@ export default function UsersPage() {
             <Card className="group relative overflow-hidden border-0 shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 rounded-2xl backdrop-blur-sm bg-gradient-to-br from-emerald-50/50 to-teal-50/50 dark:from-emerald-950/20 dark:to-teal-950/20 border border-emerald-200/50 dark:border-emerald-800/30">
               <div className="absolute inset-0 bg-white/40 dark:bg-slate-900/40 backdrop-blur-sm" />
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3 relative z-10">
-                <CardTitle className="text-sm font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-wide">Active Users</CardTitle>
+                <CardTitle className="text-sm font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-wide">Ready to Invest</CardTitle>
                 <Badge className="bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800">Active</Badge>
               </CardHeader>
-              <CardContent className="relative z-10 space-y-3">
+              <CardContent className="relative z-10 space-y-3 min-h-[88px]">
                 <div className="text-3xl lg:text-4xl font-bold text-slate-900 dark:text-slate-100">{stats.active}</div>
-                <p className="text-slate-500 dark:text-slate-400 text-xs">KYC approved</p>
+                <p className="text-slate-500 dark:text-slate-400 text-xs">Ready to invest</p>
               </CardContent>
             </Card>
           </motion.div>
@@ -173,12 +313,12 @@ export default function UsersPage() {
             <Card className="group relative overflow-hidden border-0 shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 rounded-2xl backdrop-blur-sm bg-gradient-to-br from-violet-50/50 to-purple-50/50 dark:from-violet-950/20 dark:to-purple-950/20 border border-violet-200/50 dark:border-violet-800/30">
               <div className="absolute inset-0 bg-white/40 dark:bg-slate-900/40 backdrop-blur-sm" />
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3 relative z-10">
-                <CardTitle className="text-sm font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-wide">KYC Approved</CardTitle>
-                <Badge className="bg-violet-100 dark:bg-violet-900/30 text-violet-700 dark:text-violet-300 border-violet-200 dark:border-violet-800">Verified</Badge>
+                <CardTitle className="text-sm font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-wide">Admins</CardTitle>
+                <Badge className="bg-violet-100 dark:bg-violet-900/30 text-violet-700 dark:text-violet-300 border-violet-200 dark:border-violet-800">Admin</Badge>
               </CardHeader>
-              <CardContent className="relative z-10 space-y-3">
-                <div className="text-3xl lg:text-4xl font-bold text-slate-900 dark:text-slate-100">{stats.kycApproved}</div>
-                <p className="text-slate-500 dark:text-slate-400 text-xs">85% approval rate</p>
+              <CardContent className="relative z-10 space-y-3 min-h-[88px]">
+                <div className="text-3xl lg:text-4xl font-bold text-slate-900 dark:text-slate-100">{stats.admins}</div>
+                <p className="text-slate-500 dark:text-slate-400 text-xs">Admin users</p>
               </CardContent>
             </Card>
           </motion.div>
@@ -191,12 +331,12 @@ export default function UsersPage() {
             <Card className="group relative overflow-hidden border-0 shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 rounded-2xl backdrop-blur-sm bg-gradient-to-br from-amber-50/50 to-orange-50/50 dark:from-amber-950/20 dark:to-orange-950/20 border border-amber-200/50 dark:border-amber-800/30">
               <div className="absolute inset-0 bg-white/40 dark:bg-slate-900/40 backdrop-blur-sm" />
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3 relative z-10">
-                <CardTitle className="text-sm font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-wide">Pending KYC</CardTitle>
-                <Badge className="bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300 border-amber-200 dark:border-amber-800">Pending</Badge>
+                <CardTitle className="text-sm font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-wide">With Investor</CardTitle>
+                <Badge className="bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300 border-amber-200 dark:border-amber-800">Investor</Badge>
               </CardHeader>
-              <CardContent className="relative z-10 space-y-3">
-                <div className="text-3xl lg:text-4xl font-bold text-slate-900 dark:text-slate-100">{stats.pendingKyc}</div>
-                <p className="text-slate-500 dark:text-slate-400 text-xs">Awaiting review</p>
+              <CardContent className="relative z-10 space-y-3 min-h-[88px]">
+                <div className="text-3xl lg:text-4xl font-bold text-slate-900 dark:text-slate-100">{stats.withInvestor}</div>
+                <p className="text-slate-500 dark:text-slate-400 text-xs">Have investor accounts</p>
               </CardContent>
             </Card>
           </motion.div>
@@ -259,10 +399,9 @@ export default function UsersPage() {
                     <TableRow className="bg-slate-50/50 dark:bg-slate-800/50">
                       <TableHead className="text-slate-700 dark:text-slate-300 font-semibold">User</TableHead>
                       <TableHead className="text-slate-700 dark:text-slate-300 font-semibold">Contact</TableHead>
-                      <TableHead className="text-slate-700 dark:text-slate-300 font-semibold">Funds</TableHead>
-                      <TableHead className="text-slate-700 dark:text-slate-300 font-semibold">Goals</TableHead>
-                      <TableHead className="text-slate-700 dark:text-slate-300 font-semibold">Status</TableHead>
-                      <TableHead className="text-slate-700 dark:text-slate-300 font-semibold">Joined</TableHead>
+                      <TableHead className="text-slate-700 dark:text-slate-300 font-semibold">Role</TableHead>
+                      <TableHead className="text-slate-700 dark:text-slate-300 font-semibold">Gender</TableHead>
+                      <TableHead className="text-slate-700 dark:text-slate-300 font-semibold">Investor Status</TableHead>
                       <TableHead className="text-right text-slate-700 dark:text-slate-300 font-semibold">Actions</TableHead>
                     </TableRow>
                   </TableHeader>
@@ -271,7 +410,7 @@ export default function UsersPage() {
                       <LoadingSkeleton />
                     ) : error ? (
                       <TableRow>
-                        <TableCell colSpan={7} className="text-center py-12">
+                        <TableCell colSpan={6} className="text-center py-12">
                           <div className="flex flex-col items-center gap-4">
                             <div className="w-16 h-16 rounded-full bg-red-100 dark:bg-red-900/30 flex items-center justify-center">
                               <UsersIcon className="h-8 w-8 text-red-600 dark:text-red-400" />
@@ -285,7 +424,7 @@ export default function UsersPage() {
                       </TableRow>
                     ) : filteredUsers.length === 0 ? (
                       <TableRow>
-                        <TableCell colSpan={7} className="text-center py-12">
+                        <TableCell colSpan={6} className="text-center py-12">
                           <div className="flex flex-col items-center gap-4">
                             <div className="w-16 h-16 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center">
                               <UsersIcon className="h-8 w-8 text-slate-400" />
@@ -309,10 +448,10 @@ export default function UsersPage() {
                           <TableCell>
                             <div className="flex items-center gap-3">
                               <div className="w-10 h-10 rounded-xl bg-gradient-to-r from-blue-500 to-purple-500 flex items-center justify-center text-white font-bold text-sm shadow-lg">
-                                {user.name.split(' ').map(n => n[0]).join('').toUpperCase()}
+                                {`${user.firstName?.[0] || ''}${user.lastName?.[0] || ''}`.toUpperCase() || 'U'}
                               </div>
                               <div>
-                                <div className="font-semibold text-slate-900 dark:text-slate-100">{user.name}</div>
+                                <div className="font-semibold text-slate-900 dark:text-slate-100">{user.firstName} {user.lastName}</div>
                                 <div className="text-sm text-slate-500 dark:text-slate-400">ID: {user.id}</div>
                               </div>
                             </div>
@@ -325,44 +464,46 @@ export default function UsersPage() {
                               </div>
                               <div className="flex items-center gap-2 text-sm">
                                 <Phone className="h-3 w-3 text-slate-400" />
-                                <span className="text-slate-600 dark:text-slate-400">{user.phone || 'N/A'}</span>
+                                <span className="text-slate-600 dark:text-slate-400">{user.phoneNumber || 'N/A'}</span>
                               </div>
                             </div>
                           </TableCell>
                           <TableCell>
-                            <div className="flex items-center gap-2">
-                              <span className="font-semibold text-slate-900 dark:text-slate-100">${user.totalFunds?.toLocaleString() || '0'}</span>
-                            </div>
+                            <Badge 
+                              className={
+                                user.role === "admin" 
+                                  ? "bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300 border-purple-200 dark:border-purple-800"
+                                  : "bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700"
+                              }
+                            >
+                              {user.role || 'standard'}
+                            </Badge>
                           </TableCell>
                           <TableCell>
-                            <Badge variant="secondary" className="bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 border-blue-200 dark:border-blue-800">
-                              {user.activeGoals || 0} active
-                            </Badge>
+                            <span className="text-sm text-slate-600 dark:text-slate-400 capitalize">{user.gender || 'N/A'}</span>
                           </TableCell>
                           <TableCell>
                             <Badge 
+                              variant="secondary"
                               className={
-                                user.kycStatus === "approved" 
+                                user.investor?.status === "ready_to_invest" 
                                   ? "bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800"
-                                  : user.kycStatus === "pending"
+                                  : user.investor?.status === "under_review"
                                   ? "bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300 border-amber-200 dark:border-amber-800"
-                                  : "bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300 border-red-200 dark:border-red-800"
+                                  : user.investor?.status
+                                  ? "bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 border-blue-200 dark:border-blue-800"
+                                  : "bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700"
                               }
                             >
-                              {user.kycStatus}
+                              {user.investor?.status?.replace(/_/g, ' ') || 'No Investor'}
                             </Badge>
-                          </TableCell>
-                          <TableCell>
-                            <div className="flex items-center gap-2 text-sm text-slate-600 dark:text-slate-400">
-                              <Calendar className="h-3 w-3" />
-                              {user.joinedDate ? new Date(user.joinedDate).toLocaleDateString() : 'N/A'}
-                            </div>
                           </TableCell>
                           <TableCell className="text-right">
                             <Button 
                               variant="ghost" 
                               size="sm"
                               className="hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg"
+                              onClick={() => handleViewUser(user)}
                             >
                               <Eye className="h-4 w-4" />
                             </Button>
@@ -373,10 +514,375 @@ export default function UsersPage() {
                   </TableBody>
                 </Table>
               </div>
+              
+              {/* Pagination */}
+              {pageInfo && pageInfo.totalPages > 1 && (
+                <div className="flex items-center justify-between px-6 py-4 border-t border-slate-200/50 dark:border-slate-700/50">
+                  <div className="text-sm text-slate-600 dark:text-slate-400">
+                    Showing {currentPage * pageSize + 1} to {Math.min((currentPage + 1) * pageSize, pageInfo.totalElements)} of {pageInfo.totalElements} users
+                  </div>
+                  <Pagination>
+                    <PaginationContent>
+                      <PaginationItem>
+                        <PaginationPrevious 
+                          onClick={() => setCurrentPage(Math.max(0, currentPage - 1))}
+                          className={currentPage === 0 ? 'pointer-events-none opacity-50' : 'cursor-pointer'}
+                        />
+                      </PaginationItem>
+                      
+                      {Array.from({ length: pageInfo.totalPages }, (_, i) => i).map((page) => {
+                        // Show first page, last page, current page, and pages around current
+                        if (
+                          page === 0 ||
+                          page === pageInfo.totalPages - 1 ||
+                          (page >= currentPage - 1 && page <= currentPage + 1)
+                        ) {
+                          return (
+                            <PaginationItem key={page}>
+                              <PaginationLink
+                                onClick={() => setCurrentPage(page)}
+                                isActive={currentPage === page}
+                                className="cursor-pointer"
+                              >
+                                {page + 1}
+                              </PaginationLink>
+                            </PaginationItem>
+                          );
+                        } else if (
+                          page === currentPage - 2 ||
+                          page === currentPage + 2
+                        ) {
+                          return <PaginationEllipsis key={page} />;
+                        }
+                        return null;
+                      })}
+                      
+                      <PaginationItem>
+                        <PaginationNext 
+                          onClick={() => setCurrentPage(Math.min(pageInfo.totalPages - 1, currentPage + 1))}
+                          className={currentPage === pageInfo.totalPages - 1 ? 'pointer-events-none opacity-50' : 'cursor-pointer'}
+                        />
+                      </PaginationItem>
+                    </PaginationContent>
+                  </Pagination>
+                </div>
+              )}
             </CardContent>
           </Card>
         </motion.div>
       </div>
+
+      {/* User Details Dialog */}
+      <Dialog open={isUserDetailsOpen} onOpenChange={setIsUserDetailsOpen}>
+        <DialogContent className="max-w-[95vw] md:max-w-4xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
+              <div className="w-12 h-12 rounded-xl bg-gradient-to-r from-blue-500 to-purple-500 flex items-center justify-center text-white font-bold shadow-lg">
+                {`${selectedUser?.firstName?.[0] || ''}${selectedUser?.lastName?.[0] || ''}`.toUpperCase() || 'U'}
+              </div>
+              <div>
+                <div className="text-xl font-bold">{selectedUser?.firstName} {selectedUser?.lastName}</div>
+                <div className="text-sm text-slate-500 font-normal">User Details</div>
+              </div>
+            </DialogTitle>
+          </DialogHeader>
+          
+          <div className="grid gap-6 py-4">
+            {/* Basic Information */}
+            <div className="space-y-4">
+              <h3 className="text-sm font-semibold text-slate-700 dark:text-slate-300 uppercase tracking-wide">Basic Information</h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                <div className="flex items-start gap-3 p-3 rounded-lg bg-slate-50 dark:bg-slate-800/50">
+                  <UsersIcon className="h-5 w-5 text-slate-400 mt-0.5 flex-shrink-0" />
+                  <div className="flex-1 min-w-0">
+                    <div className="text-xs text-slate-500 dark:text-slate-400">User ID</div>
+                    <div className="font-medium text-slate-900 dark:text-slate-100 break-all">{selectedUser?.id}</div>
+                  </div>
+                </div>
+                
+                <div className="flex items-start gap-3 p-3 rounded-lg bg-slate-50 dark:bg-slate-800/50">
+                  <UsersIcon className="h-5 w-5 text-slate-400 mt-0.5 flex-shrink-0" />
+                  <div className="flex-1 min-w-0">
+                    <div className="text-xs text-slate-500 dark:text-slate-400">Full Name</div>
+                    <div className="font-medium text-slate-900 dark:text-slate-100">{selectedUser?.firstName} {selectedUser?.lastName}</div>
+                  </div>
+                </div>
+                
+                <div className="flex items-start gap-3 p-3 rounded-lg bg-slate-50 dark:bg-slate-800/50">
+                  <Mail className="h-5 w-5 text-slate-400 mt-0.5 flex-shrink-0" />
+                  <div className="flex-1 min-w-0">
+                    <div className="text-xs text-slate-500 dark:text-slate-400">Email</div>
+                    <div className="font-medium text-slate-900 dark:text-slate-100 break-all">{selectedUser?.email || 'N/A'}</div>
+                  </div>
+                </div>
+                
+                <div className="flex items-start gap-3 p-3 rounded-lg bg-slate-50 dark:bg-slate-800/50">
+                  <Phone className="h-5 w-5 text-slate-400 mt-0.5 flex-shrink-0" />
+                  <div className="flex-1 min-w-0">
+                    <div className="text-xs text-slate-500 dark:text-slate-400">Phone</div>
+                    <div className="font-medium text-slate-900 dark:text-slate-100">{selectedUser?.phoneNumber || 'N/A'}</div>
+                  </div>
+                </div>
+                
+                <div className="flex items-start gap-3 p-3 rounded-lg bg-slate-50 dark:bg-slate-800/50">
+                  <Calendar className="h-5 w-5 text-slate-400 mt-0.5 flex-shrink-0" />
+                  <div className="flex-1 min-w-0">
+                    <div className="text-xs text-slate-500 dark:text-slate-400">Date of Birth</div>
+                    <div className="font-medium text-slate-900 dark:text-slate-100">
+                      {selectedUser?.dateOfBirth ? new Date(selectedUser.dateOfBirth).toLocaleDateString('en-US', { 
+                        year: 'numeric', 
+                        month: 'long', 
+                        day: 'numeric' 
+                      }) : 'N/A'}
+                    </div>
+                  </div>
+                </div>
+                
+                <div className="flex items-start gap-3 p-3 rounded-lg bg-slate-50 dark:bg-slate-800/50">
+                  <UsersIcon className="h-5 w-5 text-slate-400 mt-0.5 flex-shrink-0" />
+                  <div className="flex-1 min-w-0">
+                    <div className="text-xs text-slate-500 dark:text-slate-400">Gender</div>
+                    <div className="font-medium text-slate-900 dark:text-slate-100 capitalize">{selectedUser?.gender || 'N/A'}</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Account Information */}
+            <div className="space-y-4">
+              <h3 className="text-sm font-semibold text-slate-700 dark:text-slate-300 uppercase tracking-wide">Account Information</h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                <div className="flex items-start gap-3 p-3 rounded-lg bg-slate-50 dark:bg-slate-800/50">
+                  <Sparkles className="h-5 w-5 text-slate-400 mt-0.5 flex-shrink-0" />
+                  <div className="flex-1 min-w-0">
+                    <div className="text-xs text-slate-500 dark:text-slate-400">Role</div>
+                    <Badge 
+                      className={
+                        selectedUser?.role === "admin" 
+                          ? "bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300 border-purple-200 dark:border-purple-800"
+                          : "bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700"
+                      }
+                    >
+                      {selectedUser?.role || 'standard'}
+                    </Badge>
+                  </div>
+                </div>
+                
+                <div className="flex items-start gap-3 p-3 rounded-lg bg-slate-50 dark:bg-slate-800/50">
+                  <TrendingUp className="h-5 w-5 text-slate-400 mt-0.5 flex-shrink-0" />
+                  <div className="flex-1 min-w-0">
+                    <div className="text-xs text-slate-500 dark:text-slate-400">PAN Number</div>
+                    <div className="font-medium text-slate-900 dark:text-slate-100">{selectedUser?.panNumber || 'N/A'}</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Address Information */}
+            {selectedUser?.address && (
+              <div className="space-y-4">
+                <h3 className="text-sm font-semibold text-slate-700 dark:text-slate-300 uppercase tracking-wide">Address</h3>
+                <div className="grid grid-cols-1 gap-3">
+                  <div className="flex items-start gap-3 p-4 rounded-lg bg-slate-50 dark:bg-slate-800/50">
+                    <MapPin className="h-5 w-5 text-slate-400 mt-0.5 flex-shrink-0" />
+                    <div className="flex-1 min-w-0">
+                      <div className="text-xs text-slate-500 dark:text-slate-400 mb-1">Full Address</div>
+                      <div className="font-medium text-slate-900 dark:text-slate-100">
+                        {selectedUser.address.address_line && <div>{selectedUser.address.address_line}</div>}
+                        {selectedUser.address.city && selectedUser.address.state && (
+                          <div>{selectedUser.address.city}, {selectedUser.address.state}</div>
+                        )}
+                        {!selectedUser.address.address_line && !selectedUser.address.city && 'N/A'}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Investor Information */}
+            {selectedUser?.investor && (
+              <div className="space-y-4">
+                <h3 className="text-sm font-semibold text-slate-700 dark:text-slate-300 uppercase tracking-wide">Investor Information</h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                  <div className="flex items-center justify-between p-4 rounded-lg bg-gradient-to-r from-emerald-50 to-teal-50 dark:from-emerald-950/20 dark:to-teal-950/20 border border-emerald-200 dark:border-emerald-800">
+                    <div className="flex items-center gap-3">
+                      <div className="p-2 rounded-lg bg-emerald-500/10">
+                        <TrendingUp className="h-5 w-5 text-emerald-600" />
+                      </div>
+                      <div>
+                        <div className="text-xs text-slate-600 dark:text-slate-400">Investor ID</div>
+                        <div className="text-lg font-bold text-slate-900 dark:text-slate-100">{selectedUser.investor.id || 'N/A'}</div>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div className="flex items-center justify-between p-4 rounded-lg bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-950/20 dark:to-indigo-950/20 border border-blue-200 dark:border-blue-800">
+                    <div className="flex items-center gap-3">
+                      <div className="p-2 rounded-lg bg-blue-500/10">
+                        <Sparkles className="h-5 w-5 text-blue-600" />
+                      </div>
+                      <div>
+                        <div className="text-xs text-slate-600 dark:text-slate-400 mb-1">Status</div>
+                        <Badge 
+                          className={
+                            selectedUser.investor.status === "ready_to_invest" 
+                              ? "bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800"
+                              : selectedUser.investor.status === "under_review"
+                              ? "bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300 border-amber-200 dark:border-amber-800"
+                              : "bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 border-blue-200 dark:border-blue-800"
+                          }
+                        >
+                          {selectedUser.investor.status?.replace(/_/g, ' ') || 'Unknown'}
+                        </Badge>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Create Admin User Dialog */}
+      <Dialog open={isCreateAdminOpen} onOpenChange={setIsCreateAdminOpen}>
+        <DialogContent className="sm:max-w-[500px]">
+          <DialogHeader>
+            <div className="flex items-center gap-3 mb-2">
+              <div className="p-2 rounded-xl bg-gradient-to-r from-violet-500/10 to-purple-500/10 border border-violet-200/20 dark:border-violet-800/20">
+                <ShieldCheck className="h-6 w-6 text-violet-600 dark:text-violet-400" />
+              </div>
+              <DialogTitle className="text-2xl font-bold">Create Admin User</DialogTitle>
+            </div>
+            <DialogDescription>
+              Create a new admin user or promote an existing user to admin. Provide either email or Firebase UID.
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-4 py-4">
+            {/* Email Input */}
+            <div className="space-y-2">
+              <Label htmlFor="admin-email" className="text-sm font-medium">
+                Email Address
+              </Label>
+              <Input
+                id="admin-email"
+                type="email"
+                placeholder="admin@example.com"
+                value={adminEmail}
+                onChange={(e) => setAdminEmail(e.target.value)}
+                disabled={creatingAdmin}
+                className="h-11 rounded-xl"
+              />
+              <p className="text-xs text-slate-500 dark:text-slate-400">
+                Email of the user to promote to admin
+              </p>
+            </div>
+
+            <div className="relative">
+              <div className="absolute inset-0 flex items-center">
+                <span className="w-full border-t" />
+              </div>
+              <div className="relative flex justify-center text-xs uppercase">
+                <span className="bg-white dark:bg-slate-900 px-2 text-slate-500">Or</span>
+              </div>
+            </div>
+
+            {/* Firebase UID Input */}
+            <div className="space-y-2">
+              <Label htmlFor="admin-uid" className="text-sm font-medium">
+                Firebase UID
+              </Label>
+              <Input
+                id="admin-uid"
+                type="text"
+                placeholder="abc123xyz789"
+                value={adminFirebaseUid}
+                onChange={(e) => setAdminFirebaseUid(e.target.value)}
+                disabled={creatingAdmin}
+                className="h-11 rounded-xl"
+              />
+              <p className="text-xs text-slate-500 dark:text-slate-400">
+                Firebase user ID (if you know it)
+              </p>
+            </div>
+
+            {/* Optional: First Name */}
+            <div className="space-y-2">
+              <Label htmlFor="admin-firstname" className="text-sm font-medium">
+                First Name <span className="text-slate-400">(Optional)</span>
+              </Label>
+              <Input
+                id="admin-firstname"
+                type="text"
+                placeholder="John"
+                value={adminFirstName}
+                onChange={(e) => setAdminFirstName(e.target.value)}
+                disabled={creatingAdmin}
+                className="h-11 rounded-xl"
+              />
+            </div>
+
+            {/* Optional: Last Name */}
+            <div className="space-y-2">
+              <Label htmlFor="admin-lastname" className="text-sm font-medium">
+                Last Name <span className="text-slate-400">(Optional)</span>
+              </Label>
+              <Input
+                id="admin-lastname"
+                type="text"
+                placeholder="Doe"
+                value={adminLastName}
+                onChange={(e) => setAdminLastName(e.target.value)}
+                disabled={creatingAdmin}
+                className="h-11 rounded-xl"
+              />
+            </div>
+
+            <div className="p-4 rounded-xl bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800/30">
+              <p className="text-sm text-amber-800 dark:text-amber-400">
+                <strong>Note:</strong> The user must exist in Firebase Authentication. 
+                They will be granted admin privileges and custom claims will be set automatically.
+              </p>
+            </div>
+          </div>
+
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => {
+                setIsCreateAdminOpen(false);
+                setAdminEmail('');
+                setAdminFirebaseUid('');
+                setAdminFirstName('');
+                setAdminLastName('');
+              }}
+              disabled={creatingAdmin}
+              className="rounded-xl"
+            >
+              Cancel
+            </Button>
+            <Button
+              onClick={handleCreateAdmin}
+              disabled={creatingAdmin || (!adminEmail && !adminFirebaseUid)}
+              className="bg-gradient-to-r from-violet-600 to-purple-600 hover:from-violet-700 hover:to-purple-700 text-white rounded-xl"
+            >
+              {creatingAdmin ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Creating...
+                </>
+              ) : (
+                <>
+                  <ShieldCheck className="mr-2 h-4 w-4" />
+                  Create Admin
+                </>
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

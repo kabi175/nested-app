@@ -1,21 +1,8 @@
 package com.nested.app.controllers;
 
-import com.nested.app.annotation.AdminOnly;
-import com.nested.app.dto.BasketDTO;
-import com.nested.app.dto.Entity;
-import com.nested.app.services.BasketService;
-import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.Parameter;
-import io.swagger.v3.oas.annotations.media.Content;
-import io.swagger.v3.oas.annotations.media.Schema;
-import io.swagger.v3.oas.annotations.responses.ApiResponse;
-import io.swagger.v3.oas.annotations.responses.ApiResponses;
-import io.swagger.v3.oas.annotations.tags.Tag;
-import jakarta.validation.Valid;
 import java.util.List;
 import java.util.Map;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
+
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -26,6 +13,22 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+
+import com.nested.app.annotation.AdminOnly;
+import com.nested.app.dto.BasketDTO;
+import com.nested.app.dto.Entity;
+import com.nested.app.services.BasketService;
+
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * REST Controller for managing Basket entities Provides endpoints for CRUD operations on baskets
@@ -48,7 +51,8 @@ public class BasketController {
    * @return ResponseEntity containing list of baskets
    */
   @GetMapping
-  @Operation(summary = "Get all baskets", description = "Retrieves all investment baskets")
+  @AdminOnly
+  @Operation(summary = "Get all baskets (Admin only)", description = "Retrieves all investment baskets")
   @ApiResponses(
       value = {
         @ApiResponse(
@@ -58,6 +62,7 @@ public class BasketController {
                 @Content(
                     mediaType = "application/json",
                     schema = @Schema(implementation = Map.class))),
+        @ApiResponse(responseCode = "403", description = "Access denied - Admin role required"),
         @ApiResponse(responseCode = "500", description = "Internal server error")
       })
   public ResponseEntity<Entity<BasketDTO>> getAllBaskets() {
@@ -80,8 +85,9 @@ public class BasketController {
      * @return ResponseEntity containing basket details
      */
     @GetMapping("/{id}")
+    @AdminOnly
     @Operation(
-        summary = "Get basket details by ID",
+        summary = "Get basket details by ID (Admin only)",
         description = "Retrieves detailed information about a specific investment basket"
     )
     @ApiResponses(value = {
@@ -92,6 +98,10 @@ public class BasketController {
                 mediaType = "application/json",
                 schema = @Schema(implementation = Map.class)
             )
+        ),
+        @ApiResponse(
+            responseCode = "403",
+            description = "Access denied - Admin role required"
         ),
         @ApiResponse(
             responseCode = "404",
@@ -160,14 +170,14 @@ public class BasketController {
       })
   public ResponseEntity<?> createBasket(
       @Parameter(description = "Basket data", required = true) @Valid @RequestBody @AdminOnly
-          Entity<BasketDTO> request) {
+          BasketDTO request) {
 
     log.info("POST /api/v1/bucket - Creating new basket");
 
     try {
-      List<BasketDTO> baskets = basketService.createBaskets(request.getData());
-      log.info("Successfully created {} baskets", baskets.size());
-      return ResponseEntity.status(HttpStatus.CREATED).body(Entity.of(baskets));
+      BasketDTO baskets = basketService.createBasket(request);
+      log.info("Successfully created {} baskets", baskets.getId());
+      return ResponseEntity.status(HttpStatus.CREATED).body(baskets);
 
     } catch (IllegalArgumentException e) {
       log.warn("Validation error creating basket: {}", e.getMessage());
@@ -211,14 +221,14 @@ public class BasketController {
       })
   public ResponseEntity<?> updateBasket(
       @Parameter(description = "Basket data", required = true) @Valid @RequestBody @AdminOnly
-          Entity<BasketDTO> request) {
+          BasketDTO request) {
 
     log.info("PATCH /api/v1/bucket - Updating basket");
 
     try {
-      List<BasketDTO> baskets = basketService.updateBaskets(request.getData());
-      log.info("Successfully updated {} baskets", baskets.size());
-      return ResponseEntity.ok(Entity.of(baskets));
+      BasketDTO baskets = basketService.updateBasket(request);
+      log.info("Successfully updated the basket id: {} ", baskets.getId());
+      return ResponseEntity.ok(baskets);
 
     } catch (IllegalArgumentException e) {
       log.warn("Validation error updating basket: {}", e.getMessage());

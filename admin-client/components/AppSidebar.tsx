@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation"; // Next.js hook to get current path
-import { LayoutDashboard, Users, GraduationCap, Package, BarChart3 } from "lucide-react";
+import { LayoutDashboard, Users, GraduationCap, Package, BarChart3, LogOut, User } from "lucide-react";
 import {
   Sidebar,
   SidebarContent,
@@ -13,17 +13,21 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
   SidebarHeader,
+  SidebarFooter,
 } from "@/components/ui/sidebar";
+import { useAuth } from "@/contexts/AuthContext";
+import { Button } from "@/components/ui/button";
 
 const menuItems = [
   { title: "Dashboard", url: "/", icon: LayoutDashboard },
   { title: "Users", url: "/users", icon: Users },
-  { title: "Colleges", url: "/colleges", icon: GraduationCap },
+  { title: "Education", url: "/education", icon: GraduationCap },
   { title: "Baskets", url: "/baskets", icon: Package },
 ];
 
 export function AppSidebar() {
   const pathname = usePathname(); // Next.js way to get current route
+  const { user, logout } = useAuth();
 
   return (
     <Sidebar>
@@ -56,6 +60,26 @@ export function AppSidebar() {
           </SidebarGroupContent>
         </SidebarGroup>
       </SidebarContent>
+
+      <SidebarFooter className="border-t border-sidebar-border p-4">
+        <div className="space-y-2">
+          {user && (
+            <div className="flex items-center gap-2 px-2 py-1 text-sm text-sidebar-foreground/70">
+              <User className="h-4 w-4" />
+              <span className="truncate">{user.email}</span>
+            </div>
+          )}
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={logout}
+            className="w-full justify-start gap-2 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
+          >
+            <LogOut className="h-4 w-4" />
+            <span>Logout</span>
+          </Button>
+        </div>
+      </SidebarFooter>
     </Sidebar>
   );
 }
