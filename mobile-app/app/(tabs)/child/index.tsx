@@ -51,13 +51,14 @@ export default function GoalScreen() {
         style={styles.scrollContainer}
         showsVerticalScrollIndicator={false}
       >
-        <GoalHeader />
-
         {hasGoals && goals ? (
-          <View style={styles.contentContainer}>
-            <TotalSavedCard totalAmount={totalSaved} />
-            <GoalsList goals={goals} />
-          </View>
+          <>
+            <GoalHeader />
+            <View style={styles.contentContainer}>
+              <TotalSavedCard totalAmount={totalSaved} />
+              <GoalsList goals={goals} />
+            </View>
+          </>
         ) : (
           <EmptyGoalState
             hasChildren={hasChildren}
