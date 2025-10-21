@@ -3,10 +3,10 @@ import { api } from "./client";
 
 export const getCourses = async (): Promise<Education[]> => {
   const { data } = await api.get(`/education?type=COURSE`);
-  return data;
+  return data.data as Education[] | [];
 };
 
 export const getInstitutions = async (): Promise<Education[]> => {
   const { data } = await api.get(`/education?type=INSTITUTION`);
-  return data;
+  return data.data as Education[] | [];
 };

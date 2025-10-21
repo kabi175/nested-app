@@ -63,17 +63,15 @@ export const getGoals = async (): Promise<Goal[]> => {
 };
 
 export const createGoal = async (
-  payload: {
+  goals: {
     childId: string;
     educationId: string;
     title: string;
     targetAmount: number;
     targetDate: Date;
   }[]
-): Promise<Goal> => {
-  const { data } = await api.post("/goals", { data: payload });
-
-  return data.map((goal: any) => ({
+): Promise<Goal[]> => {
+  const payload = goals.map((goal) => ({
     child: { id: goal.childId },
     education: {
       id: goal.educationId,
@@ -82,6 +80,8 @@ export const createGoal = async (
     target_date: goal.targetDate.toLocaleDateString("en-CA"),
     title: goal.title,
   }));
+  const { data } = await api.post("/goals", { data: payload });
+  return data.data as Goal[];
 };
 
 type ChildDTO = {

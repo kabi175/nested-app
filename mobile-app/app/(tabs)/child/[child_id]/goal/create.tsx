@@ -5,7 +5,7 @@ import { Education } from "@/types/user";
 import { Ionicons } from "@expo/vector-icons";
 import * as Haptics from "expo-haptics";
 import { LinearGradient } from "expo-linear-gradient";
-import { router, usePathname } from "expo-router";
+import { router, useLocalSearchParams } from "expo-router";
 import {
   ChevronDown,
   ChevronUp,
@@ -49,7 +49,7 @@ function expectedFee(targetDate: Date, education: Education) {
 }
 
 export default function CreateGoalScreen() {
-  const childId = usePathname();
+  const childId = useLocalSearchParams<{ child_id: string }>().child_id;
 
   const createGoalMutation = useGoalCreation();
   const {
