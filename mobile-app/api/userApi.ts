@@ -1,4 +1,3 @@
-import { Education } from "@/app/(tabs)/child/[child_id]/goal/create";
 import type { Child, Goal, User } from "@/types/user";
 import { api } from "./client";
 
@@ -66,7 +65,7 @@ export const getGoals = async (): Promise<Goal[]> => {
 export const createGoal = async (
   payload: {
     childId: string;
-    education: Education;
+    educationId: string;
     title: string;
     targetAmount: number;
     targetDate: Date;
@@ -77,7 +76,7 @@ export const createGoal = async (
   return data.map((goal: any) => ({
     child: { id: goal.childId },
     education: {
-      id: goal.education.id,
+      id: goal.educationId,
     },
     target_amount: goal.targetAmount,
     target_date: goal.targetDate.toLocaleDateString("en-CA"),

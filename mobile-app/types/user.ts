@@ -30,4 +30,13 @@ type Goal = {
   updatedAt: Date;
 };
 
-export type { Child, Goal, User };
+type Education = {
+  id: string;
+  name: string;
+  type: "INSTITUTION" | "COURSE";
+  lastYearFee: number;
+  expectedIncreasePercentLt10Yr: number;
+  expectedIncreasePercentGt10Yr: number;
+};
+
+export type { Child, Education, Goal, User };

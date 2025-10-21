@@ -1,5 +1,7 @@
 import { ThemedText } from "@/components/ThemedText";
+import { useEducation } from "@/hooks/useEducation";
 import { useGoalCreation } from "@/hooks/useGoalCreation";
+import { Education } from "@/types/user";
 import { Ionicons } from "@expo/vector-icons";
 import * as Haptics from "expo-haptics";
 import { LinearGradient } from "expo-linear-gradient";
@@ -35,74 +37,26 @@ interface Goal {
   education?: Education;
 }
 
-export interface Education {
-  id: string;
-  name: string;
+function expectedFee(targetDate: Date, education: Education) {
+  const H7 = education.lastYearFee;
+  const K7 = education.expectedIncreasePercentLt10Yr;
+  const L7 = education.expectedIncreasePercentGt10Yr;
+  const noOfYears = targetDate.getFullYear() - new Date().getFullYear();
+
+  return noOfYears <= 10
+    ? Math.pow(1 + K7, noOfYears) * H7
+    : Math.pow(1 + L7, noOfYears - 10) * Math.pow(1 + K7, noOfYears) * H7;
 }
-
-const DEGREE_OPTIONS = {
-  undergraduate: [
-    "Tier 1 B.Tech",
-    "Tier 2 B.Tech",
-    "B.Com",
-    "B.Sc",
-    "B.A",
-    "BBA",
-    "B.Arch",
-    "B.Pharm",
-  ],
-  postgraduate: [
-    "Tier 1 MBA",
-    "Tier 2 MBA",
-    "M.Tech",
-    "M.Com",
-    "M.Sc",
-    "M.A",
-    "MS",
-    "M.Arch",
-  ],
-};
-
-const COLLEGE_OPTIONS = [
-  "IIT Delhi",
-  "IIT Bombay",
-  "IIT Madras",
-  "IISc Bangalore",
-  "IIM Ahmedabad",
-  "IIM Bangalore",
-  "IIM Calcutta",
-  "NIT Trichy",
-  "BITS Pilani",
-  "Custom College",
-];
-
-const COST_ESTIMATES = {
-  undergraduate: {
-    "Tier 1 B.Tech": 1500000,
-    "Tier 2 B.Tech": 800000,
-    "B.Com": 500000,
-    "B.Sc": 400000,
-    "B.A": 300000,
-    BBA: 600000,
-    "B.Arch": 1200000,
-    "B.Pharm": 800000,
-  },
-  postgraduate: {
-    "Tier 1 MBA": 2500000,
-    "Tier 2 MBA": 1500000,
-    "M.Tech": 1000000,
-    "M.Com": 400000,
-    "M.Sc": 500000,
-    "M.A": 300000,
-    MS: 2000000,
-    "M.Arch": 1500000,
-  },
-};
 
 export default function CreateGoalScreen() {
   const childId = usePathname();
 
   const createGoalMutation = useGoalCreation();
+  const {
+    courses,
+    institutions,
+    isLoading: isLoadingEducation,
+  } = useEducation();
   const [goals, setGoals] = useState<Goal[]>([
     {
       id: "1",
@@ -113,7 +67,6 @@ export default function CreateGoalScreen() {
       targetYear: 2030,
       futureCost: 4500000,
       selectionMode: "course",
-      education: null,
     },
   ]);
 
@@ -165,13 +118,15 @@ export default function CreateGoalScreen() {
       ])
     );
     pulseAnimation.start();
-  }, []);
+  }, [fadeAnim, slideAnim, scaleAnim, pulseAnim]);
 
-  const calculateFutureCost = (currentCost: number, targetYear: number) => {
-    const currentYear = new Date().getFullYear();
-    const years = targetYear - currentYear;
-    const inflationRate = 0.08; // 8% annual inflation
-    return Math.round(currentCost * Math.pow(1 + inflationRate, years));
+  const calculateFutureCost = (
+    education: Education | undefined,
+    targetYear: number
+  ) => {
+    if (!education) return 0;
+    const targetDate = new Date(targetYear, 0, 1);
+    return Math.round(expectedFee(targetDate, education));
   };
 
   const updateGoal = (goalId: string, field: keyof Goal, value: any) => {
@@ -179,17 +134,17 @@ export default function CreateGoalScreen() {
       prev.map((goal) => {
         if (goal.id === goalId) {
           const updatedGoal = { ...goal, [field]: value };
-          if (field === "degree" || field === "currentCost") {
-            updatedGoal.futureCost = calculateFutureCost(
-              field === "currentCost" ? value : updatedGoal.currentCost,
-              updatedGoal.targetYear
-            );
-          } else if (field === "targetYear") {
-            updatedGoal.futureCost = calculateFutureCost(
-              updatedGoal.currentCost,
-              value
-            );
+
+          // Recalculate future cost when education or target year changes
+          if (field === "education" || field === "targetYear") {
+            const education =
+              field === "education" ? value : updatedGoal.education;
+            const targetYear =
+              field === "targetYear" ? value : updatedGoal.targetYear;
+            updatedGoal.currentCost = education?.lastYearFee || 0;
+            updatedGoal.futureCost = calculateFutureCost(education, targetYear);
           }
+
           return updatedGoal;
         }
         return goal;
@@ -313,7 +268,7 @@ export default function CreateGoalScreen() {
     try {
       const data = goals.map((goal) => ({
         childId,
-        education: { id: "", name: goal.degree },
+        educationId: goal.education?.id || "",
         title: `${goal.degree} - ${goal.college}`,
         targetAmount: goal.futureCost,
         targetDate: new Date(goal.targetYear, 5, 1),
@@ -485,44 +440,44 @@ export default function CreateGoalScreen() {
                           },
                         ]}
                       >
-                        {DEGREE_OPTIONS[goal.type].map((degree, index) => (
-                          <Animated.View
-                            key={degree}
-                            style={{
-                              opacity: expandedDropdowns[`${goal.id}-degree`]
-                                ? 1
-                                : 0,
-                              transform: [
-                                {
-                                  translateX: expandedDropdowns[
-                                    `${goal.id}-degree`
-                                  ]
-                                    ? 0
-                                    : -20,
-                                },
-                              ],
-                            }}
-                          >
-                            <TouchableOpacity
-                              style={styles.dropdownOption}
-                              onPress={() => {
-                                updateGoal(goal.id, "degree", degree);
-                                updateGoal(
-                                  goal.id,
-                                  "currentCost",
-                                  COST_ESTIMATES[goal.type][
-                                    degree as keyof (typeof COST_ESTIMATES)[typeof goal.type]
-                                  ]
-                                );
-                                toggleDropdown(`${goal.id}-degree`);
+                        {isLoadingEducation ? (
+                          <View style={styles.dropdownOption}>
+                            <ActivityIndicator size="small" color="#2563EB" />
+                          </View>
+                        ) : (
+                          courses.map((course) => (
+                            <Animated.View
+                              key={course.id}
+                              style={{
+                                opacity: expandedDropdowns[`${goal.id}-degree`]
+                                  ? 1
+                                  : 0,
+                                transform: [
+                                  {
+                                    translateX: expandedDropdowns[
+                                      `${goal.id}-degree`
+                                    ]
+                                      ? 0
+                                      : -20,
+                                  },
+                                ],
                               }}
                             >
-                              <ThemedText style={styles.dropdownOptionText}>
-                                {degree}
-                              </ThemedText>
-                            </TouchableOpacity>
-                          </Animated.View>
-                        ))}
+                              <TouchableOpacity
+                                style={styles.dropdownOption}
+                                onPress={() => {
+                                  updateGoal(goal.id, "degree", course.name);
+                                  updateGoal(goal.id, "education", course);
+                                  toggleDropdown(`${goal.id}-degree`);
+                                }}
+                              >
+                                <ThemedText style={styles.dropdownOptionText}>
+                                  {course.name}
+                                </ThemedText>
+                              </TouchableOpacity>
+                            </Animated.View>
+                          ))
+                        )}
                       </Animated.View>
                     )}
                   </>
@@ -543,20 +498,31 @@ export default function CreateGoalScreen() {
 
                     {expandedDropdowns[`${goal.id}-college`] && (
                       <Animated.View style={styles.dropdownOptions}>
-                        {COLLEGE_OPTIONS.map((college) => (
-                          <TouchableOpacity
-                            key={college}
-                            style={styles.dropdownOption}
-                            onPress={() => {
-                              updateGoal(goal.id, "college", college);
-                              toggleDropdown(`${goal.id}-college`);
-                            }}
-                          >
-                            <ThemedText style={styles.dropdownOptionText}>
-                              {college}
-                            </ThemedText>
-                          </TouchableOpacity>
-                        ))}
+                        {isLoadingEducation ? (
+                          <View style={styles.dropdownOption}>
+                            <ActivityIndicator size="small" color="#2563EB" />
+                          </View>
+                        ) : (
+                          institutions.map((institution) => (
+                            <TouchableOpacity
+                              key={institution.id}
+                              style={styles.dropdownOption}
+                              onPress={() => {
+                                updateGoal(
+                                  goal.id,
+                                  "college",
+                                  institution.name
+                                );
+                                updateGoal(goal.id, "education", institution);
+                                toggleDropdown(`${goal.id}-college`);
+                              }}
+                            >
+                              <ThemedText style={styles.dropdownOptionText}>
+                                {institution.name}
+                              </ThemedText>
+                            </TouchableOpacity>
+                          ))
+                        )}
                       </Animated.View>
                     )}
                   </>
@@ -567,7 +533,7 @@ export default function CreateGoalScreen() {
               <View style={styles.costTimelineContainer}>
                 <View style={styles.inputGroup}>
                   <ThemedText style={styles.inputLabel}>
-                    Today's Approx Cost
+                    Today&apos;s Approx Cost
                   </ThemedText>
                   <View style={styles.costInputContainer}>
                     <ThemedText style={styles.currencySymbol}>₹</ThemedText>
@@ -653,7 +619,9 @@ export default function CreateGoalScreen() {
                   />
                 </View>
                 <ThemedText style={styles.futureCostDescription}>
-                  Calculated based on 7% annual inflation
+                  {goal.education
+                    ? `Calculated based on expected fee increases`
+                    : "Select a course or college to see future cost"}
                 </ThemedText>
               </Animated.View>
             </Animated.View>
