@@ -480,6 +480,26 @@ public class PaymentServiceImpl implements PaymentService {
     }
   }
 
+  @Override
+  public void markPaymentSuccess(Long paymentID) {
+    var payment = paymentRepository.findById(paymentID).orElseThrow();
+
+    payment.getOrders().forEach(order -> order.setStatus(Order.OrderStatus.COMPLETED));
+    payment.setStatus(Payment.PaymentStatus.COMPLETED);
+
+    paymentRepository.save(payment);
+  }
+
+  @Override
+  public void markPaymentFailure(Long paymentID) {
+    var payment = paymentRepository.findById(paymentID).orElseThrow();
+
+    payment.getOrders().forEach(order -> order.setStatus(Order.OrderStatus.FAILED));
+    payment.setStatus(Payment.PaymentStatus.FAILED);
+
+    paymentRepository.save(payment);
+  }
+
   /**
    * Converts Payment entity to PaymentDTO
    *

@@ -1,0 +1,75 @@
+<!doctype html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="utf-8"/>
+    <title>Payment</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1"/>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 2em;
+            margin: 0;
+            background: #f9f9f9;
+        }
+        .container {
+            max-width: 400px;
+            margin: auto;
+            background: #fff;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            padding: 2em;
+            text-align: center;
+        }
+        button {
+            width: 100%;
+            padding: 1em;
+            margin: 1em 0;
+            font-size: 1.1em;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        .success {
+            background: #4caf50;
+            color: #fff;
+        }
+        .failure {
+            background: #f44336;
+            color: #fff;
+        }
+        .message {
+            margin-top: 1em;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <h2>Payment for <span th:text="${name}">user</span></h2>
+    <button class="success" onclick="markPayment('success')">Mark Success</button>
+    <button class="failure" onclick="markPayment('failure')">Mark Failure</button>
+    <div class="message" id="message"></div>
+</div>
+<script>
+    function markPayment(status) {
+        const paymentId = window.location.pathname.split('/').pop();
+        fetch(`/public/payment/${paymentId}/${status}`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        })
+        .then(res => {
+            if (res.ok) {
+                document.getElementById('message').textContent = `Payment marked as ${status}.`;
+            } else {
+                document.getElementById('message').textContent = `Failed to mark payment as ${status}.`;
+            }
+        })
+        .catch(() => {
+            document.getElementById('message').textContent = 'Network error.';
+        });
+    }
+</script>
+</body>
+</html>
