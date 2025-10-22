@@ -1,4 +1,5 @@
 import { ThemedText } from "@/components/ThemedText";
+import { useChildren } from "@/hooks/useChildren";
 import { useEducation } from "@/hooks/useEducation";
 import { useGoalCreation } from "@/hooks/useGoalCreation";
 import { Education } from "@/types/user";
@@ -38,18 +39,32 @@ interface Goal {
 }
 
 function expectedFee(targetDate: Date, education: Education) {
-  const H7 = education.lastYearFee;
-  const K7 = education.expectedIncreasePercentLt10Yr;
-  const L7 = education.expectedIncreasePercentGt10Yr;
+  const lastYrFeeInLaks = education.lastYearFee / 100000;
+  const expectedIncreasePercentLt10Yr =
+    education.expectedIncreasePercentLt10Yr / 100;
+  const expectedIncreasePercentGt10Yr =
+    education.expectedIncreasePercentGt10Yr / 100;
   const noOfYears = targetDate.getFullYear() - new Date().getFullYear();
 
-  return noOfYears <= 10
-    ? Math.pow(1 + K7, noOfYears) * H7
-    : Math.pow(1 + L7, noOfYears - 10) * Math.pow(1 + K7, noOfYears) * H7;
+  console.log("noOfYears", noOfYears);
+  console.log("H7", lastYrFeeInLaks);
+  console.log("K7", expectedIncreasePercentGt10Yr);
+  console.log("L7", expectedIncreasePercentLt10Yr);
+
+  const result =
+    noOfYears <= 10
+      ? Math.pow(1 + expectedIncreasePercentGt10Yr, noOfYears) * lastYrFeeInLaks
+      : Math.pow(1 + expectedIncreasePercentLt10Yr, noOfYears - 10) *
+        Math.pow(1 + expectedIncreasePercentGt10Yr, noOfYears) *
+        lastYrFeeInLaks;
+
+  return Math.round(result) * 100000;
 }
 
 export default function CreateGoalScreen() {
   const childId = useLocalSearchParams<{ child_id: string }>().child_id;
+  const { data: children } = useChildren();
+  const child = children?.find((child) => child.id === childId);
 
   const createGoalMutation = useGoalCreation();
   const {
@@ -269,7 +284,10 @@ export default function CreateGoalScreen() {
       const data = goals.map((goal) => ({
         childId,
         educationId: goal.education?.id || "",
-        title: `${goal.degree} - ${goal.college}`,
+        title:
+          child?.firstName + " " + goal.type === "undergraduate"
+            ? "Undergraduate"
+            : "Postgraduate",
         targetAmount: goal.futureCost,
         targetDate: new Date(goal.targetYear, 5, 1),
       }));
