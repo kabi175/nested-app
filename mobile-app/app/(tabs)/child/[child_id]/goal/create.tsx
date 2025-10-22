@@ -46,11 +46,6 @@ function expectedFee(targetDate: Date, education: Education) {
     education.expectedIncreasePercentGt10Yr / 100;
   const noOfYears = targetDate.getFullYear() - new Date().getFullYear();
 
-  console.log("noOfYears", noOfYears);
-  console.log("H7", lastYrFeeInLaks);
-  console.log("K7", expectedIncreasePercentGt10Yr);
-  console.log("L7", expectedIncreasePercentLt10Yr);
-
   const result =
     noOfYears <= 10
       ? Math.pow(1 + expectedIncreasePercentGt10Yr, noOfYears) * lastYrFeeInLaks
