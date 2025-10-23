@@ -3,9 +3,10 @@ import { ThemedView } from "@/components/ThemedView";
 import type { Goal } from "@/types/user";
 import { useTheme } from "@react-navigation/native";
 import { ProgressBar } from "@ui-kitten/components";
+import { router } from "expo-router";
 import { GraduationCap, TrendingUp } from "lucide-react-native";
 import React from "react";
-import { StyleSheet, View } from "react-native";
+import { StyleSheet, TouchableOpacity, View } from "react-native";
 
 interface GoalCardProps {
   goal: Goal;
@@ -54,44 +55,59 @@ export function GoalCard({ goal }: GoalCardProps) {
   const progressPercentage = goal.currentAmount / goal.targetAmount;
   const theme = useTheme();
 
+  const handleGoalPress = () => {
+    if (goal.status === "draft") {
+      router.push({
+        pathname: `/child/${goal.childId}/goal/customize`,
+        params: {
+          goal_id: goal.id,
+          target_amount: goal.targetAmount.toString(),
+          target_date: goal.targetDate.toISOString(),
+        },
+      });
+    }
+  };
+
   return (
-    <ThemedView style={styles.goalCard}>
-      <View style={styles.goalHeader}>
-        <View style={[styles.goalIcon]}>
-          <GraduationCap color={theme.colors.primary} size={24} />
-        </View>
-        <View style={styles.goalContent}>
-          <View style={styles.goalTitleContainer}>
-            <ThemedText style={styles.goalTitle}>{goal.title}</ThemedText>
-            {goal.status === "draft" && (
-              <View style={styles.draftBadge}>
-                <ThemedText style={styles.draftText}>
-                  SIP Setup Pending
-                </ThemedText>
-              </View>
-            )}
+    <TouchableOpacity onPress={handleGoalPress}>
+      <ThemedView style={styles.goalCard}>
+        <View style={styles.goalHeader}>
+          <View style={[styles.goalIcon]}>
+            <GraduationCap color={theme.colors.primary} size={24} />
           </View>
-          <View style={styles.timeRemainingContainer}>
-            <TrendingUp color="#6B7280" size={16} />
-            <ThemedText style={styles.timeRemaining}>
-              {timeRemaining(goal.targetDate)}
+          <View style={styles.goalContent}>
+            <View style={styles.goalTitleContainer}>
+              <ThemedText style={styles.goalTitle}>{goal.title}</ThemedText>
+              {goal.status === "draft" && (
+                <View style={styles.draftBadge}>
+                  <ThemedText style={styles.draftText}>
+                    SIP Setup Pending
+                  </ThemedText>
+                </View>
+              )}
+            </View>
+            <View style={styles.timeRemainingContainer}>
+              <TrendingUp color="#6B7280" size={16} />
+              <ThemedText style={styles.timeRemaining}>
+                {timeRemaining(goal.targetDate)}
+              </ThemedText>
+            </View>
+          </View>
+        </View>
+
+        <View style={styles.goalProgress}>
+          <View style={styles.progressAmounts}>
+            <ThemedText style={styles.progressAmount}>
+              {formatCurrency(goal.currentAmount)}
+            </ThemedText>
+            <ThemedText style={styles.progressAmount}>
+              {formatCurrency(goal.targetAmount)}
             </ThemedText>
           </View>
+          <ProgressBar progress={progressPercentage} style={[]} />
         </View>
-      </View>
-
-      <View style={styles.goalProgress}>
-        <View style={styles.progressAmounts}>
-          <ThemedText style={styles.progressAmount}>
-            {formatCurrency(goal.currentAmount)}
-          </ThemedText>
-          <ThemedText style={styles.progressAmount}>
-            {formatCurrency(goal.targetAmount)}
-          </ThemedText>
-        </View>
-        <ProgressBar progress={progressPercentage} style={[]} />
-      </View>
-    </ThemedView>
+      </ThemedView>
+    </TouchableOpacity>
   );
 }
 
