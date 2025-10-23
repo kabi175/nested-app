@@ -1,8 +1,26 @@
 package com.nested.app.controllers;
 
+import com.nested.app.dto.ChildDTO;
+import com.nested.app.dto.Entity;
+import com.nested.app.dto.PlaceOrderDTO;
+import com.nested.app.dto.PlaceOrderPostDTO;
+import com.nested.app.dto.VerifyOrderDTO;
+import com.nested.app.entity.Investor;
+import com.nested.app.services.ChildService;
+import com.nested.app.services.InvestorServiceImpl;
+import com.nested.app.services.PaymentService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import java.util.List;
 import java.util.Map;
-
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -13,27 +31,6 @@ import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
-
-import com.nested.app.dto.ChildDTO;
-import com.nested.app.dto.Entity;
-import com.nested.app.dto.PlaceOrderDTO;
-import com.nested.app.dto.PlaceOrderPostDTO;
-import com.nested.app.dto.VerifyOrderDTO;
-import com.nested.app.entity.Investor;
-import com.nested.app.services.ChildService;
-import com.nested.app.services.InvestorServiceImpl;
-import com.nested.app.services.PaymentService;
-
-import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.Parameter;
-import io.swagger.v3.oas.annotations.media.Content;
-import io.swagger.v3.oas.annotations.media.Schema;
-import io.swagger.v3.oas.annotations.responses.ApiResponse;
-import io.swagger.v3.oas.annotations.responses.ApiResponses;
-import io.swagger.v3.oas.annotations.tags.Tag;
-import jakarta.validation.Valid;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 
 /**
  * REST Controller for managing Child entities Provides endpoints for CRUD operations on children
@@ -90,7 +87,7 @@ public class ChildController {
   /**
    * Creates a new child
    *
-   * @param requestBody Request body containing child data
+   * @param request Request body containing child data
    * @return ResponseEntity containing the created child
    */
   @PostMapping(consumes = MediaType.APPLICATION_JSON_VALUE)
@@ -131,7 +128,7 @@ public class ChildController {
   /**
    * Updates an existing child
    *
-   * @param requestBody Request body containing updated child data
+   * @param request Request body containing updated child data
    * @return ResponseEntity containing the updated child
    */
   @PutMapping

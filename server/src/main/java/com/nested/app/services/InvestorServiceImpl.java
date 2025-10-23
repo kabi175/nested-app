@@ -129,11 +129,19 @@ public class InvestorServiceImpl {
       throw new IllegalStateException("Parent user not found for child ID: " + childId);
     }
 
-    // Validate required fields
-    validateChildForInvestorCreation(child, parentUser);
+    TarrakkiInvestorRequest request;
+    if (child.isInvestUnderChild()) {
+      // Validate required fields
+      validateChildForInvestorCreation(child, parentUser);
 
-    // Build Tarrakki request (using child's personal data + parent's other data)
-    TarrakkiInvestorRequest request = buildInvestorRequestFromChild(child, parentUser);
+      // Build Tarrakki request (using child's personal data + parent's other data)
+      request = buildInvestorRequestFromChild(child, parentUser);
+    } else {
+      validateUserForInvestorCreation(parentUser);
+
+      // Build Tarrakki request
+      request = buildInvestorRequestFromUser(parentUser);
+    }
 
     // Call Tarrakki API
     InvestorResponse response;
