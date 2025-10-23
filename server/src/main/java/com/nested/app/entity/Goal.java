@@ -67,6 +67,10 @@ public class Goal {
   @Column(nullable = false)
   private Timestamp updatedAt;
 
+  public boolean canInvest() {
+    return this.status == Status.ACTIVE || this.status == Status.DRAFT;
+  }
+
   public enum Status {
     DRAFT("draft"),
     ACTIVE("active"),

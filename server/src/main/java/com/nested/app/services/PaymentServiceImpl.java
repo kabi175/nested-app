@@ -14,6 +14,7 @@ import com.nested.app.client.tarrakki.dto.PaymentsOrder;
 import com.nested.app.client.tarrakki.dto.PaymentsRequest;
 import com.nested.app.client.tarrakki.dto.SipOrderDetail;
 import com.nested.app.dto.OrderDTO;
+import com.nested.app.dto.OrderRequestDTO;
 import com.nested.app.dto.PaymentDTO;
 import com.nested.app.dto.PlaceOrderDTO;
 import com.nested.app.dto.PlaceOrderPostDTO;
@@ -126,7 +127,7 @@ public class PaymentServiceImpl implements PaymentService {
 
       // Create orders for each order request
       List<Order> orders = new ArrayList<>();
-      for (PlaceOrderPostDTO.OrderRequestDTO orderRequest : placeOrderRequest.getOrders()) {
+      for (OrderRequestDTO orderRequest : placeOrderRequest.getOrders()) {
         Goal goal =
             activeGoals.stream()
                 .filter(g -> g.getId().equals(orderRequest.getGoal().getId()))
@@ -580,23 +581,8 @@ public class PaymentServiceImpl implements PaymentService {
     dto.setId(order.getId());
     dto.setAmount(order.getAmount());
     dto.setStatus(order.getStatus());
-    dto.setMonthlySip(order.getMonthlySip());
-    dto.setFolio(order.getFolio());
     dto.setCreatedAt(order.getCreatedAt());
     dto.setUpdatedAt(order.getUpdatedAt());
-
-    // Set related entity IDs if available
-    if (order.getFund() != null) {
-      dto.setFundId(order.getFund().getId());
-    }
-
-    if (order.getUser() != null) {
-      dto.setUserId(order.getUser().getId());
-    }
-
-    if (order.getGoal() != null) {
-      dto.setGoalId(order.getGoal().getId());
-    }
 
     return dto;
   }

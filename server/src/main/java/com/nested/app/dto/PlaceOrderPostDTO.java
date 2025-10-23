@@ -2,10 +2,7 @@ package com.nested.app.dto;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonValue;
-import com.nested.app.annotation.ValidOrderRequest;
-import com.nested.app.entity.SIPOrder;
 import jakarta.validation.Valid;
-import jakarta.validation.constraints.DecimalMin;
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
 import java.util.List;
@@ -50,43 +47,4 @@ public class PlaceOrderPostDTO {
     }
   }
 
-  @Data
-  @ValidOrderRequest
-  public static class OrderRequestDTO {
-    @NotNull(message = "Goal is required")
-    @Valid
-    private MinifiedGoalDTO goal;
-
-    @Valid private BuyOrderDTO buyOrder;
-
-    @Valid private SipOrderDTO sipOrder;
-  }
-
-  @Data
-  public static class BuyOrderDTO {
-    @NotNull(message = "Amount is required for buy order")
-    @DecimalMin(value = "0.01", message = "Amount must be greater than 0")
-    private Double amount;
-  }
-
-  @Data
-  public static class SipOrderDTO {
-    @NotNull(message = "Amount is required for SIP order")
-    @DecimalMin(value = "0.01", message = "Amount must be greater than 0")
-    private Double amount;
-
-    @Valid
-    @JsonProperty("setup_option")
-    private SetupOptionDTO setupOption;
-
-    @Data
-    public static class SetupOptionDTO {
-      @NotNull(message = "Setup amount is required")
-      @DecimalMin(value = "0.01", message = "Setup amount must be greater than 0")
-      private Double amount;
-
-      @NotNull(message = "Frequency is required")
-      private SIPOrder.SIPStepUp.Frequency frequency;
-    }
-  }
 }

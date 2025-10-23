@@ -36,8 +36,6 @@ public class Order {
   @JoinColumn(name = "fund_id")
   private Fund fund;
 
-  @Column private Double monthlySip;
-
   @ManyToOne(optional = false)
   @JoinColumn(name = "user_id")
   private User user;

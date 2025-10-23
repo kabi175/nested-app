@@ -1,7 +1,7 @@
 package com.nested.app.validation;
 
 import com.nested.app.annotation.ValidOrderRequest;
-import com.nested.app.dto.PlaceOrderPostDTO;
+import com.nested.app.dto.OrderRequestDTO;
 import jakarta.validation.ConstraintValidator;
 import jakarta.validation.ConstraintValidatorContext;
 
@@ -10,7 +10,7 @@ import jakarta.validation.ConstraintValidatorContext;
  * provided, but not both
  */
 public class OrderRequestValidation
-    implements ConstraintValidator<ValidOrderRequest, PlaceOrderPostDTO.OrderRequestDTO> {
+    implements ConstraintValidator<ValidOrderRequest, OrderRequestDTO> {
 
   @Override
   public void initialize(ValidOrderRequest constraintAnnotation) {
@@ -18,8 +18,7 @@ public class OrderRequestValidation
   }
 
   @Override
-  public boolean isValid(
-      PlaceOrderPostDTO.OrderRequestDTO orderRequest, ConstraintValidatorContext context) {
+  public boolean isValid(OrderRequestDTO orderRequest, ConstraintValidatorContext context) {
     if (orderRequest == null) {
       return false;
     }
