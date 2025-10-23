@@ -29,7 +29,8 @@ export default function Slider({
     const { locationX } = event.nativeEvent;
     const trackWidth = width - 80; // Account for padding
     const pressPercentage = Math.max(0, Math.min(1, locationX / trackWidth));
-    const newValue = Math.round(min + pressPercentage * (max - min));
+    const rawValue = min + pressPercentage * (max - min);
+    const newValue = Math.round(rawValue / 500) * 500;
     onValueChange(newValue);
   };
 
