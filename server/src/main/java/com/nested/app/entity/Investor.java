@@ -30,7 +30,10 @@ public class Investor {
   private Status investorStatus;
 
   private String ref;
-  private String investorType; // Indiviadual, minor
+
+  @Column(nullable = false)
+  @Enumerated(EnumType.STRING)
+  private Type investorType = Type.INDIVIDUAL; // Indiviadual, minor
 
   @CreationTimestamp
   @Column(nullable = false, updatable = false)
@@ -39,6 +42,14 @@ public class Investor {
   @UpdateTimestamp
   @Column(nullable = false)
   private Timestamp updatedAt;
+
+  @RequiredArgsConstructor
+  public enum Type {
+    INDIVIDUAL("individual"),
+    MINOR("minor");
+
+    @JsonValue @Getter private final String value;
+  }
 
   @RequiredArgsConstructor
   public enum Status {

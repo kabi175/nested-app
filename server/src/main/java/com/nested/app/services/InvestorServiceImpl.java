@@ -86,7 +86,7 @@ public class InvestorServiceImpl {
 
     // Create and save Investor entity
     Investor investor = new Investor();
-    investor.setInvestorType("individual");
+    investor.setInvestorType(Investor.Type.INDIVIDUAL);
     investor.setRef(response.getId());
     investor.setInvestorStatus(Investor.Status.fromValue(response.getStatus()));
 
@@ -161,7 +161,7 @@ public class InvestorServiceImpl {
 
     // Create and save Investor entity
     Investor investor = new Investor();
-    investor.setInvestorType("minor");
+    investor.setInvestorType(Investor.Type.MINOR);
     investor.setRef(response.getId());
     investor.setInvestorStatus(Investor.Status.fromValue(response.getStatus()));
 
