@@ -19,7 +19,7 @@ public class PlaceOrderPostDTO {
 
   @NotEmpty(message = "Orders list cannot be empty")
   @Valid
-  private List<OrderRequestDTO> orders;
+  private List<OrderDTO> orders;
 
   @NotNull(message = "Payment method is required")
   @JsonProperty("payment_method")

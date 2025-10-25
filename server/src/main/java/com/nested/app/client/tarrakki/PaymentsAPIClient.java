@@ -2,26 +2,11 @@ package com.nested.app.client.tarrakki;
 
 import com.nested.app.client.tarrakki.dto.PaymentsRequest;
 import com.nested.app.client.tarrakki.dto.PaymentsResponse;
-import lombok.AllArgsConstructor;
-import org.springframework.http.*;
-import org.springframework.stereotype.Component;
+import org.springframework.stereotype.Service;
 import org.springframework.validation.annotation.Validated;
 import reactor.core.publisher.Mono;
 
-@Component
-@AllArgsConstructor
-public class PaymentsAPIClient {
-  private static final String paymentsApiUrl = "/payments";
-  private final TarrakkiAPI tarrakkiAPI;
-
-  public Mono<PaymentsResponse> createPayment(@Validated PaymentsRequest request) {
-    return tarrakkiAPI
-        .withAuth()
-        .post()
-        .uri(paymentsApiUrl)
-        .contentType(MediaType.APPLICATION_JSON)
-        .bodyValue(request)
-        .retrieve()
-        .bodyToMono(PaymentsResponse.class);
-  }
+@Service
+public interface PaymentsAPIClient {
+  Mono<PaymentsResponse> createPayment(@Validated PaymentsRequest request);
 }

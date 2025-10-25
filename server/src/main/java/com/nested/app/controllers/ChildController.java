@@ -306,7 +306,7 @@ public class ChildController {
       log.info(
           "Successfully created investor for child ID: {} with Tarrakki ref: {}",
           childId,
-          investor.getTarakkiInvestorRef());
+          investor.getRef());
 
       return ResponseEntity.status(HttpStatus.CREATED)
           .body(
@@ -315,8 +315,8 @@ public class ChildController {
                   "Investor created successfully",
                   "investor_id",
                   investor.getId(),
-                  "tarrakki_investor_ref",
-                  investor.getTarakkiInvestorRef(),
+                  "ref",
+                  investor.getRef(),
                   "investor_type",
                   investor.getInvestorType(),
                   "status",

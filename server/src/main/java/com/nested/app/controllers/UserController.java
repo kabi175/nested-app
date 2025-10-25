@@ -1,7 +1,24 @@
 package com.nested.app.controllers;
 
+import com.nested.app.contect.UserContext;
+import com.nested.app.dto.BankAccountDto;
+import com.nested.app.dto.Entity;
+import com.nested.app.dto.UserDTO;
+import com.nested.app.entity.Investor;
+import com.nested.app.entity.User;
+import com.nested.app.services.InvestorServiceImpl;
+import com.nested.app.services.UserService;
+import com.nested.app.utils.AppEnvironment;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import java.util.Map;
-
+import lombok.AllArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
@@ -15,26 +32,6 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
-
-import com.nested.app.contect.UserContext;
-import com.nested.app.dto.BankAccountDto;
-import com.nested.app.dto.Entity;
-import com.nested.app.dto.UserDTO;
-import com.nested.app.entity.Investor;
-import com.nested.app.entity.User;
-import com.nested.app.services.InvestorServiceImpl;
-import com.nested.app.services.UserService;
-import com.nested.app.utils.AppEnvironment;
-
-import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.Parameter;
-import io.swagger.v3.oas.annotations.media.Content;
-import io.swagger.v3.oas.annotations.media.Schema;
-import io.swagger.v3.oas.annotations.responses.ApiResponse;
-import io.swagger.v3.oas.annotations.responses.ApiResponses;
-import io.swagger.v3.oas.annotations.tags.Tag;
-import lombok.AllArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @Validated
@@ -124,7 +121,7 @@ public class UserController {
       log.info(
           "Successfully created investor for user ID: {} with Tarrakki ref: {}",
           userId,
-          investor.getTarakkiInvestorRef());
+          investor.getRef());
 
       return ResponseEntity.status(HttpStatus.CREATED)
           .body(

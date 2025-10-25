@@ -14,7 +14,6 @@ import com.nested.app.client.tarrakki.dto.PaymentsOrder;
 import com.nested.app.client.tarrakki.dto.PaymentsRequest;
 import com.nested.app.client.tarrakki.dto.SipOrderDetail;
 import com.nested.app.dto.OrderDTO;
-import com.nested.app.dto.OrderRequestDTO;
 import com.nested.app.dto.PaymentDTO;
 import com.nested.app.dto.PlaceOrderDTO;
 import com.nested.app.dto.PlaceOrderPostDTO;
@@ -22,7 +21,6 @@ import com.nested.app.dto.VerifyOrderDTO;
 import com.nested.app.entity.BankDetail;
 import com.nested.app.entity.Basket;
 import com.nested.app.entity.BasketFund;
-import com.nested.app.entity.BuyOrder;
 import com.nested.app.entity.Child;
 import com.nested.app.entity.Fund;
 import com.nested.app.entity.Goal;
@@ -32,9 +30,8 @@ import com.nested.app.entity.SIPOrder;
 import com.nested.app.entity.User;
 import com.nested.app.repository.ChildRepository;
 import com.nested.app.repository.GoalRepository;
+import com.nested.app.repository.OrderRepository;
 import com.nested.app.repository.PaymentRepository;
-import java.time.LocalDate;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -58,6 +55,7 @@ import org.springframework.web.reactive.function.client.WebClientResponseExcepti
 public class PaymentServiceImpl implements PaymentService {
 
   private final PaymentRepository paymentRepository;
+  private final OrderRepository orderRepository;
   private final GoalRepository goalRepository;
   private final ChildRepository childRepository;
 
@@ -68,7 +66,7 @@ public class PaymentServiceImpl implements PaymentService {
 
   private static CreateMandateRequest getCreateMandateRequest(Payment payment) {
     var mandateRequest = new CreateMandateRequest();
-    mandateRequest.setInvestor_id(payment.getInvestor().getTarakkiInvestorRef());
+    mandateRequest.setInvestor_id(payment.getInvestor().getRef());
     mandateRequest.setBank_id(payment.getBank().getRefId());
     if (payment.getPaymentType() == PlaceOrderPostDTO.PaymentMethod.UPI) {
       mandateRequest.setMandate_type(CreateMandateRequest.MandateType.UPI);
@@ -125,65 +123,9 @@ public class PaymentServiceImpl implements PaymentService {
       bankDetail.setId(placeOrderRequest.getBankID());
       payment.setBank(bankDetail);
 
+      var orderIds = placeOrderRequest.getOrders().stream().map(OrderDTO::getId).toList();
       // Create orders for each order request
-      List<Order> orders = new ArrayList<>();
-      for (OrderRequestDTO orderRequest : placeOrderRequest.getOrders()) {
-        Goal goal =
-            activeGoals.stream()
-                .filter(g -> g.getId().equals(orderRequest.getGoal().getId()))
-                .findFirst()
-                .orElseThrow(
-                    () ->
-                        new IllegalArgumentException(
-                            "Goal not found or not active: " + orderRequest.getGoal().getId()));
-
-        if (orderRequest.getBuyOrder() != null) {
-          goal.getBasket().getBasketFunds().stream()
-              .map(
-                  basketFund -> {
-                    var buyOrder = new BuyOrder();
-                    var totalAmount = orderRequest.getBuyOrder().getAmount();
-                    var fundAmount = (totalAmount * basketFund.getAllocationPercentage()) / 100;
-                    buyOrder.setGoal(goal);
-                    buyOrder.setUser(user);
-                    buyOrder.setPayment(payment);
-                    buyOrder.setFund(basketFund.getFund());
-                    buyOrder.setAmount(fundAmount);
-                    return buyOrder;
-                  })
-              .forEach(orders::add);
-        }
-
-        if (orderRequest.getSipOrder() != null) {
-          goal.getBasket().getBasketFunds().stream()
-              .map(
-                  basketFund -> {
-                    var sipOrder = new SIPOrder();
-                    var totalAmount = orderRequest.getBuyOrder().getAmount();
-                    var fundAmount = (totalAmount * basketFund.getAllocationPercentage()) / 100;
-                    sipOrder.setGoal(goal);
-                    sipOrder.setUser(user);
-                    sipOrder.setPayment(payment);
-                    sipOrder.setFund(basketFund.getFund());
-                    sipOrder.setAmount(fundAmount);
-                    sipOrder.setEndDate(goal.getTargetDate().toLocalDate());
-                    sipOrder.setStartDate(LocalDate.now());
-
-                    if (orderRequest.getSipOrder().getSetupOption() != null) {
-                      var option = orderRequest.getSipOrder().getSetupOption();
-                      var stepUp = new SIPOrder.SIPStepUp();
-                      stepUp.setStepUpAmount(option.getAmount());
-                      stepUp.setStepUpStartDate(LocalDate.now().plusMonths(12));
-                      stepUp.setStepUpEndDate(goal.getTargetDate().toLocalDate());
-                      stepUp.setStepUpFrequency(option.getFrequency());
-                      sipOrder.setSipStepUp(stepUp);
-                    }
-
-                    return sipOrder;
-                  })
-              .forEach(orders::add);
-        }
-      }
+      List<Order> orders = orderRepository.findAllById(orderIds);
 
       var otpDetails =
           orders.stream()
@@ -200,8 +142,7 @@ public class PaymentServiceImpl implements PaymentService {
               .toList();
 
       OtpRequest otpRequest =
-          BulkOrderOtpRequest.getInstance(
-              payment.getInvestor().getTarakkiInvestorRef(), otpDetails);
+          BulkOrderOtpRequest.getInstance(payment.getInvestor().getRef(), otpDetails);
 
       var otpResp = otpApiClient.sendOtp(otpRequest).block();
       if (otpResp == null) {
@@ -311,7 +252,7 @@ public class PaymentServiceImpl implements PaymentService {
 
       var bulkOrderRequest =
           BulkOrderRequest.builder()
-              .investor_id(payment.getInvestor().getTarakkiInvestorRef())
+              .investor_id(payment.getInvestor().getRef())
               .auth_ref(payment.getVerificationRef())
               .investorIP(ipAddress)
               .detail(payment.getOrders().stream().map(this::convertOrderToOrderDetail).toList())
@@ -333,7 +274,7 @@ public class PaymentServiceImpl implements PaymentService {
 
       var paymentRequest =
           PaymentsRequest.builder()
-              .investor_id(payment.getInvestor().getTarakkiInvestorRef())
+              .investor_id(payment.getInvestor().getRef())
               .bank_id(payment.getBank().getRefId())
               .payment_method(paymentMethod)
               .upi_id(payment.getUpiId())

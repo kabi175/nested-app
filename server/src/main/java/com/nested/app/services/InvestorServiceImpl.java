@@ -87,7 +87,7 @@ public class InvestorServiceImpl {
     // Create and save Investor entity
     Investor investor = new Investor();
     investor.setInvestorType("individual");
-    investor.setTarakkiInvestorRef(response.getId());
+    investor.setRef(response.getId());
     investor.setInvestorStatus(Investor.Status.fromValue(response.getStatus()));
 
     Investor savedInvestor = investorRepository.save(investor);
@@ -162,7 +162,7 @@ public class InvestorServiceImpl {
     // Create and save Investor entity
     Investor investor = new Investor();
     investor.setInvestorType("minor");
-    investor.setTarakkiInvestorRef(response.getId());
+    investor.setRef(response.getId());
     investor.setInvestorStatus(Investor.Status.fromValue(response.getStatus()));
 
     Investor savedInvestor = investorRepository.save(investor);
@@ -387,7 +387,7 @@ public class InvestorServiceImpl {
             .orElseThrow(
                 () -> new IllegalArgumentException("Investor not found with ID: " + investorId));
 
-    if (investor.getTarakkiInvestorRef() == null) {
+    if (investor.getRef() == null) {
       throw new IllegalStateException("Investor does not have a Tarrakki reference ID");
     }
 
@@ -403,7 +403,7 @@ public class InvestorServiceImpl {
       response =
           investorAPIClient
               .addBankForInvestor(
-                  investor.getTarakkiInvestorRef(),
+                  investor.getRef(),
                   bankAccountDto.getAccountType().getValue(),
                   bankAccountDto.getAccountNumber(),
                   bankAccountDto.getIfsc())
@@ -441,7 +441,7 @@ public class InvestorServiceImpl {
             .orElseThrow(
                 () -> new IllegalArgumentException("Investor not found with ID: " + investorId));
 
-    if (investor.getTarakkiInvestorRef() == null) {
+    if (investor.getRef() == null) {
       throw new IllegalStateException("Investor does not have a Tarrakki reference ID");
     }
 
@@ -453,8 +453,7 @@ public class InvestorServiceImpl {
     // Call Tarrakki API
     try {
       investorAPIClient
-          .uploadDocumentForInvestor(
-              investor.getTarakkiInvestorRef(), documentType.toLowerCase(), file)
+          .uploadDocumentForInvestor(investor.getRef(), documentType.toLowerCase(), file)
           .block();
     } catch (Exception e) {
       log.error("Error uploading document for investor {}: {}", investorId, e.getMessage(), e);
@@ -479,13 +478,13 @@ public class InvestorServiceImpl {
             .orElseThrow(
                 () -> new IllegalArgumentException("Investor not found with ID: " + investorId));
 
-    if (investor.getTarakkiInvestorRef() == null) {
+    if (investor.getRef() == null) {
       throw new IllegalStateException("Investor does not have a Tarrakki reference ID");
     }
 
     // Create OTP request
     OtpRequest otpRequest = new OtpRequest();
-    otpRequest.setInvestor_id(investor.getTarakkiInvestorRef());
+    otpRequest.setInvestor_id(investor.getRef());
     otpRequest.setOtp_type(OtpRequest.Type.NOMINEE);
 
     // Call Tarrakki API
@@ -552,7 +551,7 @@ public class InvestorServiceImpl {
             .orElseThrow(
                 () -> new IllegalArgumentException("Investor not found with ID: " + investorId));
 
-    if (investor.getTarakkiInvestorRef() == null) {
+    if (investor.getRef() == null) {
       throw new IllegalStateException("Investor does not have a Tarrakki reference ID");
     }
 
@@ -564,9 +563,7 @@ public class InvestorServiceImpl {
     NomineeResponse response;
     try {
       response =
-          investorAPIClient
-              .addNomineesForInvestor(investor.getTarakkiInvestorRef(), nomineeRequest)
-              .block();
+          investorAPIClient.addNomineesForInvestor(investor.getRef(), nomineeRequest).block();
 
       if (response == null || response.getNominee_id() == null) {
         throw new RuntimeException("Failed to add nominees: null response from Tarrakki API");

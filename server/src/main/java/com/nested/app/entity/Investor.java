@@ -29,7 +29,7 @@ public class Investor {
   @Column(nullable = false)
   private Status investorStatus;
 
-  private String tarakkiInvestorRef;
+  private String ref;
   private String investorType; // Indiviadual, minor
 
   @CreationTimestamp
