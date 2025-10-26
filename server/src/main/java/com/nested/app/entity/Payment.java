@@ -64,6 +64,8 @@ public class Payment {
 
   @Unique private String orderRef;
 
+  @Unique private String ref;
+
   @CreationTimestamp
   @Column(nullable = false, updatable = false)
   private Timestamp createdAt;

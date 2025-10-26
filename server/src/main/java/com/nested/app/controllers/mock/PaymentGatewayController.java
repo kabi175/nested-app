@@ -14,7 +14,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 @Profile("dev")
 @RequiredArgsConstructor
 public class PaymentGatewayController {
-  private PaymentService paymentService;
+  private final PaymentService paymentService;
 
   @GetMapping("/public/payment/{payment_id}")
   public String page(Model model) {
@@ -22,15 +22,15 @@ public class PaymentGatewayController {
     return "payment-dev"; // refers to templates/index.html
   }
 
-  @PostMapping("/public/payment/{payment_id}/success")
-  public ResponseEntity<?> markSuccess(@PathVariable("payment_id") Long paymentID) {
-    paymentService.markPaymentSuccess(paymentID);
+  @PostMapping("/public/payment/{payment_ref}/success")
+  public ResponseEntity<?> markSuccess(@PathVariable("payment_ref") String paymentRef) {
+    paymentService.markPaymentSuccess(paymentRef);
     return ResponseEntity.ok().build();
   }
 
-  @PostMapping("/public/payment/{payment_id}/failure")
-  public ResponseEntity<?> markFailure(@PathVariable("payment_id") Long paymentID) {
-    paymentService.markPaymentFailure(paymentID);
+  @PostMapping("/public/payment/{payment_ref}/failure")
+  public ResponseEntity<?> markFailure(@PathVariable("payment_ref") String paymentRef) {
+    paymentService.markPaymentFailure(paymentRef);
     return ResponseEntity.ok().build();
   }
 }

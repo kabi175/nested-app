@@ -291,6 +291,7 @@ public class PaymentServiceImpl implements PaymentService {
         throw new RuntimeException("Failed to initiate payment with MF provider");
       }
       payment.setPaymentUrl(paymentResponse.getRedirectUrl());
+      payment.setRef(paymentResponse.getPaymentId());
       paymentRepository.save(payment);
 
       return convertPaymentToDTO(payment);
@@ -447,8 +448,8 @@ public class PaymentServiceImpl implements PaymentService {
   }
 
   @Override
-  public void markPaymentSuccess(Long paymentID) {
-    var payment = paymentRepository.findById(paymentID).orElseThrow();
+  public void markPaymentSuccess(String paymentRef) {
+    var payment = paymentRepository.findByRef(paymentRef).orElseThrow();
 
     payment.getOrders().forEach(order -> order.setStatus(Order.OrderStatus.COMPLETED));
     payment.setStatus(Payment.PaymentStatus.COMPLETED);
@@ -457,8 +458,8 @@ public class PaymentServiceImpl implements PaymentService {
   }
 
   @Override
-  public void markPaymentFailure(Long paymentID) {
-    var payment = paymentRepository.findById(paymentID).orElseThrow();
+  public void markPaymentFailure(String paymentRef) {
+    var payment = paymentRepository.findByRef(paymentRef).orElseThrow();
 
     payment.getOrders().forEach(order -> order.setStatus(Order.OrderStatus.FAILED));
     payment.setStatus(Payment.PaymentStatus.FAILED);

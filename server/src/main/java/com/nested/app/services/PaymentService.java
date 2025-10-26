@@ -65,7 +65,7 @@ public interface PaymentService {
    */
   List<PaymentDTO> getPaymentsByUserId(Long userId);
 
-  void markPaymentSuccess(Long paymentID);
+  void markPaymentSuccess(String paymentRef);
 
-    void markPaymentFailure(Long paymentID);
+  void markPaymentFailure(String paymentRef);
 }

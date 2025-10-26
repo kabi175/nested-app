@@ -2,6 +2,7 @@ package com.nested.app.repository;
 
 import com.nested.app.entity.Payment;
 import java.util.List;
+import java.util.Optional;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
@@ -32,27 +33,10 @@ public interface PaymentRepository extends JpaRepository<Payment, Long> {
   List<Payment> findByChildId(Long childId);
 
   /**
-   * Find payments by status
+   * Find payment by order reference
    *
-   * @param status Payment status
-   * @return List of payments with the specified status
+   * @param ref - Payment reference
+   * @return Optional of Payment
    */
-  List<Payment> findByStatus(Payment.PaymentStatus status);
-
-  /**
-   * Find payments by verification status
-   *
-   * @param verificationStatus Verification status
-   * @return List of payments with the specified verification status
-   */
-  List<Payment> findByVerificationStatus(Payment.VerificationStatus verificationStatus);
-
-  /**
-   * Find payments by user ID and child ID
-   *
-   * @param userId User ID
-   * @param childId Child ID
-   * @return List of payments for the specified user and child
-   */
-  List<Payment> findByUserIdAndChildId(Long userId, Long childId);
+  Optional<Payment> findByRef(String ref);
 }
