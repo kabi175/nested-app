@@ -29,9 +29,6 @@ public class PaymentDTO {
   @JsonProperty("payment_url")
   private String paymentUrl;
 
-  @JsonProperty("verification_ref")
-  private String verificationRef;
-
   @JsonProperty("mandate_type")
   private MandateType mandateType;
 

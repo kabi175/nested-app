@@ -1,4 +1,4 @@
-package com.nested.app.client.tarrakki;
+package com.nested.app.client.mf;
 
 import com.nested.app.client.tarrakki.dto.PaymentsRequest;
 import com.nested.app.client.tarrakki.dto.PaymentsResponse;

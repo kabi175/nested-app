@@ -29,7 +29,6 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 /**
@@ -269,7 +268,7 @@ public class GoalController {
 
   @PostMapping("/{goal_id}/orders")
   public ResponseEntity<?> createOrders(
-      @RequestParam("goal_id") Long goalID, @RequestBody OrderRequestDTO requestBody) {
+      @PathVariable("goal_id") Long goalID, @RequestBody OrderRequestDTO requestBody) {
     log.info("POST /api/v1/goals/{}/orders - Creating orders for goal", requestBody);
 
     try {

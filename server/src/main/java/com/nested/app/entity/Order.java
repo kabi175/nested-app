@@ -33,10 +33,6 @@ public class Order {
   private OrderStatus status = OrderStatus.NOT_PLACED;
 
   @ManyToOne(optional = false)
-  @JoinColumn(name = "fund_id")
-  private Fund fund;
-
-  @ManyToOne(optional = false)
   @JoinColumn(name = "user_id")
   private User user;
 
@@ -44,7 +40,7 @@ public class Order {
   @JoinColumn(name = "goal_id")
   private Goal goal;
 
-  @ManyToOne(optional = false)
+  @ManyToOne
   @JoinColumn(name = "payment_id")
   private Payment payment;
 

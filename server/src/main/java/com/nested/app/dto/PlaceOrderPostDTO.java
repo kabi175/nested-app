@@ -15,16 +15,18 @@ import lombok.Data;
  * @version 1.0
  */
 @Data
+@Valid
 public class PlaceOrderPostDTO {
 
   @NotEmpty(message = "Orders list cannot be empty")
   @Valid
-  private List<OrderDTO> orders;
+  private List<MinifiedOrderDTO> orders;
 
   @NotNull(message = "Payment method is required")
   @JsonProperty("payment_method")
   private PaymentMethod paymentMethod;
 
+  @NotNull(message = "Bank ID is required")
   @JsonProperty("bank_id")
   private Long bankID;
 
@@ -46,5 +48,4 @@ public class PlaceOrderPostDTO {
       return value;
     }
   }
-
 }

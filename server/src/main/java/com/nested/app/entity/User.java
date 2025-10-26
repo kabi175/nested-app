@@ -26,9 +26,11 @@ import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.RequiredArgsConstructor;
+import lombok.ToString;
 import lombok.With;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.Filter;
@@ -39,15 +41,18 @@ import org.hibernate.annotations.UpdateTimestamp;
 @Data
 @Entity
 @Builder
+@ToString
 @Table(name = "users")
 @FilterDef(name = "userFilter", parameters = @ParamDef(name = "userId", type = Long.class))
 @Filter(name = "userFilter", condition = "id = :userId")
 @EntityListeners(UserEntityListener.class)
 @NoArgsConstructor(access = AccessLevel.PROTECTED) // required by JPA
+@EqualsAndHashCode(onlyExplicitlyIncluded = true)
 @AllArgsConstructor
 public class User {
 
   @Id
+  @EqualsAndHashCode.Include
   @GeneratedValue(strategy = GenerationType.IDENTITY)
   private Long id;
 

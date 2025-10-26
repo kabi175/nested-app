@@ -59,7 +59,7 @@ public class Payment {
   @JoinColumn(name = "investor_id")
   private Investor investor;
 
-  @OneToMany(mappedBy = "payment", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+  @OneToMany(mappedBy = "payment", cascade = CascadeType.ALL, fetch = FetchType.EAGER)
   private List<Order> orders;
 
   @Unique private String orderRef;

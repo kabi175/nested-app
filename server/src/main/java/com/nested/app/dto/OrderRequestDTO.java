@@ -20,7 +20,7 @@ public class OrderRequestDTO {
 
   @Valid
   @JsonProperty("sip_order")
-  private List<OrderRequestDTO.SipOrderDTO> sipOrder;
+  private List<OrderRequestDTO.SipOrderDTO> sipOrder = List.of();
 
   @Data
   public static class BuyOrderDTO {

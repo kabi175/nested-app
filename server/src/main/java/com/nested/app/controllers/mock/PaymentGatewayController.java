@@ -1,4 +1,4 @@
-package com.nested.app.controllers;
+package com.nested.app.controllers.mock;
 
 import com.nested.app.services.PaymentService;
 import lombok.RequiredArgsConstructor;
@@ -7,13 +7,13 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestParam;
 
 @Controller
 @Profile("dev")
 @RequiredArgsConstructor
-public class PaymentDevController {
+public class PaymentGatewayController {
   private PaymentService paymentService;
 
   @GetMapping("/public/payment/{payment_id}")
@@ -23,13 +23,13 @@ public class PaymentDevController {
   }
 
   @PostMapping("/public/payment/{payment_id}/success")
-  public ResponseEntity<?> markSuccess(@RequestParam("payment_id") Long paymentID) {
+  public ResponseEntity<?> markSuccess(@PathVariable("payment_id") Long paymentID) {
     paymentService.markPaymentSuccess(paymentID);
     return ResponseEntity.ok().build();
   }
 
   @PostMapping("/public/payment/{payment_id}/failure")
-  public ResponseEntity<?> markFailure(@RequestParam("payment_id") Long paymentID) {
+  public ResponseEntity<?> markFailure(@PathVariable("payment_id") Long paymentID) {
     paymentService.markPaymentFailure(paymentID);
     return ResponseEntity.ok().build();
   }

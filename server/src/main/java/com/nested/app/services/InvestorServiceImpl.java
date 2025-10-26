@@ -1,7 +1,7 @@
 package com.nested.app.services;
 
+import com.nested.app.client.mf.OtpApiClient;
 import com.nested.app.client.tarrakki.InvestorAPIClient;
-import com.nested.app.client.tarrakki.OtpApiClient;
 import com.nested.app.client.tarrakki.dto.BankResponse;
 import com.nested.app.client.tarrakki.dto.InvestorResponse;
 import com.nested.app.client.tarrakki.dto.NomineeRequest;
@@ -502,7 +502,7 @@ public class InvestorServiceImpl {
     log.info(
         "Successfully sent nominee OTP for investor ID: {} with otp_id: {}",
         investorId,
-        response.getOtp_id());
+        response.getOtpId());
 
     return response;
   }

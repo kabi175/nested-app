@@ -1,8 +1,8 @@
 package com.nested.app.dto;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import java.sql.Timestamp;
 import java.util.List;
-
 import lombok.Data;
 
 /**
@@ -14,7 +14,9 @@ import lombok.Data;
  */
 @Data
 public class BasketDTO {
+  @JsonFormat(shape = JsonFormat.Shape.STRING)
   private Long id;
+
   private String title;
   private Double years;
   private List<BasketFundDTO> funds;

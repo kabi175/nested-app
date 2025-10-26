@@ -1,13 +1,16 @@
 package com.nested.app.client.tarrakki;
 
+import com.nested.app.client.mf.OrderApiClient;
 import com.nested.app.client.tarrakki.dto.*;
 import lombok.RequiredArgsConstructor;
+import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;
 
 @Service
+@Profile("prod")
 @RequiredArgsConstructor
-public class OrderApiClient {
+public class OrderApiClientImpl implements OrderApiClient {
 
   private final TarrakkiAPI tarrakkiAPI;
 

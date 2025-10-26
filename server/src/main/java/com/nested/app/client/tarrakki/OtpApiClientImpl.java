@@ -1,9 +1,11 @@
 package com.nested.app.client.tarrakki;
 
+import com.nested.app.client.mf.OtpApiClient;
 import com.nested.app.client.tarrakki.dto.*;
 import java.text.MessageFormat;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.annotation.Profile;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClientException;
@@ -11,8 +13,9 @@ import reactor.core.publisher.Mono;
 
 @Slf4j
 @Service
+@Profile("prod")
 @RequiredArgsConstructor
-public class OtpApiClient {
+public class OtpApiClientImpl implements OtpApiClient {
   private final TarrakkiAPI tarrakkiAPI;
 
   public Mono<OtpResponse> sendOtp(OtpRequest request) {

@@ -118,14 +118,14 @@ public class InvestorController {
       log.info(
           "Successfully sent nominee OTP for investor ID: {} with otp_id: {}",
           investorId,
-          otpResponse.getOtp_id());
+          otpResponse.getOtpId());
 
       return ResponseEntity.ok(
           Map.of(
               "message",
               "OTP sent successfully",
               "otp_id",
-              otpResponse.getOtp_id(),
+              otpResponse.getOtpId(),
               "email",
               otpResponse.getEmail(),
               "mobile",

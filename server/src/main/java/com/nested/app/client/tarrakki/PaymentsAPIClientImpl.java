@@ -1,5 +1,6 @@
 package com.nested.app.client.tarrakki;
 
+import com.nested.app.client.mf.PaymentsAPIClient;
 import com.nested.app.client.tarrakki.dto.PaymentsRequest;
 import com.nested.app.client.tarrakki.dto.PaymentsResponse;
 import lombok.AllArgsConstructor;

@@ -1,9 +1,9 @@
 package com.nested.app.services;
 
+import com.nested.app.client.mf.OrderApiClient;
+import com.nested.app.client.mf.OtpApiClient;
+import com.nested.app.client.mf.PaymentsAPIClient;
 import com.nested.app.client.tarrakki.MandateApiClient;
-import com.nested.app.client.tarrakki.OrderApiClient;
-import com.nested.app.client.tarrakki.OtpApiClient;
-import com.nested.app.client.tarrakki.PaymentsAPIClient;
 import com.nested.app.client.tarrakki.dto.BulkOrderOtpRequest;
 import com.nested.app.client.tarrakki.dto.BulkOrderRequest;
 import com.nested.app.client.tarrakki.dto.CreateMandateRequest;
@@ -13,6 +13,7 @@ import com.nested.app.client.tarrakki.dto.OtpVerifyRequest;
 import com.nested.app.client.tarrakki.dto.PaymentsOrder;
 import com.nested.app.client.tarrakki.dto.PaymentsRequest;
 import com.nested.app.client.tarrakki.dto.SipOrderDetail;
+import com.nested.app.dto.MinifiedOrderDTO;
 import com.nested.app.dto.OrderDTO;
 import com.nested.app.dto.PaymentDTO;
 import com.nested.app.dto.PlaceOrderDTO;
@@ -35,6 +36,7 @@ import com.nested.app.repository.PaymentRepository;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -123,7 +125,7 @@ public class PaymentServiceImpl implements PaymentService {
       bankDetail.setId(placeOrderRequest.getBankID());
       payment.setBank(bankDetail);
 
-      var orderIds = placeOrderRequest.getOrders().stream().map(OrderDTO::getId).toList();
+      var orderIds = placeOrderRequest.getOrders().stream().map(MinifiedOrderDTO::getId).toList();
       // Create orders for each order request
       List<Order> orders = orderRepository.findAllById(orderIds);
 
@@ -148,9 +150,10 @@ public class PaymentServiceImpl implements PaymentService {
       if (otpResp == null) {
         throw new RuntimeException("Failed to get OTP from MF provider");
       }
-      payment.setVerificationRef(otpResp.getOtp_id());
+      payment.setVerificationRef(otpResp.getOtpId());
 
       payment.setOrders(orders);
+      orders.forEach(order -> order.setPayment(payment));
 
       // Save payment and orders
       Payment savedPayment = paymentRepository.save(payment);
@@ -255,7 +258,8 @@ public class PaymentServiceImpl implements PaymentService {
               .investor_id(payment.getInvestor().getRef())
               .auth_ref(payment.getVerificationRef())
               .investorIP(ipAddress)
-              .detail(payment.getOrders().stream().map(this::convertOrderToOrderDetail).toList())
+              .detail(
+                  payment.getOrders().stream().flatMap(this::convertOrderToOrderDetail).toList())
               .build();
       var orderResponse = orderApiClient.placeBulkOrder(bulkOrderRequest).block();
       if (orderResponse == null) {
@@ -264,8 +268,8 @@ public class PaymentServiceImpl implements PaymentService {
       payment.setOrderRef(orderResponse.getBulk_order_id());
       paymentRepository.save(payment);
 
-      var totalAmount =
-          payment.getOrders().stream().map(Order::getAmount).reduce(Double::sum).orElseThrow();
+      var orders = orderRepository.findByPaymentId(paymentID);
+      var totalAmount = orders.stream().map(Order::getAmount).reduce(Double::sum).orElseThrow();
 
       var paymentMethod =
           payment.getPaymentType() == PlaceOrderPostDTO.PaymentMethod.UPI
@@ -286,7 +290,7 @@ public class PaymentServiceImpl implements PaymentService {
       if (paymentResponse == null) {
         throw new RuntimeException("Failed to initiate payment with MF provider");
       }
-      payment.setPaymentUrl(paymentResponse.getRedirect_url());
+      payment.setPaymentUrl(paymentResponse.getRedirectUrl());
       paymentRepository.save(payment);
 
       return convertPaymentToDTO(payment);
@@ -303,20 +307,40 @@ public class PaymentServiceImpl implements PaymentService {
     }
   }
 
-  OrderDetail convertOrderToOrderDetail(Order order) {
+  OrderDetail convertOrderToOrderDetail(BasketFund fund, Order order) {
     if (order instanceof SIPOrder sipOrder) {
       return SipOrderDetail.builder()
-          .fundID(order.getFund().getId().toString())
-          .amount(order.getAmount())
+          .fundID(fund.getFund().getId().toString())
           .mandateID(sipOrder.getMandateID())
           .startDate(sipOrder.getStartDate())
           .firstOrderToday(false)
           .build();
     }
-    return OrderDetail.builder()
-        .fundID(order.getFund().getId().toString())
-        .amount(order.getAmount())
-        .build();
+
+    return OrderDetail.builder().fundID(fund.getFund().getId().toString()).build();
+  }
+
+  Stream<OrderDetail> convertOrderToOrderDetail(Order order) {
+    var basketFunds = order.getGoal().getBasket().getBasketFunds();
+    var totalAmount = order.getAmount();
+    var amountAllocation =
+        new java.util.ArrayList<>(
+            basketFunds.stream()
+                .map(f -> f.getAllocationPercentage() / 100.0 * totalAmount)
+                .map(amount -> amount / 100 * 100)
+                .toList());
+
+    var totalAllocation = amountAllocation.stream().reduce(Double::sum).orElse(0.0);
+    var correction = totalAmount - (totalAllocation - amountAllocation.getLast());
+    amountAllocation.set(amountAllocation.size() - 1, correction);
+
+    var orders = basketFunds.stream().map(f -> convertOrderToOrderDetail(f, order)).toList();
+
+    for (int i = 0; i < amountAllocation.size(); i++) {
+      orders.get(i).setAmount(amountAllocation.get(i));
+    }
+
+    return orders.stream();
   }
 
   /**
@@ -457,7 +481,6 @@ public class PaymentServiceImpl implements PaymentService {
     dto.setVerificationStatus(
         PaymentDTO.VerificationStatus.valueOf(payment.getVerificationStatus().name()));
     dto.setPaymentUrl(payment.getPaymentUrl());
-    dto.setVerificationRef(payment.getVerificationRef());
     dto.setMandateType(PaymentDTO.MandateType.valueOf(payment.getPaymentType().name()));
     dto.setUpiId(payment.getUpiId());
     dto.setConfirmationUrl(payment.getMandateConfirmationUrl());
