@@ -1,4 +1,4 @@
-import { FirebaseAuthTypes, getAuth } from "@react-native-firebase/auth";
+import { FirebaseAuthTypes, signOut } from "@react-native-firebase/auth";
 import { createContext, useContext } from "react";
 
 export const defaultAuthState: AuthState = {
@@ -21,8 +21,5 @@ export function useAuth(): AuthState {
 }
 
 export function useSignOut() {
-  const signOut = async () => {
-    await getAuth().signOut();
-  };
   return { signOut };
 }

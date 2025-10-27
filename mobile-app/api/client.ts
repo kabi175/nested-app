@@ -1,7 +1,27 @@
-import axios from 'axios';
+import { getAuth, getIdToken } from "@react-native-firebase/auth";
+import axios from "axios";
 
 export const api = axios.create({
   baseURL: process.env.EXPO_PUBLIC_API_URL,
   timeout: 10000,
-  headers: { 'Content-Type': 'application/json' },
+  headers: {
+    "Content-Type": "application/json",
+  },
 });
+
+api.interceptors.request.use(
+  async (config) => {
+    const auth = getAuth();
+    const user = auth.currentUser;
+
+    if (user) {
+      const token = await getIdToken(user);
+      config.headers.Authorization = `Bearer ${token}`;
+    }
+
+    return config;
+  },
+  (error) => {
+    return Promise.reject(error);
+  }
+);
