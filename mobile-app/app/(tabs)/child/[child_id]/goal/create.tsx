@@ -1,3 +1,4 @@
+import { goalsForCustomizeAtom } from "@/atoms/goals";
 import { ThemedText } from "@/components/ThemedText";
 import { useChildren } from "@/hooks/useChildren";
 import { useEducation } from "@/hooks/useEducation";
@@ -7,6 +8,7 @@ import { Ionicons } from "@expo/vector-icons";
 import * as Haptics from "expo-haptics";
 import { LinearGradient } from "expo-linear-gradient";
 import { router, useLocalSearchParams } from "expo-router";
+import { useSetAtom } from "jotai";
 import {
   ChevronDown,
   ChevronUp,
@@ -60,7 +62,7 @@ export default function CreateGoalScreen() {
   const childId = useLocalSearchParams<{ child_id: string }>().child_id;
   const { data: children } = useChildren();
   const child = children?.find((child) => child.id === childId);
-
+  const setGoalsForCustomize = useSetAtom(goalsForCustomizeAtom);
   const createGoalMutation = useGoalCreation();
   const {
     courses,
@@ -287,8 +289,9 @@ export default function CreateGoalScreen() {
         targetDate: new Date(goal.targetYear, 5, 1),
       }));
 
-      await createGoalMutation.mutateAsync(data);
+      const createdGoals = await createGoalMutation.mutateAsync(data);
 
+      setGoalsForCustomize(createdGoals);
       //TODO: redirect to
       router.push(`/child/${childId}/goal/customize`);
     } catch (error) {

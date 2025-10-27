@@ -46,22 +46,32 @@ export const getChildren = async (): Promise<Child[]> => {
 
 export const getGoals = async (): Promise<Goal[]> => {
   const { data } = await api.get("/goals");
-  const goals = (data.data ?? []).map(
-    (goal: any): Goal => ({
-      id: goal.id,
-      title: goal.title,
-      childId: goal.child_id,
-      targetAmount: goal.target_amount,
-      currentAmount: goal.current_amount,
-      status: goal.status,
-      targetDate: goal.target_date ? new Date(goal.target_date) : new Date(),
-      createdAt: goal.createdAt ? new Date(goal.createdAt) : new Date(),
-      updatedAt: goal.updatedAt ? new Date(goal.updatedAt) : new Date(),
-    })
-  );
+  const goals = (data.data ?? []).map((goal: any): Goal => mapGoalToGoal(goal));
   return goals;
 };
 
+export const getGoal = async (id: string): Promise<Goal> => {
+  const { data } = await api.get(`/goals/${id}`);
+  const goals = (data.data ?? []).map((goal: any): Goal => mapGoalToGoal(goal));
+  if (goals.length === 0) {
+    throw new Error("Goal not found");
+  }
+  return goals[0];
+};
+
+function mapGoalToGoal(goal: any): Goal {
+  return {
+    id: goal.id,
+    title: goal.title,
+    childId: goal.child_id,
+    targetAmount: goal.target_amount,
+    currentAmount: goal.current_amount,
+    status: goal.status,
+    targetDate: goal.target_date ? new Date(goal.target_date) : new Date(),
+    createdAt: goal.createdAt ? new Date(goal.createdAt) : new Date(),
+    updatedAt: goal.updatedAt ? new Date(goal.updatedAt) : new Date(),
+  };
+}
 export const createGoal = async (
   goals: {
     childId: string;
@@ -81,7 +91,7 @@ export const createGoal = async (
     title: goal.title,
   }));
   const { data } = await api.post("/goals", { data: payload });
-  return data.data as Goal[];
+  return (data.data ?? []).map((goal: any): Goal => mapGoalToGoal(goal));
 };
 
 type ChildDTO = {
