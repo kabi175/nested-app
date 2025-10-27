@@ -11,6 +11,7 @@ import com.nested.app.repository.BasketRepository;
 import com.nested.app.repository.EducationRepository;
 import com.nested.app.repository.GoalRepository;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -52,6 +53,17 @@ public class GoalServiceImpl implements GoalService {
       log.info("Successfully retrieved {} goals", goalDTOs.size());
       return goalDTOs;
 
+    } catch (Exception e) {
+      log.error("Error retrieving goals: {}", e.getMessage(), e);
+      throw new RuntimeException("Failed to retrieve goals", e);
+    }
+  }
+
+  @Override
+  public GoalDTO getGoalById(Long goalId) {
+    try {
+      Optional<Goal> goals = goalRepository.findById(goalId);
+      return goals.map(this::convertToDTO).orElse(null);
     } catch (Exception e) {
       log.error("Error retrieving goals: {}", e.getMessage(), e);
       throw new RuntimeException("Failed to retrieve goals", e);

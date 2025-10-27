@@ -19,6 +19,7 @@ public interface GoalService {
      */
     List<GoalDTO> getAllGoals();
 
+  GoalDTO getGoalById(Long goalId);
 
     /**
      * Updates an existing goal

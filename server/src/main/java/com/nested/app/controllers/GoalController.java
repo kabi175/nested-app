@@ -84,6 +84,18 @@ public class GoalController {
     }
   }
 
+  @GetMapping("/{goalId}")
+  public ResponseEntity<Entity<GoalDTO>> getGoalById(@PathVariable Long goalId) {
+    GoalDTO goal = goalService.getGoalById(goalId);
+    log.info("Successfully retrieved goal with ID {}", goalId);
+
+    if (goal == null) {
+      return ResponseEntity.noContent().build();
+    }
+
+    return ResponseEntity.ok(Entity.of(List.of(goal)));
+  }
+
   /**
    * Creates a new goal
    *
