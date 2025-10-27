@@ -58,7 +58,7 @@ export function GoalCard({ goal }: GoalCardProps) {
   const handleGoalPress = () => {
     if (goal.status === "draft") {
       router.push({
-        pathname: `/child/${goal.childId}/goal/customize`,
+        pathname: `/child/${goal.childId}/goal/${goal.id}/customize`,
         params: {
           goal_id: goal.id,
           target_amount: goal.targetAmount.toString(),
