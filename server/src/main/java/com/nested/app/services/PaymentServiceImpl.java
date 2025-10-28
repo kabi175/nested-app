@@ -541,14 +541,6 @@ public class PaymentServiceImpl implements PaymentService {
    */
   private OrderDTO convertOrderToDTO(Order order) {
     log.debug("Converting Order entity to DTO for ID: {}", order.getId());
-
-    OrderDTO dto = new OrderDTO();
-    dto.setId(order.getId());
-    dto.setAmount(order.getAmount());
-    dto.setStatus(order.getStatus());
-    dto.setCreatedAt(order.getCreatedAt());
-    dto.setUpdatedAt(order.getUpdatedAt());
-
-    return dto;
+    return OrderDTO.fromEntity(order);
   }
 }

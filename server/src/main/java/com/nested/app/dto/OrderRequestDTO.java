@@ -1,5 +1,6 @@
 package com.nested.app.dto;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.nested.app.annotation.ValidOrderRequest;
@@ -7,6 +8,7 @@ import com.nested.app.entity.SIPOrder;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.DecimalMin;
 import jakarta.validation.constraints.NotNull;
+import java.time.LocalDate;
 import java.util.List;
 import lombok.Data;
 
@@ -20,7 +22,7 @@ public class OrderRequestDTO {
 
   @Valid
   @JsonProperty("sip_order")
-  private List<OrderRequestDTO.SipOrderDTO> sipOrder = List.of();
+  private List<SipOrderDTO> sipOrder = List.of();
 
   @Data
   public static class BuyOrderDTO {
@@ -34,6 +36,10 @@ public class OrderRequestDTO {
     @NotNull(message = "Amount is required for SIP order")
     @DecimalMin(value = "0.01", message = "Amount must be greater than 0")
     private Double amount;
+
+    @JsonProperty("start_date")
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd")
+    private LocalDate startDate = LocalDate.now();
 
     @Valid
     @JsonProperty("setup_option")

@@ -1,5 +1,6 @@
 package com.nested.app.entity;
 
+import com.fasterxml.jackson.annotation.JsonValue;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -12,6 +13,8 @@ import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import java.sql.Timestamp;
 import lombok.Data;
+import lombok.Getter;
+import lombok.RequiredArgsConstructor;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
@@ -54,11 +57,14 @@ public class Order {
 
   @Column private String folio;
 
+  @RequiredArgsConstructor
   public enum OrderStatus {
-    NOT_PLACED,
-    PLACED,
-    COMPLETED,
-    FAILED,
-    CANCELLED
+    NOT_PLACED("not_placed"),
+    PLACED("placed"),
+    COMPLETED("completed"),
+    FAILED("failed"),
+    CANCELLED("cancelled");
+
+    @JsonValue @Getter private final String value;
   }
 }

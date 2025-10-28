@@ -73,6 +73,7 @@ public class Goal {
 
   public enum Status {
     DRAFT("draft"),
+    PAYMENT_PENDING("payment_pending"),
     ACTIVE("active"),
     COMPLETED("completed"),
     CANCELLED("cancelled");
