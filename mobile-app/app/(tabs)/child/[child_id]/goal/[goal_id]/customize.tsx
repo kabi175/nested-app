@@ -1,12 +1,18 @@
+import { createOrders } from "@/api/paymentAPI";
+import { goalsForCustomizeAtom } from "@/atoms/goals";
 import { ThemedText } from "@/components/ThemedText";
 import Slider from "@/components/ui/Slider";
 import ToggleCard from "@/components/ui/ToggleCard";
 import { useSIPCalculator } from "@/hooks/useSIPCalculator";
 import { formatCurrency } from "@/utils/formatters";
 import { Ionicons } from "@expo/vector-icons";
+import { useMutation } from "@tanstack/react-query";
+import { Datepicker } from "@ui-kitten/components";
 import * as Haptics from "expo-haptics";
 import { LinearGradient } from "expo-linear-gradient";
 import { router, useLocalSearchParams } from "expo-router";
+import { useAtom } from "jotai";
+import { CalendarSync } from "lucide-react-native";
 import React, { useEffect, useState } from "react";
 import {
   Animated,
@@ -18,10 +24,16 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function CustomizeInvestmentScreen() {
-  const { target_amount, target_date } = useLocalSearchParams<{
+  const {
+    goal_id,
+    target_amount,
+    target_date,
+    redirect_on_success: redirectOnSuccess,
+  } = useLocalSearchParams<{
     goal_id: string;
     target_amount: string;
     target_date: string;
+    redirect_on_success: "true" | "false";
   }>();
   const targetDate = new Date(target_date);
 
@@ -41,6 +53,38 @@ export default function CustomizeInvestmentScreen() {
   const [scaleAnim] = useState(new Animated.Value(0.95));
   const [pulseAnim] = useState(new Animated.Value(1));
   const [sipAmountAnim] = useState(new Animated.Value(1));
+  const [goals, setGoals] = useAtom(goalsForCustomizeAtom);
+
+  // SIP Date state
+  const [sipDate, setSipDate] = useState(new Date());
+
+  // React Query mutation for creating orders
+  const createOrdersMutation = useMutation({
+    mutationFn: ({
+      goalId,
+      orders,
+    }: {
+      goalId: string;
+      orders: {
+        type: "sip" | "buy";
+        amount: number;
+        start_date?: Date;
+        yearly_setup?: number;
+      }[];
+    }) => createOrders(goalId, orders),
+    onSuccess: () => {
+      if (redirectOnSuccess === "true") {
+        router.back();
+      } else {
+        // Navigate to loading screen
+        router.push("/child/1/goal/loading");
+      }
+    },
+    onError: (error) => {
+      console.error("Error creating orders:", error);
+      // TODO: Show error message to user
+    },
+  });
 
   useEffect(() => {
     Animated.parallel([
@@ -78,12 +122,61 @@ export default function CustomizeInvestmentScreen() {
       ])
     );
     pulseAnimation.start();
-  }, []);
+  }, [fadeAnim, slideAnim, scaleAnim, pulseAnim]);
 
-  const handleContinue = () => {
+  const handleContinue = async () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-    // Navigate to loading screen
-    router.push("/child/1/goal/loading");
+
+    // Prepare orders array
+    const orders = [];
+
+    // Add SIP order
+    orders.push({
+      type: "sip" as const,
+      amount: sipAmount,
+      start_date: sipDate,
+      yearly_setup: stepUpAmount > 0 ? stepUpAmount : undefined,
+    });
+
+    // Add lump sum order if specified
+    if (lumpSumAmount > 0) {
+      orders.push({
+        type: "buy" as const,
+        amount: lumpSumAmount,
+      });
+    }
+
+    // Trigger mutation
+    const ordersResponse = await createOrdersMutation.mutateAsync({
+      goalId: goal_id!,
+      orders,
+    });
+
+    const goal = goals.find((goal) => goal.id === goal_id);
+    if (goal) {
+      setGoals(
+        goals.map((g) =>
+          g.id === goal_id ? { ...g, investment: ordersResponse } : g
+        )
+      );
+    }
+
+    if (redirectOnSuccess === "true") {
+      router.back();
+    } else {
+      // Navigate to loading screen
+      router.push("/child/1/goal/loading");
+    }
+  };
+
+  const formatDateForSchedule = (date: Date) => {
+    return date.toLocaleDateString("en-US", {
+      day: "numeric",
+    });
+  };
+
+  const handleDateChange = (selectedDate: Date) => {
+    setSipDate(selectedDate);
   };
 
   return (
@@ -148,6 +241,35 @@ export default function CustomizeInvestmentScreen() {
             />
           </Animated.View>
 
+          {/* SIP Schedule Card */}
+          <Animated.View style={styles.investmentCard}>
+            <View style={styles.sipScheduleHeader}>
+              <CalendarSync color="#3B82F6" size={22} strokeWidth={2} />
+              <ThemedText style={styles.cardTitle}>SIP Schedule</ThemedText>
+            </View>
+            <View style={styles.firstInstallmentHeader}>
+              <ThemedText style={styles.firstInstallmentLabel}>
+                First Installment Today
+              </ThemedText>
+            </View>
+            <ThemedText style={styles.sipScheduleLabel}>
+              SIP Schedule Monthly on {formatDateForSchedule(sipDate)}
+            </ThemedText>
+
+            <View style={styles.datePickerContainer}>
+              <Datepicker
+                date={sipDate}
+                onSelect={handleDateChange}
+                min={new Date()}
+                accessoryRight={() => (
+                  <Ionicons name="calendar-outline" size={20} color="#3B82F6" />
+                )}
+                style={styles.datePicker}
+                placeholder="Select SIP Date"
+              />
+            </View>
+          </Animated.View>
+
           {/* Add Lump Sum Card */}
           <ToggleCard
             title="Add Lump Sum"
@@ -168,16 +290,32 @@ export default function CustomizeInvestmentScreen() {
 
           {/* Continue Button */}
           <TouchableOpacity
-            style={styles.continueButton}
+            style={[
+              styles.continueButton,
+              createOrdersMutation.isPending && styles.continueButtonDisabled,
+            ]}
             onPress={handleContinue}
+            disabled={createOrdersMutation.isPending}
           >
             <LinearGradient
-              colors={["#8B5CF6", "#3B82F6"]}
+              colors={
+                createOrdersMutation.isPending
+                  ? ["#9CA3AF", "#6B7280"]
+                  : ["#8B5CF6", "#3B82F6"]
+              }
               style={styles.continueButtonGradient}
             >
-              <ThemedText style={styles.continueButtonText}>
-                Continue
-              </ThemedText>
+              {createOrdersMutation.isPending ? (
+                <View style={styles.loadingContainer}>
+                  <ThemedText style={styles.continueButtonText}>
+                    Creating Orders...
+                  </ThemedText>
+                </View>
+              ) : (
+                <ThemedText style={styles.continueButtonText}>
+                  Continue
+                </ThemedText>
+              )}
             </LinearGradient>
           </TouchableOpacity>
         </ScrollView>
@@ -258,6 +396,52 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
     color: "#1F2937",
   },
+  firstInstallmentHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: 4,
+  },
+  firstInstallmentAmount: {
+    alignItems: "center",
+    marginTop: 16,
+    paddingVertical: 16,
+    backgroundColor: "#F0FDF4",
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: "#BBF7D0",
+  },
+  firstInstallmentValue: {
+    fontSize: 24,
+    fontWeight: "bold",
+    color: "#059669",
+    marginBottom: 4,
+  },
+  firstInstallmentLabel: {
+    fontSize: 14,
+    color: "#065F46",
+    fontWeight: "500",
+  },
+  sipScheduleHeader: {
+    flexDirection: "row",
+    alignItems: "flex-start",
+    marginBottom: 4,
+    gap: 8,
+  },
+  sipScheduleLabel: {
+    fontSize: 16,
+    color: "#1F2937",
+    fontWeight: "500",
+    marginTop: 8,
+    marginBottom: 16,
+  },
+  datePickerContainer: {
+    marginTop: 8,
+  },
+  datePicker: {
+    backgroundColor: "#F9FAFB",
+    borderRadius: 12,
+    borderColor: "#D1D5DB",
+  },
   summaryCard: {
     borderRadius: 16,
     padding: 20,
@@ -333,6 +517,10 @@ const styles = StyleSheet.create({
     shadowRadius: 12,
     elevation: 8,
   },
+  continueButtonDisabled: {
+    opacity: 0.7,
+    shadowOpacity: 0.05,
+  },
   continueButtonGradient: {
     paddingVertical: 20,
     paddingHorizontal: 24,
@@ -343,5 +531,10 @@ const styles = StyleSheet.create({
     color: "#FFFFFF",
     fontSize: 18,
     fontWeight: "600",
+  },
+  loadingContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
   },
 });

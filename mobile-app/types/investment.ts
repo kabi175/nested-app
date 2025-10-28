@@ -11,6 +11,7 @@ export type Goal = {
 };
 
 export type Order = {
+  id: string;
   type: "sip" | "buy" | "sell";
   amount: number;
   yearly_setup?: number;
