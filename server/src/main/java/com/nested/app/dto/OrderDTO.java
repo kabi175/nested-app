@@ -40,7 +40,7 @@ public class OrderDTO {
   @JsonProperty(access = JsonProperty.Access.READ_ONLY)
   private Order.OrderStatus status;
 
-  @JsonProperty(value = "updated_at", access = JsonProperty.Access.READ_ONLY)
+  @JsonProperty(value = "created_at", access = JsonProperty.Access.READ_ONLY)
   private Timestamp createdAt;
 
   @JsonProperty(value = "updated_at", access = JsonProperty.Access.READ_ONLY)

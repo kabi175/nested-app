@@ -3,7 +3,6 @@ package com.nested.app.controllers;
 import com.nested.app.dto.ChildDTO;
 import com.nested.app.dto.Entity;
 import com.nested.app.dto.PlaceOrderDTO;
-import com.nested.app.dto.PlaceOrderPostDTO;
 import com.nested.app.dto.VerifyOrderDTO;
 import com.nested.app.entity.Investor;
 import com.nested.app.services.ChildService;
@@ -164,60 +163,6 @@ public class ChildController {
           .body(Map.<String, Object>of("error", e.getMessage()));
     } catch (Exception e) {
       log.error("Error updating child: {}", e.getMessage(), e);
-      return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
-    }
-  }
-
-  /**
-   * Places orders for all active goals of a child
-   *
-   * @param childId Child ID to place orders for
-   * @param placeOrderRequest Order placement request data
-   * @return ResponseEntity containing payment with placed orders
-   */
-  @PostMapping("/{child_id}/actions/place_order")
-  @Operation(
-      summary = "Place orders for all active goals",
-      description =
-          "Creates a payment with multiple orders for all active goals associated with the specified child")
-  @ApiResponses(
-      value = {
-        @ApiResponse(
-            responseCode = "201",
-            description = "Payment with orders created successfully",
-            content =
-                @Content(
-                    mediaType = "application/json",
-                    schema = @Schema(implementation = Map.class))),
-        @ApiResponse(responseCode = "400", description = "Invalid input data"),
-        @ApiResponse(responseCode = "404", description = "Child not found"),
-        @ApiResponse(responseCode = "500", description = "Internal server error")
-      })
-  public ResponseEntity<?> placeOrders(
-      @PathVariable("child_id") Long childId,
-      @Valid @RequestBody PlaceOrderPostDTO placeOrderRequest) {
-
-    log.info(
-        "POST /api/v1/children/{}/actions/place_order - Creating payment with orders for child",
-        childId);
-
-    try {
-      PlaceOrderDTO paymentWithOrders =
-          paymentService.createPaymentWithOrders(childId, placeOrderRequest);
-
-      log.info(
-          "Successfully created payment with {} orders for child ID: {}",
-          paymentWithOrders.getOrders() != null ? paymentWithOrders.getOrders().size() : 0,
-          childId);
-
-      return ResponseEntity.status(HttpStatus.CREATED).body(Entity.of(List.of(paymentWithOrders)));
-
-    } catch (IllegalArgumentException e) {
-      log.warn("Validation error creating payment for child {}: {}", childId, e.getMessage());
-      return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-          .body(Map.<String, Object>of("error", e.getMessage()));
-    } catch (Exception e) {
-      log.error("Error creating payment for child {}: {}", childId, e.getMessage(), e);
       return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
     }
   }

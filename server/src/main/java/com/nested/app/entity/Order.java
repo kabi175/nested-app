@@ -55,6 +55,10 @@ public class Order {
   @Column(nullable = false)
   private Timestamp updatedAt;
 
+  @ManyToOne
+  @JoinColumn(name = "investor_id")
+  private Investor investor;
+
   @Column private String folio;
 
   @RequiredArgsConstructor

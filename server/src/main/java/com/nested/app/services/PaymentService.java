@@ -18,11 +18,10 @@ public interface PaymentService {
   /**
    * Creates a payment with multiple orders for a child
    *
-   * @param childId Child ID to create payment for
    * @param placeOrderRequest Order placement request data
    * @return Created payment with orders
    */
-  PlaceOrderDTO createPaymentWithOrders(Long childId, PlaceOrderPostDTO placeOrderRequest);
+  PlaceOrderDTO createPaymentWithOrders(PlaceOrderPostDTO placeOrderRequest);
 
   /**
    * Verifies a payment using verification code

@@ -102,6 +102,7 @@ public class OrderServiceImpl implements OrderService {
   @Override
   public List<OrderDTO> placeOrder(Long goalID, OrderRequestDTO orderRequest) {
     var goal = goalRepository.findById(goalID).orElseThrow();
+    var investor = goal.getChild().getInvestor();
 
     // Validate goal ownership
     if (!goal.getUser().equals(userContext.getUser())) {
@@ -120,6 +121,7 @@ public class OrderServiceImpl implements OrderService {
                   order.setAmount(buyOrder.getAmount());
                   order.setUser(userContext.getUser());
                   order.setGoal(goal);
+                  order.setInvestor(investor);
                   return order;
                 });
 
@@ -137,6 +139,7 @@ public class OrderServiceImpl implements OrderService {
                   order.setEndDate(goal.getTargetDate().toLocalDate());
                   order.setUser(userContext.getUser());
                   order.setGoal(goal);
+                  order.setInvestor(investor);
                   return order;
                 });
 

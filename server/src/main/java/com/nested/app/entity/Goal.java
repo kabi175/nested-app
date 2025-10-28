@@ -47,7 +47,7 @@ public class Goal {
   @JoinColumn(name = "user_id")
   private User user;
 
-  @ManyToOne(optional = false)
+  @ManyToOne(optional = false, fetch = jakarta.persistence.FetchType.EAGER)
   @JoinColumn(name = "child_id")
   private Child child;
 

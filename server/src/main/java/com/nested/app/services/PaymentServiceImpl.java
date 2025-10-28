@@ -13,6 +13,7 @@ import com.nested.app.client.tarrakki.dto.OtpVerifyRequest;
 import com.nested.app.client.tarrakki.dto.PaymentsOrder;
 import com.nested.app.client.tarrakki.dto.PaymentsRequest;
 import com.nested.app.client.tarrakki.dto.SipOrderDetail;
+import com.nested.app.contect.UserContext;
 import com.nested.app.dto.MinifiedOrderDTO;
 import com.nested.app.dto.OrderDTO;
 import com.nested.app.dto.PaymentDTO;
@@ -22,9 +23,9 @@ import com.nested.app.dto.VerifyOrderDTO;
 import com.nested.app.entity.BankDetail;
 import com.nested.app.entity.Basket;
 import com.nested.app.entity.BasketFund;
-import com.nested.app.entity.Child;
 import com.nested.app.entity.Fund;
 import com.nested.app.entity.Goal;
+import com.nested.app.entity.Investor;
 import com.nested.app.entity.Order;
 import com.nested.app.entity.Payment;
 import com.nested.app.entity.SIPOrder;
@@ -34,6 +35,7 @@ import com.nested.app.repository.GoalRepository;
 import com.nested.app.repository.OrderRepository;
 import com.nested.app.repository.PaymentRepository;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -58,6 +60,7 @@ public class PaymentServiceImpl implements PaymentService {
 
   private final PaymentRepository paymentRepository;
   private final OrderRepository orderRepository;
+  private final UserContext userContext;
   private final GoalRepository goalRepository;
   private final ChildRepository childRepository;
 
@@ -83,38 +86,39 @@ public class PaymentServiceImpl implements PaymentService {
   /**
    * Creates a payment with multiple orders for a child
    *
-   * @param childId Child ID to create payment for
    * @param placeOrderRequest Order placement request data
    * @return Created payment with orders
    */
   @Override
-  public PlaceOrderDTO createPaymentWithOrders(Long childId, PlaceOrderPostDTO placeOrderRequest) {
-    log.info("Creating payment with orders for child ID: {}", childId);
+  public PlaceOrderDTO createPaymentWithOrders(PlaceOrderPostDTO placeOrderRequest) {
 
     try {
-      // Get child and user information
-      Child child =
-          childRepository
-              .findById(childId)
-              .orElseThrow(
-                  () -> new IllegalArgumentException("Child not found with ID: " + childId));
+      var orderIds = placeOrderRequest.getOrders().stream().map(MinifiedOrderDTO::getId).toList();
+      // Create orders for each order request
+      List<Order> orders = orderRepository.findAllById(orderIds);
 
-      User user = child.getUser();
-
-      // Get active goals for the child
-      List<Goal> activeGoals = goalRepository.findByChildIdAndStatus(childId, Goal.Status.DRAFT);
-
-      if (activeGoals.isEmpty()) {
-        throw new IllegalArgumentException("No active goals found for child ID: " + childId);
+      if (orders.size() != orderIds.size()) {
+        throw new IllegalArgumentException("Some orders not found for the provided IDs");
       }
+
+      if (orders.stream().map(Order::getInvestor).anyMatch(Objects::isNull)) {
+        throw new IllegalArgumentException("All orders must have an associated investor");
+      }
+
+      if (orders.stream().map(Order::getInvestor).map(Investor::getId).distinct().count() > 1) {
+        throw new IllegalArgumentException("All orders must belong to the same investor");
+      }
+
+      var investor = orders.getFirst().getInvestor();
+
+      User user = userContext.getUser();
 
       // Create payment entity
       Payment payment = new Payment();
       payment.setStatus(Payment.PaymentStatus.PENDING);
       payment.setVerificationStatus(Payment.VerificationStatus.PENDING);
       payment.setUser(user);
-      payment.setChild(child);
-      payment.setInvestor(child.getInvestor());
+      payment.setInvestor(investor);
 
       // Set mandate information
       payment.setPaymentType(placeOrderRequest.getPaymentMethod());
@@ -124,10 +128,6 @@ public class PaymentServiceImpl implements PaymentService {
       var bankDetail = new BankDetail();
       bankDetail.setId(placeOrderRequest.getBankID());
       payment.setBank(bankDetail);
-
-      var orderIds = placeOrderRequest.getOrders().stream().map(MinifiedOrderDTO::getId).toList();
-      // Create orders for each order request
-      List<Order> orders = orderRepository.findAllById(orderIds);
 
       var otpDetails =
           orders.stream()
@@ -161,21 +161,18 @@ public class PaymentServiceImpl implements PaymentService {
       // Convert to DTO
       PlaceOrderDTO placeOrderDTO = convertPaymentToPlaceOrderDTO(savedPayment);
 
-      log.info(
-          "Successfully created payment with {} orders for child ID: {}", orders.size(), childId);
+      log.info("Successfully created payment with {} orders ", orders.size());
       return placeOrderDTO;
 
     } catch (WebClientResponseException e) {
       log.error(
-          " Error from MF provider while creating payment with orders for child ID {}: {}",
-          childId,
+          " Error from MF provider while creating payment with orders: {}",
           e.getResponseBodyAsString(),
           e);
 
       throw new RuntimeException(e);
     } catch (Exception e) {
-      log.error(
-          "Error creating payment with orders for child ID {}: {}", childId, e.getMessage(), e);
+      log.error("Error creating payment with orders: {}", e.getMessage(), e);
       throw new RuntimeException("Failed to create payment with orders", e);
     }
   }
