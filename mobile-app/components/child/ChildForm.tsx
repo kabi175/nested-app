@@ -1,4 +1,4 @@
-import { Child } from "@/types/user";
+import { Child } from "@/types/child";
 import {
   Card,
   CheckBox,

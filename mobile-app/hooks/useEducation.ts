@@ -1,5 +1,5 @@
 import { getCourses, getInstitutions } from "@/api/educationAPI";
-import { Education } from "@/types/user";
+import { Education } from "@/types/education";
 import { useQuery } from "@tanstack/react-query";
 
 export const useEducation = () => {

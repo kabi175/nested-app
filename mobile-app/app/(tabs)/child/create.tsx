@@ -2,7 +2,7 @@ import { createChild } from "@/api/userApi";
 import { ChildForm } from "@/components/child/ChildForm";
 import { FormHeader } from "@/components/child/FormHeader";
 import { useFormAnimation } from "@/hooks/useFormAnimation";
-import { Child } from "@/types/user";
+import { Child } from "@/types/child";
 import {
   childSchema,
   defaultChildFormErrors,

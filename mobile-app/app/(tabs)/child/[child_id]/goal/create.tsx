@@ -3,7 +3,7 @@ import { ThemedText } from "@/components/ThemedText";
 import { useChildren } from "@/hooks/useChildren";
 import { useEducation } from "@/hooks/useEducation";
 import { useGoalCreation } from "@/hooks/useGoalCreation";
-import { Education } from "@/types/user";
+import { Education } from "@/types/education";
 import { Ionicons } from "@expo/vector-icons";
 import * as Haptics from "expo-haptics";
 import { LinearGradient } from "expo-linear-gradient";

@@ -1,11 +1,6 @@
-import { Goal } from "@/types/user";
+import { Goal, Order } from "@/types/investment";
 import { atom } from "jotai";
 
-export type Investment = {
-  id: string;
-  type: "sip" | "buy";
-  amount: number;
-};
-export type GoalForCustomize = Goal & { investment?: Investment[] };
+export type GoalForCustomize = Goal & { investment?: Order[] };
 
 export const goalsForCustomizeAtom = atom<GoalForCustomize[]>([]);

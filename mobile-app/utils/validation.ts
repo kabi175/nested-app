@@ -1,4 +1,4 @@
-import { Child } from "@/types/user";
+import { Child } from "@/types/child";
 import Joi from "joi";
 
 // Generic validation function

@@ -1,4 +1,4 @@
-import type { Goal } from "@/types/user";
+import type { Goal } from "@/types/investment";
 import React from "react";
 import { StyleSheet, View } from "react-native";
 import { GoalCard } from "./GoalCard";

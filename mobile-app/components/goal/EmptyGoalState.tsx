@@ -1,5 +1,5 @@
 import { ThemedText } from "@/components/ThemedText";
-import type { Child } from "@/types/user";
+import type { Child } from "@/types/child";
 import { ArrowRight, GraduationCap } from "lucide-react-native";
 import React from "react";
 import { StyleSheet, TouchableOpacity, View } from "react-native";

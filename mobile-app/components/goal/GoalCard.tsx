@@ -1,6 +1,6 @@
 import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
-import type { Goal } from "@/types/user";
+import type { Goal } from "@/types/investment";
 import { useTheme } from "@react-navigation/native";
 import { ProgressBar } from "@ui-kitten/components";
 import { router } from "expo-router";

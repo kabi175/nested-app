@@ -1,4 +1,4 @@
-import { Education } from "@/types/user";
+import { Education } from "@/types/education";
 import { api } from "./client";
 
 export const getCourses = async (): Promise<Education[]> => {

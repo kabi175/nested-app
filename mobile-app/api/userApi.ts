@@ -1,4 +1,6 @@
-import type { Child, Goal, User } from "@/types/user";
+import type { User } from "@/types/auth";
+import type { Child } from "@/types/child";
+import type { Goal } from "@/types/investment";
 import { api } from "./client";
 
 export const getUser = async (id: string): Promise<User> => {
