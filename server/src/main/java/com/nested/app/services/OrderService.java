@@ -21,6 +21,7 @@ public interface OrderService {
    */
   List<OrderDTO> getOrdersByGoalId(String goalId);
 
+  List<OrderDTO> getPendingOrders(Long goalId);
 
   /**
    * Places new orders

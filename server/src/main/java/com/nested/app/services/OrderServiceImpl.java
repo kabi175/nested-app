@@ -36,6 +36,14 @@ public class OrderServiceImpl implements OrderService {
   private final GoalRepository goalRepository;
   private final UserContext userContext;
 
+  @Override
+  public List<OrderDTO> getPendingOrders(Long goalId) {
+    List<Order> orders =
+        orderRepository.findByGoalIdAndStatus(goalId, (Order.OrderStatus.NOT_PLACED));
+
+    return orders.stream().map(this::convertToDTO).collect(Collectors.toList());
+  }
+
   /**
    * Retrieves orders by goal ID
    *
@@ -130,11 +138,6 @@ public class OrderServiceImpl implements OrderService {
    */
   private OrderDTO convertToDTO(Order order) {
     log.debug("Converting Order entity to DTO for ID: {}", order.getId());
-
-    OrderDTO dto = new OrderDTO();
-    dto.setId(order.getId());
-    dto.setAmount(order.getAmount());
-    dto.setStatus(order.getStatus());
-    return dto;
+    return OrderDTO.fromEntity(order);
   }
 }

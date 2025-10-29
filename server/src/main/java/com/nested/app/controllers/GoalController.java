@@ -278,6 +278,12 @@ public class GoalController {
     }
   }
 
+  @GetMapping("/{goal_id}/orders/pending")
+  public ResponseEntity<?> fetchPending(@PathVariable("goal_id") Long goalId) {
+    List<OrderDTO> fetchedOrders = orderService.getPendingOrders(goalId);
+    return ResponseEntity.status(HttpStatus.CREATED).body(Map.of("data", fetchedOrders));
+  }
+
   @PostMapping("/{goal_id}/orders")
   public ResponseEntity<?> createOrders(
       @PathVariable("goal_id") Long goalID, @RequestBody OrderRequestDTO requestBody) {

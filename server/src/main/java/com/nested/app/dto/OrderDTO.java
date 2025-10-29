@@ -48,34 +48,37 @@ public class OrderDTO {
 
   public static OrderDTO fromEntity(Order order) {
 
-      OrderDTO dto = new OrderDTO();
-      dto.setId(order.getId());
-      dto.setAmount(order.getAmount());
-      dto.setStatus(order.getStatus());
-      dto.setCreatedAt(order.getCreatedAt());
-      dto.setUpdatedAt(order.getUpdatedAt());
+    OrderDTO dto = new OrderDTO();
+    dto.setId(order.getId());
+    dto.setAmount(order.getAmount());
+    dto.setStatus(order.getStatus());
+    dto.setCreatedAt(order.getCreatedAt());
+    dto.setUpdatedAt(order.getUpdatedAt());
 
-      switch (order) {
-          case SIPOrder sipOrder -> {
-              dto.setType(OrderDTO.OrderType.SIP);
-              dto.setStartDate(sipOrder.getStartDate());
-              if(sipOrder.getSipStepUp() != null) {
-                  dto.setYearlySetup(sipOrder.getSipStepUp().getStepUpAmount());
-              }
-          }
-          case SellOrder ignored -> dto.setType(OrderDTO.OrderType.SELL);
-          default -> dto.setType(OrderDTO.OrderType.BUY);
+    if (order.getGoal() != null) {
+      dto.setGoal(new MinifiedGoalDTO(order.getGoal().getId()));
+    }
+
+    switch (order) {
+      case SIPOrder sipOrder -> {
+        dto.setType(OrderDTO.OrderType.SIP);
+        dto.setStartDate(sipOrder.getStartDate());
+        if (sipOrder.getSipStepUp() != null) {
+          dto.setYearlySetup(sipOrder.getSipStepUp().getStepUpAmount());
+        }
       }
-      return dto;
+      case SellOrder ignored -> dto.setType(OrderDTO.OrderType.SELL);
+      default -> dto.setType(OrderDTO.OrderType.BUY);
+    }
+    return dto;
   }
 
   @RequiredArgsConstructor
   public enum OrderType {
-      BUY("buy"),
-      SELL("sell"),
-      SIP("sip");
+    BUY("buy"),
+    SELL("sell"),
+    SIP("sip");
 
-      @Getter @JsonValue
-      private final String value;
+    @Getter @JsonValue private final String value;
   }
 }
