@@ -64,31 +64,6 @@ public class OrderServiceImpl implements OrderService {
     }
   }
 
-
-  /**
-   * Retrieves all orders
-   *
-   * @return List of all orders
-   */
-  @Override
-  @Transactional(readOnly = true)
-  public List<OrderDTO> getAllOrders() {
-    log.info("Retrieving all orders from database");
-
-    try {
-      List<Order> orders = orderRepository.findAll();
-      List<OrderDTO> orderDTOs =
-          orders.stream().map(this::convertToDTO).collect(Collectors.toList());
-
-      log.info("Successfully retrieved {} orders", orderDTOs.size());
-      return orderDTOs;
-
-    } catch (Exception e) {
-      log.error("Error retrieving all orders: {}", e.getMessage(), e);
-      throw new RuntimeException("Failed to retrieve orders", e);
-    }
-  }
-
   @Override
   public List<OrderDTO> placeOrder(Long goalID, OrderRequestDTO orderRequest) {
     var goal = goalRepository.findById(goalID).orElseThrow();

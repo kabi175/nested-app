@@ -21,12 +21,6 @@ public interface OrderService {
    */
   List<OrderDTO> getOrdersByGoalId(String goalId);
 
-  /**
-   * Retrieves all orders
-   *
-   * @return List of all orders
-   */
-  List<OrderDTO> getAllOrders();
 
   /**
    * Places new orders
