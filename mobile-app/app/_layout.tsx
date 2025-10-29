@@ -55,9 +55,14 @@ function RootNavigator() {
   const hasEnteredName = auth.isSignedIn && auth.user?.displayName !== null;
 
   return (
-    <Stack>
+    <Stack
+      screenOptions={{
+        headerShown: false,
+      }}
+    >
       <Stack.Protected guard={hasEnteredName === true}>
         <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+        <Stack.Screen name="payment" />
         <Stack.Screen name="+not-found" />
       </Stack.Protected>
 

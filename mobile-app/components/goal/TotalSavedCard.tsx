@@ -1,5 +1,6 @@
 import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
+import { formatCurrency } from "@/utils/formatters";
 import { Ionicons } from "@expo/vector-icons";
 import React from "react";
 import { StyleSheet, View } from "react-native";
@@ -7,14 +8,6 @@ import { StyleSheet, View } from "react-native";
 interface TotalSavedCardProps {
   totalAmount: number;
 }
-
-const formatCurrency = (amount: number) => {
-  return new Intl.NumberFormat("en-IN", {
-    style: "currency",
-    currency: "INR",
-    maximumFractionDigits: 1,
-  }).format(amount);
-};
 
 export function TotalSavedCard({ totalAmount }: TotalSavedCardProps) {
   return (

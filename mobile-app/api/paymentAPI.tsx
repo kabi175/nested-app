@@ -44,6 +44,13 @@ export const createOrders = async (
   return data.data;
 };
 
+export const getPendingOrdersByGoalId = async (
+  goalId: string
+): Promise<Order[]> => {
+  const { data } = await api.get(`/goals/${goalId}/orders/pending`);
+  return data.data as Order[];
+};
+
 type PaymentOption = {
   payment_method: "upi" | "net_banking";
   upi_id?: string;

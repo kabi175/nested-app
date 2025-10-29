@@ -1,9 +1,13 @@
+import { getPendingOrdersByGoalId } from "@/api/paymentAPI";
+import { cartAtom } from "@/atoms/cart";
 import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
 import type { Goal } from "@/types/investment";
+import { formatCurrency } from "@/utils/formatters";
 import { useTheme } from "@react-navigation/native";
 import { ProgressBar } from "@ui-kitten/components";
 import { router } from "expo-router";
+import { useSetAtom } from "jotai";
 import { GraduationCap, TrendingUp } from "lucide-react-native";
 import React from "react";
 import { StyleSheet, TouchableOpacity, View } from "react-native";
@@ -11,14 +15,6 @@ import { StyleSheet, TouchableOpacity, View } from "react-native";
 interface GoalCardProps {
   goal: Goal;
 }
-
-const formatCurrency = (amount: number) => {
-  return new Intl.NumberFormat("en-IN", {
-    style: "currency",
-    currency: "INR",
-    maximumFractionDigits: 0,
-  }).format(amount);
-};
 
 // Removed unused getStatusColor function
 
@@ -52,10 +48,11 @@ function timeRemaining(future: Date) {
 
 //TODO: add a percentage completion & mothly SIP amount
 export function GoalCard({ goal }: GoalCardProps) {
+  const setCart = useSetAtom(cartAtom);
   const progressPercentage = goal.currentAmount / goal.targetAmount;
   const theme = useTheme();
 
-  const handleGoalPress = () => {
+  const handleGoalPress = async () => {
     if (goal.status === "draft") {
       router.push({
         pathname: `/child/${goal.childId}/goal/${goal.id}/customize`,
@@ -65,6 +62,15 @@ export function GoalCard({ goal }: GoalCardProps) {
           target_date: goal.targetDate.toISOString(),
         },
       });
+    } else if (goal.status === "payment_pending") {
+      const orders = await getPendingOrdersByGoalId(goal.id);
+      if (orders.length > 0) {
+        setCart(orders);
+
+        router.push({
+          pathname: `/payment`,
+        });
+      }
     }
   };
 
@@ -78,10 +84,12 @@ export function GoalCard({ goal }: GoalCardProps) {
           <View style={styles.goalContent}>
             <View style={styles.goalTitleContainer}>
               <ThemedText style={styles.goalTitle}>{goal.title}</ThemedText>
-              {goal.status === "draft" && (
+              {["draft", "payment_pending"].includes(goal.status) && (
                 <View style={styles.draftBadge}>
                   <ThemedText style={styles.draftText}>
-                    SIP Setup Pending
+                    {goal.status === "draft"
+                      ? "SIP Setup Pending"
+                      : "Payment Pending"}
                   </ThemedText>
                 </View>
               )}
