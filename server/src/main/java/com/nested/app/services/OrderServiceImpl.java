@@ -5,6 +5,7 @@ import com.nested.app.contect.UserContext;
 import com.nested.app.dto.OrderDTO;
 import com.nested.app.dto.OrderRequestDTO;
 import com.nested.app.entity.BuyOrder;
+import com.nested.app.entity.Goal;
 import com.nested.app.entity.Order;
 import com.nested.app.entity.SIPOrder;
 import com.nested.app.repository.GoalRepository;
@@ -144,6 +145,11 @@ public class OrderServiceImpl implements OrderService {
                 });
 
     var orders = orderRepository.saveAll(Streams.concat(buyOrders, sipOrders).toList());
+
+    if (goal.getStatus().equals(Goal.Status.DRAFT)) {
+      goal.setStatus(Goal.Status.PAYMENT_PENDING);
+      goalRepository.save(goal);
+    }
 
     // Return the saved orders in proper format
     return orders.stream()
