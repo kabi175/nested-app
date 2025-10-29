@@ -14,14 +14,6 @@ import java.util.List;
 public interface OrderService {
 
   /**
-   * Retrieves orders by goal ID
-   *
-   * @param goalId Goal ID to filter orders
-   * @return List of orders for the specified goal
-   */
-  List<OrderDTO> getOrdersByGoal(String goalId);
-
-  /**
    * Retrieves orders by goal ID (alias method for API compatibility)
    *
    * @param goalId Goal ID to filter orders

@@ -44,7 +44,7 @@ public class OrderServiceImpl implements OrderService {
    */
   @Override
   @Transactional(readOnly = true)
-  public List<OrderDTO> getOrdersByGoal(String goalId) {
+  public List<OrderDTO> getOrdersByGoalId(String goalId) {
     log.info("Retrieving orders for goal ID: {}", goalId);
 
     try {
@@ -64,17 +64,6 @@ public class OrderServiceImpl implements OrderService {
     }
   }
 
-  /**
-   * Retrieves orders by goal ID (alias method for API compatibility)
-   *
-   * @param goalId Goal ID to filter orders
-   * @return List of orders for the specified goal
-   */
-  @Override
-  @Transactional(readOnly = true)
-  public List<OrderDTO> getOrdersByGoalId(String goalId) {
-    return getOrdersByGoal(goalId);
-  }
 
   /**
    * Retrieves all orders
