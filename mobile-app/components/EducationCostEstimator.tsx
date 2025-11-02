@@ -1,9 +1,10 @@
 import { Ionicons } from "@expo/vector-icons";
 import { Layout } from "@ui-kitten/components";
 import { LinearGradient } from "expo-linear-gradient";
-import React, { useState } from "react";
+import { router } from "expo-router";
+import React, { useRef, useState } from "react";
 import {
-  Dimensions,
+  PanResponder,
   ScrollView,
   StyleSheet,
   Text,
@@ -15,8 +16,6 @@ import HowNestedHelps from "./HowNestedHelps";
 import { ThemedText } from "./ThemedText";
 import { ThemedView } from "./ThemedView";
 
-const { width } = Dimensions.get("window");
-
 interface EducationCostEstimatorProps {
   onCourseSelect?: (course: string) => void;
   onCollegeSelect?: (college: string) => void;
@@ -24,26 +23,67 @@ interface EducationCostEstimatorProps {
 }
 
 export default function EducationCostEstimator({
-  onCourseSelect,
-  onCollegeSelect,
   onTimelineChange,
 }: EducationCostEstimatorProps) {
   const [selectedCourse, setSelectedCourse] = useState<string>("");
   const [selectedCollege, setSelectedCollege] = useState<string>("");
   const [timeline, setTimeline] = useState<number>(10);
   const insets = useSafeAreaInsets();
+  const sliderTrackRef = useRef<View>(null);
+  const sliderLayout = useRef({ width: 0, pageX: 0 });
 
-  const handleTimelineChange = (value: number) => {
-    setTimeline(value);
-    onTimelineChange?.(value);
-  };
+  const MIN_YEARS = 1;
+  const MAX_YEARS = 25;
 
   const handleStartGoal = () => {
-    // Navigate to goal creation or home screen
-    console.log("Navigate to goal creation");
+    router.push("/sign-in");
   };
 
+  const updateTimeline = (value: number) => {
+    const newValue = Math.max(
+      MIN_YEARS,
+      Math.min(MAX_YEARS, Math.round(value))
+    );
+    setTimeline(newValue);
+    onTimelineChange?.(newValue);
+  };
+
+  const getTimelineFromPageX = (pageX: number) => {
+    if (sliderLayout.current.width === 0) return timeline;
+    const relativeX = pageX - sliderLayout.current.pageX;
+    const percentage = Math.max(
+      0,
+      Math.min(100, (relativeX / sliderLayout.current.width) * 100)
+    );
+    const years = MIN_YEARS + (percentage / 100) * (MAX_YEARS - MIN_YEARS);
+    return years;
+  };
+
+  const panResponder = useRef(
+    PanResponder.create({
+      onStartShouldSetPanResponder: () => true,
+      onMoveShouldSetPanResponder: () => true,
+      onPanResponderGrant: (evt) => {
+        // Handle tap/drag start on track
+        const pageX = evt.nativeEvent.pageX;
+        const newTimeline = getTimelineFromPageX(pageX);
+        updateTimeline(newTimeline);
+      },
+      onPanResponderMove: (evt) => {
+        // Handle dragging
+        const pageX = evt.nativeEvent.pageX;
+        const newTimeline = getTimelineFromPageX(pageX);
+        updateTimeline(newTimeline);
+      },
+      onPanResponderRelease: () => {
+        // Release handling if needed
+      },
+    })
+  ).current;
+
   const estimatedCost = Math.round(1.2 * (1 + timeline * 0.1)); // Simple calculation for demo
+  const sliderPercentage =
+    ((timeline - MIN_YEARS) / (MAX_YEARS - MIN_YEARS)) * 100;
 
   return (
     <ScrollView
@@ -105,18 +145,28 @@ export default function EducationCostEstimator({
             </ThemedText>
 
             <View style={styles.sliderWrapper}>
-              <View style={styles.sliderTrack}>
+              <View
+                ref={sliderTrackRef}
+                style={styles.sliderTrack}
+                onLayout={(event) => {
+                  const { width } = event.nativeEvent.layout;
+                  sliderTrackRef.current?.measure(
+                    (x, y, w, h, pageX, pageY) => {
+                      sliderLayout.current = { width: width, pageX: pageX };
+                    }
+                  );
+                }}
+                {...panResponder.panHandlers}
+              >
                 <View
                   style={[
                     styles.sliderActiveTrack,
-                    { width: `${(timeline - 1) * 4}%` },
+                    { width: `${sliderPercentage}%` },
                   ]}
                 />
                 <View
-                  style={[
-                    styles.sliderThumb,
-                    { left: `${(timeline - 1) * 4}%` },
-                  ]}
+                  style={[styles.sliderThumb, { left: `${sliderPercentage}%` }]}
+                  hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
                 />
               </View>
 
@@ -124,29 +174,6 @@ export default function EducationCostEstimator({
                 <Text style={styles.sliderLabelText}>+1 Yr</Text>
                 <Text style={styles.sliderLabelText}>+25 Yrs</Text>
               </View>
-            </View>
-
-            {/* Timeline buttons */}
-            <View style={styles.timelineButtons}>
-              {[1, 5, 10, 15, 20, 25].map((year) => (
-                <TouchableOpacity
-                  key={year}
-                  style={[
-                    styles.timelineButton,
-                    timeline === year && styles.timelineButtonActive,
-                  ]}
-                  onPress={() => handleTimelineChange(year)}
-                >
-                  <Text
-                    style={[
-                      styles.timelineButtonText,
-                      timeline === year && styles.timelineButtonTextActive,
-                    ]}
-                  >
-                    {year}Y
-                  </Text>
-                </TouchableOpacity>
-              ))}
             </View>
           </View>
 
@@ -297,6 +324,15 @@ const styles = StyleSheet.create({
     position: "absolute",
     top: -8,
     marginLeft: -12,
+    zIndex: 10,
+    shadowColor: "#2563EB",
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.3,
+    shadowRadius: 4,
+    elevation: 5,
   },
   sliderLabels: {
     flexDirection: "row",

@@ -301,6 +301,12 @@ export default function SignIn() {
               </Layout>
             )}
 
+            <Layout style={styles.howItWorksContainer}>
+              <Link href="/nested-intro">
+                <Text style={styles.howItWorksText}>See how it works</Text>
+              </Link>
+            </Layout>
+
             {/* Security Info */}
             <Layout
               style={[
@@ -441,5 +447,15 @@ const styles = StyleSheet.create({
   formTitle: {
     textAlign: "center",
     marginBottom: 8,
+  },
+  howItWorksContainer: {
+    alignItems: "center",
+    marginBottom: 24,
+    backgroundColor: "transparent",
+  },
+  howItWorksText: {
+    color: "#3B82F6",
+    fontSize: 16,
+    textDecorationLine: "underline",
   },
 });
