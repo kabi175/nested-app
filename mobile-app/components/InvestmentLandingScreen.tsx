@@ -1,4 +1,3 @@
-import { Ionicons } from "@expo/vector-icons";
 import React from "react";
 import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { ThemedText } from "./ThemedText";
@@ -114,33 +113,6 @@ export default function InvestmentLandingScreen({
               </View>
             </TouchableOpacity>
           ))}
-        </View>
-
-        {/* Know More Section */}
-        <View style={styles.knowMoreSection}>
-          <ThemedText style={styles.knowMoreTitle}>
-            Know More, Invest Better
-          </ThemedText>
-
-          {/* No Lock-in Card */}
-          <TouchableOpacity
-            style={styles.noLockInCard}
-            onPress={handleLearnMore}
-            activeOpacity={0.8}
-          >
-            <View style={styles.noLockInContent}>
-              {/* Clock Icon */}
-              <View style={styles.clockIconContainer}>
-                <Ionicons name="time-outline" size={24} color="#2563EB" />
-              </View>
-
-              {/* Card Text */}
-              <ThemedText style={styles.noLockInTitle}>No lock-in</ThemedText>
-              <ThemedText style={styles.noLockInDescription}>
-                Withdraw your money anytime, no questions asked.
-              </ThemedText>
-            </View>
-          </TouchableOpacity>
         </View>
       </View>
     </ThemedView>

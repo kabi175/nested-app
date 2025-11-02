@@ -1,18 +1,13 @@
-import React from "react";
+import { Layout, Text } from "@ui-kitten/components";
 import {
-  ScrollView,
-  StyleSheet,
-  Text,
-  TouchableOpacity,
-  View,
-} from "react-native";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { ThemedText } from "./ThemedText";
-import { ThemedView } from "./ThemedView";
-
-interface HowNestedHelpsProps {
-  onStartGoal?: () => void;
-}
+  BellRing,
+  BrainCircuit,
+  ChartPie,
+  ChartSpline,
+  ClipboardClock,
+} from "lucide-react-native";
+import React from "react";
+import { StyleSheet } from "react-native";
 
 interface TimelineStep {
   number: number;
@@ -21,6 +16,7 @@ interface TimelineStep {
   color: string;
   borderColor: string;
   numberColor: string;
+  icon: React.ReactNode;
 }
 
 const timelineSteps: TimelineStep[] = [
@@ -31,6 +27,7 @@ const timelineSteps: TimelineStep[] = [
     color: "#EC4899",
     borderColor: "#F9A8D4",
     numberColor: "#FFFFFF",
+    icon: <ChartSpline />,
   },
   {
     number: 2,
@@ -39,6 +36,7 @@ const timelineSteps: TimelineStep[] = [
     color: "#3B82F6",
     borderColor: "#93C5FD",
     numberColor: "#FFFFFF",
+    icon: <BrainCircuit />,
   },
   {
     number: 3,
@@ -47,6 +45,7 @@ const timelineSteps: TimelineStep[] = [
     color: "#10B981",
     borderColor: "#86EFAC",
     numberColor: "#FFFFFF",
+    icon: <ChartPie />,
   },
   {
     number: 4,
@@ -55,6 +54,7 @@ const timelineSteps: TimelineStep[] = [
     color: "#8B5CF6",
     borderColor: "#C4B5FD",
     numberColor: "#FFFFFF",
+    icon: <ClipboardClock />,
   },
   {
     number: 5,
@@ -63,88 +63,61 @@ const timelineSteps: TimelineStep[] = [
     color: "#06B6D4",
     borderColor: "#BAE6FD",
     numberColor: "#FFFFFF",
+    icon: <BellRing />,
   },
 ];
 
-export default function HowNestedHelps({ onStartGoal }: HowNestedHelpsProps) {
-  const insets = useSafeAreaInsets();
-
-  const handleStartGoal = () => {
-    onStartGoal?.();
-    // You can add navigation logic here
-    console.log("Start Your First Goal pressed");
-  };
-
+export default function HowNestedHelps() {
   return (
-    <ScrollView
-      style={styles.container}
-      showsVerticalScrollIndicator={false}
-      contentContainerStyle={[
-        styles.scrollContent,
-        { paddingTop: insets.top + 20 },
-      ]}
-    >
-      <ThemedView style={styles.content}>
+    <Layout style={styles.container}>
+      <Layout style={[styles.content, { backgroundColor: "transparent" }]}>
         {/* Header */}
-        <ThemedText style={styles.headerTitle}>How Nested Helps</ThemedText>
+        <Text category="h4">How Nested Helps</Text>
 
         {/* Timeline Steps */}
-        <View style={styles.timelineContainer}>
-          {timelineSteps.map((step, index) => (
-            <View key={step.number} style={styles.stepContainer}>
+        <Layout
+          style={[styles.timelineContainer, { backgroundColor: "transparent" }]}
+        >
+          {timelineSteps.map((step) => (
+            <Layout
+              key={step.number}
+              style={[styles.stepContainer, { backgroundColor: "transparent" }]}
+            >
               {/* Step Circle */}
-              <View
+              <Layout
                 style={[
                   styles.stepCircle,
-                  {
-                    backgroundColor: step.color,
-                    borderColor: step.borderColor,
-                  },
+                  { backgroundColor: step.borderColor },
                 ]}
               >
-                <Text style={[styles.stepNumber, { color: step.numberColor }]}>
-                  {step.number}
-                </Text>
-              </View>
-
-              {/* Connecting Line */}
-              {index < timelineSteps.length - 1 && (
-                <View
-                  style={[
-                    styles.connectingLine,
-                    { backgroundColor: step.borderColor },
-                  ]}
-                />
-              )}
+                {step.icon}
+              </Layout>
 
               {/* Step Content */}
-              <View style={styles.stepContent}>
-                <ThemedText style={styles.stepTitle}>{step.title}</ThemedText>
-                <ThemedText style={styles.stepSubtitle}>
+              <Layout
+                style={[styles.stepContent, { backgroundColor: "transparent" }]}
+              >
+                <Text category="h6" style={styles.stepTitle}>
+                  {step.title}
+                </Text>
+                <Text category="p1" style={styles.stepSubtitle}>
                   {step.subtitle}
-                </ThemedText>
-              </View>
-            </View>
+                </Text>
+              </Layout>
+            </Layout>
           ))}
-        </View>
+        </Layout>
 
         {/* Call-to-Action Button */}
-        <TouchableOpacity
-          style={styles.ctaButton}
-          onPress={handleStartGoal}
-          activeOpacity={0.8}
-        >
-          <Text style={styles.ctaButtonText}>Start Your First Goal</Text>
-        </TouchableOpacity>
-      </ThemedView>
-    </ScrollView>
+      </Layout>
+    </Layout>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
+    paddingTop: 12,
     flex: 1,
-    backgroundColor: "#F8F9FA",
   },
   scrollContent: {
     flexGrow: 1,
@@ -152,31 +125,29 @@ const styles = StyleSheet.create({
   },
   content: {
     flex: 1,
-    paddingHorizontal: 24,
     backgroundColor: "transparent",
   },
   headerTitle: {
     fontSize: 28,
     fontWeight: "bold",
-    textAlign: "center",
+    textAlign: "left",
     marginBottom: 40,
     color: "#1F2937",
   },
   timelineContainer: {
     flex: 1,
-    marginBottom: 40,
+    marginTop: 12,
   },
   stepContainer: {
     flexDirection: "row",
     alignItems: "flex-start",
-    marginBottom: 32,
+    marginBottom: 24,
     position: "relative",
   },
   stepCircle: {
     width: 48,
     height: 48,
     borderRadius: 24,
-    borderWidth: 2,
     justifyContent: "center",
     alignItems: "center",
     marginRight: 16,

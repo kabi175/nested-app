@@ -1,61 +1,66 @@
-import EducationCostEstimator from "@/components/EducationCostEstimator";
-import InvestmentLandingScreen from "@/components/InvestmentLandingScreen";
+import HowNestedHelps from "@/components/HowNestedHelps";
+import KnowMore from "@/components/KnowMore";
+import { Button, Divider, Layout, Text } from "@ui-kitten/components";
+import { router } from "expo-router";
+import { StatusBar } from "expo-status-bar";
 import React from "react";
 import { ScrollView, StyleSheet } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function NestedIntro() {
-  const handleCourseSelect = (course: string) => {
-    console.log("Selected course:", course);
-  };
-
-  const handleCollegeSelect = (college: string) => {
-    console.log("Selected college:", college);
-  };
-
-  const handleTimelineChange = (years: number) => {
-    console.log("Timeline changed to:", years, "years");
-  };
-
-  const handleExploreStrategy = (strategy: string) => {
-    console.log("Explore strategy:", strategy);
-    // Navigate to strategy details or investment flow
-  };
-
-  const handleLearnMore = () => {
-    console.log("Learn more pressed");
-    // Navigate to learn more section or FAQ
+  const handleStartGoal = () => {
+    router.push("/sign-in");
   };
 
   return (
-    <SafeAreaView style={styles.container} edges={["top"]}>
-      <ScrollView
-        style={styles.scrollContainer}
-        showsVerticalScrollIndicator={false}
-      >
-        {/* Existing Education Cost Estimator */}
-        <EducationCostEstimator
-          onCourseSelect={handleCourseSelect}
-          onCollegeSelect={handleCollegeSelect}
-          onTimelineChange={handleTimelineChange}
-        />
+    <SafeAreaView style={styles.rootContainer}>
+      <StatusBar style="auto" backgroundColor="#FFFFFF" />
 
-        {/* New Investment Landing Section */}
-        <InvestmentLandingScreen
+      <Layout style={styles.container}>
+        <ScrollView showsVerticalScrollIndicator={false}>
+          <Layout style={styles.content}>
+            <Text category="h3">Secure your child’s future</Text>
+            <Text category="p1">
+              Build a custom portfolio for their college expenses
+            </Text>
+
+            <HowNestedHelps />
+            <Divider />
+
+            <KnowMore />
+            <Divider />
+
+            {/* New Investment Landing Section */}
+            {/* <InvestmentLandingScreen
           onExploreStrategy={handleExploreStrategy}
           onLearnMore={handleLearnMore}
-        />
-      </ScrollView>
+        /> */}
+          </Layout>
+        </ScrollView>
+        <Button onPress={handleStartGoal}>
+          <Text category="h4">Get Started</Text>
+        </Button>
+      </Layout>
     </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
+  rootContainer: {
+    height: "100%",
+    width: "100%",
     flex: 1,
-    backgroundColor: "#F8F7FF",
   },
-  scrollContainer: {
+  container: {
+    height: "100%",
+    width: "100%",
     flex: 1,
+    paddingBottom: 24,
+    paddingTop: 24,
+    paddingHorizontal: 24,
+  },
+  content: {
+    flex: 1,
+    gap: 16,
   },
 });

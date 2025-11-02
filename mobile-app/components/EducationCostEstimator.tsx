@@ -1,7 +1,5 @@
 import { Ionicons } from "@expo/vector-icons";
-import { Layout } from "@ui-kitten/components";
 import { LinearGradient } from "expo-linear-gradient";
-import { router } from "expo-router";
 import React, { useRef, useState } from "react";
 import {
   PanResponder,
@@ -12,7 +10,6 @@ import {
   View,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import HowNestedHelps from "./HowNestedHelps";
 import { ThemedText } from "./ThemedText";
 import { ThemedView } from "./ThemedView";
 
@@ -34,10 +31,6 @@ export default function EducationCostEstimator({
 
   const MIN_YEARS = 1;
   const MAX_YEARS = 25;
-
-  const handleStartGoal = () => {
-    router.push("/sign-in");
-  };
 
   const updateTimeline = (value: number) => {
     const newValue = Math.max(
@@ -193,10 +186,6 @@ export default function EducationCostEstimator({
           </View>
         </View>
       </ThemedView>
-
-      <Layout style={{ flex: 1, marginTop: 20, marginHorizontal: 20 }}>
-        <HowNestedHelps onStartGoal={handleStartGoal} />
-      </Layout>
     </ScrollView>
   );
 }
