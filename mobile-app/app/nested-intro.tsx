@@ -38,7 +38,7 @@ export default function NestedIntro() {
           </Layout>
         </ScrollView>
         <Button onPress={handleStartGoal}>
-          <Text category="h4">Get Started</Text>
+          <Text category="h4">Estimate Future Cost</Text>
         </Button>
       </Layout>
     </SafeAreaView>
