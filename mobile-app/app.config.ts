@@ -1,7 +1,11 @@
 module.exports = () => ({
   expo: {
+    name: "NextEd",
+    slug: "nested",
+    owner: "kabi175",
     android: {
-      googleServicesFile: "./google-services.json",
+      googleServicesFile:
+        process.env.GOOGLE_SERVICES_JSON ?? "./google-services.json",
       package: "com.nexted.app",
     },
     ios: {
@@ -22,5 +26,11 @@ module.exports = () => ({
         },
       ],
     ],
+    extra: {
+      router: {},
+      eas: {
+        projectId: "6477a09a-e718-4279-a315-efd930313c29",
+      },
+    },
   },
 });
