@@ -30,10 +30,14 @@ export interface Education {
 /**
  * Fetch all education records
  * @param pagination - Pagination parameters
+ * @param search - Optional search term to filter by name or country
+ * @param type - Optional filter by education type (INSTITUTION or COURSE)
  * @returns Promise with list of education records and pagination info
  */
 export async function getEducation(
-  pagination?: PaginationParams
+  pagination?: PaginationParams,
+  search?: string,
+  type?: 'INSTITUTION' | 'COURSE'
 ): Promise<{ education: Education[]; pageInfo?: PageInfo }> {
   try {
     const params: Record<string, any> = {};
@@ -41,6 +45,12 @@ export async function getEducation(
       if (pagination.page !== undefined) params.page = pagination.page;
       if (pagination.size !== undefined) params.size = pagination.size;
       if (pagination.sort) params.sort = pagination.sort;
+    }
+    if (search) {
+      params.search = search;
+    }
+    if (type) {
+      params.type = type;
     }
     
     const response = await apiClient.get<ApiResponse<EducationDTO>>('/education', params);
@@ -157,6 +167,20 @@ export async function deleteEducation(id: string): Promise<EducationDTO> {
     return response.data[0];
   } catch (error) {
     console.error('Error deleting education:', error);
+    throw error;
+  }
+}
+
+/**
+ * Seed sample education data
+ * @returns Promise with list of created education records
+ */
+export async function seedEducationData(): Promise<EducationDTO[]> {
+  try {
+    const response = await apiClient.post<ApiResponse<EducationDTO>>('/education/seed', {});
+    return response.data;
+  } catch (error) {
+    console.error('Error seeding education data:', error);
     throw error;
   }
 }

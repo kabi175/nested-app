@@ -8,6 +8,15 @@ import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import {
+  Pagination,
+  PaginationContent,
+  PaginationEllipsis,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+} from '@/components/ui/pagination';
+import {
   Dialog,
   DialogContent,
   DialogDescription,
@@ -35,7 +44,14 @@ import {
   Eye,
   GraduationCap,
   Download,
-  Percent
+  Percent,
+  Search,
+  X,
+  Database,
+  Filter,
+  ArrowUpDown,
+  ArrowUp,
+  ArrowDown
 } from 'lucide-react';
 import { getEducation, createEducation, updateEducation, deleteEducation, Education } from '@/lib/api';
 import { useToast } from '@/hooks/use-toast';
@@ -54,6 +70,11 @@ export default function EducationPage() {
   const [currentPage, setCurrentPage] = useState(0);
   const [pageSize, setPageSize] = useState(10);
   const [pageInfo, setPageInfo] = useState<PageInfo | null>(null);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [debouncedSearchTerm, setDebouncedSearchTerm] = useState('');
+  const [typeFilter, setTypeFilter] = useState<'ALL' | 'INSTITUTION' | 'COURSE'>('ALL');
+  const [sortBy, setSortBy] = useState<string>('id');
+  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
   const [formData, setFormData] = useState({
     name: '',
     type: 'INSTITUTION' as 'INSTITUTION' | 'COURSE',
@@ -63,29 +84,127 @@ export default function EducationPage() {
     expectedIncreasePercentGt10Yr: ''
   });
 
+  // Debounce search term
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearchTerm(searchTerm);
+      setCurrentPage(0); // Reset to first page on search
+    }, 300);
+
+    return () => clearTimeout(timer);
+  }, [searchTerm]);
+
+  // Reset page when filter or sort changes
+  useEffect(() => {
+    setCurrentPage(0);
+  }, [typeFilter, sortBy, sortOrder]);
+
   // Fetch education from API
   useEffect(() => {
     fetchEducation();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [currentPage, pageSize]);
+  }, [currentPage, pageSize, debouncedSearchTerm, typeFilter, sortBy, sortOrder]);
 
   const fetchEducation = async () => {
     setLoading(true);
     setError(null);
     try {
-      const response = await getEducation({
-        page: currentPage,
-        size: pageSize,
-        sort: 'id',
-      });
-      setEducation(response.education);
-      setPageInfo(response.pageInfo || null);
+      // Try to fetch with pagination first
+      const sortParam = sortBy === 'id' ? 'id' : 
+                       sortBy === 'name' ? 'name' :
+                       sortBy === 'fee' ? 'lastYearFee' :
+                       sortBy === 'country' ? 'country' : 'id';
+      
+      const sortValue = `${sortParam},${sortOrder}`;
+      
+      const response = await getEducation(
+        {
+          page: currentPage,
+          size: pageSize,
+          sort: sortValue,
+        },
+        debouncedSearchTerm || undefined,
+        typeFilter !== 'ALL' ? typeFilter : undefined
+      );
+      
+      // If backend returns pagination info, use it (server-side pagination)
+      if (response.pageInfo && response.pageInfo.totalPages > 0) {
+        setEducation(response.education);
+        setPageInfo(response.pageInfo);
+      } else {
+        // Client-side pagination and sorting fallback
+        // Fetch all data without pagination for client-side processing
+        const allResponse = await getEducation(
+          undefined, // No pagination - fetch all
+          debouncedSearchTerm || undefined,
+          typeFilter !== 'ALL' ? typeFilter : undefined
+        );
+        
+        let allEducation = [...allResponse.education];
+        
+        // Client-side sorting
+        const sortParamLocal = sortBy === 'id' ? 'id' : 
+                              sortBy === 'name' ? 'name' :
+                              sortBy === 'fee' ? 'lastYearFee' :
+                              sortBy === 'country' ? 'country' : 'id';
+        
+        allEducation.sort((a, b) => {
+          let aVal: any;
+          let bVal: any;
+          
+          if (sortParamLocal === 'id') {
+            aVal = parseInt(a.id) || 0;
+            bVal = parseInt(b.id) || 0;
+          } else if (sortParamLocal === 'name') {
+            aVal = (a.name || '').toLowerCase();
+            bVal = (b.name || '').toLowerCase();
+          } else if (sortParamLocal === 'lastYearFee') {
+            aVal = a.lastYearFee || 0;
+            bVal = b.lastYearFee || 0;
+          } else if (sortParamLocal === 'country') {
+            aVal = (a.country || '').toLowerCase();
+            bVal = (b.country || '').toLowerCase();
+          } else {
+            return 0;
+          }
+          
+          if (typeof aVal === 'string') {
+            return sortOrder === 'asc' 
+              ? aVal.localeCompare(bVal)
+              : bVal.localeCompare(aVal);
+          } else {
+            return sortOrder === 'asc' 
+              ? aVal - bVal
+              : bVal - aVal;
+          }
+        });
+        
+        // Client-side pagination
+        const totalElements = allEducation.length;
+        const totalPages = Math.ceil(totalElements / pageSize) || 1;
+        const startIndex = currentPage * pageSize;
+        const endIndex = startIndex + pageSize;
+        const paginatedEducation = allEducation.slice(startIndex, endIndex);
+        
+        setEducation(paginatedEducation);
+        setPageInfo({
+          page: currentPage,
+          size: pageSize,
+          totalElements,
+          totalPages,
+        });
+      }
     } catch (err) {
       console.error('Error fetching education:', err);
       setError(err instanceof Error ? err.message : 'Failed to fetch education records');
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleClearSearch = () => {
+    setSearchTerm('');
+    setDebouncedSearchTerm('');
   };
 
   const handleAddEducation = async () => {
@@ -402,18 +521,109 @@ export default function EducationPage() {
         >
           <Card className="border-0 shadow-xl rounded-2xl backdrop-blur-sm bg-white/80 dark:bg-slate-900/80 border-slate-200/50 dark:border-slate-700/50">
             <CardHeader className="pb-4">
-              <CardTitle className="flex items-center justify-between">
-                <div className="flex items-center gap-3 text-xl font-bold text-slate-900 dark:text-slate-100">
-                  <div className="p-2 rounded-xl bg-gradient-to-r from-emerald-500/10 to-teal-500/10 border border-emerald-200/20 dark:border-emerald-800/20">
-                    <GraduationCap className="h-5 w-5 text-emerald-600 dark:text-emerald-400" />
+              <div className="flex flex-col gap-4">
+                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                  <CardTitle className="flex items-center gap-3 text-xl font-bold text-slate-900 dark:text-slate-100">
+                    <div className="p-2 rounded-xl bg-gradient-to-r from-emerald-500/10 to-teal-500/10 border border-emerald-200/20 dark:border-emerald-800/20">
+                      <GraduationCap className="h-5 w-5 text-emerald-600 dark:text-emerald-400" />
+                    </div>
+                    Education Records ({pageInfo?.totalElements || education.length})
+                  </CardTitle>
+                  {/* Search Input */}
+                  <div className="relative w-full sm:w-auto min-w-[250px]">
+                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-slate-400" />
+                    <Input
+                      type="text"
+                      placeholder="Search by name or country..."
+                      value={searchTerm}
+                      onChange={(e) => setSearchTerm(e.target.value)}
+                      className="pl-10 pr-10 w-full bg-white/50 dark:bg-slate-800/50 border-slate-200/50 dark:border-slate-700/50 rounded-xl focus:ring-2 focus:ring-emerald-500/20"
+                    />
+                    {searchTerm && (
+                      <button
+                        onClick={handleClearSearch}
+                        className="absolute right-3 top-1/2 transform -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 transition-colors"
+                      >
+                        <X className="h-4 w-4" />
+                      </button>
+                    )}
                   </div>
-                  Education Records ({education.length})
                 </div>
-                <Button variant="ghost" size="sm" className="text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100">
-                  <Eye className="w-4 h-4 mr-2" />
-                  View All
-                </Button>
-              </CardTitle>
+                {/* Filters and Sort */}
+                <div className="flex flex-wrap items-center gap-3">
+                  {/* Type Filter */}
+                  <div className="flex items-center gap-2">
+                    <Filter className="h-4 w-4 text-slate-500 dark:text-slate-400" />
+                    <Select
+                      value={typeFilter}
+                      onValueChange={(value: 'ALL' | 'INSTITUTION' | 'COURSE') => setTypeFilter(value)}
+                    >
+                      <SelectTrigger className="w-[150px] bg-white/50 dark:bg-slate-800/50 border-slate-200/50 dark:border-slate-700/50">
+                        <SelectValue placeholder="Filter by type" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="ALL">All Types</SelectItem>
+                        <SelectItem value="INSTITUTION">Institutions</SelectItem>
+                        <SelectItem value="COURSE">Courses</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  
+                  {/* Sort By */}
+                  <div className="flex items-center gap-2">
+                    <ArrowUpDown className="h-4 w-4 text-slate-500 dark:text-slate-400" />
+                    <Select
+                      value={sortBy}
+                      onValueChange={setSortBy}
+                    >
+                      <SelectTrigger className="w-[150px] bg-white/50 dark:bg-slate-800/50 border-slate-200/50 dark:border-slate-700/50">
+                        <SelectValue placeholder="Sort by" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="name">Name</SelectItem>
+                        <SelectItem value="fee">Fee</SelectItem>
+                        <SelectItem value="country">Country</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    {/* Sort Order Toggle Button */}
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc')}
+                      className="bg-white/50 dark:bg-slate-800/50 border-slate-200/50 dark:border-slate-700/50 hover:bg-white dark:hover:bg-slate-800 px-3"
+                      title={sortOrder === 'asc' ? 'Ascending - Click to sort descending' : 'Descending - Click to sort ascending'}
+                    >
+                      {sortOrder === 'asc' ? (
+                        <ArrowUp className="h-4 w-4" />
+                      ) : (
+                        <ArrowDown className="h-4 w-4" />
+                      )}
+                    </Button>
+                  </div>
+                  
+                  {/* Page Size */}
+                  <div className="flex items-center gap-2 ml-auto">
+                    <span className="text-sm text-slate-600 dark:text-slate-400">Per page:</span>
+                    <Select
+                      value={pageSize.toString()}
+                      onValueChange={(value) => {
+                        setPageSize(parseInt(value));
+                        setCurrentPage(0);
+                      }}
+                    >
+                      <SelectTrigger className="w-[80px] bg-white/50 dark:bg-slate-800/50 border-slate-200/50 dark:border-slate-700/50">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="10">10</SelectItem>
+                        <SelectItem value="20">20</SelectItem>
+                        <SelectItem value="50">50</SelectItem>
+                        <SelectItem value="100">100</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+              </div>
             </CardHeader>
             <CardContent>
               <div className="rounded-xl border border-slate-200/50 dark:border-slate-700/50 overflow-hidden">
@@ -535,6 +745,61 @@ export default function EducationPage() {
                   </TableBody>
                 </Table>
               </div>
+              
+              {/* Pagination */}
+              {pageInfo && pageInfo.totalPages > 0 && (
+                <div className="flex flex-col sm:flex-row items-center justify-between gap-4 px-6 py-4 border-t border-slate-200/50 dark:border-slate-700/50">
+                  <div className="text-sm text-slate-600 dark:text-slate-400">
+                    Showing {pageInfo.totalElements > 0 ? currentPage * pageSize + 1 : 0} to {Math.min((currentPage + 1) * pageSize, pageInfo.totalElements || 0)} of {pageInfo.totalElements || 0} records
+                  </div>
+                  {pageInfo.totalPages > 1 && (
+                    <Pagination>
+                      <PaginationContent>
+                        <PaginationItem>
+                          <PaginationPrevious 
+                            onClick={() => setCurrentPage(Math.max(0, currentPage - 1))}
+                            className={currentPage === 0 ? 'pointer-events-none opacity-50' : 'cursor-pointer'}
+                          />
+                        </PaginationItem>
+                        
+                        {Array.from({ length: pageInfo.totalPages }, (_, i) => i).map((page) => {
+                          // Show first page, last page, current page, and pages around current
+                          if (
+                            page === 0 ||
+                            page === pageInfo.totalPages - 1 ||
+                            (page >= currentPage - 1 && page <= currentPage + 1)
+                          ) {
+                            return (
+                              <PaginationItem key={page}>
+                                <PaginationLink
+                                  onClick={() => setCurrentPage(page)}
+                                  isActive={currentPage === page}
+                                  className="cursor-pointer"
+                                >
+                                  {page + 1}
+                                </PaginationLink>
+                              </PaginationItem>
+                            );
+                          } else if (
+                            page === currentPage - 2 ||
+                            page === currentPage + 2
+                          ) {
+                            return <PaginationEllipsis key={page} />;
+                          }
+                          return null;
+                        })}
+                        
+                        <PaginationItem>
+                          <PaginationNext 
+                            onClick={() => setCurrentPage(Math.min((pageInfo.totalPages || 1) - 1, currentPage + 1))}
+                            className={currentPage >= (pageInfo.totalPages || 1) - 1 ? 'pointer-events-none opacity-50' : 'cursor-pointer'}
+                          />
+                        </PaginationItem>
+                      </PaginationContent>
+                    </Pagination>
+                  )}
+                </div>
+              )}
             </CardContent>
           </Card>
         </motion.div>

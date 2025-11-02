@@ -1,14 +1,17 @@
 package com.nested.app.services;
 
+import java.util.List;
+import java.util.stream.Collectors;
+
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
 import com.nested.app.dto.EducationDTO;
 import com.nested.app.entity.Education;
 import com.nested.app.repository.EducationRepository;
-import java.util.List;
-import java.util.stream.Collectors;
+
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 /**
  * Implementation of EducationService Handles business logic for education management
@@ -25,10 +28,25 @@ public class EducationServiceImpl implements EducationService {
   private final EducationRepository educationRepository;
 
   @Override
-  public List<EducationDTO> getAllEducation(Education.Type type) {
-    log.info("Fetching all education records");
-    List<Education> educationList =
-        type == null ? educationRepository.findAll() : educationRepository.findByType(type);
+  public List<EducationDTO> getAllEducation(Education.Type type, String search) {
+    log.info("Fetching all education records with type: {}, search: {}", type, search);
+    List<Education> educationList;
+    
+    if (search != null && !search.trim().isEmpty()) {
+      // Search is provided
+      if (type != null) {
+        // Both type and search are provided
+        educationList = educationRepository.searchByNameOrCountryAndType(search.trim(), type);
+      } else {
+        // Only search is provided
+        educationList = educationRepository.searchByNameOrCountry(search.trim());
+      }
+    } else {
+      // No search, use existing logic
+      educationList =
+          type == null ? educationRepository.findAll() : educationRepository.findByType(type);
+    }
+    
     return educationList.stream().map(this::convertToDTO).collect(Collectors.toList());
   }
 
