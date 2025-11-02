@@ -19,7 +19,14 @@ import {
 } from "@ui-kitten/components";
 import { LinearGradient } from "expo-linear-gradient";
 import { useEffect, useState } from "react";
-import { Alert, ImageProps, ScrollView, StyleSheet, View } from "react-native";
+import {
+  Alert,
+  Image,
+  ImageProps,
+  ScrollView,
+  StyleSheet,
+  View,
+} from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 const LoadingIndicator = (props: ImageProps) => (
@@ -167,13 +174,24 @@ export default function SignIn() {
         >
           <Layout style={styles.contentContainer}>
             {/* Title */}
+            <Layout style={styles.logoContainer}>
+              <Image
+                source={require("@/assets/images/splash-icon.png")} // 👈 put your logo image here
+                style={styles.logoImage}
+                resizeMode="contain"
+              />
+              <Text category="h6" style={styles.title}>
+                Secure your child&apos;s future
+              </Text>
+            </Layout>
+
             <Layout
               style={[
                 styles.titleContainer,
                 { backgroundColor: "transparent" },
               ]}
             >
-              <Text category="h4" style={styles.title}>
+              <Text category="h4" style={styles.formTitle}>
                 {title}
               </Text>
               <Text category="s1" appearance="hint" style={styles.subtitle}>
@@ -410,5 +428,18 @@ const styles = StyleSheet.create({
   },
   otpContainer: {
     marginBottom: 24,
+  },
+  logoImage: {
+    width: 150,
+    height: 150,
+  },
+  logoContainer: {
+    alignItems: "center",
+    marginBottom: 24,
+    backgroundColor: "transparent",
+  },
+  formTitle: {
+    textAlign: "center",
+    marginBottom: 8,
   },
 });
