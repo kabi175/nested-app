@@ -3,6 +3,7 @@ module.exports = () => ({
     name: "NextEd",
     slug: "nested",
     owner: "kabi175",
+    icon: "./assets/images/icon.png",
     android: {
       googleServicesFile:
         process.env.GOOGLE_SERVICES_JSON ?? "./google-services.json",
@@ -23,6 +24,15 @@ module.exports = () => ({
           ios: {
             useFrameworks: "static",
           },
+        },
+      ],
+      [
+        "expo-splash-screen",
+        {
+          image: "./assets/images/splash-icon.png",
+          imageWidth: 200,
+          resizeMode: "contain",
+          backgroundColor: "#ffffff",
         },
       ],
     ],
