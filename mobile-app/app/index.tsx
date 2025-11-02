@@ -1,0 +1,45 @@
+import { useAuth } from "@/hooks/auth";
+import { Redirect } from "expo-router";
+import { Image, StyleSheet, View } from "react-native";
+
+export default function Home() {
+  const { isSignedIn, isLoaded } = useAuth();
+
+  if (!isLoaded) {
+    // show logo
+    return (
+      <View style={styles.container}>
+        <Image
+          source={require("@/assets/images/icon.png")} // 👈 put your logo image here
+          style={styles.logo}
+          resizeMode="contain"
+        />
+      </View>
+    );
+  }
+
+  if (isSignedIn) {
+    return <Redirect href="/(tabs)" />;
+  }
+
+  return <Redirect href="/sign-in" />;
+}
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "#fff", // ✅ white background
+  },
+  logo: {
+    width: 150,
+    height: 150,
+    marginBottom: 20,
+  },
+  title: {
+    color: "#333", // dark gray text
+    fontSize: 20,
+    fontWeight: "600",
+  },
+});
