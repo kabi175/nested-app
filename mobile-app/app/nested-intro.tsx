@@ -9,7 +9,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function NestedIntro() {
   const handleStartGoal = () => {
-    router.push("/sign-in");
+    router.push("/estimate-cost");
   };
 
   return (

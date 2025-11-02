@@ -82,7 +82,7 @@ export default function EducationCostEstimator({
     <ScrollView
       style={styles.container}
       showsVerticalScrollIndicator={false}
-      contentContainerStyle={[styles.scrollContent, { paddingTop: insets.top }]}
+      contentContainerStyle={styles.scrollContent}
     >
       {/* Header Section */}
       <LinearGradient
@@ -104,13 +104,11 @@ export default function EducationCostEstimator({
         <View style={styles.cardContent}>
           {/* Title */}
           <ThemedText style={styles.cardTitle}>Estimate Future Cost</ThemedText>
-
           {/* Description */}
           <ThemedText style={styles.cardDescription}>
             With college fees on the rise, see how much you&apos;ll need to save
             for your child&apos;s dream education.
           </ThemedText>
-
           {/* Input Fields */}
           <View style={styles.inputContainer}>
             <TouchableOpacity style={styles.dropdownField}>
@@ -129,7 +127,6 @@ export default function EducationCostEstimator({
               <Ionicons name="chevron-down" size={20} color="#666" />
             </TouchableOpacity>
           </View>
-
           {/* Timeline Slider */}
           <View style={styles.sliderContainer}>
             <ThemedText style={styles.sliderLabel}>
@@ -169,21 +166,22 @@ export default function EducationCostEstimator({
               </View>
             </View>
           </View>
-
           {/* Cost Projection Display */}
-          <View style={styles.costProjectionCard}>
-            <View style={styles.chartIconContainer}>
-              <Ionicons name="trending-up" size={24} color="#2563EB" />
+          {(selectedCourse || selectedCollege) && (
+            <View style={styles.costProjectionCard}>
+              <View style={styles.chartIconContainer}>
+                <Ionicons name="trending-up" size={24} color="#2563EB" />
+              </View>
+              <ThemedText style={styles.chartDescription}>
+                Interactive cost projection chart
+              </ThemedText>
+              <View style={styles.estimatedCostContainer}>
+                <Text style={styles.estimatedCostText}>
+                  ₹{estimatedCost}Cr estimated cost
+                </Text>
+              </View>
             </View>
-            <ThemedText style={styles.chartDescription}>
-              Interactive cost projection chart
-            </ThemedText>
-            <View style={styles.estimatedCostContainer}>
-              <Text style={styles.estimatedCostText}>
-                ₹{estimatedCost}Cr estimated cost
-              </Text>
-            </View>
-          </View>
+          )}
         </View>
       </ThemedView>
     </ScrollView>
