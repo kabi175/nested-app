@@ -128,11 +128,8 @@ const styles = StyleSheet.create({
     backgroundColor: "transparent",
   },
   headerTitle: {
-    fontSize: 28,
-    fontWeight: "bold",
     textAlign: "left",
     marginBottom: 40,
-    color: "#1F2937",
   },
   timelineContainer: {
     flex: 1,
@@ -153,10 +150,6 @@ const styles = StyleSheet.create({
     marginRight: 16,
     zIndex: 1,
   },
-  stepNumber: {
-    fontSize: 18,
-    fontWeight: "bold",
-  },
   connectingLine: {
     position: "absolute",
     left: 23,
@@ -170,14 +163,10 @@ const styles = StyleSheet.create({
     paddingTop: 4,
   },
   stepTitle: {
-    fontSize: 18,
-    fontWeight: "bold",
-    color: "#1F2937",
     marginBottom: 8,
     lineHeight: 24,
   },
   stepSubtitle: {
-    fontSize: 16,
     color: "#6B7280",
     lineHeight: 22,
   },
@@ -195,10 +184,5 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.3,
     shadowRadius: 8,
     elevation: 6,
-  },
-  ctaButtonText: {
-    color: "#FFFFFF",
-    fontSize: 18,
-    fontWeight: "bold",
   },
 });
