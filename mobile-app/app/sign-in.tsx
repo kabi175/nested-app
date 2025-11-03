@@ -71,7 +71,8 @@ export default function SignIn() {
       );
       setConfirm(confirmation);
       setResendTimer(30);
-    } catch {
+    } catch (error) {
+      console.log("Error", error);
       Alert.alert("Error", "Failed to send OTP. Please try again.");
     } finally {
       setIsLoading(false);
