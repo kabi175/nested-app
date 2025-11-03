@@ -7,17 +7,9 @@ import { useEffect } from "react";
 import { Image, StyleSheet, View } from "react-native";
 
 export default function Home() {
-  const { isSignedIn, isLoaded } = useAuth();
-  const { data: user, isLoading } = useUser();
-  const setUser = useSetAtom(userAtom);
+  const { isSignedIn, isLoaded, user } = useAuth();
 
-  useEffect(() => {
-    if (user) {
-      setUser(user);
-    }
-  }, [user]);
-
-  if (!isLoaded || isLoading) {
+  if (!isLoaded) {
     // show logo
     return (
       <View style={styles.container}>
@@ -30,12 +22,33 @@ export default function Home() {
     );
   }
 
+  if (user?.displayName === null) {
+    return <Redirect href="/name-input" />;
+  }
+
   if (isSignedIn) {
-    return <Redirect href="/(tabs)" />;
+    return <Authorized />;
   }
 
   return <Redirect href="/sign-in" />;
 }
+
+const Authorized = () => {
+  const { data: user, isLoading } = useUser();
+  const setUser = useSetAtom(userAtom);
+
+  useEffect(() => {
+    if (user) {
+      setUser(user);
+    }
+  }, [user]);
+
+  if (!isLoading) {
+    return null;
+  }
+
+  return <Redirect href="/(tabs)" />;
+};
 
 const styles = StyleSheet.create({
   container: {
