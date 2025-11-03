@@ -1,32 +1,14 @@
+import UPIButton from "@/components/buttons/UPIButton";
 import { formatCurrency } from "@/utils/formatters";
-import { isValidUpiId } from "@/utils/validation";
-import {
-  Button,
-  Card,
-  Divider,
-  Input,
-  Layout,
-  Text,
-} from "@ui-kitten/components";
+import { Button, Layout, Text } from "@ui-kitten/components";
+import { LinearGradient } from "expo-linear-gradient";
 import { Link } from "expo-router";
 import { StatusBar } from "expo-status-bar";
-import { ArrowRight } from "lucide-react-native";
-import { useState } from "react";
-import { ScrollView, StyleSheet, View } from "react-native";
+import { ArrowRight, CreditCard, Lock, Sparkles } from "lucide-react-native";
+import { ScrollView, StyleSheet, TouchableOpacity, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function BankAccountsScreen() {
-  const [upiId, setUpiId] = useState("");
-  const [error, setError] = useState<string | null>(null);
-
-  const handleContinue = () => {
-    if (!isValidUpiId(upiId)) {
-      setError("Please enter a valid UPI ID");
-    } else {
-      setError(null);
-    }
-  };
-
   return (
     <SafeAreaView style={styles.safeArea} edges={["top"]}>
       <StatusBar style="auto" backgroundColor="#fff" />
@@ -42,63 +24,96 @@ export default function BankAccountsScreen() {
               Link bank account
             </Text>
             <Text category="s1" appearance="hint" style={styles.subtitle}>
-              Bank account in your name from which you will transact funds for
-              Investment
+              Securely connect your bank account to start investing for your
+              child&apos;s future
             </Text>
           </View>
 
-          {/* UPI Link Section */}
-          <Card style={styles.card} status="primary">
-            <View style={styles.cardHeader}>
-              <Text category="h6" style={styles.cardTitle}>
-                Link with UPI
-              </Text>
-            </View>
+          {/* UPI Card */}
+          <TouchableOpacity activeOpacity={0.95}>
+            <LinearGradient
+              colors={["#2563EB", "#1D4ED8"]}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 1 }}
+              style={styles.upiCard}
+            >
+              <View style={styles.upiCardHeader}>
+                <View style={styles.upiIconContainer}>
+                  <CreditCard size={24} color="#fff" />
+                </View>
+                <View style={styles.upiCardContent}>
+                  <Text category="h6" style={styles.upiCardTitle}>
+                    Quick Link with UPI
+                  </Text>
+                  <Text category="s2" style={styles.upiCardSubtitle}>
+                    Fast & secure verification
+                  </Text>
+                </View>
+                <View style={styles.sparklesContainer}>
+                  <Sparkles size={20} color="rgba(255,255,255,0.5)" />
+                </View>
+              </View>
 
-            <View style={styles.upiSection}>
-              <Input
-                style={styles.upiInput}
-                placeholder="Enter UPI ID"
-                textContentType="none"
-                autoCapitalize="none"
-                value={upiId}
-                onChangeText={setUpiId}
-                onBlur={handleContinue}
-                status={error ? "danger" : "basic"}
-                caption={
-                  error
-                    ? error
-                    : `${formatCurrency(
-                        1
-                      )} will be debited from your bank account and refunded within 24 hours for verification.`
-                }
-              />
-            </View>
-          </Card>
+              <View style={styles.upiButtonContainer}>
+                <UPIButton />
+              </View>
 
-          {/* Manual Link Option */}
-          <View style={styles.manualLinkSection}>
-            <Link href="/bank-accounts/add-manual" asChild>
-              <Button
-                appearance="ghost"
-                style={styles.manualButton}
-                accessoryRight={() => <ArrowRight size={20} color="#2563EB" />}
-              >
-                Link manually instead
-              </Button>
-            </Link>
+              <View style={styles.verificationInfo}>
+                <Lock size={14} color="rgba(255,255,255,0.8)" />
+                <Text category="s1" style={styles.verificationText}>
+                  {formatCurrency(1)} will be temporarily charged and refunded
+                  within 24 hours
+                </Text>
+              </View>
+            </LinearGradient>
+          </TouchableOpacity>
+
+          {/* Divider with "OR" text */}
+          <View style={styles.orDivider}>
+            <View style={styles.dividerLine} />
+            <Text category="s1" appearance="hint" style={styles.orText}>
+              or
+            </Text>
+            <View style={styles.dividerLine} />
           </View>
 
-          <Divider style={styles.divider} />
+          {/* Manual Link Option */}
+          <TouchableOpacity>
+            <Link href="/bank-accounts/add-manual" asChild>
+              <View style={styles.manualLinkCard}>
+                <View style={styles.manualLinkContent}>
+                  <Text category="h6" style={styles.manualLinkTitle}>
+                    Link manually
+                  </Text>
+                  <Text category="s2" appearance="hint">
+                    Enter your bank details manually
+                  </Text>
+                </View>
+                <View style={styles.arrowContainer}>
+                  <ArrowRight size={20} color="#2563EB" />
+                </View>
+              </View>
+            </Link>
+          </TouchableOpacity>
+
+          {/* Security Note */}
+          <View style={styles.securityNote}>
+            <View style={styles.securityHeader}>
+              <Lock size={16} color="#10B981" />
+              <Text category="s1" style={styles.securityTitle}>
+                Your security matters
+              </Text>
+            </View>
+            <Text category="s2" style={styles.securityDescription}>
+              All transactions are encrypted and your data is protected with
+              bank-level security
+            </Text>
+          </View>
         </ScrollView>
 
         {/* Continue Button - Fixed at Bottom */}
         <SafeAreaView style={styles.buttonContainer} edges={["bottom"]}>
-          <Button
-            style={styles.continueButton}
-            size="large"
-            disabled={!upiId || !!error}
-          >
+          <Button style={styles.continueButton} size="large">
             Continue
           </Button>
         </SafeAreaView>
@@ -110,9 +125,11 @@ export default function BankAccountsScreen() {
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
+    backgroundColor: "#F8FAFC",
   },
   container: {
     flex: 1,
+    backgroundColor: "#F8FAFC",
   },
   scrollView: {
     flex: 1,
@@ -120,56 +137,167 @@ const styles = StyleSheet.create({
   scrollContent: {
     paddingHorizontal: 20,
     paddingTop: 24,
-    paddingBottom: 100, // Extra padding to prevent content from being hidden behind button
+    paddingBottom: 100,
   },
   headerSection: {
-    marginBottom: 24,
+    marginBottom: 32,
   },
   title: {
     marginBottom: 8,
-    fontWeight: "bold",
+    fontWeight: "700",
+    color: "#0F172A",
+    letterSpacing: -0.5,
   },
   subtitle: {
-    lineHeight: 20,
+    lineHeight: 22,
+    color: "#64748B",
   },
-  card: {
+  // UPI Card Styles
+  upiCard: {
+    borderRadius: 20,
+    padding: 24,
+    marginBottom: 24,
+    shadowColor: "#2563EB",
+    shadowOffset: {
+      width: 0,
+      height: 8,
+    },
+    shadowOpacity: 0.25,
+    shadowRadius: 16,
+    elevation: 8,
+  },
+  upiCardHeader: {
+    flexDirection: "row",
+    alignItems: "center",
     marginBottom: 20,
+  },
+  upiIconContainer: {
+    width: 48,
+    height: 48,
     borderRadius: 12,
+    backgroundColor: "rgba(255,255,255,0.2)",
+    justifyContent: "center",
+    alignItems: "center",
+    marginRight: 12,
   },
-  cardHeader: {
-    marginBottom: 12,
+  upiCardContent: {
+    flex: 1,
   },
-  cardTitle: {
+  upiCardTitle: {
+    color: "#FFFFFF",
+    fontWeight: "700",
+    marginBottom: 4,
+  },
+  upiCardSubtitle: {
+    color: "rgba(255,255,255,0.9)",
+  },
+  sparklesContainer: {
+    width: 40,
+    height: 40,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  verificationInfo: {
+    flexDirection: "row",
+    alignItems: "flex-start",
+    backgroundColor: "rgba(255,255,255,0.15)",
+    borderRadius: 12,
+    padding: 12,
+  },
+  verificationText: {
+    flex: 1,
+    marginLeft: 8,
+    color: "rgba(255,255,255,0.95)",
+    lineHeight: 18,
+  },
+  // OR Divider Styles
+  orDivider: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: 24,
+  },
+  dividerLine: {
+    flex: 1,
+    height: 1,
+    backgroundColor: "#E2E8F0",
+  },
+  orText: {
+    marginHorizontal: 16,
+    color: "#94A3B8",
+    fontWeight: "500",
+  },
+  // Manual Link Styles
+  manualLinkCard: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#FFFFFF",
+    borderRadius: 16,
+    padding: 20,
+    marginBottom: 24,
+    borderWidth: 1.5,
+    borderColor: "#E2E8F0",
+    shadowColor: "#000",
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.05,
+    shadowRadius: 8,
+    elevation: 2,
+  },
+  manualLinkContent: {
+    flex: 1,
+  },
+  manualLinkTitle: {
     fontWeight: "600",
+    marginBottom: 4,
+    color: "#0F172A",
   },
-  infoText: {
-    marginBottom: 20,
-    lineHeight: 20,
+  arrowContainer: {
+    width: 40,
+    height: 40,
+    borderRadius: 10,
+    backgroundColor: "#EFF6FF",
+    justifyContent: "center",
+    alignItems: "center",
   },
-  upiSection: {
-    gap: 16,
+  // Security Note Styles
+  securityNote: {
+    backgroundColor: "#ECFDF5",
+    borderRadius: 16,
+    padding: 16,
+    borderWidth: 1,
+    borderColor: "#D1FAE5",
   },
-  upiInput: {
-    marginTop: 8,
-  },
-  manualLinkSection: {
+  securityHeader: {
+    flexDirection: "row",
+    alignItems: "center",
     marginBottom: 8,
   },
-  manualButton: {
-    alignSelf: "flex-start",
+  securityTitle: {
+    marginLeft: 8,
+    fontWeight: "600",
+    color: "#065F46",
   },
-  divider: {
-    marginVertical: 24,
+  securityDescription: {
+    color: "#047857",
+    lineHeight: 20,
   },
+  // Button Container
   buttonContainer: {
     paddingHorizontal: 20,
     paddingTop: 16,
     paddingBottom: 20,
-    borderTopWidth: 1,
-    borderTopColor: "#E5E7EB",
     backgroundColor: "#FFFFFF",
+    borderTopWidth: 1,
+    borderTopColor: "#E2E8F0",
   },
   continueButton: {
     width: "100%",
+  },
+  upiButtonContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
   },
 });

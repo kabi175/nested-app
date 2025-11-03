@@ -19,6 +19,7 @@ const styles = StyleSheet.create({
     height: 80,
     width: 150,
     marginBottom: 20,
+    backgroundColor: "#FFFFFF",
   },
   upiImage: {
     height: "100%",
