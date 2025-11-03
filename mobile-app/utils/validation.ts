@@ -52,3 +52,8 @@ export const defaultChildFormErrors = {
   gender: "",
   investUnderChild: "",
 };
+
+export const isValidUpiId = (upiId: string): boolean => {
+  const pattern = /^[a-zA-Z0-9._-]+@[a-zA-Z0-9]+$/;
+  return pattern.test(upiId);
+};

@@ -1,5 +1,5 @@
-import UPIButton from "@/components/buttons/UPIButton";
 import { formatCurrency } from "@/utils/formatters";
+import { isValidUpiId } from "@/utils/validation";
 import {
   Button,
   Card,
@@ -9,13 +9,27 @@ import {
   Text,
 } from "@ui-kitten/components";
 import { Link } from "expo-router";
+import { StatusBar } from "expo-status-bar";
 import { ArrowRight } from "lucide-react-native";
+import { useState } from "react";
 import { ScrollView, StyleSheet, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function BankAccountsScreen() {
+  const [upiId, setUpiId] = useState("");
+  const [error, setError] = useState<string | null>(null);
+
+  const handleContinue = () => {
+    if (!isValidUpiId(upiId)) {
+      setError("Please enter a valid UPI ID");
+    } else {
+      setError(null);
+    }
+  };
+
   return (
     <SafeAreaView style={styles.safeArea} edges={["top"]}>
+      <StatusBar style="auto" backgroundColor="#fff" />
       <Layout style={styles.container} level="1">
         <ScrollView
           style={styles.scrollView}
@@ -41,18 +55,23 @@ export default function BankAccountsScreen() {
               </Text>
             </View>
 
-            <Text category="p2" appearance="hint" style={styles.infoText}>
-              {formatCurrency(1)} will be debited from your bank account and
-              refunded within 24 hours for verification.
-            </Text>
-
             <View style={styles.upiSection}>
-              <UPIButton />
               <Input
                 style={styles.upiInput}
                 placeholder="Enter UPI ID"
                 textContentType="none"
                 autoCapitalize="none"
+                value={upiId}
+                onChangeText={setUpiId}
+                onBlur={handleContinue}
+                status={error ? "danger" : "basic"}
+                caption={
+                  error
+                    ? error
+                    : `${formatCurrency(
+                        1
+                      )} will be debited from your bank account and refunded within 24 hours for verification.`
+                }
               />
             </View>
           </Card>
@@ -75,7 +94,11 @@ export default function BankAccountsScreen() {
 
         {/* Continue Button - Fixed at Bottom */}
         <SafeAreaView style={styles.buttonContainer} edges={["bottom"]}>
-          <Button style={styles.continueButton} size="large">
+          <Button
+            style={styles.continueButton}
+            size="large"
+            disabled={!upiId || !!error}
+          >
             Continue
           </Button>
         </SafeAreaView>
