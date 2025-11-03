@@ -29,7 +29,19 @@ export const updateUser = async (
   id: string,
   payload: Partial<User>
 ): Promise<User> => {
-  const { data } = await api.put(`/users/${id}`, payload);
+  const userDTO = {
+    first_name: payload.firstName,
+    last_name: payload.lastName,
+    email: payload.email,
+    phone_number: payload.phone_number,
+    pan_number: payload.panNumber,
+    date_of_birth: payload.dob
+      ? payload.dob.toLocaleDateString("en-CA")
+      : undefined,
+    gender: payload.gender,
+  };
+
+  const { data } = await api.patch(`/users/${id}`, userDTO);
   return data;
 };
 
