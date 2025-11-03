@@ -1,5 +1,6 @@
 import HowNestedHelps from "@/components/HowNestedHelps";
 import KnowMore from "@/components/KnowMore";
+import WhyParentTrustUs from "@/components/WhyParentTrustUs";
 import { Button, Divider, Layout, Text } from "@ui-kitten/components";
 import { router } from "expo-router";
 import { StatusBar } from "expo-status-bar";
@@ -28,6 +29,8 @@ export default function NestedIntro() {
             <Divider />
 
             <KnowMore />
+            <Divider />
+            <WhyParentTrustUs />
             <Divider />
 
             {/* New Investment Landing Section */}
