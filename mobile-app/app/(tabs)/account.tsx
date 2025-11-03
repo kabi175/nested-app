@@ -1,5 +1,6 @@
 import { ThemedText } from "@/components/ThemedText";
 import { useAuth, useSignOut } from "@/hooks/auth";
+import { openWhatsApp } from "@/utils/whtsapp";
 import { Ionicons } from "@expo/vector-icons";
 import Constants from "expo-constants";
 import { router } from "expo-router";
@@ -93,21 +94,21 @@ export default function AccountScreen() {
       borderColor: "#F59E0B",
       onPress: () => router.push("/bank-accounts/list"),
     },
-    {
-      id: "refer-friend",
-      title: "Refer a Friend",
-      icon: "people-outline",
-      iconColor: "#8B5CF6",
-      borderColor: "#8B5CF6",
-      onPress: () => console.log("Refer a Friend pressed"),
-    },
+    // {
+    //   id: "refer-friend",
+    //   title: "Refer a Friend",
+    //   icon: "people-outline",
+    //   iconColor: "#8B5CF6",
+    //   borderColor: "#8B5CF6",
+    //   onPress: () => console.log("Refer a Friend pressed"),
+    // },
     {
       id: "share-feedback",
       title: "Share Feedback",
       icon: "chatbubble-outline",
       iconColor: "#3B82F6",
       borderColor: "#3B82F6",
-      onPress: () => console.log("Share Feedback pressed"),
+      onPress: () => openWhatsApp("916382751431", "Hello 👋"),
     },
     {
       id: "support",
@@ -115,7 +116,7 @@ export default function AccountScreen() {
       icon: "help-circle-outline",
       iconColor: "#10B981",
       borderColor: "#10B981",
-      onPress: () => console.log("Support pressed"),
+      onPress: () => openWhatsApp("916382751431", "Hello 👋"),
     },
     {
       id: "logout",
