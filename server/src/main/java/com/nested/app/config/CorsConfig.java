@@ -17,7 +17,7 @@ public class CorsConfig {
     CorsConfiguration configuration = new CorsConfiguration();
     
     // Allow requests from localhost on any port (for development)
-    configuration.setAllowedOriginPatterns(Arrays.asList("http://localhost:*", "http://127.0.0.1:*"));
+    configuration.setAllowedOriginPatterns(Arrays.asList("http://localhost:*", "http://127.0.0.1:*","https://verpan.in/*"));
     
     // Allow all HTTP methods
     configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
