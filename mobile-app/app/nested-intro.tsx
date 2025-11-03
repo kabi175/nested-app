@@ -1,18 +1,14 @@
 import HowNestedHelps from "@/components/HowNestedHelps";
 import KnowMore from "@/components/KnowMore";
+import LaunchingSoon from "@/components/LaunchingSoon";
 import WhyParentTrustUs from "@/components/WhyParentTrustUs";
 import { Divider, Layout, Text } from "@ui-kitten/components";
-import { router } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import React from "react";
 import { ScrollView, StyleSheet } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function NestedIntro() {
-  const handleStartGoal = () => {
-    router.push("/estimate-cost");
-  };
-
   return (
     <SafeAreaView style={styles.rootContainer}>
       <StatusBar style="auto" backgroundColor="#FFFFFF" />
@@ -31,6 +27,9 @@ export default function NestedIntro() {
             <KnowMore />
             <Divider />
             <WhyParentTrustUs />
+            <Divider />
+
+            <LaunchingSoon />
             <Divider />
 
             {/* New Investment Landing Section */}
