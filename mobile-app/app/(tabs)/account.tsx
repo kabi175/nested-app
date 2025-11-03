@@ -61,21 +61,21 @@ export default function AccountScreen() {
   };
 
   const menuItems: MenuItem[] = [
-    {
-      id: "modify-goals",
-      title: "Modify Goals",
-      icon: "star-outline",
-      iconColor: "#EC4899",
-      borderColor: "#EC4899",
-      onPress: () => console.log("Modify Goals pressed"),
-    },
+    // {
+    //   id: "modify-goals",
+    //   title: "Modify Goals",
+    //   icon: "star-outline",
+    //   iconColor: "#EC4899",
+    //   borderColor: "#EC4899",
+    //   onPress: () => console.log("Modify Goals pressed"),
+    // },
     {
       id: "orders",
       title: "Orders",
       icon: "document-text-outline",
       iconColor: "#F59E0B",
       borderColor: "#F59E0B",
-      onPress: () => console.log("Orders pressed"),
+      onPress: () => router.push("/orders"),
     },
     {
       id: "manage-sips",
@@ -83,7 +83,7 @@ export default function AccountScreen() {
       icon: "refresh-outline",
       iconColor: "#06B6D4",
       borderColor: "#06B6D4",
-      onPress: () => console.log("Manage SIPs pressed"),
+      onPress: () => router.push("/sip"),
     },
     {
       id: "manage-bank-accounts",
