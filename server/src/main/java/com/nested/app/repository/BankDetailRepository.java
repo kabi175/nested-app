@@ -107,6 +107,8 @@ public interface BankDetailRepository extends JpaRepository<BankDetail, Long> {
     @Query("UPDATE BankDetail b SET b.isPrimary = false WHERE b.investor.id = :investorId")
     void setAllAsNonPrimaryForInvestor(@Param("investorId") Long investorId);
 
+    List<BankDetail> findAllByUserId(Long userId);
+
     /**
      * Custom query to find bank details by multiple criteria
      * @param investorId investor ID (optional)

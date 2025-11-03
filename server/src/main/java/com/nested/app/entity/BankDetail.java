@@ -46,6 +46,10 @@ public class BankDetail {
   @JoinColumn(name = "investor_id", nullable = false)
   private Investor investor;
 
+  @ManyToOne(optional = true)
+  @JoinColumn(name = "user_id", nullable = true)
+  private User user;
+
   // Only SAVINGS & CURRENT  is currently supported
   public enum AccountType {
     SAVINGS,

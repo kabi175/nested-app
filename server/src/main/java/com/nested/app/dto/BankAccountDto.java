@@ -22,9 +22,13 @@ public class BankAccountDto {
   @JsonProperty("ifsc")
   private String ifsc;
 
+  @JsonProperty("is_primary")
+  private boolean isPrimary;
+
   public static BankAccountDto fromEntity(BankDetail bankDetail) {
     return new BankAccountDto(
-        bankDetail.getAccountType(), bankDetail.getAccountNumber(), bankDetail.getIfscCode());
+        bankDetail.getAccountType(), bankDetail.getAccountNumber(),
+            bankDetail.getIfscCode(), bankDetail.isPrimary());
   }
 
   public BankDetail toEntity() {
@@ -32,6 +36,7 @@ public class BankAccountDto {
     bankDetail.setAccountType(this.accountType);
     bankDetail.setAccountNumber(this.accountNumber);
     bankDetail.setIfscCode(this.ifsc);
+    bankDetail.setPrimary(this.isPrimary);
     return bankDetail;
   }
 }

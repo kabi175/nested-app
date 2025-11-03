@@ -47,21 +47,27 @@ public class UserController {
   private final AppEnvironment appEnvironment;
 
   @GetMapping(produces = MediaType.APPLICATION_JSON_VALUE)
-  @Operation(summary = "Get users", description = "Get current user or all users (admin only for ALL)")
+  @Operation(
+      summary = "Get users",
+      description = "Get current user or all users (admin only for ALL)")
   @ApiResponses(
       value = {
         @ApiResponse(responseCode = "200", description = "Successfully retrieved users"),
         @ApiResponse(responseCode = "204", description = "No users found"),
-        @ApiResponse(responseCode = "403", description = "Access denied - Admin role required for type ALL")
+        @ApiResponse(
+            responseCode = "403",
+            description = "Access denied - Admin role required for type ALL")
       })
   public ResponseEntity<?> getUsers(
       @RequestParam(defaultValue = "CURRENT_USER") UserService.Type type,
       @PageableDefault(sort = "id") Pageable pageable) {
-    
+
     // Check if user is trying to access ALL users without admin role
     // Skip check in development mode
-    if (!appEnvironment.isDevelopment() && 
-        (type == UserService.Type.ALL || type == UserService.Type.ACTIVE || type == UserService.Type.INACTIVE)) {
+    if (!appEnvironment.isDevelopment()
+        && (type == UserService.Type.ALL
+            || type == UserService.Type.ACTIVE
+            || type == UserService.Type.INACTIVE)) {
       User currentUser = userContext.getUser();
       if (currentUser == null || !User.Role.ADMIN.equals(currentUser.getRole())) {
         log.warn("Non-admin user attempted to access all users");
@@ -69,7 +75,7 @@ public class UserController {
             .body(Map.of("error", "Access denied - Admin role required"));
       }
     }
-    
+
     var users = userService.findAllUsers(type, pageable);
     if (users.isEmpty()) {
       return ResponseEntity.noContent().build();
@@ -192,5 +198,18 @@ public class UserController {
       return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
           .body(Map.of("error", "Failed to add bank account: " + e.getMessage()));
     }
+  }
+
+    @GetMapping(value = "/{user_id}/banks", produces =
+            MediaType.APPLICATION_JSON_VALUE)
+  public ResponseEntity<Entity<BankAccountDto>> getBankAccounts(
+      @Parameter(description = "User ID", required = true) @PathVariable("user_id") Long userID) {
+    var banks = investorService.findBankAccountByUserId(userID);
+
+    if (banks == null || banks.isEmpty()) {
+      return ResponseEntity.noContent().build();
+    }
+
+    return ResponseEntity.ok(Entity.of(banks));
   }
 }

@@ -11,14 +11,18 @@ import com.nested.app.client.tarrakki.dto.OtpResponse;
 import com.nested.app.client.tarrakki.dto.OtpVerifyRequest;
 import com.nested.app.client.tarrakki.dto.TarrakkiInvestorRequest;
 import com.nested.app.dto.BankAccountDto;
+import com.nested.app.entity.BankDetail;
 import com.nested.app.entity.Child;
 import com.nested.app.entity.Investor;
 import com.nested.app.entity.User;
+import com.nested.app.repository.BankDetailRepository;
 import com.nested.app.repository.ChildRepository;
 import com.nested.app.repository.InvestorRepository;
 import com.nested.app.repository.UserRepository;
 import java.time.LocalDate;
 import java.time.ZoneId;
+import java.util.List;
+
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -36,7 +40,8 @@ import org.springframework.web.reactive.function.client.WebClientResponseExcepti
 @Transactional
 public class InvestorServiceImpl {
 
-  private final InvestorAPIClient investorAPIClient;
+    private final BankDetailRepository bankDetailRepository;
+    private final InvestorAPIClient investorAPIClient;
   private final InvestorRepository investorRepository;
   private final UserRepository userRepository;
   private final ChildRepository childRepository;
@@ -425,7 +430,12 @@ public class InvestorServiceImpl {
     return response.getBank_id();
   }
 
-  /**
+    public List<BankAccountDto> findBankAccountByUserId(Long userID) {
+        var bankAccounts = bankDetailRepository.findAllByUserId(userID);
+        return bankAccounts.stream().map(BankAccountDto::fromEntity).toList();
+    }
+
+    /**
    * Uploads a document for an investor
    *
    * @param investorId Investor ID
