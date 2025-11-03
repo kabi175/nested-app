@@ -377,7 +377,7 @@ public class InvestorServiceImpl {
   /**
    * Adds a bank account for an investor
    *
-   * @param investorId Investor ID
+   * @param userID userID
    * @return Bank ID from Tarrakki
    */
   public BankAccountDto addBankAccount(Long userID, BankAccountDto bankAccountDto) {
