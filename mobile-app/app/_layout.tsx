@@ -63,6 +63,7 @@ function RootNavigator() {
       <Stack.Protected guard={hasEnteredName === true}>
         <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
         <Stack.Screen name="payment" />
+        <Stack.Screen name="bank-accounts" />
         <Stack.Screen name="+not-found" />
       </Stack.Protected>
 

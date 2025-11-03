@@ -86,12 +86,12 @@ export default function AccountScreen() {
       onPress: () => console.log("Manage SIPs pressed"),
     },
     {
-      id: "manage-mandates",
-      title: "Manage Mandates",
+      id: "manage-bank-accounts",
+      title: "Manage Bank Accounts",
       icon: "card-outline",
       iconColor: "#F59E0B",
       borderColor: "#F59E0B",
-      onPress: () => console.log("Manage Mandates pressed"),
+      onPress: () => router.push("/bank-accounts"),
     },
     {
       id: "refer-friend",
