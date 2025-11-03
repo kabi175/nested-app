@@ -179,14 +179,9 @@ public class UserController {
     log.info("POST /api/v1/users/{}/banks - Adding bank account for User", userID);
 
     try {
-      String bankId = investorService.addBankAccount(userID, bankAccountDto);
+      var bank = investorService.addBankAccount(userID, bankAccountDto);
 
-      log.info(
-          "Successfully added bank account for investor ID: {} with bank_id: {}", userID, bankId);
-
-      return ResponseEntity.status(HttpStatus.CREATED)
-          .body(Map.of("message", "Bank account added successfully", "bank_id", bankId));
-
+      return ResponseEntity.status(HttpStatus.CREATED).body(bank);
     } catch (IllegalArgumentException e) {
       log.warn("Validation error adding bank account for investor {}: {}", userID, e.getMessage());
       return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of("error", e.getMessage()));
@@ -200,8 +195,7 @@ public class UserController {
     }
   }
 
-    @GetMapping(value = "/{user_id}/banks", produces =
-            MediaType.APPLICATION_JSON_VALUE)
+  @GetMapping(value = "/{user_id}/banks", produces = MediaType.APPLICATION_JSON_VALUE)
   public ResponseEntity<Entity<BankAccountDto>> getBankAccounts(
       @Parameter(description = "User ID", required = true) @PathVariable("user_id") Long userID) {
     var banks = investorService.findBankAccountByUserId(userID);

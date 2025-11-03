@@ -22,7 +22,7 @@ public class BankDetail {
   @GeneratedValue(strategy = GenerationType.IDENTITY)
   private Long id;
 
-  @Column(nullable = false)
+  @Column
   private String bankName;
 
   @Column(nullable = false)
@@ -39,15 +39,15 @@ public class BankDetail {
   private boolean isPrimary;
 
   // this is the reference id returned by the tarrakki when the bank is added
-  @Column(nullable = false, unique = true, updatable = false)
+  @Column
   private String refId;
 
-  @ManyToOne(optional = false)
-  @JoinColumn(name = "investor_id", nullable = false)
+  @ManyToOne()
+  @JoinColumn(name = "investor_id")
   private Investor investor;
 
-  @ManyToOne(optional = true)
-  @JoinColumn(name = "user_id", nullable = true)
+  @ManyToOne(optional = false)
+  @JoinColumn(name = "user_id", nullable = false)
   private User user;
 
   // Only SAVINGS & CURRENT  is currently supported

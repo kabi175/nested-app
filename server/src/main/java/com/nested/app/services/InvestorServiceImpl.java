@@ -2,7 +2,6 @@ package com.nested.app.services;
 
 import com.nested.app.client.mf.OtpApiClient;
 import com.nested.app.client.tarrakki.InvestorAPIClient;
-import com.nested.app.client.tarrakki.dto.BankResponse;
 import com.nested.app.client.tarrakki.dto.InvestorResponse;
 import com.nested.app.client.tarrakki.dto.NomineeRequest;
 import com.nested.app.client.tarrakki.dto.NomineeResponse;
@@ -11,7 +10,6 @@ import com.nested.app.client.tarrakki.dto.OtpResponse;
 import com.nested.app.client.tarrakki.dto.OtpVerifyRequest;
 import com.nested.app.client.tarrakki.dto.TarrakkiInvestorRequest;
 import com.nested.app.dto.BankAccountDto;
-import com.nested.app.entity.BankDetail;
 import com.nested.app.entity.Child;
 import com.nested.app.entity.Investor;
 import com.nested.app.entity.User;
@@ -22,7 +20,6 @@ import com.nested.app.repository.UserRepository;
 import java.time.LocalDate;
 import java.time.ZoneId;
 import java.util.List;
-
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -40,8 +37,8 @@ import org.springframework.web.reactive.function.client.WebClientResponseExcepti
 @Transactional
 public class InvestorServiceImpl {
 
-    private final BankDetailRepository bankDetailRepository;
-    private final InvestorAPIClient investorAPIClient;
+  private final BankDetailRepository bankDetailRepository;
+  private final InvestorAPIClient investorAPIClient;
   private final InvestorRepository investorRepository;
   private final UserRepository userRepository;
   private final ChildRepository childRepository;
@@ -383,59 +380,27 @@ public class InvestorServiceImpl {
    * @param investorId Investor ID
    * @return Bank ID from Tarrakki
    */
-  public String addBankAccount(Long investorId, BankAccountDto bankAccountDto) {
-    log.info("Adding bank account for investor ID: {}", investorId);
+  public BankAccountDto addBankAccount(Long userID, BankAccountDto bankAccountDto) {
 
-    Investor investor =
-        investorRepository
-            .findById(investorId)
-            .orElseThrow(
-                () -> new IllegalArgumentException("Investor not found with ID: " + investorId));
+    var bank = bankAccountDto.toEntity();
 
-    if (investor.getRef() == null) {
-      throw new IllegalStateException("Investor does not have a Tarrakki reference ID");
-    }
+    var user =
+        userRepository
+            .findById(userID)
+            .orElseThrow(() -> new IllegalArgumentException("User not found with ID: " + userID));
+    bank.setUser(user);
 
-    // Validate file
-    // TODO: handle file upload properly
-    //    if (file == null || file.isEmpty()) {
-    //      throw new IllegalArgumentException("Verification document file is required");
-    //    }
+    bank = bankDetailRepository.save(bank);
 
-    // Call Tarrakki API
-    BankResponse response;
-    try {
-      response =
-          investorAPIClient
-              .addBankForInvestor(
-                  investor.getRef(),
-                  bankAccountDto.getAccountType().getValue(),
-                  bankAccountDto.getAccountNumber(),
-                  bankAccountDto.getIfsc())
-              .block();
-
-      if (response == null || response.getBank_id() == null) {
-        throw new RuntimeException("Failed to add bank account: null response from Tarrakki API");
-      }
-    } catch (Exception e) {
-      log.error("Error adding bank account for investor {}: {}", investorId, e.getMessage(), e);
-      throw new RuntimeException("Failed to add bank account", e);
-    }
-
-    log.info(
-        "Successfully added bank account for investor ID: {} with bank_id: {}",
-        investorId,
-        response.getBank_id());
-
-    return response.getBank_id();
+      return BankAccountDto.fromEntity(bankDetailRepository.findById(bank.getId()).orElseThrow());
   }
 
-    public List<BankAccountDto> findBankAccountByUserId(Long userID) {
-        var bankAccounts = bankDetailRepository.findAllByUserId(userID);
-        return bankAccounts.stream().map(BankAccountDto::fromEntity).toList();
-    }
+  public List<BankAccountDto> findBankAccountByUserId(Long userID) {
+    var bankAccounts = bankDetailRepository.findAllByUserId(userID);
+    return bankAccounts.stream().map(BankAccountDto::fromEntity).toList();
+  }
 
-    /**
+  /**
    * Uploads a document for an investor
    *
    * @param investorId Investor ID
