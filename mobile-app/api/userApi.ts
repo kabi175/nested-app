@@ -3,9 +3,9 @@ import type { Child } from "@/types/child";
 import type { Goal } from "@/types/investment";
 import { api } from "./client";
 
-export const getUser = async (id: string): Promise<User> => {
-  const { data } = await api.get(`/users/${id}`);
-  return data;
+export const getUser = async (): Promise<User | null> => {
+  const { data } = await api.get(`/users?type=CURRENT_USER`);
+  return data.data?.[0] as User | null;
 };
 
 export const updateUser = async (

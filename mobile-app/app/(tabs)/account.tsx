@@ -91,7 +91,7 @@ export default function AccountScreen() {
       icon: "card-outline",
       iconColor: "#F59E0B",
       borderColor: "#F59E0B",
-      onPress: () => router.push("/bank-accounts"),
+      onPress: () => router.push("/bank-accounts/list"),
     },
     {
       id: "refer-friend",

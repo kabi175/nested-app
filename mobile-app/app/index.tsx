@@ -1,11 +1,23 @@
+import { userAtom } from "@/atoms/user";
 import { useAuth } from "@/hooks/auth";
+import { useUser } from "@/hooks/useUser";
 import { Redirect } from "expo-router";
+import { useSetAtom } from "jotai";
+import { useEffect } from "react";
 import { Image, StyleSheet, View } from "react-native";
 
 export default function Home() {
   const { isSignedIn, isLoaded } = useAuth();
+  const { data: user, isLoading } = useUser();
+  const setUser = useSetAtom(userAtom);
 
-  if (!isLoaded) {
+  useEffect(() => {
+    if (user) {
+      setUser(user);
+    }
+  }, [user]);
+
+  if (!isLoaded || isLoading) {
     // show logo
     return (
       <View style={styles.container}>
