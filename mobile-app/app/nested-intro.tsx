@@ -1,6 +1,9 @@
 import HowNestedHelps from "@/components/HowNestedHelps";
 import KnowMore from "@/components/KnowMore";
 import LaunchingSoon from "@/components/LaunchingSoon";
+import NestedFooter from "@/components/NestedFooter";
+import ShareApp from "@/components/ShareApp";
+import WhatParentsSay from "@/components/WhatParentsSay";
 import WhyParentTrustUs from "@/components/WhyParentTrustUs";
 import { Divider, Layout, Text } from "@ui-kitten/components";
 import { StatusBar } from "expo-status-bar";
@@ -31,6 +34,14 @@ export default function NestedIntro() {
 
             <LaunchingSoon />
             <Divider />
+
+            <WhatParentsSay />
+            <Divider />
+
+            <ShareApp />
+            <Divider />
+
+            <NestedFooter />
 
             {/* New Investment Landing Section */}
             {/* <InvestmentLandingScreen
