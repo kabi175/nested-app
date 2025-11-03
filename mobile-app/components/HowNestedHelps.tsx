@@ -1,22 +1,14 @@
 import { Layout, Text } from "@ui-kitten/components";
-import {
-  BellRing,
-  BrainCircuit,
-  ChartPie,
-  ChartSpline,
-  ClipboardClock,
-} from "lucide-react-native";
+import { router } from "expo-router";
 import React from "react";
-import { StyleSheet } from "react-native";
+import { Pressable, StyleSheet, View } from "react-native";
 
 interface TimelineStep {
   number: number;
   title: string;
   subtitle: string;
-  color: string;
+  backgroundColor: string;
   borderColor: string;
-  numberColor: string;
-  icon: React.ReactNode;
 }
 
 const timelineSteps: TimelineStep[] = [
@@ -24,74 +16,77 @@ const timelineSteps: TimelineStep[] = [
     number: 1,
     title: "We help you estimate future costs",
     subtitle: "And update you if anything changes.",
-    color: "#EC4899",
+    backgroundColor: "#FCE7F3",
     borderColor: "#F9A8D4",
-    numberColor: "#FFFFFF",
-    icon: <ChartSpline />,
   },
   {
     number: 2,
     title: "We construct investment plan for your goal",
     subtitle: "And help you stick to the plan.",
-    color: "#3B82F6",
+    backgroundColor: "#DBEAFE",
     borderColor: "#93C5FD",
-    numberColor: "#FFFFFF",
-    icon: <BrainCircuit />,
   },
   {
     number: 3,
     title: "We build a customized portfolio",
     subtitle: "Tailored to your goal and timeline.",
-    color: "#10B981",
+    backgroundColor: "#D1FAE5",
     borderColor: "#86EFAC",
-    numberColor: "#FFFFFF",
-    icon: <ChartPie />,
   },
   {
     number: 4,
     title: "We track your portfolio",
     subtitle: "And recommend rebalancing on timely basis.",
-    color: "#8B5CF6",
+    backgroundColor: "#E9D5FF",
     borderColor: "#C4B5FD",
-    numberColor: "#FFFFFF",
-    icon: <ClipboardClock />,
   },
   {
     number: 5,
     title: "We alert you when risks arise",
     subtitle: "If market conditions put your plan at risk.",
-    color: "#06B6D4",
-    borderColor: "#BAE6FD",
-    numberColor: "#FFFFFF",
-    icon: <BellRing />,
+    backgroundColor: "#F3F4F6",
+    borderColor: "#E5E7EB",
   },
 ];
 
 export default function HowNestedHelps() {
+  const handleStartGoal = () => {
+    // Navigate to goal creation screen
+    router.push("/(tabs)/child/create");
+  };
+
   return (
     <Layout style={styles.container}>
       <Layout style={[styles.content, { backgroundColor: "transparent" }]}>
         {/* Header */}
-        <Text category="h4">How Nested Helps</Text>
+        <Text category="h4" style={styles.headerTitle}>
+          How Nested Helps
+        </Text>
 
         {/* Timeline Steps */}
         <Layout
           style={[styles.timelineContainer, { backgroundColor: "transparent" }]}
         >
+          {/* Vertical Connecting Line */}
+          <View style={styles.connectingLine} />
+
           {timelineSteps.map((step) => (
             <Layout
               key={step.number}
               style={[styles.stepContainer, { backgroundColor: "transparent" }]}
             >
               {/* Step Circle */}
-              <Layout
+              <View
                 style={[
                   styles.stepCircle,
-                  { backgroundColor: step.borderColor },
+                  {
+                    backgroundColor: step.backgroundColor,
+                    borderColor: step.borderColor,
+                  },
                 ]}
               >
-                {step.icon}
-              </Layout>
+                <Text style={styles.stepNumber}>{step.number}</Text>
+              </View>
 
               {/* Step Content */}
               <Layout
@@ -109,6 +104,15 @@ export default function HowNestedHelps() {
         </Layout>
 
         {/* Call-to-Action Button */}
+        <Pressable
+          style={({ pressed }) => [
+            styles.ctaButton,
+            pressed && styles.ctaButtonPressed,
+          ]}
+          onPress={handleStartGoal}
+        >
+          <Text style={styles.ctaButtonText}>Start Your First Goal</Text>
+        </Pressable>
       </Layout>
     </Layout>
   );
@@ -119,27 +123,38 @@ const styles = StyleSheet.create({
     paddingTop: 12,
     flex: 1,
   },
-  scrollContent: {
-    flexGrow: 1,
-    paddingBottom: 40,
-  },
   content: {
     flex: 1,
     backgroundColor: "transparent",
+    paddingHorizontal: 20,
   },
   headerTitle: {
-    textAlign: "left",
+    textAlign: "center",
     marginBottom: 40,
+    fontWeight: "bold",
+    fontSize: 24,
   },
   timelineContainer: {
     flex: 1,
     marginTop: 12,
+    position: "relative",
+    paddingLeft: 0,
+  },
+  connectingLine: {
+    position: "absolute",
+    left: 23, // Center of circle (24 circle radius) - 1 (half line width)
+    top: 24, // Start from center of first circle
+    bottom: 24, // End at center of last circle
+    width: 2,
+    backgroundColor: "#E5E7EB",
+    zIndex: 0,
   },
   stepContainer: {
     flexDirection: "row",
     alignItems: "flex-start",
-    marginBottom: 24,
+    marginBottom: 32,
     position: "relative",
+    zIndex: 1,
   },
   stepCircle: {
     width: 48,
@@ -148,35 +163,40 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
     marginRight: 16,
-    zIndex: 1,
+    borderWidth: 2,
+    zIndex: 2,
   },
-  connectingLine: {
-    position: "absolute",
-    left: 23,
-    top: 48,
-    width: 2,
-    height: 64,
-    zIndex: 0,
+  stepNumber: {
+    fontSize: 18,
+    fontWeight: "bold",
+    color: "#1F2937",
   },
   stepContent: {
     flex: 1,
     paddingTop: 4,
   },
   stepTitle: {
-    marginBottom: 8,
+    marginBottom: 6,
     lineHeight: 24,
+    fontWeight: "bold",
+    fontSize: 18,
+    color: "#1F2937",
   },
   stepSubtitle: {
     color: "#6B7280",
-    lineHeight: 22,
+    lineHeight: 20,
+    fontSize: 14,
   },
   ctaButton: {
-    backgroundColor: "#2563EB",
+    backgroundColor: "#4F70F7",
     borderRadius: 12,
     paddingVertical: 16,
     paddingHorizontal: 32,
     alignItems: "center",
-    shadowColor: "#2563EB",
+    justifyContent: "center",
+    marginTop: 32,
+    marginBottom: 20,
+    shadowColor: "#4F70F7",
     shadowOffset: {
       width: 0,
       height: 4,
@@ -184,5 +204,13 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.3,
     shadowRadius: 8,
     elevation: 6,
+  },
+  ctaButtonPressed: {
+    opacity: 0.8,
+  },
+  ctaButtonText: {
+    color: "#FFFFFF",
+    fontSize: 16,
+    fontWeight: "bold",
   },
 });
