@@ -1,7 +1,7 @@
 import HowNestedHelps from "@/components/HowNestedHelps";
 import KnowMore from "@/components/KnowMore";
 import WhyParentTrustUs from "@/components/WhyParentTrustUs";
-import { Button, Divider, Layout, Text } from "@ui-kitten/components";
+import { Divider, Layout, Text } from "@ui-kitten/components";
 import { router } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import React from "react";
@@ -40,9 +40,6 @@ export default function NestedIntro() {
         /> */}
           </Layout>
         </ScrollView>
-        <Button onPress={handleStartGoal}>
-          <Text category="h4">Estimate Future Cost</Text>
-        </Button>
       </Layout>
     </SafeAreaView>
   );
