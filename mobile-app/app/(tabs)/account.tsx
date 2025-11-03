@@ -78,7 +78,7 @@ export default function AccountScreen() {
     },
     {
       id: "manage-sips",
-      title: "Manage SIPs/SWPs/STPs",
+      title: "Manage SIPs",
       icon: "refresh-outline",
       iconColor: "#06B6D4",
       borderColor: "#06B6D4",
