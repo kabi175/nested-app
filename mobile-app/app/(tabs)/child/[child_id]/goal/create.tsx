@@ -4,6 +4,7 @@ import { useChildren } from "@/hooks/useChildren";
 import { useEducation } from "@/hooks/useEducation";
 import { useGoalCreation } from "@/hooks/useGoalCreation";
 import { Education } from "@/types/education";
+import { expectedFee } from "@/utils/education";
 import { Ionicons } from "@expo/vector-icons";
 import * as Haptics from "expo-haptics";
 import { LinearGradient } from "expo-linear-gradient";
@@ -38,24 +39,6 @@ interface Goal {
   futureCost: number;
   selectionMode: "course" | "college";
   education?: Education;
-}
-
-function expectedFee(targetDate: Date, education: Education) {
-  const lastYrFeeInLaks = education.lastYearFee / 100000;
-  const expectedIncreasePercentLt10Yr =
-    education.expectedIncreasePercentLt10Yr / 100;
-  const expectedIncreasePercentGt10Yr =
-    education.expectedIncreasePercentGt10Yr / 100;
-  const noOfYears = targetDate.getFullYear() - new Date().getFullYear();
-
-  const result =
-    noOfYears <= 10
-      ? Math.pow(1 + expectedIncreasePercentGt10Yr, noOfYears) * lastYrFeeInLaks
-      : Math.pow(1 + expectedIncreasePercentLt10Yr, noOfYears - 10) *
-        Math.pow(1 + expectedIncreasePercentGt10Yr, noOfYears) *
-        lastYrFeeInLaks;
-
-  return Math.round(result) * 100000;
 }
 
 export default function CreateGoalScreen() {

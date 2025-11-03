@@ -1,17 +1,14 @@
+import { useEducation } from "@/hooks/useEducation";
+import { Education } from "@/types/education";
+import { expectedFee } from "@/utils/education";
+import { formatCurrency } from "@/utils/formatters";
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import React, { useRef, useState } from "react";
-import {
-  PanResponder,
-  ScrollView,
-  StyleSheet,
-  Text,
-  TouchableOpacity,
-  View,
-} from "react-native";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { PanResponder, ScrollView, StyleSheet, Text, View } from "react-native";
 import { ThemedText } from "./ThemedText";
 import { ThemedView } from "./ThemedView";
+import { SearchableDropdown } from "./ui/SearchableDropdown";
 
 interface EducationCostEstimatorProps {
   onCourseSelect?: (course: string) => void;
@@ -20,17 +17,33 @@ interface EducationCostEstimatorProps {
 }
 
 export default function EducationCostEstimator({
+  onCourseSelect,
+  onCollegeSelect,
   onTimelineChange,
 }: EducationCostEstimatorProps) {
-  const [selectedCourse, setSelectedCourse] = useState<string>("");
-  const [selectedCollege, setSelectedCollege] = useState<string>("");
+  const [selectedCourse, setSelectedCourse] = useState<Education | null>(null);
+  const [selectedCollege, setSelectedCollege] = useState<Education | null>(
+    null
+  );
   const [timeline, setTimeline] = useState<number>(10);
-  const insets = useSafeAreaInsets();
   const sliderTrackRef = useRef<View>(null);
   const sliderLayout = useRef({ width: 0, pageX: 0 });
+  const { courses, institutions } = useEducation();
 
   const MIN_YEARS = 1;
   const MAX_YEARS = 25;
+
+  const handleCourseSelect = (course: Education) => {
+    setSelectedCourse(course);
+    setSelectedCollege(null); // Clear college when course is selected
+    onCourseSelect?.(course.name);
+  };
+
+  const handleCollegeSelect = (college: Education) => {
+    setSelectedCollege(college);
+    setSelectedCourse(null); // Clear course when college is selected
+    onCollegeSelect?.(college.name);
+  };
 
   const updateTimeline = (value: number) => {
     const newValue = Math.max(
@@ -74,7 +87,6 @@ export default function EducationCostEstimator({
     })
   ).current;
 
-  const estimatedCost = Math.round(1.2 * (1 + timeline * 0.1)); // Simple calculation for demo
   const sliderPercentage =
     ((timeline - MIN_YEARS) / (MAX_YEARS - MIN_YEARS)) * 100;
 
@@ -111,21 +123,27 @@ export default function EducationCostEstimator({
           </ThemedText>
           {/* Input Fields */}
           <View style={styles.inputContainer}>
-            <TouchableOpacity style={styles.dropdownField}>
-              <Text style={styles.dropdownPlaceholder}>
-                Select target course
-              </Text>
-              <Ionicons name="chevron-down" size={20} color="#666" />
-            </TouchableOpacity>
+            <SearchableDropdown
+              data={courses}
+              labelKey="name"
+              valueKey="id"
+              placeholder="Select target course"
+              searchPlaceholder="Search courses..."
+              onSelect={handleCourseSelect}
+              selectedValue={selectedCourse}
+            />
 
             <ThemedText style={styles.orText}>OR</ThemedText>
 
-            <TouchableOpacity style={styles.dropdownField}>
-              <Text style={styles.dropdownPlaceholder}>
-                Select dream college
-              </Text>
-              <Ionicons name="chevron-down" size={20} color="#666" />
-            </TouchableOpacity>
+            <SearchableDropdown
+              data={institutions}
+              labelKey="name"
+              valueKey="id"
+              placeholder="Select dream college"
+              searchPlaceholder="Search colleges..."
+              onSelect={handleCollegeSelect}
+              selectedValue={selectedCollege}
+            />
           </View>
           {/* Timeline Slider */}
           <View style={styles.sliderContainer}>
@@ -168,25 +186,45 @@ export default function EducationCostEstimator({
           </View>
           {/* Cost Projection Display */}
           {(selectedCourse || selectedCollege) && (
-            <View style={styles.costProjectionCard}>
-              <View style={styles.chartIconContainer}>
-                <Ionicons name="trending-up" size={24} color="#2563EB" />
-              </View>
-              <ThemedText style={styles.chartDescription}>
-                Interactive cost projection chart
-              </ThemedText>
-              <View style={styles.estimatedCostContainer}>
-                <Text style={styles.estimatedCostText}>
-                  ₹{estimatedCost}Cr estimated cost
-                </Text>
-              </View>
-            </View>
+            <EstimatedCostCard
+              education={selectedCourse || (selectedCollege as Education)}
+              timeline={timeline}
+            />
           )}
         </View>
       </ThemedView>
     </ScrollView>
   );
 }
+
+const EstimatedCostCard = ({
+  education,
+  timeline,
+}: {
+  education: Education;
+  timeline: number;
+}) => {
+  const estimatedCost = expectedFee(
+    new Date(new Date().getFullYear() + timeline),
+    education
+  );
+
+  return (
+    <View style={styles.costProjectionCard}>
+      <View style={styles.chartIconContainer}>
+        <Ionicons name="trending-up" size={24} color="#2563EB" />
+      </View>
+      <ThemedText style={styles.chartDescription}>
+        Interactive cost projection chart
+      </ThemedText>
+      <View style={styles.estimatedCostContainer}>
+        <Text style={styles.estimatedCostText}>
+          {formatCurrency(estimatedCost)} in {timeline} years
+        </Text>
+      </View>
+    </View>
+  );
+};
 
 const styles = StyleSheet.create({
   container: {
@@ -252,20 +290,6 @@ const styles = StyleSheet.create({
   },
   inputContainer: {
     marginBottom: 32,
-  },
-  dropdownField: {
-    backgroundColor: "#F3F4F6",
-    borderRadius: 12,
-    paddingHorizontal: 16,
-    paddingVertical: 16,
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    marginBottom: 16,
-  },
-  dropdownPlaceholder: {
-    fontSize: 16,
-    color: "#6B7280",
   },
   orText: {
     textAlign: "center",

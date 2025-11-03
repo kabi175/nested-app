@@ -2,15 +2,15 @@ import { getCourses, getInstitutions } from "@/api/educationAPI";
 import { Education } from "@/types/education";
 import { useQuery } from "@tanstack/react-query";
 
-export const useEducation = () => {
+export const useEducation = (search?: string) => {
   const coursesQuery = useQuery<Education[]>({
     queryKey: ["education", "courses"],
-    queryFn: getCourses,
+    queryFn: () => getCourses(search),
   });
 
   const institutionsQuery = useQuery<Education[]>({
     queryKey: ["education", "institutions"],
-    queryFn: getInstitutions,
+    queryFn: () => getInstitutions(search),
   });
 
   return {

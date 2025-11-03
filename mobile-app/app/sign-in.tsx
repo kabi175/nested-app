@@ -71,8 +71,7 @@ export default function SignIn() {
       );
       setConfirm(confirmation);
       setResendTimer(30);
-    } catch (error) {
-      console.log("Phone number verification error", error);
+    } catch {
       Alert.alert("Error", "Failed to send OTP. Please try again.");
     } finally {
       setIsLoading(false);
