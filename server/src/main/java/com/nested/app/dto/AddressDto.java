@@ -1,6 +1,7 @@
 package com.nested.app.dto;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.nested.app.entity.Address;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -22,8 +23,9 @@ import lombok.NoArgsConstructor;
 @Schema(description = "Address information")
 public class AddressDto {
 
-    @Schema(description = "Unique identifier of the address", example = "1")
-    private Long id;
+  @Schema(description = "Unique identifier of the address", example = "1")
+  @JsonIgnore
+  private Long id;
 
   @NotBlank(message = "Address line is required")
   @Size(max = 255, message = "Address line cannot exceed 255 characters")

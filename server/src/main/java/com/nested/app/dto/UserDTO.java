@@ -45,6 +45,7 @@ public class UserDTO {
   @Enumerated(EnumType.STRING)
   private User.Gender gender;
 
+  @JsonProperty("pan_number")
   private String panNumber;
 
   private InvestorDto investor;
