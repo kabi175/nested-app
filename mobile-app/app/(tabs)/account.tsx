@@ -1,7 +1,7 @@
 import { ThemedText } from "@/components/ThemedText";
 import { useAuth, useSignOut } from "@/hooks/auth";
 import { Ionicons } from "@expo/vector-icons";
-import { LinearGradient } from "expo-linear-gradient";
+import Constants from "expo-constants";
 import { router } from "expo-router";
 import React from "react";
 import {
@@ -19,7 +19,7 @@ interface MenuItem {
   title: string;
   icon: keyof typeof Ionicons.glyphMap;
   iconColor: string;
-  gradientColors: string[];
+  borderColor: string;
   onPress: () => void;
   isDestructive?: boolean;
 }
@@ -64,24 +64,24 @@ export default function AccountScreen() {
       id: "modify-goals",
       title: "Modify Goals",
       icon: "star-outline",
-      iconColor: "#3B82F6",
-      gradientColors: ["#EC4899", "#F3E8FF"],
+      iconColor: "#EC4899",
+      borderColor: "#EC4899",
       onPress: () => console.log("Modify Goals pressed"),
     },
     {
       id: "orders",
       title: "Orders",
       icon: "document-text-outline",
-      iconColor: "#10B981",
-      gradientColors: ["#FDE047", "#D1FAE5"],
+      iconColor: "#F59E0B",
+      borderColor: "#F59E0B",
       onPress: () => console.log("Orders pressed"),
     },
     {
       id: "manage-sips",
       title: "Manage SIPs/SWPs/STPs",
       icon: "refresh-outline",
-      iconColor: "#8B5CF6",
-      gradientColors: ["#06B6D4", "#D1FAE5"],
+      iconColor: "#06B6D4",
+      borderColor: "#06B6D4",
       onPress: () => console.log("Manage SIPs pressed"),
     },
     {
@@ -89,15 +89,15 @@ export default function AccountScreen() {
       title: "Manage Mandates",
       icon: "card-outline",
       iconColor: "#F59E0B",
-      gradientColors: ["#F59E0B", "#FCE7F3"],
+      borderColor: "#F59E0B",
       onPress: () => console.log("Manage Mandates pressed"),
     },
     {
       id: "refer-friend",
       title: "Refer a Friend",
       icon: "people-outline",
-      iconColor: "#EC4899",
-      gradientColors: ["#8B5CF6", "#FCE7F3"],
+      iconColor: "#8B5CF6",
+      borderColor: "#8B5CF6",
       onPress: () => console.log("Refer a Friend pressed"),
     },
     {
@@ -105,7 +105,7 @@ export default function AccountScreen() {
       title: "Share Feedback",
       icon: "chatbubble-outline",
       iconColor: "#3B82F6",
-      gradientColors: ["#3B82F6", "#F3E8FF"],
+      borderColor: "#3B82F6",
       onPress: () => console.log("Share Feedback pressed"),
     },
     {
@@ -113,7 +113,7 @@ export default function AccountScreen() {
       title: "Support",
       icon: "help-circle-outline",
       iconColor: "#10B981",
-      gradientColors: ["#10B981", "#DBEAFE"],
+      borderColor: "#10B981",
       onPress: () => console.log("Support pressed"),
     },
     {
@@ -121,7 +121,7 @@ export default function AccountScreen() {
       title: "Logout",
       icon: "log-out-outline",
       iconColor: "#EF4444",
-      gradientColors: ["#EF4444", "#F59E0B"],
+      borderColor: "#EF4444",
       onPress: handleLogout,
       isDestructive: true,
     },
@@ -184,46 +184,45 @@ export default function AccountScreen() {
           {menuItems.map((item, index) => (
             <TouchableOpacity
               key={item.id}
-              style={styles.menuItem}
+              style={[styles.menuItem, { borderLeftColor: item.borderColor }]}
               onPress={item.onPress}
               activeOpacity={0.8}
             >
-              <LinearGradient
-                colors={item.gradientColors}
-                start={{ x: 0, y: 0 }}
-                end={{ x: 1, y: 1 }}
-                style={styles.gradientBorder}
-              >
-                <View style={styles.menuItemContent}>
-                  {/* Icon */}
-                  <View style={styles.iconContainer}>
-                    <Ionicons
-                      name={item.icon}
-                      size={24}
-                      color={item.iconColor}
-                    />
-                  </View>
+              <View style={styles.menuItemContent}>
+                {/* Icon */}
+                <Ionicons
+                  name={item.icon}
+                  size={24}
+                  color={item.iconColor}
+                  style={styles.icon}
+                />
 
-                  {/* Title */}
-                  <Text
-                    style={[
-                      styles.menuItemTitle,
-                      item.isDestructive && styles.destructiveText,
-                    ]}
-                  >
-                    {item.title}
-                  </Text>
+                {/* Title */}
+                <Text
+                  style={[
+                    styles.menuItemTitle,
+                    item.isDestructive && styles.destructiveText,
+                  ]}
+                >
+                  {item.title}
+                </Text>
 
-                  {/* Chevron */}
-                  <Ionicons
-                    name="chevron-forward"
-                    size={20}
-                    color={item.isDestructive ? "#EF4444" : "#9CA3AF"}
-                  />
-                </View>
-              </LinearGradient>
+                {/* Chevron */}
+                <Ionicons
+                  name="chevron-forward"
+                  size={20}
+                  color={item.isDestructive ? "#EF4444" : "#9CA3AF"}
+                />
+              </View>
             </TouchableOpacity>
           ))}
+        </View>
+
+        {/* Version Number */}
+        <View style={styles.versionContainer}>
+          <Text style={styles.versionText}>
+            Version {Constants.expoConfig?.version || "1.0.0"}
+          </Text>
         </View>
 
         {/* Bottom Spacing */}
@@ -312,12 +311,12 @@ const styles = StyleSheet.create({
   },
   menuContainer: {
     paddingHorizontal: 20,
-    gap: 12,
   },
   menuItem: {
     borderRadius: 12,
-    overflow: "hidden",
     backgroundColor: "#FFFFFF",
+    borderLeftWidth: 4,
+    marginBottom: 12,
     shadowColor: "#000",
     shadowOffset: {
       width: 0,
@@ -327,26 +326,14 @@ const styles = StyleSheet.create({
     shadowRadius: 4,
     elevation: 2,
   },
-  gradientBorder: {
-    padding: 3,
-    borderRadius: 12,
-  },
   menuItemContent: {
-    backgroundColor: "#FFFFFF",
-    borderRadius: 9,
     paddingHorizontal: 20,
     paddingVertical: 16,
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
   },
-  iconContainer: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: "#F9FAFB",
-    justifyContent: "center",
-    alignItems: "center",
+  icon: {
     marginRight: 16,
   },
   menuItemTitle: {
@@ -357,6 +344,15 @@ const styles = StyleSheet.create({
   },
   destructiveText: {
     color: "#EF4444",
+  },
+  versionContainer: {
+    alignItems: "center",
+    marginTop: 24,
+    marginBottom: 12,
+  },
+  versionText: {
+    fontSize: 14,
+    color: "#9CA3AF",
   },
   bottomSpacing: {
     height: 20,
