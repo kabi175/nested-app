@@ -4,25 +4,29 @@ import type { Goal } from "@/types/investment";
 import { api } from "./client";
 
 export const getUser = async (): Promise<User | null> => {
-  const { data } = await api.get(`/users?type=CURRENT_USER`);
-  const user = data.data?.[0];
-  if (!user) {
+  try {
+    const { data } = await api.get(`/users?type=CURRENT_USER`);
+    const user = data.data?.[0];
+    if (!user) {
+      return null;
+    }
+
+    return {
+      id: user.id,
+      firstName: user.first_name,
+      lastName: user.last_name,
+      email: user.email,
+      phone_number: user.phone_number,
+      role: user.role,
+      panNumber: user.pan_number,
+      dob: new Date(user.date_of_birth),
+      gender: user.gender,
+      created_at: user.created_at,
+      updated_at: user.updated_at,
+    };
+  } catch (error: any) {
     return null;
   }
-
-  return {
-    id: user.id,
-    firstName: user.first_name,
-    lastName: user.last_name,
-    email: user.email,
-    phone_number: user.phone_number,
-    role: user.role,
-    panNumber: user.pan_number,
-    dob: new Date(user.date_of_birth),
-    gender: user.gender,
-    created_at: user.created_at,
-    updated_at: user.updated_at,
-  };
 };
 
 export const updateUser = async (
