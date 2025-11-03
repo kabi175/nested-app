@@ -37,7 +37,7 @@ public class SecurityConfig {
       // Production mode - require authentication
       http.authorizeHttpRequests(
               auth ->
-                  auth.requestMatchers("/public/**")
+                  auth.requestMatchers("/public/**", "/api/v1/education")
                       .permitAll()
                       .anyRequest()
                       .authenticated() // everything else requires auth
