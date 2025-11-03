@@ -74,4 +74,4 @@ jobs:
             docker pull ${{ steps.login-ecr.outputs.registry }}/nested:latest
             docker stop nested-server || true
             docker rm nested-server || true
-            docker run -d --env-file ~/env.list -p 8080:8080 --name nested-server ${{ steps.login-ecr.outputs.registry }}/nested:latest
+            docker run -d --env-file ~/env.list -v /home/ec2-user/serviceAccountKey.json:/home/ec2-user/serviceAccountKey.json:ro -p 8080:8080 --name nested-server ${{ steps.login-ecr.outputs.registry }}/nested:latest
