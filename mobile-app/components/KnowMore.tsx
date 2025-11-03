@@ -1,253 +1,293 @@
 import { Layout, Text } from "@ui-kitten/components";
 import {
-  Award,
   Clock,
   Heart,
   Shield,
   TrendingUp,
   UsersRound,
-  Zap,
 } from "lucide-react-native";
-import React from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { StyleSheet, View } from "react-native";
+import Animated, {
+  runOnJS,
+  useAnimatedStyle,
+  useSharedValue,
+  withTiming,
+} from "react-native-reanimated";
 
-interface MainFeatureCard {
+interface FeatureCard {
   title: string;
-  subtitle: string;
+  description: string;
   icon: React.ReactNode;
-  backgroundColor: string;
   iconBgColor: string;
   iconColor: string;
+  cardBgColor: string;
 }
 
-interface SmallFeatureCard {
-  title: string;
-  icon: React.ReactNode;
-  backgroundColor: string;
-  iconColor: string;
-}
-
-const mainFeatures: MainFeatureCard[] = [
+const features: FeatureCard[] = [
   {
-    title: "No Lock-In",
-    subtitle: "Withdraw anytime without penalties",
-    icon: <Clock size={20} />,
-    backgroundColor: "#DBF2FF",
-    iconBgColor: "#DBF2FF",
-    iconColor: "#2563EB",
-  },
-  {
-    title: "Flexible SIP",
-    subtitle: "Adjust or pause SIP's anytime",
-    icon: <Heart size={20} />,
-    backgroundColor: "#FCE7F3",
-    iconBgColor: "#FCE7F3",
-    iconColor: "#EC4899",
+    title: "No new demat account",
+    description: "Invest with your existing bank account.",
+    icon: <Shield size={40} />,
+    iconBgColor: "#E6F0FF",
+    iconColor: "#6699FF",
+    cardBgColor: "#FFFFFF",
   },
   {
     title: "Money goes directly to AMCs",
-    subtitle: "Your investment is always safe",
-    icon: <TrendingUp size={20} />,
-    backgroundColor: "#D1FAE5",
-    iconBgColor: "#D1FAE5",
-    iconColor: "#10B981",
+    description: "Your investment is always safe.",
+    icon: <TrendingUp size={40} />,
+    iconBgColor: "#E8F0FE",
+    iconColor: "#4285F4",
+    cardBgColor: "#FFFFFF",
   },
-];
-
-const smallFeatures: SmallFeatureCard[] = [
+  {
+    title: "No lock-in",
+    description: "Withdraw your money anytime, no questions asked.",
+    icon: <Clock size={40} />,
+    iconBgColor: "#DBF2FF",
+    iconColor: "#2563EB",
+    cardBgColor: "#F0F8F8",
+  },
+  {
+    title: "Flexible SIPs",
+    description: "Start, stop or modify your SIPs anytime.",
+    icon: <Heart size={40} />,
+    iconBgColor: "#E6F0FF",
+    iconColor: "#6699FF",
+    cardBgColor: "#F8F8FC",
+  },
   {
     title: "Goal-linked portfolio",
-    icon: <UsersRound size={24} />,
-    backgroundColor: "#F3E8FF",
-    iconColor: "#8B5CF6",
-  },
-  {
-    title: "Tailored for education goals",
-    icon: <Zap size={24} />,
-    backgroundColor: "#FFF4E6",
-    iconColor: "#F59E0B",
-  },
-  {
-    title: "Disciplined yet flexible",
-    icon: <Award size={24} />,
-    backgroundColor: "#E0E7FF",
-    iconColor: "#6366F1",
+    description: "Investments aligned with your child's goals.",
+    icon: <UsersRound size={40} />,
+    iconBgColor: "#E6F0FF",
+    iconColor: "#6699FF",
+    cardBgColor: "#FFFFFF",
   },
 ];
 
+const FLIP_DURATION = 3000; // 3 seconds per card
+const FLIP_ANIMATION_DURATION = 600; // Animation duration
+
 export default function KnowMore() {
+  const [currentIndex, setCurrentIndex] = useState(0);
+  const intervalRef = useRef<NodeJS.Timeout | null>(null);
+  const rotateY = useSharedValue(0);
+
+  const updateIndex = () => {
+    setCurrentIndex((prev) => (prev + 1) % features.length);
+  };
+
+  useEffect(() => {
+    // Auto-flip every FLIP_DURATION
+    const startAutoFlip = () => {
+      // Initial delay before first flip
+      const timeout = setTimeout(() => {
+        intervalRef.current = setInterval(() => {
+          rotateY.value = withTiming(
+            90,
+            { duration: FLIP_ANIMATION_DURATION / 2 },
+            (finished) => {
+              if (finished) {
+                runOnJS(updateIndex)();
+                rotateY.value = -90;
+                rotateY.value = withTiming(0, {
+                  duration: FLIP_ANIMATION_DURATION / 2,
+                });
+              }
+            }
+          );
+        }, FLIP_DURATION);
+      }, FLIP_DURATION);
+
+      return timeout;
+    };
+
+    const timeout = startAutoFlip();
+
+    return () => {
+      if (intervalRef.current) {
+        clearInterval(intervalRef.current);
+      }
+      if (timeout) {
+        clearTimeout(timeout);
+      }
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const frontAnimatedStyle = useAnimatedStyle(() => {
+    const rotate = rotateY.value;
+    return {
+      transform: [{ rotateY: `${rotate}deg` }],
+      opacity: Math.abs(rotate) >= 90 ? 0 : 1,
+    };
+  });
+
+  const backAnimatedStyle = useAnimatedStyle(() => {
+    const rotate = rotateY.value;
+    return {
+      transform: [{ rotateY: `${rotate + 180}deg` }],
+      opacity: Math.abs(rotate) >= 90 ? 1 : 0,
+    };
+  }, []);
+
+  const currentFeature = features[currentIndex];
+  const nextFeature = features[(currentIndex + 1) % features.length];
+
   return (
     <Layout style={[styles.container, { backgroundColor: "transparent" }]}>
       {/* Header */}
       <Layout style={[styles.header, { backgroundColor: "transparent" }]}>
         <Text category="h4" style={styles.title}>
-          Know More
-        </Text>
-        <Text category="p1" style={styles.subtitle}>
-          Why investors trust Nested
+          Know More, Invest Better
         </Text>
       </Layout>
 
-      {/* Main Feature Cards */}
-      <Layout
-        style={[styles.mainCardsContainer, { backgroundColor: "transparent" }]}
-      >
-        {mainFeatures.map((feature, index) => (
-          <Layout
-            key={index}
+      {/* Flip Card Container */}
+      <View style={styles.cardContainer}>
+        <View style={styles.cardWrapper}>
+          {/* Front Card */}
+          <Animated.View
             style={[
-              styles.mainCard,
-              { backgroundColor: feature.backgroundColor },
+              styles.card,
+              styles.cardFront,
+              { backgroundColor: currentFeature.cardBgColor },
+              frontAnimatedStyle,
             ]}
           >
             <View
               style={[
-                styles.iconCircle,
-                { backgroundColor: feature.iconBgColor },
+                styles.iconContainer,
+                { backgroundColor: currentFeature.iconBgColor },
               ]}
             >
-              {React.cloneElement(feature.icon as React.ReactElement<any>, {
-                color: feature.iconColor,
-              })}
+              {React.cloneElement(
+                currentFeature.icon as React.ReactElement<any>,
+                {
+                  color: currentFeature.iconColor,
+                }
+              )}
             </View>
-            <Layout
-              style={[
-                styles.mainCardContent,
-                { backgroundColor: "transparent" },
-              ]}
-            >
-              <Text category="h6" style={styles.mainCardTitle}>
-                {feature.title}
-              </Text>
-              <Text category="p2" style={styles.mainCardSubtitle}>
-                {feature.subtitle}
-              </Text>
-            </Layout>
-          </Layout>
-        ))}
-      </Layout>
+            <Text category="h5" style={styles.cardTitle}>
+              {currentFeature.title}
+            </Text>
+            <Text category="p1" style={styles.cardDescription}>
+              {currentFeature.description}
+            </Text>
+          </Animated.View>
 
-      {/* Small Feature Cards */}
-      <Layout
-        style={[styles.smallCardsContainer, { backgroundColor: "transparent" }]}
-      >
-        {smallFeatures.map((feature, index) => (
-          <Layout
-            key={index}
+          {/* Back Card */}
+          <Animated.View
             style={[
-              styles.smallCard,
-              { backgroundColor: feature.backgroundColor },
+              styles.card,
+              styles.cardBack,
+              { backgroundColor: nextFeature.cardBgColor },
+              backAnimatedStyle,
             ]}
           >
-            <View style={styles.smallCardIcon}>
-              {React.cloneElement(feature.icon as React.ReactElement<any>, {
-                color: feature.iconColor,
+            <View
+              style={[
+                styles.iconContainer,
+                { backgroundColor: nextFeature.iconBgColor },
+              ]}
+            >
+              {React.cloneElement(nextFeature.icon as React.ReactElement<any>, {
+                color: nextFeature.iconColor,
               })}
             </View>
-            <Text category="s1" style={styles.smallCardTitle}>
-              {feature.title}
+            <Text category="h5" style={styles.cardTitle}>
+              {nextFeature.title}
             </Text>
-          </Layout>
-        ))}
-      </Layout>
-
-      {/* Security Bar */}
-      <Layout style={[styles.securityBar, { backgroundColor: "#F3F4F6" }]}>
-        <View style={styles.securityBarContent}>
-          <Shield size={20} color="#1F2937" />
-          <Text category="p2" style={styles.securityBarText}>
-            100% Secure · SEBI Registered
-          </Text>
+            <Text category="p1" style={styles.cardDescription}>
+              {nextFeature.description}
+            </Text>
+          </Animated.View>
         </View>
-      </Layout>
+      </View>
     </Layout>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
-    gap: 20,
+    gap: 32,
     paddingVertical: 8,
+    alignItems: "center",
   },
   header: {
-    gap: 4,
+    alignItems: "center",
   },
   title: {
     fontSize: 24,
     fontWeight: "bold",
     color: "#1F2937",
-  },
-  subtitle: {
-    fontSize: 16,
-    color: "#1F2937",
-  },
-  mainCardsContainer: {
-    gap: 16,
-  },
-  mainCard: {
-    flexDirection: "row",
-    alignItems: "flex-start",
-    padding: 16,
-    borderRadius: 16,
-    gap: 12,
-  },
-  iconCircle: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  mainCardContent: {
-    flex: 1,
-    gap: 4,
-  },
-  mainCardTitle: {
-    fontSize: 16,
-    fontWeight: "bold",
-    color: "#1F2937",
-  },
-  mainCardSubtitle: {
-    fontSize: 14,
-    color: "#6B7280",
-    lineHeight: 20,
-  },
-  smallCardsContainer: {
-    flexDirection: "row",
-    gap: 12,
-    justifyContent: "space-between",
-  },
-  smallCard: {
-    flex: 1,
-    alignItems: "center",
-    padding: 16,
-    borderRadius: 16,
-    gap: 8,
-    minHeight: 100,
-    justifyContent: "center",
-  },
-  smallCardIcon: {
-    marginBottom: 4,
-  },
-  smallCardTitle: {
-    fontSize: 12,
-    fontWeight: "600",
-    color: "#1F2937",
     textAlign: "center",
   },
-  securityBar: {
-    paddingVertical: 14,
-    paddingHorizontal: 16,
-    borderRadius: 16,
-  },
-  securityBarContent: {
-    flexDirection: "row",
+  cardContainer: {
+    width: "100%",
     alignItems: "center",
-    gap: 10,
+    justifyContent: "center",
+    paddingHorizontal: 20,
   },
-  securityBarText: {
-    fontSize: 14,
+  cardWrapper: {
+    width: "100%",
+    height: 280,
+    position: "relative",
+  },
+  card: {
+    position: "absolute",
+    width: "100%",
+    height: "100%",
+    borderRadius: 24,
+    padding: 40,
+    alignItems: "center",
+    justifyContent: "center",
+    backfaceVisibility: "hidden",
+    shadowColor: "#000",
+    shadowOffset: {
+      width: 0,
+      height: 4,
+    },
+    shadowOpacity: 0.08,
+    shadowRadius: 16,
+    elevation: 8,
+  },
+  cardFront: {
+    // Front card styles
+  },
+  cardBack: {
+    // Back card initial transform handled by animated style
+  },
+  iconContainer: {
+    width: 88,
+    height: 88,
+    borderRadius: 44,
+    justifyContent: "center",
+    alignItems: "center",
+    marginBottom: 32,
+    shadowColor: "#000",
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.06,
+    shadowRadius: 6,
+    elevation: 2,
+  },
+  cardTitle: {
+    fontSize: 20,
+    fontWeight: "bold",
     color: "#1F2937",
-    fontWeight: "500",
+    textAlign: "center",
+    marginBottom: 16,
+  },
+  cardDescription: {
+    fontSize: 16,
+    color: "#6B7280",
+    textAlign: "center",
+    lineHeight: 24,
+    paddingHorizontal: 8,
   },
 });
