@@ -14,6 +14,31 @@ export const getBankAccounts = async (
   }));
 };
 
+export const addBankAccount = async (
+  user_id: string,
+  bank_account: {
+    accountNumber: string;
+    ifscCode: string;
+    type: "savings" | "current";
+    isPrimary: boolean;
+  }
+): Promise<BankAccount> => {
+  const { data } = await api.post(`/users/${user_id}/banks`, {
+    account_number: bank_account.accountNumber,
+    ifsc: bank_account.ifscCode,
+    account_type: bank_account.type,
+    is_primary: bank_account.isPrimary,
+  });
+
+  return {
+    id: data.id,
+    accountNumber: data.account_number,
+    ifscCode: data.ifsc,
+    type: data.account_type,
+    isPrimary: data.is_primary,
+  };
+};
+
 export const deleteBankAccount = async (
   user_id: string,
   bank_id: string

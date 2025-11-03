@@ -1,3 +1,4 @@
+import { useAddBankAccount } from "@/hooks/useBankAccount";
 import {
   Button,
   Card,
@@ -7,9 +8,10 @@ import {
   RadioGroup,
   Text,
 } from "@ui-kitten/components";
+import { router } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import { useState } from "react";
-import { ScrollView, StyleSheet, View } from "react-native";
+import { Alert, ScrollView, StyleSheet, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function AddManualScreen() {
@@ -23,12 +25,44 @@ export default function AddManualScreen() {
   const [ifscCode, setIfscCode] = useState("");
   const [accountType, setAccountType] = useState<string | null>(null);
 
+  const { mutate: addBank, isPending } = useAddBankAccount();
+
   const isFormValid =
     accountNumber.trim() &&
     reAccountNumber.trim() &&
     ifscCode.trim() &&
     accountType &&
     accountNumber === reAccountNumber;
+
+  const handleContinue = () => {
+    if (!isFormValid) return;
+
+    addBank(
+      {
+        accountNumber: accountNumber.trim(),
+        ifscCode: ifscCode.trim(),
+        type: accountType as "savings" | "current",
+        isPrimary: false,
+      },
+      {
+        onSuccess: () => {
+          Alert.alert("Success", "Bank account added successfully", [
+            {
+              text: "OK",
+              onPress: () => router.replace("/bank-accounts/list"),
+            },
+          ]);
+        },
+        onError: (error: any) => {
+          Alert.alert(
+            "Error",
+            error?.response?.data?.message ||
+              "Failed to add bank account. Please try again."
+          );
+        },
+      }
+    );
+  };
 
   return (
     <SafeAreaView style={styles.safeArea} edges={["top"]}>
@@ -135,9 +169,10 @@ export default function AddManualScreen() {
           <Button
             style={styles.continueButton}
             size="large"
-            disabled={!isFormValid}
+            disabled={!isFormValid || isPending}
+            onPress={handleContinue}
           >
-            Continue
+            {isPending ? "Adding..." : "Continue"}
           </Button>
         </SafeAreaView>
       </Layout>
