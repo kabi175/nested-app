@@ -173,7 +173,7 @@ export default function AccountScreen() {
             {/* Edit Icon */}
             <TouchableOpacity
               style={styles.editButton}
-              onPress={() => router.push("/name-input")}
+              onPress={() => router.push("/user")}
               activeOpacity={0.7}
             >
               <SquarePen size={20} color="#6B7280" />

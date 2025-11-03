@@ -5,6 +5,9 @@ export type User = {
   email: string | null;
   phone_number: string;
   role: "admin" | "investor";
+  panNumber: string | null;
+  dob: Date | null;
+  gender: "male" | "female" | "other";
   created_at: Date;
   updated_at: Date | null;
 };
