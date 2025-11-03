@@ -3,6 +3,7 @@ import { useAuth, useSignOut } from "@/hooks/auth";
 import { Ionicons } from "@expo/vector-icons";
 import Constants from "expo-constants";
 import { router } from "expo-router";
+import { SquarePen } from "lucide-react-native";
 import React from "react";
 import {
   Alert,
@@ -174,7 +175,7 @@ export default function AccountScreen() {
               onPress={() => router.push("/name-input")}
               activeOpacity={0.7}
             >
-              <Ionicons name="pencil-outline" size={20} color="#6B7280" />
+              <SquarePen size={20} color="#6B7280" />
             </TouchableOpacity>
           </View>
         </View>
