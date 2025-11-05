@@ -7,7 +7,6 @@ import {
 import { useChildren } from "@/hooks/useChildren";
 import { useGoals } from "@/hooks/useGoals";
 import { router } from "expo-router";
-import { Bell, MoreVertical } from "lucide-react-native";
 import React, { useCallback } from "react";
 import {
   ActivityIndicator,
@@ -69,14 +68,6 @@ export default function GoalScreen() {
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
         <ThemedText style={styles.headerTitle}>My Portfolio</ThemedText>
-        <View style={styles.headerIcons}>
-          <TouchableOpacity style={styles.iconButton}>
-            <Bell size={24} color="#1F2937" />
-          </TouchableOpacity>
-          <TouchableOpacity style={[styles.iconButton, styles.lastIconButton]}>
-            <MoreVertical size={24} color="#1F2937" />
-          </TouchableOpacity>
-        </View>
       </View>
       <ScrollView
         style={styles.scrollContainer}
