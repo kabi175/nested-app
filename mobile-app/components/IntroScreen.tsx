@@ -5,25 +5,28 @@ import NestedFooter from "@/components/NestedFooter";
 import ShareApp from "@/components/ShareApp";
 import WhatParentsSay from "@/components/WhatParentsSay";
 import WhyParentTrustUs from "@/components/WhyParentTrustUs";
+import { useAuth } from "@/hooks/auth";
 import { Divider, Layout, Text } from "@ui-kitten/components";
 import { StatusBar } from "expo-status-bar";
 import React from "react";
 import { ScrollView, StyleSheet } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import EducationCostEstimator from "./EducationCostEstimator";
 
 export default function NestedIntro() {
+  const auth = useAuth();
   return (
     <SafeAreaView style={styles.rootContainer}>
       <StatusBar style="auto" backgroundColor="#FFFFFF" />
 
       <Layout style={styles.container}>
-        <ScrollView showsVerticalScrollIndicator={false}>
+        <ScrollView
+          showsVerticalScrollIndicator={false}
+          contentContainerStyle={styles.scrollContent}
+        >
+          <Text category="h6"> Hello, {auth.user?.displayName} </Text>
+          <EducationCostEstimator />
           <Layout style={styles.content}>
-            <Text category="h3">Secure your child’s future</Text>
-            <Text category="p1">
-              Build a custom portfolio for their college expenses
-            </Text>
-
             <HowNestedHelps />
             <Divider />
 
@@ -67,10 +70,14 @@ const styles = StyleSheet.create({
     flex: 1,
     paddingBottom: 24,
     paddingTop: 24,
-    paddingHorizontal: 24,
   },
   content: {
     flex: 1,
     gap: 16,
+    paddingHorizontal: 24,
+  },
+  scrollContent: {
+    flexGrow: 1,
+    width: "100%",
   },
 });

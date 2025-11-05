@@ -301,12 +301,6 @@ export default function SignIn() {
               </Layout>
             )}
 
-            <Layout style={styles.howItWorksContainer}>
-              <Link href="/nested-intro">
-                <Text style={styles.howItWorksText}>See how it works</Text>
-              </Link>
-            </Layout>
-
             {/* Security Info */}
             <Layout
               style={[

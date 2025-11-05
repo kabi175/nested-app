@@ -1,10 +1,5 @@
-import { Text } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
+import IntroScreen from "@/components/IntroScreen";
 
 export default function HomeScreen() {
-  return (
-    <SafeAreaView edges={["top"]}>
-      <Text> Portfolio here </Text>
-    </SafeAreaView>
-  );
+  return <IntroScreen />;
 }

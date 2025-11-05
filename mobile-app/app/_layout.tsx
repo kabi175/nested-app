@@ -78,14 +78,6 @@ function RootNavigator() {
           name="sign-in"
           options={{ headerShown: false, presentation: "card" }}
         />
-        <Stack.Screen
-          name="nested-intro"
-          options={{ presentation: "transparentModal" }}
-        />
-        <Stack.Screen
-          name="estimate-cost"
-          options={{ presentation: "transparentModal" }}
-        />
       </Stack.Protected>
     </Stack>
   );
