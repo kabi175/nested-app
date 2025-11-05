@@ -46,7 +46,6 @@ function timeRemaining(future: Date) {
   return `1 day remaining`;
 }
 
-//TODO: add a percentage completion & mothly SIP amount
 export function GoalCard({ goal }: GoalCardProps) {
   const setCart = useSetAtom(cartAtom);
   const progressPercentage = goal.currentAmount / goal.targetAmount;
@@ -113,6 +112,19 @@ export function GoalCard({ goal }: GoalCardProps) {
             </ThemedText>
           </View>
           <ProgressBar progress={progressPercentage} style={[]} />
+          <View style={styles.progressInfo}>
+            <ThemedText style={styles.completionPercentage}>
+              {(progressPercentage * 100).toFixed(1)}% Complete
+            </ThemedText>
+            {goal.monthlySip && (
+              <ThemedText style={styles.monthlySip}>
+                Monthly SIP:{" "}
+                <ThemedText style={styles.monthlySipAmount}>
+                  {formatCurrency(goal.monthlySip)}
+                </ThemedText>
+              </ThemedText>
+            )}
+          </View>
         </View>
       </ThemedView>
     </TouchableOpacity>
@@ -205,6 +217,25 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: "600",
     color: "#1F2937",
+  },
+  progressInfo: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginTop: 8,
+  },
+  completionPercentage: {
+    fontSize: 12,
+    fontWeight: "600",
+    color: "#1F2937",
+  },
+  monthlySip: {
+    fontSize: 12,
+    color: "#3B82F6",
+  },
+  monthlySipAmount: {
+    fontSize: 12,
+    color: "#3B82F6",
   },
   progressBar: {
     height: 6,

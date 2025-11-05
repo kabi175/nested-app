@@ -4,6 +4,7 @@ export type Goal = {
   title: string;
   targetAmount: number;
   currentAmount: number;
+  monthlySip: number | null;
   targetDate: Date;
   status: "draft" | "payment_pending" | "active" | "completed" | "cancelled";
   createdAt: Date;

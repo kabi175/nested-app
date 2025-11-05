@@ -101,6 +101,7 @@ function mapGoalToGoal(goal: any): Goal {
     childId: goal.child_id,
     targetAmount: goal.target_amount,
     currentAmount: goal.current_amount,
+    monthlySip: goal.monthly_sip,
     status: goal.status,
     targetDate: goal.target_date ? new Date(goal.target_date) : new Date(),
     createdAt: goal.createdAt ? new Date(goal.createdAt) : new Date(),
