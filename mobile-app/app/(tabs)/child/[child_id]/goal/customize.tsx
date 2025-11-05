@@ -4,9 +4,11 @@ import { ThemedView } from "@/components/ThemedView";
 import { formatCurrency } from "@/utils/formatters";
 import { Ionicons } from "@expo/vector-icons";
 import * as Haptics from "expo-haptics";
+import { LinearGradient } from "expo-linear-gradient";
 import { router } from "expo-router";
 import { useAtom } from "jotai";
 import {
+  AlertCircle,
   Calendar,
   GraduationCap,
   Target,
@@ -45,6 +47,11 @@ function CustomizeGoalCard({ goal }: CustomizeGoalCardProps) {
     });
   };
 
+  const handleCompleteSetup = () => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    handleGoalPress();
+  };
+
   const formatDate = (date: Date) => {
     return date.toLocaleDateString("en-US", {
       year: "numeric",
@@ -80,6 +87,103 @@ function CustomizeGoalCard({ goal }: CustomizeGoalCardProps) {
     return `1 day remaining`;
   };
 
+  // Extract short title (PG, UG, etc.)
+  const getShortTitle = (title: string) => {
+    if (
+      title.toLowerCase().includes("postgraduate") ||
+      title.toLowerCase().includes("post-graduate")
+    ) {
+      return "PG";
+    }
+    if (title.toLowerCase().includes("undergraduate")) {
+      return "UG";
+    }
+    // Return first 2 uppercase letters or first 2 characters
+    const words = title.split(" ");
+    if (words.length > 1) {
+      return words
+        .map((w) => w[0])
+        .join("")
+        .substring(0, 2)
+        .toUpperCase();
+    }
+    return title.substring(0, 2).toUpperCase();
+  };
+
+  // Draft state design matching the image
+  if (goal.status === "draft") {
+    return (
+      <View style={styles.goalCard}>
+        <ThemedView style={styles.cardContent}>
+          {/* Goal Header Section */}
+          <View style={styles.goalHeader}>
+            <View style={styles.goalHeaderLeft}>
+              <View style={styles.goalIcon}>
+                <GraduationCap color="#FFFFFF" size={24} strokeWidth={2} />
+              </View>
+              <View style={styles.goalTitleContainer}>
+                <ThemedText style={styles.goalTitleShort}>
+                  {getShortTitle(goal.title)}
+                </ThemedText>
+                <View style={styles.timeRemainingContainer}>
+                  <Calendar color="#6B7280" size={12} />
+                  <ThemedText style={styles.timeRemaining}>
+                    {timeRemaining(goal.targetDate)}
+                  </ThemedText>
+                </View>
+              </View>
+            </View>
+            <View style={styles.draftBadge}>
+              <ThemedText style={styles.draftText}>Setup Pending</ThemedText>
+            </View>
+          </View>
+
+          {/* Target Amount Section */}
+          <View style={styles.targetAmountContainer}>
+            <View style={styles.targetAmountRow}>
+              <View style={styles.purpleBullet} />
+              <ThemedText style={styles.targetAmountLabel}>
+                Target Amount
+              </ThemedText>
+            </View>
+            <ThemedText style={styles.targetAmount}>
+              {formatCurrency(goal.targetAmount)}
+            </ThemedText>
+          </View>
+
+          {/* Warning/Instruction Message */}
+          <View style={styles.warningBox}>
+            <View style={styles.warningIconContainer}>
+              <AlertCircle color="#FFFFFF" size={20} />
+            </View>
+            <ThemedText style={styles.warningText}>
+              Complete setup to start investing towards your goal
+            </ThemedText>
+          </View>
+
+          {/* Complete Setup Button */}
+          <TouchableOpacity
+            style={styles.completeSetupButton}
+            onPress={handleCompleteSetup}
+            activeOpacity={0.8}
+          >
+            <LinearGradient
+              colors={["#2563EB", "#9333EA"]}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 0 }}
+              style={styles.completeSetupGradient}
+            >
+              <ThemedText style={styles.completeSetupText}>
+                Complete Setup
+              </ThemedText>
+            </LinearGradient>
+          </TouchableOpacity>
+        </ThemedView>
+      </View>
+    );
+  }
+
+  // Non-draft state - keep original design with improvements
   return (
     <TouchableOpacity onPress={handleGoalPress} style={styles.goalCard}>
       <ThemedView style={styles.cardContent}>
@@ -91,13 +195,6 @@ function CustomizeGoalCard({ goal }: CustomizeGoalCardProps) {
           <View style={styles.goalContent}>
             <View style={styles.goalTitleContainer}>
               <ThemedText style={styles.goalTitle}>{goal.title}</ThemedText>
-              {goal.status === "draft" && (
-                <View style={styles.draftBadge}>
-                  <ThemedText style={styles.draftText}>
-                    Setup Pending
-                  </ThemedText>
-                </View>
-              )}
             </View>
             <View style={styles.timeRemainingContainer}>
               <Calendar color="#6B7280" size={14} />
@@ -288,25 +385,28 @@ const styles = StyleSheet.create({
   goalHeader: {
     flexDirection: "row",
     alignItems: "flex-start",
-    marginBottom: 16,
+    justifyContent: "space-between",
+    marginBottom: 20,
+  },
+  goalHeaderLeft: {
+    flexDirection: "row",
+    alignItems: "flex-start",
+    flex: 1,
   },
   goalIcon: {
-    width: 50,
-    height: 50,
-    borderRadius: 10,
+    width: 48,
+    height: 48,
+    borderRadius: 12,
     justifyContent: "center",
     alignItems: "center",
     marginRight: 12,
-    backgroundColor: "#3b82f620",
+    backgroundColor: "#2563EB",
   },
   goalContent: {
     flex: 1,
   },
   goalTitleContainer: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    marginBottom: 4,
+    flex: 1,
   },
   goalTitle: {
     fontSize: 16,
@@ -314,21 +414,28 @@ const styles = StyleSheet.create({
     color: "#1F2937",
     flex: 1,
   },
+  goalTitleShort: {
+    fontSize: 18,
+    fontWeight: "bold",
+    color: "#1F2937",
+    marginBottom: 4,
+  },
   draftBadge: {
     backgroundColor: "#F59E0B",
-    paddingHorizontal: 8,
-    paddingVertical: 2,
-    borderRadius: 8,
-    marginLeft: 8,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 20,
+    alignSelf: "flex-start",
   },
   draftText: {
-    fontSize: 10,
-    fontWeight: "600",
+    fontSize: 12,
+    fontWeight: "bold",
     color: "#FFFFFF",
   },
   timeRemainingContainer: {
     flexDirection: "row",
     alignItems: "center",
+    marginTop: 4,
   },
   timeRemaining: {
     fontSize: 12,
@@ -352,6 +459,51 @@ const styles = StyleSheet.create({
     fontSize: 20,
     fontWeight: "bold",
     color: "#1F2937",
+  },
+  purpleBullet: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: "#9333EA",
+    marginRight: 8,
+  },
+  warningBox: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#FEF3C7",
+    borderRadius: 12,
+    padding: 12,
+    marginBottom: 16,
+  },
+  warningIconContainer: {
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    backgroundColor: "#F59E0B",
+    justifyContent: "center",
+    alignItems: "center",
+    marginRight: 12,
+  },
+  warningText: {
+    flex: 1,
+    fontSize: 14,
+    color: "#92400E",
+    fontWeight: "500",
+  },
+  completeSetupButton: {
+    borderRadius: 12,
+    overflow: "hidden",
+  },
+  completeSetupGradient: {
+    paddingVertical: 16,
+    paddingHorizontal: 24,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  completeSetupText: {
+    fontSize: 16,
+    fontWeight: "bold",
+    color: "#FFFFFF",
   },
   investmentDetails: {
     marginBottom: 16,
