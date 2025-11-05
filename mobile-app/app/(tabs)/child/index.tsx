@@ -7,6 +7,7 @@ import {
 import { useChildren } from "@/hooks/useChildren";
 import { useGoals } from "@/hooks/useGoals";
 import { router } from "expo-router";
+import { StatusBar } from "expo-status-bar";
 import React, { useCallback } from "react";
 import {
   ActivityIndicator,
@@ -66,6 +67,7 @@ export default function GoalScreen() {
 
   return (
     <SafeAreaView style={styles.container}>
+      <StatusBar style="auto" backgroundColor="#F8F7FF" />
       <View style={styles.header}>
         <ThemedText style={styles.headerTitle}>My Portfolio</ThemedText>
       </View>
