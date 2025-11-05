@@ -32,6 +32,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 interface Goal {
   id: string;
   type: "undergraduate" | "postgraduate";
+  title: string;
   degree: string;
   college: string;
   currentCost: number;
@@ -56,6 +57,7 @@ export default function CreateGoalScreen() {
     {
       id: "1",
       type: "undergraduate",
+      title: "Undergraduate",
       degree: "Choose a course",
       college: "Select Dream College",
       currentCost: 2500000,
@@ -66,6 +68,9 @@ export default function CreateGoalScreen() {
   ]);
 
   const [expandedDropdowns, setExpandedDropdowns] = useState<{
+    [key: string]: boolean;
+  }>({});
+  const [editingTitle, setEditingTitle] = useState<{
     [key: string]: boolean;
   }>({});
   const [inputSectionAnimations, setInputSectionAnimations] = useState<{
@@ -205,6 +210,7 @@ export default function CreateGoalScreen() {
     const newGoal: Goal = {
       id: Date.now().toString(),
       type: "undergraduate",
+      title: "Undergraduate",
       degree: "Choose a course",
       college: "Select Dream College",
       currentCost: 2500000,
@@ -265,9 +271,8 @@ export default function CreateGoalScreen() {
         childId,
         educationId: goal.education?.id || "",
         title:
-          child?.firstName + " " + goal.type === "undergraduate"
-            ? "Undergraduate"
-            : "Postgraduate",
+          goal.title ||
+          (goal.type === "undergraduate" ? "Undergraduate" : "Postgraduate"),
         targetAmount: goal.futureCost,
         targetDate: new Date(goal.targetYear, 5, 1),
       }));
@@ -333,12 +338,38 @@ export default function CreateGoalScreen() {
               {/* Goal Header */}
               <View style={styles.goalHeader}>
                 <View style={styles.goalTitleContainer}>
-                  <ThemedText style={styles.goalTitle}>
-                    {goal.type === "undergraduate"
-                      ? `Undergraduate`
-                      : "Post-Graduate"}
-                  </ThemedText>
-                  <TouchableOpacity style={styles.editButton}>
+                  {editingTitle[goal.id] ? (
+                    <TextInput
+                      style={styles.goalTitleInput}
+                      value={goal.title}
+                      onChangeText={(text) =>
+                        updateGoal(goal.id, "title", text)
+                      }
+                      onBlur={() => {
+                        setEditingTitle((prev) => ({
+                          ...prev,
+                          [goal.id]: false,
+                        }));
+                      }}
+                      autoFocus
+                      placeholder="Enter goal title"
+                      placeholderTextColor="#9CA3AF"
+                    />
+                  ) : (
+                    <ThemedText style={styles.goalTitle}>
+                      {goal.title}
+                    </ThemedText>
+                  )}
+                  <TouchableOpacity
+                    style={styles.editButton}
+                    onPress={() => {
+                      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                      setEditingTitle((prev) => ({
+                        ...prev,
+                        [goal.id]: !prev[goal.id],
+                      }));
+                    }}
+                  >
                     <Edit3 size={16} color="#6B7280" />
                   </TouchableOpacity>
                 </View>
@@ -717,12 +748,28 @@ const styles = StyleSheet.create({
   goalTitleContainer: {
     flexDirection: "row",
     alignItems: "center",
+    flex: 1,
+    marginRight: 8,
   },
   goalTitle: {
     fontSize: 18,
     fontWeight: "bold",
     color: "#1F2937",
     marginRight: 8,
+    flex: 1,
+  },
+  goalTitleInput: {
+    fontSize: 18,
+    fontWeight: "bold",
+    color: "#1F2937",
+    marginRight: 8,
+    flex: 1,
+    backgroundColor: "#F3F4F6",
+    borderRadius: 8,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderWidth: 1,
+    borderColor: "#2563EB",
   },
   editButton: {
     padding: 4,
