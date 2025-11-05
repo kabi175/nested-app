@@ -8,7 +8,7 @@ import { useTheme } from "@react-navigation/native";
 import { ProgressBar } from "@ui-kitten/components";
 import { router } from "expo-router";
 import { useSetAtom } from "jotai";
-import { GraduationCap, TrendingUp } from "lucide-react-native";
+import { TrendingUp } from "lucide-react-native";
 import React from "react";
 import { StyleSheet, TouchableOpacity, View } from "react-native";
 
@@ -92,9 +92,6 @@ export function GoalCard({ goal }: GoalCardProps) {
         ]}
       >
         <View style={styles.goalHeader}>
-          <View style={[styles.goalIcon]}>
-            <GraduationCap color={theme.colors.primary} size={20} />
-          </View>
           <View style={styles.goalContent}>
             <View style={styles.goalTitleContainer}>
               <ThemedText style={styles.goalTitle}>{goal.title}</ThemedText>
@@ -128,9 +125,11 @@ export function GoalCard({ goal }: GoalCardProps) {
           </View>
           <ProgressBar progress={progressPercentage} style={[]} />
           <View style={styles.progressInfo}>
-            <ThemedText style={styles.completionPercentage}>
-              {(progressPercentage * 100).toFixed(1)}% Complete
-            </ThemedText>
+            {progressPercentage > 0 && (
+              <ThemedText style={styles.completionPercentage}>
+                {(progressPercentage * 100).toFixed(1)}% Complete
+              </ThemedText>
+            )}
             {goal.monthlySip && (
               <ThemedText style={styles.monthlySip}>
                 Monthly SIP:{" "}
