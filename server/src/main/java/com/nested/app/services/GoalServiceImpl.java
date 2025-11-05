@@ -228,6 +228,7 @@ public class GoalServiceImpl implements GoalService {
     dto.setTargetAmount(goal.getTargetAmount());
     dto.setCurrentAmount(goal.getCurrentAmount());
     dto.setTargetDate(goal.getTargetDate());
+    dto.setMonthlySip(goal.getMonthlySip());
     dto.setStatus(goal.getStatus());
 
     // Set user information if available

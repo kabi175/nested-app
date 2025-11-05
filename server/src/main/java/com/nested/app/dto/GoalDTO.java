@@ -28,6 +28,9 @@ public class GoalDTO {
   @JsonProperty("current_amount")
   private Double currentAmount;
 
+  @JsonProperty("monthly_sip")
+  private Double monthlySip;
+
   @NotEmpty
   @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd")
   @JsonProperty("target_date")
