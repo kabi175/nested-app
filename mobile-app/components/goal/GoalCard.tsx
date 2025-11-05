@@ -46,10 +46,20 @@ function timeRemaining(future: Date) {
   return `1 day remaining`;
 }
 
+// Generate a color for the left border based on goal ID
+function getGoalBorderColor(goalId: string): string {
+  const colors = ["#FBCFE8", "#FEF3C7", "#FCE7F3", "#DBEAFE", "#D1FAE5"];
+  const hash = goalId
+    .split("")
+    .reduce((acc, char) => acc + char.charCodeAt(0), 0);
+  return colors[hash % colors.length];
+}
+
 export function GoalCard({ goal }: GoalCardProps) {
   const setCart = useSetAtom(cartAtom);
   const progressPercentage = goal.currentAmount / goal.targetAmount;
   const theme = useTheme();
+  const borderColor = getGoalBorderColor(goal.id);
 
   const handleGoalPress = async () => {
     if (goal.status === "draft") {
@@ -75,10 +85,15 @@ export function GoalCard({ goal }: GoalCardProps) {
 
   return (
     <TouchableOpacity onPress={handleGoalPress}>
-      <ThemedView style={styles.goalCard}>
+      <ThemedView
+        style={[
+          styles.goalCard,
+          { borderLeftColor: borderColor, borderLeftWidth: 4 },
+        ]}
+      >
         <View style={styles.goalHeader}>
           <View style={[styles.goalIcon]}>
-            <GraduationCap color={theme.colors.primary} size={24} />
+            <GraduationCap color={theme.colors.primary} size={20} />
           </View>
           <View style={styles.goalContent}>
             <View style={styles.goalTitleContainer}>
@@ -94,7 +109,7 @@ export function GoalCard({ goal }: GoalCardProps) {
               )}
             </View>
             <View style={styles.timeRemainingContainer}>
-              <TrendingUp color="#6B7280" size={16} />
+              <TrendingUp color="#6B7280" size={14} />
               <ThemedText style={styles.timeRemaining}>
                 {timeRemaining(goal.targetDate)}
               </ThemedText>
@@ -133,31 +148,31 @@ export function GoalCard({ goal }: GoalCardProps) {
 
 const styles = StyleSheet.create({
   goalCard: {
-    borderRadius: 16,
-    padding: 20,
-    marginBottom: 16,
+    borderRadius: 12,
+    padding: 14,
+    marginBottom: 12,
     shadowColor: "#000",
     shadowOffset: {
       width: 0,
-      height: 4,
+      height: 2,
     },
-    shadowOpacity: 0.1,
-    shadowRadius: 12,
-    elevation: 8,
+    shadowOpacity: 0.08,
+    shadowRadius: 8,
+    elevation: 4,
     backgroundColor: "#FFFFFF",
   },
   goalHeader: {
     flexDirection: "row",
     alignItems: "flex-start",
-    marginBottom: 10,
+    marginBottom: 8,
   },
   goalIcon: {
-    width: 50,
-    height: 50,
-    borderRadius: 10,
+    width: 40,
+    height: 40,
+    borderRadius: 8,
     justifyContent: "center",
     alignItems: "center",
-    marginRight: 12,
+    marginRight: 10,
     backgroundColor: "#3b82f620",
   },
   goalContent: {
@@ -167,23 +182,23 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    marginBottom: 4,
+    marginBottom: 3,
   },
   goalTitle: {
-    fontSize: 16,
+    fontSize: 14,
     fontWeight: "600",
     color: "#1F2937",
     flex: 1,
   },
   draftBadge: {
     backgroundColor: "#F59E0B",
-    paddingHorizontal: 8,
+    paddingHorizontal: 6,
     paddingVertical: 2,
-    borderRadius: 8,
-    marginLeft: 8,
+    borderRadius: 6,
+    marginLeft: 6,
   },
   draftText: {
-    fontSize: 10,
+    fontSize: 9,
     fontWeight: "600",
     color: "#FFFFFF",
   },
@@ -192,12 +207,12 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   timeRemaining: {
-    fontSize: 12,
+    fontSize: 11,
     color: "#6B7280",
     marginLeft: 4,
   },
   goalProgress: {
-    marginTop: 5,
+    marginTop: 4,
   },
   progressLabels: {
     flexDirection: "row",
@@ -205,16 +220,16 @@ const styles = StyleSheet.create({
     marginBottom: 4,
   },
   progressLabel: {
-    fontSize: 12,
+    fontSize: 11,
     color: "#6B7280",
   },
   progressAmounts: {
     flexDirection: "row",
     justifyContent: "space-between",
-    marginBottom: 8,
+    marginBottom: 6,
   },
   progressAmount: {
-    fontSize: 14,
+    fontSize: 13,
     fontWeight: "600",
     color: "#1F2937",
   },
@@ -222,23 +237,23 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    marginTop: 8,
+    marginTop: 6,
   },
   completionPercentage: {
-    fontSize: 12,
+    fontSize: 11,
     fontWeight: "600",
     color: "#1F2937",
   },
   monthlySip: {
-    fontSize: 12,
+    fontSize: 11,
     color: "#3B82F6",
   },
   monthlySipAmount: {
-    fontSize: 12,
+    fontSize: 11,
     color: "#3B82F6",
   },
   progressBar: {
-    height: 6,
+    height: 5,
     borderRadius: 3,
   },
   progressFill: {
