@@ -4,7 +4,6 @@ import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
 import type { Goal } from "@/types/investment";
 import { formatCurrency } from "@/utils/formatters";
-import { useTheme } from "@react-navigation/native";
 import { ProgressBar } from "@ui-kitten/components";
 import { router } from "expo-router";
 import { useSetAtom } from "jotai";
@@ -58,7 +57,6 @@ function getGoalBorderColor(goalId: string): string {
 export function GoalCard({ goal }: GoalCardProps) {
   const setCart = useSetAtom(cartAtom);
   const progressPercentage = goal.currentAmount / goal.targetAmount;
-  const theme = useTheme();
   const borderColor = getGoalBorderColor(goal.id);
 
   const handleGoalPress = async () => {
