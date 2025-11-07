@@ -11,7 +11,6 @@ public class ReversePennyDropResponse {
 
     @lombok.Data
     public static class Data {
-        private String transactionId;
         private double amount;
         private String referenceId;
         private String upi;
