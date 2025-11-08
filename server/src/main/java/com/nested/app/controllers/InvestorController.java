@@ -1,7 +1,7 @@
 package com.nested.app.controllers;
 
-import com.nested.app.client.tarrakki.dto.NomineeRequest;
-import com.nested.app.client.tarrakki.dto.OtpResponse;
+import com.nested.app.client.mf.dto.NomineeRequest;
+import com.nested.app.client.mf.dto.OtpResponse;
 import com.nested.app.services.InvestorServiceImpl;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;

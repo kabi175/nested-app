@@ -1,8 +1,8 @@
 package com.nested.app.client.mf.mock;
 
 import com.nested.app.client.mf.PaymentsAPIClient;
-import com.nested.app.client.tarrakki.dto.PaymentsRequest;
-import com.nested.app.client.tarrakki.dto.PaymentsResponse;
+import com.nested.app.client.mf.dto.PaymentsRequest;
+import com.nested.app.client.mf.dto.PaymentsResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;

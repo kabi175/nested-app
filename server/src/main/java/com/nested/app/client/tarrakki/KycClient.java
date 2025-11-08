@@ -1,8 +1,8 @@
 package com.nested.app.client.tarrakki;
 
-import com.nested.app.client.tarrakki.dto.KycInitiateRequest;
-import com.nested.app.client.tarrakki.dto.KycInitiateResponse;
-import com.nested.app.client.tarrakki.dto.KycStausResponse;
+import com.nested.app.client.mf.dto.KycInitiateRequest;
+import com.nested.app.client.mf.dto.KycInitiateResponse;
+import com.nested.app.client.mf.dto.KycStausResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;

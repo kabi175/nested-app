@@ -1,7 +1,8 @@
 package com.nested.app.client.tarrakki;
 
 import com.nested.app.client.mf.OrderApiClient;
-import com.nested.app.client.tarrakki.dto.*;
+import com.nested.app.client.mf.dto.BulkOrderRequest;
+import com.nested.app.client.mf.dto.OrderResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Service;

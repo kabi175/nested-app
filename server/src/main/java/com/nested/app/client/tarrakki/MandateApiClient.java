@@ -1,6 +1,7 @@
 package com.nested.app.client.tarrakki;
 
-import com.nested.app.client.tarrakki.dto.*;
+import com.nested.app.client.mf.dto.CreateMandateRequest;
+import com.nested.app.client.mf.dto.MandateResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;

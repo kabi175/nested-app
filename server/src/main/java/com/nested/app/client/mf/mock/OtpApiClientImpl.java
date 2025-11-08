@@ -3,9 +3,9 @@ package com.nested.app.client.mf.mock;
 import static com.nested.app.client.mf.mock.Util.generateMockId;
 
 import com.nested.app.client.mf.OtpApiClient;
-import com.nested.app.client.tarrakki.dto.OtpRequest;
-import com.nested.app.client.tarrakki.dto.OtpResponse;
-import com.nested.app.client.tarrakki.dto.OtpVerifyRequest;
+import com.nested.app.client.mf.dto.OtpRequest;
+import com.nested.app.client.mf.dto.OtpResponse;
+import com.nested.app.client.mf.dto.OtpVerifyRequest;
 import java.time.LocalDateTime;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Profile;

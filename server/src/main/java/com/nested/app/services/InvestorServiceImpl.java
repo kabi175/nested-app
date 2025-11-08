@@ -1,14 +1,14 @@
 package com.nested.app.services;
 
 import com.nested.app.client.mf.OtpApiClient;
+import com.nested.app.client.mf.dto.CreateInvestorRequest;
+import com.nested.app.client.mf.dto.CreateInvestorResponse;
+import com.nested.app.client.mf.dto.NomineeRequest;
+import com.nested.app.client.mf.dto.NomineeResponse;
+import com.nested.app.client.mf.dto.OtpRequest;
+import com.nested.app.client.mf.dto.OtpResponse;
+import com.nested.app.client.mf.dto.OtpVerifyRequest;
 import com.nested.app.client.tarrakki.InvestorAPIClient;
-import com.nested.app.client.tarrakki.dto.InvestorResponse;
-import com.nested.app.client.tarrakki.dto.NomineeRequest;
-import com.nested.app.client.tarrakki.dto.NomineeResponse;
-import com.nested.app.client.tarrakki.dto.OtpRequest;
-import com.nested.app.client.tarrakki.dto.OtpResponse;
-import com.nested.app.client.tarrakki.dto.OtpVerifyRequest;
-import com.nested.app.client.tarrakki.dto.TarrakkiInvestorRequest;
 import com.nested.app.dto.BankAccountDto;
 import com.nested.app.entity.Child;
 import com.nested.app.entity.Investor;
@@ -68,10 +68,10 @@ public class InvestorServiceImpl {
     validateUserForInvestorCreation(user);
 
     // Build Tarrakki request
-    TarrakkiInvestorRequest request = buildInvestorRequestFromUser(user);
+    CreateInvestorRequest request = buildInvestorRequestFromUser(user);
 
     // Call Tarrakki API
-    InvestorResponse response;
+    CreateInvestorResponse response;
     try {
       response = investorAPIClient.createInvestor(request).block();
       if (response == null) {
@@ -131,7 +131,7 @@ public class InvestorServiceImpl {
       throw new IllegalStateException("Parent user not found for child ID: " + childId);
     }
 
-    TarrakkiInvestorRequest request;
+    CreateInvestorRequest request;
     if (child.isInvestUnderChild()) {
       // Validate required fields
       validateChildForInvestorCreation(child, parentUser);
@@ -146,7 +146,7 @@ public class InvestorServiceImpl {
     }
 
     // Call Tarrakki API
-    InvestorResponse response;
+    CreateInvestorResponse response;
     try {
       response = investorAPIClient.createInvestor(request).block();
       if (response == null) {
@@ -252,10 +252,10 @@ public class InvestorServiceImpl {
   }
 
   /** Builds Tarrakki investor request from User entity */
-  private TarrakkiInvestorRequest buildInvestorRequestFromUser(User user) {
-    TarrakkiInvestorRequest request = new TarrakkiInvestorRequest();
+  private CreateInvestorRequest buildInvestorRequestFromUser(User user) {
+    CreateInvestorRequest request = new CreateInvestorRequest();
 
-    request.setInvestor_type(TarrakkiInvestorRequest.InvestorType.INDIVIDUAL);
+    request.setInvestor_type(CreateInvestorRequest.InvestorType.INDIVIDUAL);
 
     // Split name into first and last name
     request.setFirst_name(user.getFirstName());
@@ -271,12 +271,10 @@ public class InvestorServiceImpl {
     request.setPan(user.getPanNumber());
     request.setEmail(user.getEmail());
 
-    // Format phone number (remove +91 or 91 prefix if present)
-    String mobile = formatPhoneNumber(user.getPhoneNumber());
-    request.setMobile(mobile);
+    request.setMobileNumber(user.getPhoneNumber());
 
     // Map address
-    TarrakkiInvestorRequest.AddressDTO address = new TarrakkiInvestorRequest.AddressDTO();
+    CreateInvestorRequest.AddressDTO address = new CreateInvestorRequest.AddressDTO();
     address.setAddress_line_1(user.getAddress().getAddressLine());
     address.setAddress_line_2("");
     address.setAddress_line_3("");
@@ -284,13 +282,9 @@ public class InvestorServiceImpl {
     address.setState(user.getAddress().getState());
     address.setCountry(user.getAddress().getCountry());
     address.setPincode(user.getAddress().getPinCode());
-    request.setAddress(address);
-
-    request.setEmail_declaration("self");
-    request.setMobile_declaration("self");
 
     // Map FATCA details
-    TarrakkiInvestorRequest.FatcaDetailDTO fatca = new TarrakkiInvestorRequest.FatcaDetailDTO();
+    CreateInvestorRequest.FatcaDetailDTO fatca = new CreateInvestorRequest.FatcaDetailDTO();
     fatca.setOccupation(user.getOccupation().name().toLowerCase());
     fatca.setIncome_source(user.getIncomeSource().name().toLowerCase());
     fatca.setIncome_slab(user.getIncomeSlab().name().toLowerCase());
@@ -302,10 +296,10 @@ public class InvestorServiceImpl {
   }
 
   /** Builds Tarrakki investor request from Child entity (using parent's data for most fields) */
-  private TarrakkiInvestorRequest buildInvestorRequestFromChild(Child child, User parentUser) {
-    TarrakkiInvestorRequest request = new TarrakkiInvestorRequest();
+  private CreateInvestorRequest buildInvestorRequestFromChild(Child child, User parentUser) {
+    CreateInvestorRequest request = new CreateInvestorRequest();
 
-    request.setInvestor_type(TarrakkiInvestorRequest.InvestorType.MINOR);
+    request.setInvestor_type(CreateInvestorRequest.InvestorType.MINOR);
 
     // Use child's name and DOB
     request.setFirst_name(child.getFirstName());
@@ -323,10 +317,10 @@ public class InvestorServiceImpl {
     request.setEmail(parentUser.getEmail());
 
     String mobile = formatPhoneNumber(parentUser.getPhoneNumber());
-    request.setMobile(mobile);
+    request.setMobileNumber(parentUser.getPhoneNumber());
 
     // Map parent's address
-    TarrakkiInvestorRequest.AddressDTO address = new TarrakkiInvestorRequest.AddressDTO();
+    CreateInvestorRequest.AddressDTO address = new CreateInvestorRequest.AddressDTO();
     address.setAddress_line_1(parentUser.getAddress().getAddressLine());
     address.setAddress_line_2("");
     address.setAddress_line_3("");
@@ -334,13 +328,12 @@ public class InvestorServiceImpl {
     address.setState(parentUser.getAddress().getState());
     address.setCountry(parentUser.getAddress().getCountry());
     address.setPincode(parentUser.getAddress().getPinCode());
-    request.setAddress(address);
 
     request.setEmail_declaration("guardian");
     request.setMobile_declaration("guardian");
 
     // Map parent's FATCA details
-    TarrakkiInvestorRequest.FatcaDetailDTO fatca = new TarrakkiInvestorRequest.FatcaDetailDTO();
+    CreateInvestorRequest.FatcaDetailDTO fatca = new CreateInvestorRequest.FatcaDetailDTO();
     fatca.setOccupation(parentUser.getOccupation().name().toLowerCase());
     fatca.setIncome_source(parentUser.getIncomeSource().name().toLowerCase());
     fatca.setIncome_slab(parentUser.getIncomeSlab().name().toLowerCase());
@@ -352,11 +345,11 @@ public class InvestorServiceImpl {
   }
 
   /** Maps User.Gender enum to Tarrakki Gender enum */
-  private TarrakkiInvestorRequest.Gender mapGenderToTarrakki(User.Gender gender) {
+  private CreateInvestorRequest.Gender mapGenderToTarrakki(User.Gender gender) {
     return switch (gender) {
-      case User.Gender.MALE -> TarrakkiInvestorRequest.Gender.MALE;
-      case User.Gender.FEMALE -> TarrakkiInvestorRequest.Gender.FEMALE;
-      default -> TarrakkiInvestorRequest.Gender.TRANSGENDER;
+      case User.Gender.MALE -> CreateInvestorRequest.Gender.MALE;
+      case User.Gender.FEMALE -> CreateInvestorRequest.Gender.FEMALE;
+      default -> CreateInvestorRequest.Gender.TRANSGENDER;
     };
   }
 
@@ -392,7 +385,7 @@ public class InvestorServiceImpl {
 
     bank = bankDetailRepository.save(bank);
 
-      return BankAccountDto.fromEntity(bankDetailRepository.findById(bank.getId()).orElseThrow());
+    return BankAccountDto.fromEntity(bankDetailRepository.findById(bank.getId()).orElseThrow());
   }
 
   public List<BankAccountDto> findBankAccountByUserId(Long userID) {
@@ -537,8 +530,7 @@ public class InvestorServiceImpl {
     // Call Tarrakki API
     NomineeResponse response;
     try {
-      response =
-          investorAPIClient.addNomineesForInvestor(investor.getRef(), nomineeRequest).block();
+      response = investorAPIClient.addNominees(investor.getRef(), nomineeRequest).block();
 
       if (response == null || response.getNominee_id() == null) {
         throw new RuntimeException("Failed to add nominees: null response from Tarrakki API");

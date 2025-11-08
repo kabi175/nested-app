@@ -1,8 +1,8 @@
 package com.nested.app.client.mf;
 
-import com.nested.app.client.tarrakki.dto.OtpRequest;
-import com.nested.app.client.tarrakki.dto.OtpResponse;
-import com.nested.app.client.tarrakki.dto.OtpVerifyRequest;
+import com.nested.app.client.mf.dto.OtpRequest;
+import com.nested.app.client.mf.dto.OtpResponse;
+import com.nested.app.client.mf.dto.OtpVerifyRequest;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;
 

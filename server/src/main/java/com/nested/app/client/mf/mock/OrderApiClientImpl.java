@@ -3,8 +3,8 @@ package com.nested.app.client.mf.mock;
 import static com.nested.app.client.mf.mock.Util.generateMockId;
 
 import com.nested.app.client.mf.OrderApiClient;
-import com.nested.app.client.tarrakki.dto.BulkOrderRequest;
-import com.nested.app.client.tarrakki.dto.OrderResponse;
+import com.nested.app.client.mf.dto.BulkOrderRequest;
+import com.nested.app.client.mf.dto.OrderResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Service;

@@ -1,4 +1,4 @@
-package com.nested.app.client.tarrakki.dto;
+package com.nested.app.client.mf.dto;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonValue;

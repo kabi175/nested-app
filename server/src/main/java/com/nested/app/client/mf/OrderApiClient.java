@@ -1,7 +1,7 @@
 package com.nested.app.client.mf;
 
-import com.nested.app.client.tarrakki.dto.BulkOrderRequest;
-import com.nested.app.client.tarrakki.dto.OrderResponse;
+import com.nested.app.client.mf.dto.BulkOrderRequest;
+import com.nested.app.client.mf.dto.OrderResponse;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;
 

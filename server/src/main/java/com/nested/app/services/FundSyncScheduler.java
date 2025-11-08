@@ -1,8 +1,8 @@
 package com.nested.app.services;
 
+import com.nested.app.client.mf.dto.FundDTO;
+import com.nested.app.client.mf.dto.FundResponse;
 import com.nested.app.client.tarrakki.FundAPIClient;
-import com.nested.app.client.tarrakki.dto.FundDTO;
-import com.nested.app.client.tarrakki.dto.FundResponse;
 import com.nested.app.entity.Fund;
 import com.nested.app.repository.FundRepository;
 import java.sql.Timestamp;

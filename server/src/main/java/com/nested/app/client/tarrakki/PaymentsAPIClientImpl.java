@@ -1,8 +1,8 @@
 package com.nested.app.client.tarrakki;
 
 import com.nested.app.client.mf.PaymentsAPIClient;
-import com.nested.app.client.tarrakki.dto.PaymentsRequest;
-import com.nested.app.client.tarrakki.dto.PaymentsResponse;
+import com.nested.app.client.mf.dto.PaymentsRequest;
+import com.nested.app.client.mf.dto.PaymentsResponse;
 import lombok.AllArgsConstructor;
 import org.springframework.context.annotation.Profile;
 import org.springframework.http.*;

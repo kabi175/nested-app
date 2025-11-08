@@ -1,7 +1,9 @@
 package com.nested.app.client.tarrakki;
 
 import com.nested.app.client.mf.OtpApiClient;
-import com.nested.app.client.tarrakki.dto.*;
+import com.nested.app.client.mf.dto.OtpRequest;
+import com.nested.app.client.mf.dto.OtpResponse;
+import com.nested.app.client.mf.dto.OtpVerifyRequest;
 import java.text.MessageFormat;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

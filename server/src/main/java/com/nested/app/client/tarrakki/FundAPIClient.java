@@ -1,6 +1,6 @@
 package com.nested.app.client.tarrakki;
 
-import com.nested.app.client.tarrakki.dto.FundResponse;
+import com.nested.app.client.mf.dto.FundResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;

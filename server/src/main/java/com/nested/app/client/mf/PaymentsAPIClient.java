@@ -1,7 +1,7 @@
 package com.nested.app.client.mf;
 
-import com.nested.app.client.tarrakki.dto.PaymentsRequest;
-import com.nested.app.client.tarrakki.dto.PaymentsResponse;
+import com.nested.app.client.mf.dto.PaymentsRequest;
+import com.nested.app.client.mf.dto.PaymentsResponse;
 import org.springframework.stereotype.Service;
 import org.springframework.validation.annotation.Validated;
 import reactor.core.publisher.Mono;
