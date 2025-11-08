@@ -2,13 +2,12 @@ package com.nested.app.controllers;
 
 import java.util.Map;
 
+import io.swagger.v3.oas.annotations.Parameter;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import com.nested.app.client.bulkpe.dto.ReversePennyDropResponse;
 import com.nested.app.services.ReversePennyDropService;
@@ -32,7 +31,7 @@ public class ReversePennyDropController {
 
   private final ReversePennyDropService reversePennyDropService;
 
-  @PostMapping(consumes = MediaType.APPLICATION_JSON_VALUE)
+  @GetMapping(value = "/{user_id}", produces = MediaType.APPLICATION_JSON_VALUE)
   @Operation(summary = "Initiate reverse penny drop", description = "Returns upi url and transaction details")
   @ApiResponses(
       value = {
@@ -40,10 +39,12 @@ public class ReversePennyDropController {
         @ApiResponse(responseCode = "400", description = "Invalid input", content = @Content(schema = @Schema(implementation = Map.class))),
         @ApiResponse(responseCode = "500", description = "Internal error")
       })
-  public ResponseEntity<?> initiate() {
+  public ResponseEntity<?> initiate(
+          @Parameter(description = "User ID", required = true) @PathVariable("user_id") Long userID
+  ) {
     log.info("POST /api/v1/reverse-penny-drop");
     try {
-      ReversePennyDropResponse resp = reversePennyDropService.initiate();
+      ReversePennyDropResponse resp = reversePennyDropService.initiate(userID);
       return ResponseEntity.status(HttpStatus.CREATED).body(resp);
     } catch (IllegalArgumentException e) {
       return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of("error", e.getMessage()));

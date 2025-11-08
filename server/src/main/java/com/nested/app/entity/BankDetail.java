@@ -38,7 +38,6 @@ public class BankDetail {
   @Column(nullable = false)
   private boolean isPrimary;
 
-  // this is the reference id returned by the tarrakki when the bank is added
   @Column
   private String refId;
 
