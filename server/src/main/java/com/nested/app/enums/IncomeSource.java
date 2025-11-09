@@ -1,19 +1,19 @@
 package com.nested.app.enums;
 
+import com.fasterxml.jackson.annotation.JsonValue;
 import lombok.Getter;
 
 @Getter
 public enum IncomeSource {
     SALARY("salary"),
     BUSINESS_INCOME("business_income"),
-    GIFT("gift"),
     ANCESTRAL_PROPERTY("ancestral_property"),
     RENTAL_INCOME("rental_income"),
     PRIZE_MONEY("prize_money"),
     ROYALTY("royalty"),
     OTHERS("others");
 
-    private final String value;
+  @JsonValue private final String value;
 
     IncomeSource(String value) {
         this.value = value;
