@@ -2,21 +2,23 @@ package com.nested.app.client.mf.dto;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonValue;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 
+@Builder
 public class AddAddressRequest {
   @JsonProperty("profile")
   private String investorID;
 
   @JsonProperty("line1")
-  private String address_line_1;
+  private String addressLine1;
 
   @JsonProperty("line2")
-  private String address_line_2;
+  private String addressLine2;
 
   @JsonProperty("line3")
-  private String address_line_3;
+  private String addressLine3;
 
   private String city;
   private String state;
