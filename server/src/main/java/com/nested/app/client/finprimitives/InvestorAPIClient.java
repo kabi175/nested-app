@@ -11,6 +11,8 @@ import com.nested.app.client.mf.dto.NomineeRequest;
 import com.nested.app.client.mf.dto.NomineeResponse;
 import java.util.Map;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.MediaType;
+import org.springframework.http.client.MultipartBodyBuilder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 import reactor.core.publisher.Mono;
@@ -36,8 +38,10 @@ public class InvestorAPIClient implements com.nested.app.client.mf.InvestorAPICl
         .bodyToMono(CreateInvestorResponse.class)
         .map(
             r -> {
-              addEmail(r.getId(), request.getEmail());
-              addMobileNumber(r.getId(), request.getMobileNumber());
+              Mono.zip(
+                      addEmail(r.getId(), request.getEmail()),
+                      addMobileNumber(r.getId(), request.getMobileNumber()))
+                  .block();
               return r;
             });
   }
@@ -106,13 +110,42 @@ public class InvestorAPIClient implements com.nested.app.client.mf.InvestorAPICl
 
   @Override
   public Mono<Void> uploadSignature(String investorRef, MultipartFile file) {
-    return null;
+    var entity = uploadDocumentForInvestor(investorRef, "signature", file).block();
+
+    if (entity == null) {
+      return Mono.error(new RuntimeException("Failed to upload signature document"));
+    }
+
+    var request = Map.of("id", investorRef, "signature", entity.getId());
+
+    return api.withAuth()
+        .patch()
+        .uri(INVESTOR_API_URL)
+        .bodyValue(request)
+        .retrieve()
+        .bodyToMono(Void.class);
   }
 
   @Override
-  public Mono<Void> uploadDocumentForInvestor(
+  public Mono<EntityResponse> uploadDocumentForInvestor(
       String investorRef, String documentType, MultipartFile file) {
-    return null;
+
+    if (file.getContentType() == null) {
+      return Mono.error(new IllegalArgumentException("File content type cannot be null"));
+    }
+
+    var builder = new MultipartBodyBuilder();
+    builder.part("purpose", documentType);
+    builder
+        .part("file", file.getResource())
+        .filename(file.getName())
+        .contentType(MediaType.parseMediaType(file.getContentType()));
+    return api.withAuth()
+        .post()
+        .uri("/files")
+        .bodyValue(builder.build())
+        .retrieve()
+        .bodyToMono(EntityResponse.class);
   }
 
   @Override

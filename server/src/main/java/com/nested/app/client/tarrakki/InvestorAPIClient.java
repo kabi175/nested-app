@@ -94,7 +94,7 @@ public class InvestorAPIClient implements com.nested.app.client.mf.InvestorAPICl
    * @return Empty Mono on success
    */
   @Override
-  public Mono<Void> uploadDocumentForInvestor(
+  public Mono<EntityResponse> uploadDocumentForInvestor(
       String investorRef, String documentType, MultipartFile file) {
 
     try {
@@ -109,7 +109,7 @@ public class InvestorAPIClient implements com.nested.app.client.mf.InvestorAPICl
           .contentType(MediaType.MULTIPART_FORM_DATA)
           .bodyValue(builder.build())
           .retrieve()
-          .bodyToMono(Void.class);
+          .bodyToMono(EntityResponse.class);
     } catch (Exception e) {
       return Mono.error(new RuntimeException("Failed to upload document", e));
     }

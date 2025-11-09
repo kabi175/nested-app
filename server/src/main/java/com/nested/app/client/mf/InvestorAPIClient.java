@@ -28,7 +28,8 @@ public interface InvestorAPIClient {
 
   Mono<Void> uploadSignature(String investorRef, MultipartFile file);
 
-  Mono<Void> uploadDocumentForInvestor(String investorRef, String documentType, MultipartFile file);
+  Mono<EntityResponse> uploadDocumentForInvestor(
+      String investorRef, String documentType, MultipartFile file);
 
   Mono<NomineeResponse> addNominees(String investorRef, NomineeRequest request);
 }
