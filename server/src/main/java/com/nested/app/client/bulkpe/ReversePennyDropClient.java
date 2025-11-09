@@ -37,7 +37,7 @@ public class ReversePennyDropClient {
    */
   public Mono<ReversePennyDropResponse> getReversePennyDropUrl(ReversePennyDropRequest request) {
 
-      log.info("Initiating Reverse Penny Drop for referenceId={}", request.getReferenceId());
+    log.info("Initiating Reverse Penny Drop for referenceId={}", request.getReferenceId());
 
     return bulkpeApi
         .withAuth()
@@ -55,7 +55,7 @@ public class ReversePennyDropClient {
                           log.error(
                               "Reverse Penny Drop API returned error for referenceId={}: {}",
                               request.getReferenceId(),
-                                  clientResponse.statusCode().value());
+                              clientResponse.statusCode().value());
                           return Mono.error(new RuntimeException(error));
                         }))
         .bodyToMono(ReversePennyDropResponse.class)

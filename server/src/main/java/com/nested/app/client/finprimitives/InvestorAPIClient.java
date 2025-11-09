@@ -11,6 +11,7 @@ import com.nested.app.client.mf.dto.NomineeRequest;
 import com.nested.app.client.mf.dto.NomineeResponse;
 import java.util.Map;
 import lombok.RequiredArgsConstructor;
+import org.springframework.context.annotation.Primary;
 import org.springframework.http.MediaType;
 import org.springframework.http.client.MultipartBodyBuilder;
 import org.springframework.stereotype.Service;
@@ -18,6 +19,7 @@ import org.springframework.web.multipart.MultipartFile;
 import reactor.core.publisher.Mono;
 
 @Service
+@Primary
 @RequiredArgsConstructor
 public class InvestorAPIClient implements com.nested.app.client.mf.InvestorAPIClient {
   private static final String INVESTOR_API_URL = "/v2/investor_profiles";
