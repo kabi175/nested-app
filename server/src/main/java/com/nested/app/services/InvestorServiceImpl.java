@@ -8,7 +8,7 @@ import com.nested.app.client.mf.dto.NomineeResponse;
 import com.nested.app.client.mf.dto.OtpRequest;
 import com.nested.app.client.mf.dto.OtpResponse;
 import com.nested.app.client.mf.dto.OtpVerifyRequest;
-import com.nested.app.client.tarrakki.InvestorAPIClient;
+import com.nested.app.client.tarrakki.TarrakkiInvestorAPIClient;
 import com.nested.app.dto.BankAccountDto;
 import com.nested.app.entity.Child;
 import com.nested.app.entity.Investor;
@@ -38,7 +38,7 @@ import org.springframework.web.reactive.function.client.WebClientResponseExcepti
 public class InvestorServiceImpl {
 
   private final BankDetailRepository bankDetailRepository;
-  private final InvestorAPIClient investorAPIClient;
+  private final TarrakkiInvestorAPIClient investorAPIClient;
   private final InvestorRepository investorRepository;
   private final UserRepository userRepository;
   private final ChildRepository childRepository;

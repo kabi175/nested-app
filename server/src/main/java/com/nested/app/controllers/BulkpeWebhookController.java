@@ -60,19 +60,8 @@ public class BulkpeWebhookController {
                 ));
             } else {
                 log.warn("Webhook processing failed or skipped");
-                String referenceId = webhookRequest.getData() != null ? webhookRequest.getData().getReferenceId() : null;
-                String accountNumber = webhookRequest.getData() != null ? webhookRequest.getData().getRemitterAccountNumber() : null;
-                String ifscCode = webhookRequest.getData() != null ? webhookRequest.getData().getRemitterIfsc() : null;
-                
-                String detailedMessage = "Webhook processing failed. ";
-                if (webhookRequest.getData() != null && !"SUCCESS".equalsIgnoreCase(webhookRequest.getData().getTrxStatus())) {
-                    detailedMessage += "Transaction status is not SUCCESS.";
-                } else {
-                    detailedMessage += "No matching bank detail found. ";
-                    detailedMessage += "Please ensure a bank detail exists with refId='" + referenceId + "' ";
-                    detailedMessage += "or accountNumber='" + accountNumber + "' and ifscCode='" + ifscCode + "'.";
-                }
-                
+                String detailedMessage = getDetailedMessage(webhookRequest);
+
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of(
                     "status", "failed",
                     "message", detailedMessage
@@ -85,6 +74,22 @@ public class BulkpeWebhookController {
                 "message", "Internal server error while processing webhook"
             ));
         }
+    }
+
+    private static String getDetailedMessage(BulkpeWebhookRequest webhookRequest) {
+        String referenceId = webhookRequest.getData() != null ? webhookRequest.getData().getReferenceId() : null;
+        String accountNumber = webhookRequest.getData() != null ? webhookRequest.getData().getRemitterAccountNumber() : null;
+        String ifscCode = webhookRequest.getData() != null ? webhookRequest.getData().getRemitterIfsc() : null;
+
+        String detailedMessage = "Webhook processing failed. ";
+        if (webhookRequest.getData() != null && !"SUCCESS".equalsIgnoreCase(webhookRequest.getData().getTrxStatus())) {
+            detailedMessage += "Transaction status is not SUCCESS.";
+        } else {
+            detailedMessage += "No matching bank detail found. ";
+            detailedMessage += "Please ensure a bank detail exists with refId='" + referenceId + "' ";
+            detailedMessage += "or accountNumber='" + accountNumber + "' and ifscCode='" + ifscCode + "'.";
+        }
+        return detailedMessage;
     }
 }
 

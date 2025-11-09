@@ -18,7 +18,7 @@ import reactor.core.publisher.Mono;
 
 @Service
 @RequiredArgsConstructor
-public class InvestorAPIClient implements com.nested.app.client.mf.InvestorAPIClient {
+public class TarrakkiInvestorAPIClient implements com.nested.app.client.mf.InvestorAPIClient {
   private static final String INVESTOR_API_URL = "/investors";
   private final TarrakkiAPI tarrakkiAPI;
 
