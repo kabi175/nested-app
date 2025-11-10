@@ -27,7 +27,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @RequiredArgsConstructor
 @RequestMapping(
-    value = "/api/v1/users/user_id}/actions/reverse-penny-drop",
+    value = "/api/v1/users/{user_id}/actions/reverse-penny-drop",
     produces = MediaType.APPLICATION_JSON_VALUE)
 @Tag(name = "bank-account", description = "Initiate Bulkpe reverse penny drop" + " " + "validation")
 public class ReversePennyDropController {
@@ -43,7 +43,7 @@ public class ReversePennyDropController {
         @ApiResponse(
             responseCode = "201",
             description = "Initiated successfully",
-            content = @Content(schema = @Schema(implementation = ReversePennyDropResponse.class))),
+            content = @Content(schema = @Schema(implementation = UserActionRequest.class))),
         @ApiResponse(
             responseCode = "400",
             description = "Invalid input",
