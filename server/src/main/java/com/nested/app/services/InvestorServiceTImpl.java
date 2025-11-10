@@ -88,10 +88,9 @@ public class InvestorServiceTImpl {
     }
 
     // Create and save Investor entity
-    Investor investor = new Investor();
+    Investor investor = Investor.builder().build();
     investor.setType(Investor.Type.INDIVIDUAL);
     investor.setRef(response.getId());
-    investor.setStatus(Investor.Status.fromValue(response.getStatus()));
 
     Investor savedInvestor = investorRepository.save(investor);
 
@@ -163,10 +162,9 @@ public class InvestorServiceTImpl {
     }
 
     // Create and save Investor entity
-    Investor investor = new Investor();
+    Investor investor = Investor.builder().build();
     investor.setType(Investor.Type.MINOR);
     investor.setRef(response.getId());
-    investor.setStatus(Investor.Status.fromValue(response.getStatus()));
 
     Investor savedInvestor = investorRepository.save(investor);
 
