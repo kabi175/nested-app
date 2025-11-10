@@ -10,4 +10,5 @@ export type User = {
   gender: "male" | "female" | "other";
   created_at: Date;
   updated_at: Date | null;
+  status: "completed" | "pending" | "rejected";
 };

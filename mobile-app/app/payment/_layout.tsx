@@ -1,12 +1,20 @@
+import { userAtom } from "@/atoms/user";
 import {
   Text,
   TopNavigation,
   TopNavigationAction,
 } from "@ui-kitten/components";
-import { router, Stack } from "expo-router";
+import { Redirect, router, Stack } from "expo-router";
+import { useAtomValue } from "jotai";
 import { ArrowLeft } from "lucide-react-native";
 
 export default function Layout() {
+  const user = useAtomValue(userAtom);
+
+  if (user && user.status !== "completed") {
+    return <Redirect href="/kyc/basic-details" />;
+  }
+
   return (
     <Stack>
       <Stack.Screen

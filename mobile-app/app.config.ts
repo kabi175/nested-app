@@ -35,6 +35,13 @@ module.exports = () => ({
           backgroundColor: "#ffffff",
         },
       ],
+      [
+        "expo-image-picker",
+        {
+          photosPermission:
+            "The app accesses your photos to let you upload your signature.",
+        },
+      ],
     ],
     extra: {
       router: {},
