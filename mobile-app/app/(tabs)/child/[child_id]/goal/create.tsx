@@ -20,6 +20,7 @@ import {
 import React, { useEffect, useState } from "react";
 import {
   ActivityIndicator,
+  Alert,
   Animated,
   ScrollView,
   StyleSheet,
@@ -40,14 +41,16 @@ interface Goal {
   futureCost: number;
   selectionMode: "course" | "college";
   education?: Education;
+  childId: string | null;
 }
 
 export default function CreateGoalScreen() {
-  const childId = useLocalSearchParams<{ child_id: string }>().child_id;
-  const { data: children } = useChildren();
-  const child = children?.find((child) => child.id === childId);
+  const { child_id } = useLocalSearchParams<{ child_id?: string | string[] }>();
+  const routeChildId = Array.isArray(child_id) ? child_id[0] : child_id;
+  const { data: children, isLoading: isLoadingChildren } = useChildren();
   const setGoalsForCustomize = useSetAtom(goalsForCustomizeAtom);
   const createGoalMutation = useGoalCreation();
+  const [selectedChildId, setSelectedChildId] = useState<string | null>(null);
   const {
     courses,
     institutions,
@@ -64,6 +67,7 @@ export default function CreateGoalScreen() {
       targetYear: 2030,
       futureCost: 4500000,
       selectionMode: "course",
+      childId: null,
     },
   ]);
 
@@ -119,6 +123,34 @@ export default function CreateGoalScreen() {
     );
     pulseAnimation.start();
   }, [fadeAnim, slideAnim, scaleAnim, pulseAnim]);
+
+  useEffect(() => {
+    if (!children || children.length === 0) {
+      return;
+    }
+
+    const preferredChildId: string | null = (() => {
+      if (routeChildId && children.some((child) => child.id === routeChildId)) {
+        return routeChildId;
+      }
+      return children[0]?.id ?? null;
+    })();
+
+    setSelectedChildId((prev) => prev ?? preferredChildId);
+
+    setGoals((prev) =>
+      prev.map((goal) => {
+        if (goal.childId) {
+          return goal;
+        }
+        return {
+          ...goal,
+          childId: preferredChildId,
+        };
+      })
+    );
+  }, [children, routeChildId]);
+  const selectedChild = children?.find((child) => child.id === selectedChildId);
 
   const calculateFutureCost = (
     education: Education | undefined,
@@ -217,6 +249,13 @@ export default function CreateGoalScreen() {
       targetYear: 2030,
       futureCost: 4500000,
       selectionMode: "course",
+      childId:
+        selectedChildId ||
+        ((routeChildId &&
+          children?.some((child) => child.id === routeChildId) &&
+          routeChildId) as string) ||
+        children?.[0]?.id ||
+        null,
     };
 
     // Add with animation
@@ -267,8 +306,25 @@ export default function CreateGoalScreen() {
     ]).start();
 
     try {
-      const data = goals.map((goal) => ({
-        childId,
+      const visibleGoals = goals.filter(
+        (goal) => goal.childId && goal.childId === selectedChildId
+      );
+      const goalsMissingChild = visibleGoals.filter((goal) => !goal.childId);
+      if (goalsMissingChild.length > 0) {
+        Alert.alert(
+          "Select a child",
+          "Please choose a child for each goal before proceeding."
+        );
+        return;
+      }
+
+      if (!selectedChildId) {
+        Alert.alert("Select a child", "Please select a child to continue.");
+        return;
+      }
+
+      const data = visibleGoals.map((goal) => ({
+        childId: goal.childId!,
         educationId: goal.education?.id || "",
         title:
           goal.title ||
@@ -281,12 +337,19 @@ export default function CreateGoalScreen() {
 
       setGoalsForCustomize(createdGoals);
       //TODO: redirect to
-      router.push(`/child/${childId}/goal/customize`);
+      const nextChildId = selectedChildId || data[0]?.childId;
+      if (nextChildId) {
+        router.push(`/child/${nextChildId}/goal/customize`);
+      }
     } catch (error) {
       console.error("Error saving goals:", error);
       // TODO: Show error message to user
     }
   };
+
+  if (isLoadingChildren) {
+    return <ActivityIndicator size="large" color="#2563EB" />;
+  }
 
   return (
     <SafeAreaView style={styles.container}>
@@ -316,346 +379,420 @@ export default function CreateGoalScreen() {
           </View>
         </LinearGradient>
 
+        {/* Child selector pills */}
+        {children && children.length > 0 && (
+          <View style={styles.childSelectorHeader}>
+            <ThemedText style={styles.childGreeting}>
+              {`Hi ddd, let's set up education goals for ${
+                selectedChild?.firstName || "Child"
+              }`}
+            </ThemedText>
+            <ScrollView
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              contentContainerStyle={styles.childPillsHeaderWrapper}
+            >
+              {children.map((child) => {
+                const isSelected = selectedChildId === child.id;
+                const displayName = child.firstName || "Child";
+                return (
+                  <TouchableOpacity
+                    key={child.id}
+                    style={[
+                      styles.childPill,
+                      isSelected && styles.childPillSelected,
+                    ]}
+                    onPress={() => setSelectedChildId(child.id)}
+                  >
+                    <ThemedText
+                      style={[
+                        styles.childPillText,
+                        isSelected && styles.childPillTextSelected,
+                      ]}
+                    >
+                      {displayName}
+                    </ThemedText>
+                  </TouchableOpacity>
+                );
+              })}
+
+              {/* Add Child pill */}
+              <TouchableOpacity
+                style={[styles.childPill, styles.addChildPill]}
+                onPress={() => router.push("/(tabs)/child/create")}
+              >
+                <ThemedText
+                  style={[styles.childPillText, { color: "#2563EB" }]}
+                >
+                  + Add Child
+                </ThemedText>
+              </TouchableOpacity>
+            </ScrollView>
+          </View>
+        )}
+
+        {(!children || children.length === 0) && (
+          <View style={styles.emptyChildrenContainer}>
+            <ThemedText style={styles.emptyChildrenText}>
+              Add a child profile to start creating goals.
+            </ThemedText>
+          </View>
+        )}
+
         <ScrollView
           style={styles.scrollContainer}
           showsVerticalScrollIndicator={false}
           contentContainerStyle={styles.scrollContent}
         >
-          {goals.map((goal, index) => (
-            <Animated.View
-              key={goal.id}
-              style={[
-                styles.goalCard,
-                {
-                  transform: [
-                    {
-                      translateY: new Animated.Value(0),
-                    },
-                  ],
-                },
-              ]}
-            >
-              {/* Goal Header */}
-              <View style={styles.goalHeader}>
-                <View style={styles.goalTitleContainer}>
-                  {editingTitle[goal.id] ? (
-                    <TextInput
-                      style={styles.goalTitleInput}
-                      value={goal.title}
-                      onChangeText={(text) =>
-                        updateGoal(goal.id, "title", text)
-                      }
-                      onBlur={() => {
-                        setEditingTitle((prev) => ({
-                          ...prev,
-                          [goal.id]: false,
-                        }));
-                      }}
-                      autoFocus
-                      placeholder="Enter goal title"
-                      placeholderTextColor="#9CA3AF"
-                    />
-                  ) : (
-                    <ThemedText style={styles.goalTitle}>
-                      {goal.title}
-                    </ThemedText>
-                  )}
-                  <TouchableOpacity
-                    style={styles.editButton}
-                    onPress={() => {
-                      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-                      setEditingTitle((prev) => ({
-                        ...prev,
-                        [goal.id]: !prev[goal.id],
-                      }));
-                    }}
-                  >
-                    <Edit3 size={16} color="#6B7280" />
-                  </TouchableOpacity>
-                </View>
-                <TouchableOpacity
-                  style={styles.deleteButton}
-                  onPress={() => removeGoal(goal.id)}
-                >
-                  <Trash2 size={20} color="#EF4444" />
-                </TouchableOpacity>
-              </View>
-
-              {/* Selection Mode Toggle */}
-              <Animated.View style={styles.selectionModeContainer}>
-                <TouchableOpacity
-                  style={[
-                    styles.selectionModeButton,
-                    goal.selectionMode === "course" &&
-                      styles.selectionModeButtonActive,
-                  ]}
-                  onPress={() => updateSelectionMode(goal.id, "course")}
-                >
-                  <ThemedText
-                    style={[
-                      styles.selectionModeText,
-                      goal.selectionMode === "course" &&
-                        styles.selectionModeTextActive,
-                    ]}
-                  >
-                    Course Type
-                  </ThemedText>
-                </TouchableOpacity>
-                <TouchableOpacity
-                  style={[
-                    styles.selectionModeButton,
-                    goal.selectionMode === "college" &&
-                      styles.selectionModeButtonActive,
-                  ]}
-                  onPress={() => updateSelectionMode(goal.id, "college")}
-                >
-                  <ThemedText
-                    style={[
-                      styles.selectionModeText,
-                      goal.selectionMode === "college" &&
-                        styles.selectionModeTextActive,
-                    ]}
-                  >
-                    Dream College
-                  </ThemedText>
-                </TouchableOpacity>
-              </Animated.View>
-
-              {/* Dynamic Input Section */}
+          {goals
+            .filter((goal) => goal.childId === selectedChildId)
+            .map((goal, index) => (
               <Animated.View
+                key={goal.id}
                 style={[
-                  styles.inputSection,
+                  styles.goalCard,
                   {
-                    opacity: inputSectionAnimations[goal.id] || 1,
                     transform: [
                       {
-                        scale: inputSectionAnimations[goal.id] || 1,
+                        translateY: new Animated.Value(0),
                       },
                     ],
                   },
                 ]}
               >
-                {goal.selectionMode === "course" ? (
-                  <>
-                    <ThemedText style={styles.inputLabel}>
-                      Select Course Type
-                    </ThemedText>
-                    <TouchableOpacity
-                      style={styles.dropdown}
-                      onPress={() => toggleDropdown(`${goal.id}-degree`)}
-                    >
-                      <ThemedText style={styles.dropdownText}>
-                        {goal.degree}
+                {/* Goal Header */}
+                <View style={styles.goalHeader}>
+                  <View style={styles.goalTitleContainer}>
+                    {editingTitle[goal.id] ? (
+                      <TextInput
+                        style={styles.goalTitleInput}
+                        value={goal.title}
+                        onChangeText={(text) =>
+                          updateGoal(goal.id, "title", text)
+                        }
+                        onBlur={() => {
+                          setEditingTitle((prev) => ({
+                            ...prev,
+                            [goal.id]: false,
+                          }));
+                        }}
+                        autoFocus
+                        placeholder="Enter goal title"
+                        placeholderTextColor="#9CA3AF"
+                      />
+                    ) : (
+                      <ThemedText style={styles.goalTitle}>
+                        {goal.title}
                       </ThemedText>
-                      <ChevronDown size={20} color="#6B7280" />
+                    )}
+                    <TouchableOpacity
+                      style={styles.editButton}
+                      onPress={() => {
+                        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                        setEditingTitle((prev) => ({
+                          ...prev,
+                          [goal.id]: !prev[goal.id],
+                        }));
+                      }}
+                    >
+                      <Edit3 size={16} color="#6B7280" />
                     </TouchableOpacity>
+                  </View>
+                  <TouchableOpacity
+                    style={styles.deleteButton}
+                    onPress={() => removeGoal(goal.id)}
+                  >
+                    <Trash2 size={20} color="#EF4444" />
+                  </TouchableOpacity>
+                </View>
 
-                    {expandedDropdowns[`${goal.id}-degree`] && (
-                      <Animated.View
-                        style={[
-                          styles.dropdownOptions,
-                          {
-                            opacity: expandedDropdowns[`${goal.id}-degree`]
-                              ? 1
-                              : 0,
-                            transform: [
-                              {
-                                translateY: expandedDropdowns[
-                                  `${goal.id}-degree`
-                                ]
-                                  ? 0
-                                  : -10,
-                              },
-                            ],
-                          },
-                        ]}
+                {/* Selection Mode Toggle */}
+                <Animated.View style={styles.selectionModeContainer}>
+                  <TouchableOpacity
+                    style={[
+                      styles.selectionModeButton,
+                      goal.selectionMode === "course" &&
+                        styles.selectionModeButtonActive,
+                    ]}
+                    onPress={() => updateSelectionMode(goal.id, "course")}
+                  >
+                    <ThemedText
+                      style={[
+                        styles.selectionModeText,
+                        goal.selectionMode === "course" &&
+                          styles.selectionModeTextActive,
+                      ]}
+                    >
+                      Course Type
+                    </ThemedText>
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    style={[
+                      styles.selectionModeButton,
+                      goal.selectionMode === "college" &&
+                        styles.selectionModeButtonActive,
+                    ]}
+                    onPress={() => updateSelectionMode(goal.id, "college")}
+                  >
+                    <ThemedText
+                      style={[
+                        styles.selectionModeText,
+                        goal.selectionMode === "college" &&
+                          styles.selectionModeTextActive,
+                      ]}
+                    >
+                      Dream College
+                    </ThemedText>
+                  </TouchableOpacity>
+                </Animated.View>
+
+                {/* Dynamic Input Section */}
+                <Animated.View
+                  style={[
+                    styles.inputSection,
+                    {
+                      opacity: inputSectionAnimations[goal.id] || 1,
+                      transform: [
+                        {
+                          scale: inputSectionAnimations[goal.id] || 1,
+                        },
+                      ],
+                    },
+                  ]}
+                >
+                  {goal.selectionMode === "course" ? (
+                    <>
+                      <ThemedText style={styles.inputLabel}>
+                        Select Course Type
+                      </ThemedText>
+                      <TouchableOpacity
+                        style={styles.dropdown}
+                        onPress={() => toggleDropdown(`${goal.id}-degree`)}
                       >
-                        {isLoadingEducation ? (
-                          <View style={styles.dropdownOption}>
-                            <ActivityIndicator size="small" color="#2563EB" />
-                          </View>
-                        ) : (
-                          courses.map((course) => (
-                            <Animated.View
-                              key={course.id}
-                              style={{
-                                opacity: expandedDropdowns[`${goal.id}-degree`]
-                                  ? 1
-                                  : 0,
-                                transform: [
-                                  {
-                                    translateX: expandedDropdowns[
-                                      `${goal.id}-degree`
-                                    ]
-                                      ? 0
-                                      : -20,
-                                  },
-                                ],
-                              }}
-                            >
+                        <ThemedText style={styles.dropdownText}>
+                          {goal.degree}
+                        </ThemedText>
+                        <ChevronDown size={20} color="#6B7280" />
+                      </TouchableOpacity>
+
+                      {expandedDropdowns[`${goal.id}-degree`] && (
+                        <Animated.View
+                          style={[
+                            styles.dropdownOptions,
+                            {
+                              opacity: expandedDropdowns[`${goal.id}-degree`]
+                                ? 1
+                                : 0,
+                              transform: [
+                                {
+                                  translateY: expandedDropdowns[
+                                    `${goal.id}-degree`
+                                  ]
+                                    ? 0
+                                    : -10,
+                                },
+                              ],
+                            },
+                          ]}
+                        >
+                          {isLoadingEducation ? (
+                            <View style={styles.dropdownOption}>
+                              <ActivityIndicator size="small" color="#2563EB" />
+                            </View>
+                          ) : (
+                            courses.map((course) => (
+                              <Animated.View
+                                key={course.id}
+                                style={{
+                                  opacity: expandedDropdowns[
+                                    `${goal.id}-degree`
+                                  ]
+                                    ? 1
+                                    : 0,
+                                  transform: [
+                                    {
+                                      translateX: expandedDropdowns[
+                                        `${goal.id}-degree`
+                                      ]
+                                        ? 0
+                                        : -20,
+                                    },
+                                  ],
+                                }}
+                              >
+                                <TouchableOpacity
+                                  style={styles.dropdownOption}
+                                  onPress={() => {
+                                    updateGoal(goal.id, "degree", course.name);
+                                    updateGoal(goal.id, "education", course);
+                                    toggleDropdown(`${goal.id}-degree`);
+                                  }}
+                                >
+                                  <ThemedText style={styles.dropdownOptionText}>
+                                    {course.name}
+                                  </ThemedText>
+                                </TouchableOpacity>
+                              </Animated.View>
+                            ))
+                          )}
+                        </Animated.View>
+                      )}
+                    </>
+                  ) : (
+                    <>
+                      <ThemedText style={styles.inputLabel}>
+                        Select Dream College
+                      </ThemedText>
+                      <TouchableOpacity
+                        style={styles.dropdown}
+                        onPress={() => toggleDropdown(`${goal.id}-college`)}
+                      >
+                        <ThemedText style={styles.dropdownText}>
+                          {goal.college}
+                        </ThemedText>
+                        <ChevronDown size={20} color="#6B7280" />
+                      </TouchableOpacity>
+
+                      {expandedDropdowns[`${goal.id}-college`] && (
+                        <Animated.View style={styles.dropdownOptions}>
+                          {isLoadingEducation ? (
+                            <View style={styles.dropdownOption}>
+                              <ActivityIndicator size="small" color="#2563EB" />
+                            </View>
+                          ) : (
+                            institutions.map((institution) => (
                               <TouchableOpacity
+                                key={institution.id}
                                 style={styles.dropdownOption}
                                 onPress={() => {
-                                  updateGoal(goal.id, "degree", course.name);
-                                  updateGoal(goal.id, "education", course);
-                                  toggleDropdown(`${goal.id}-degree`);
+                                  updateGoal(
+                                    goal.id,
+                                    "college",
+                                    institution.name
+                                  );
+                                  updateGoal(goal.id, "education", institution);
+                                  toggleDropdown(`${goal.id}-college`);
                                 }}
                               >
                                 <ThemedText style={styles.dropdownOptionText}>
-                                  {course.name}
+                                  {institution.name}
                                 </ThemedText>
                               </TouchableOpacity>
-                            </Animated.View>
-                          ))
-                        )}
-                      </Animated.View>
-                    )}
-                  </>
-                ) : (
-                  <>
+                            ))
+                          )}
+                        </Animated.View>
+                      )}
+                    </>
+                  )}
+                </Animated.View>
+
+                {/* Cost and Timeline */}
+                <View style={styles.costTimelineContainer}>
+                  <View style={styles.inputGroup}>
                     <ThemedText style={styles.inputLabel}>
-                      Select Dream College
+                      Today&apos;s Approx Cost
                     </ThemedText>
-                    <TouchableOpacity
-                      style={styles.dropdown}
-                      onPress={() => toggleDropdown(`${goal.id}-college`)}
-                    >
-                      <ThemedText style={styles.dropdownText}>
-                        {goal.college}
-                      </ThemedText>
-                      <ChevronDown size={20} color="#6B7280" />
-                    </TouchableOpacity>
-
-                    {expandedDropdowns[`${goal.id}-college`] && (
-                      <Animated.View style={styles.dropdownOptions}>
-                        {isLoadingEducation ? (
-                          <View style={styles.dropdownOption}>
-                            <ActivityIndicator size="small" color="#2563EB" />
-                          </View>
-                        ) : (
-                          institutions.map((institution) => (
-                            <TouchableOpacity
-                              key={institution.id}
-                              style={styles.dropdownOption}
-                              onPress={() => {
-                                updateGoal(
-                                  goal.id,
-                                  "college",
-                                  institution.name
-                                );
-                                updateGoal(goal.id, "education", institution);
-                                toggleDropdown(`${goal.id}-college`);
-                              }}
-                            >
-                              <ThemedText style={styles.dropdownOptionText}>
-                                {institution.name}
-                              </ThemedText>
-                            </TouchableOpacity>
-                          ))
-                        )}
-                      </Animated.View>
-                    )}
-                  </>
-                )}
-              </Animated.View>
-
-              {/* Cost and Timeline */}
-              <View style={styles.costTimelineContainer}>
-                <View style={styles.inputGroup}>
-                  <ThemedText style={styles.inputLabel}>
-                    Today&apos;s Approx Cost
-                  </ThemedText>
-                  <View style={styles.costInputContainer}>
-                    <ThemedText style={styles.currencySymbol}>₹</ThemedText>
-                    <TextInput
-                      style={styles.costInput}
-                      value={goal.currentCost.toLocaleString("en-IN")}
-                      onChangeText={(text) => {
-                        const value = parseInt(text.replace(/,/g, "")) || 0;
-                        updateGoal(goal.id, "currentCost", value);
-                      }}
-                      keyboardType="numeric"
-                      placeholder="0"
-                    />
+                    <View style={styles.costInputContainer}>
+                      <ThemedText style={styles.currencySymbol}>₹</ThemedText>
+                      <TextInput
+                        style={styles.costInput}
+                        value={goal.currentCost.toLocaleString("en-IN")}
+                        onChangeText={(text) => {
+                          const value = parseInt(text.replace(/,/g, "")) || 0;
+                          updateGoal(goal.id, "currentCost", value);
+                        }}
+                        keyboardType="numeric"
+                        placeholder="0"
+                      />
+                    </View>
                   </View>
-                </View>
 
-                <View style={styles.inputGroup}>
-                  <ThemedText style={styles.inputLabel}>Target Year</ThemedText>
-                  <View style={styles.yearInputContainer}>
-                    <TextInput
-                      style={styles.yearInput}
-                      value={goal.targetYear.toString()}
-                      onChangeText={(text) => {
-                        const value =
-                          parseInt(text) || new Date().getFullYear();
-                        updateGoal(goal.id, "targetYear", value);
-                      }}
-                      keyboardType="numeric"
-                    />
-                    <View style={styles.yearControls}>
-                      <TouchableOpacity
-                        style={styles.yearButton}
-                        onPress={() =>
-                          updateGoal(goal.id, "targetYear", goal.targetYear + 1)
-                        }
-                      >
-                        <ChevronUp size={16} color="#6B7280" />
-                      </TouchableOpacity>
-                      <TouchableOpacity
-                        style={styles.yearButton}
-                        onPress={() =>
-                          updateGoal(goal.id, "targetYear", goal.targetYear - 1)
-                        }
-                      >
-                        <ChevronDown size={16} color="#6B7280" />
-                      </TouchableOpacity>
+                  <View style={styles.inputGroup}>
+                    <ThemedText style={styles.inputLabel}>
+                      Target Year
+                    </ThemedText>
+                    <View style={styles.yearInputContainer}>
+                      <TextInput
+                        style={styles.yearInput}
+                        value={goal.targetYear.toString()}
+                        onChangeText={(text) => {
+                          const value =
+                            parseInt(text) || new Date().getFullYear();
+                          updateGoal(goal.id, "targetYear", value);
+                        }}
+                        keyboardType="numeric"
+                      />
+                      <View style={styles.yearControls}>
+                        <TouchableOpacity
+                          style={styles.yearButton}
+                          onPress={() =>
+                            updateGoal(
+                              goal.id,
+                              "targetYear",
+                              goal.targetYear + 1
+                            )
+                          }
+                        >
+                          <ChevronUp size={16} color="#6B7280" />
+                        </TouchableOpacity>
+                        <TouchableOpacity
+                          style={styles.yearButton}
+                          onPress={() =>
+                            updateGoal(
+                              goal.id,
+                              "targetYear",
+                              goal.targetYear - 1
+                            )
+                          }
+                        >
+                          <ChevronDown size={16} color="#6B7280" />
+                        </TouchableOpacity>
+                      </View>
                     </View>
                   </View>
                 </View>
-              </View>
 
-              {/* Future Cost Display */}
-              <Animated.View
-                style={[
-                  styles.futureCostContainer,
-                  {
-                    transform: [
-                      {
-                        scale: pulseAnim,
-                      },
-                    ],
-                  },
-                ]}
-              >
-                <View style={styles.futureCostHeader}>
-                  <ThemedText style={styles.futureCostLabel}>
-                    Expected Future Cost
+                {/* Future Cost Display */}
+                <Animated.View
+                  style={[
+                    styles.futureCostContainer,
+                    {
+                      transform: [
+                        {
+                          scale: pulseAnim,
+                        },
+                      ],
+                    },
+                  ]}
+                >
+                  <View style={styles.futureCostHeader}>
+                    <ThemedText style={styles.futureCostLabel}>
+                      Expected Future Cost
+                    </ThemedText>
+                    <TouchableOpacity style={styles.editButton}>
+                      <Edit3 size={16} color="#6B7280" />
+                    </TouchableOpacity>
+                  </View>
+                  <View style={styles.futureCostInputContainer}>
+                    <ThemedText style={styles.currencySymbol}>₹</ThemedText>
+                    <TextInput
+                      style={styles.futureCostInput}
+                      value={goal.futureCost.toLocaleString("en-IN")}
+                      onChangeText={(text) => {
+                        const value = parseInt(text.replace(/,/g, "")) || 0;
+                        updateGoal(goal.id, "futureCost", value);
+                      }}
+                      keyboardType="numeric"
+                    />
+                  </View>
+                  <ThemedText style={styles.futureCostDescription}>
+                    {goal.education
+                      ? `Calculated based on expected fee increases`
+                      : "Select a course or college to see future cost"}
                   </ThemedText>
-                  <TouchableOpacity style={styles.editButton}>
-                    <Edit3 size={16} color="#6B7280" />
-                  </TouchableOpacity>
-                </View>
-                <View style={styles.futureCostInputContainer}>
-                  <ThemedText style={styles.currencySymbol}>₹</ThemedText>
-                  <TextInput
-                    style={styles.futureCostInput}
-                    value={goal.futureCost.toLocaleString("en-IN")}
-                    onChangeText={(text) => {
-                      const value = parseInt(text.replace(/,/g, "")) || 0;
-                      updateGoal(goal.id, "futureCost", value);
-                    }}
-                    keyboardType="numeric"
-                  />
-                </View>
-                <ThemedText style={styles.futureCostDescription}>
-                  {goal.education
-                    ? `Calculated based on expected fee increases`
-                    : "Select a course or college to see future cost"}
-                </ThemedText>
+                </Animated.View>
               </Animated.View>
-            </Animated.View>
-          ))}
+            ))}
 
           {/* Add Goal Button */}
           <TouchableOpacity style={styles.addGoalButton} onPress={addGoal}>
@@ -702,6 +839,21 @@ const styles = StyleSheet.create({
     paddingBottom: 20,
     paddingHorizontal: 20,
   },
+  childSelectorHeader: {
+    paddingHorizontal: 16,
+    paddingTop: 8,
+  },
+  childGreeting: {
+    fontSize: 16,
+    fontWeight: "500",
+    color: "#374151",
+    lineHeight: 22,
+    letterSpacing: 0.2,
+    marginBottom: 8,
+  },
+  childPillsHeaderWrapper: {
+    paddingVertical: 8,
+  },
   headerContent: {
     flexDirection: "row",
     alignItems: "center",
@@ -724,6 +876,14 @@ const styles = StyleSheet.create({
   scrollContent: {
     padding: 20,
     paddingBottom: 40,
+  },
+  emptyChildrenContainer: {
+    paddingHorizontal: 20,
+    paddingTop: 16,
+  },
+  emptyChildrenText: {
+    fontSize: 16,
+    color: "#6B7280",
   },
   goalCard: {
     backgroundColor: "#FFFFFF",
@@ -776,6 +936,45 @@ const styles = StyleSheet.create({
   },
   deleteButton: {
     padding: 8,
+  },
+  childSelectorContainer: {
+    marginBottom: 20,
+  },
+  childPillsWrapper: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    marginTop: 12,
+  },
+  addChildPill: {
+    backgroundColor: "#FFFFFF",
+    borderColor: "#BFDBFE",
+  },
+  childPill: {
+    paddingVertical: 10,
+    paddingHorizontal: 18,
+    borderRadius: 9999,
+    backgroundColor: "#EFF6FF",
+    borderWidth: 1,
+    borderColor: "transparent",
+    marginRight: 12,
+    marginBottom: 12,
+  },
+  childPillSelected: {
+    backgroundColor: "#DBEAFE",
+    borderColor: "#2563EB",
+    shadowColor: "#60A5FA",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.35,
+    shadowRadius: 6,
+    elevation: 3,
+  },
+  childPillText: {
+    fontSize: 14,
+    fontWeight: "600",
+    color: "#1D4ED8",
+  },
+  childPillTextSelected: {
+    color: "#1E3A8A",
   },
   selectionModeContainer: {
     flexDirection: "row",
