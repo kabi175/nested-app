@@ -19,6 +19,8 @@ public interface UserService {
 
   List<BankAccountDto> fetchBankAccounts(Long userID);
 
+  void deleteBankAccount(Long userID, Long bankAccountID);
+
   enum Type {
     CURRENT_USER,
     ALL,

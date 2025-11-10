@@ -162,6 +162,12 @@ public class UserServiceImpl implements UserService {
     return bankAccounts.stream().map(BankAccountDto::fromEntity).toList();
   }
 
+  @Override
+  public void deleteBankAccount(Long userID, Long bankAccountID) {
+    var bankAccount = bankDetailRepository.findById(bankAccountID).orElseThrow();
+    bankDetailRepository.delete(bankAccount);
+  }
+
   private void updateAddressFields(Address address, AddressDto addressDto) {
     if (addressDto.getAddressLine() != null) {
       address.setAddressLine(addressDto.getAddressLine());

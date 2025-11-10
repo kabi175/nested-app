@@ -15,7 +15,6 @@ import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
-import io.swagger.v3.oas.annotations.tags.Tag;
 import java.util.Map;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -25,6 +24,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -38,7 +38,6 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @AllArgsConstructor
 @RequestMapping("/api/v1/users")
-@Tag(name = "User Management", description = "APIs for managing users")
 public class UserController {
 
   private final UserService userService;
@@ -48,6 +47,7 @@ public class UserController {
 
   @GetMapping(produces = MediaType.APPLICATION_JSON_VALUE)
   @Operation(
+      tags = "user",
       summary = "Get users",
       description = "Get current user or all users (admin only for ALL)")
   @ApiResponses(
@@ -87,6 +87,7 @@ public class UserController {
       path = "/{id}",
       consumes = MediaType.APPLICATION_JSON_VALUE,
       produces = MediaType.APPLICATION_JSON_VALUE)
+  @Operation(tags = "user")
   public ResponseEntity<UserDTO> updateUser(
       @PathVariable Long id,
       @Validated @org.springframework.web.bind.annotation.RequestBody UserDTO userDTO) {
@@ -97,6 +98,7 @@ public class UserController {
 
   @PostMapping("/{user_id}/actions/create_investor")
   @Operation(
+      tags = "user",
       summary = "Create investor for user",
       description =
           "Creates an investor profile in Tarrakki for the specified user (individual type)")
@@ -128,7 +130,10 @@ public class UserController {
   }
 
   @PostMapping(value = "/{user_id}/banks", consumes = MediaType.APPLICATION_JSON_VALUE)
-  @Operation(summary = "Add bank account for User", description = "Adds a bank account to User")
+  @Operation(
+      tags = "bank-account",
+      summary = "Add bank account for User",
+      description = "Add bank account for User")
   @ApiResponses(
       value = {
         @ApiResponse(
@@ -153,6 +158,10 @@ public class UserController {
     return ResponseEntity.status(HttpStatus.CREATED).body(bank);
   }
 
+  @Operation(
+      tags = "bank-account",
+      summary = "fetch bank account for User",
+      description = "fetch bank account for User")
   @GetMapping(value = "/{user_id}/banks", produces = MediaType.APPLICATION_JSON_VALUE)
   public ResponseEntity<Entity<BankAccountDto>> getBankAccounts(
       @Parameter(description = "User ID", required = true) @PathVariable("user_id") Long userID) {
@@ -162,5 +171,19 @@ public class UserController {
     }
 
     return ResponseEntity.ok(Entity.of(banks));
+  }
+
+  @Operation(
+      tags = "bank-account",
+      summary = "delete a bank account for User",
+      description = "delete a bank account for User")
+  @DeleteMapping(value = "/{user_id}/banks/{bank_id}", produces = MediaType.APPLICATION_JSON_VALUE)
+  public ResponseEntity<Entity<BankAccountDto>> deleteBankAccounts(
+      @Parameter(description = "User ID", required = true) @PathVariable("user_id") Long userID,
+      @Parameter(description = "Bank Account ID", required = true) @PathVariable("bank_id")
+          Long bankAccountID) {
+    userService.deleteBankAccount(userID, bankAccountID);
+
+    return ResponseEntity.accepted().build();
   }
 }
