@@ -29,7 +29,7 @@ public class KycAPIClient implements com.nested.app.client.mf.KycAPIClient {
   private static final String AADHAAR_UPLOAD_API_URL = "/v2/identity_documents";
 
   @Value("${app.url}")
-  private final String APP_URL;
+  private String APP_URL;
 
   private final FinPrimitivesAPI api;
 
