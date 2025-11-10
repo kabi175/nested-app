@@ -13,6 +13,7 @@ import java.util.List;
 import java.util.Map;
 import lombok.Data;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Primary;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.stereotype.Service;
@@ -26,6 +27,9 @@ public class KycAPIClient implements com.nested.app.client.mf.KycAPIClient {
   private static final String KYC_REQUEST_API_URL = "/v2/kyc_requests";
   private static final String E_SIGN_API_URL = "/v2/esigns";
   private static final String AADHAAR_UPLOAD_API_URL = "/v2/identity_documents";
+
+  @Value("${app.url}")
+  private final String APP_URL;
 
   private final FinPrimitivesAPI api;
 
@@ -72,7 +76,8 @@ public class KycAPIClient implements com.nested.app.client.mf.KycAPIClient {
 
   @Override
   public Mono<ActionRequired> createESignRequest(String kycRequestID) {
-    var request = Map.of("kyc_request", kycRequestID);
+    var request =
+        Map.of("kyc_request", kycRequestID, "postback_url", callbackUrl(kycRequestID, "esign"));
     return api.withAuth()
         .post()
         .uri(E_SIGN_API_URL)
@@ -98,7 +103,17 @@ public class KycAPIClient implements com.nested.app.client.mf.KycAPIClient {
   @Override
   public Mono<ActionRequired> createAadhaarUploadRequest(String kycRequestID) {
     var proofID = fetchAadhaarDocument(kycRequestID).map(IdentityDocument::getId).block();
-    var request = Map.of("kyc_request", kycRequestID, "type", "aadhaar");
+    if (proofID != null) {
+      return Mono.empty();
+    }
+    var request =
+        Map.of(
+            "kyc_request",
+            kycRequestID,
+            "type",
+            "aadhaar",
+            "postback_url",
+            callbackUrl(kycRequestID, "aadhaar_upload"));
     return api.withAuth()
         .post()
         .uri(AADHAAR_UPLOAD_API_URL)
@@ -148,6 +163,10 @@ public class KycAPIClient implements com.nested.app.client.mf.KycAPIClient {
         .block();
 
     return Mono.just(true);
+  }
+
+  private String callbackUrl(String kycRequestID, String feature) {
+    return APP_URL + "/redirects/kyc/" + kycRequestID + "/" + feature;
   }
 
   @Data
