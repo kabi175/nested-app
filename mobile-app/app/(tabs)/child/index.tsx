@@ -79,7 +79,7 @@ export default function GoalScreen() {
         {hasGoals && goals ? (
           <>
             <View style={styles.contentContainer}>
-              {currentValue && (
+              {currentValue > 0 && (
                 <PortfolioSummaryCard
                   currentValue={currentValue}
                   invested={invested}
