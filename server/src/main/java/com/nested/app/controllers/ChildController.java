@@ -220,8 +220,7 @@ public class ChildController {
   @PostMapping("/{child_id}/actions/create_investor")
   @Operation(
       summary = "Create investor for child",
-      description =
-          "Creates an investor profile in Tarrakki for the specified child (minor type)")
+      description = "Creates an investor profile in Tarrakki for the specified child (minor type)")
   @ApiResponses(
       value = {
         @ApiResponse(
@@ -253,24 +252,11 @@ public class ChildController {
           childId,
           investor.getRef());
 
-      return ResponseEntity.status(HttpStatus.CREATED)
-          .body(
-              Map.of(
-                  "message",
-                  "Investor created successfully",
-                  "investor_id",
-                  investor.getId(),
-                  "ref",
-                  investor.getRef(),
-                  "investor_type",
-                  investor.getType(),
-                  "status",
-                  investor.getStatus()));
+      return ResponseEntity.status(HttpStatus.CREATED).build();
 
     } catch (IllegalArgumentException e) {
       log.warn("Validation error creating investor for child {}: {}", childId, e.getMessage());
-      return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-          .body(Map.of("error", e.getMessage()));
+      return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of("error", e.getMessage()));
     } catch (IllegalStateException e) {
       log.warn("State error creating investor for child {}: {}", childId, e.getMessage());
       return ResponseEntity.status(HttpStatus.CONFLICT).body(Map.of("error", e.getMessage()));

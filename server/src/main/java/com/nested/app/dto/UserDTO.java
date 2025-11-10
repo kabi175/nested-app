@@ -48,8 +48,6 @@ public class UserDTO {
   @JsonProperty("pan_number")
   private String panNumber;
 
-  private InvestorDto investor;
-
   public static UserDTO fromEntity(User entity) {
     return new UserDTO(
         entity.getId(),
@@ -61,8 +59,7 @@ public class UserDTO {
         AddressDto.fromEntity(entity.getAddress()),
         entity.getDateOfBirth(),
         entity.getGender(),
-        entity.getPanNumber(),
-        InvestorDto.fromEntity(entity.getInvestor()));
+        entity.getPanNumber());
   }
 
   public static User fromDto(UserDTO dto) {
