@@ -36,6 +36,7 @@ import org.springframework.web.reactive.function.client.WebClientResponseExcepti
 @Service
 @RequiredArgsConstructor
 @Transactional
+@Deprecated
 public class InvestorServiceTImpl {
 
   private final BankDetailRepository bankDetailRepository;
@@ -367,6 +368,7 @@ public class InvestorServiceTImpl {
    * @param userID userID
    * @return Bank ID from Tarrakki
    */
+  @Deprecated
   public BankAccountDto addBankAccount(Long userID, BankAccountDto bankAccountDto) {
 
     var bank = bankAccountDto.toEntity();
@@ -382,6 +384,7 @@ public class InvestorServiceTImpl {
     return BankAccountDto.fromEntity(bankDetailRepository.findById(bank.getId()).orElseThrow());
   }
 
+  @Deprecated
   public List<BankAccountDto> findBankAccountByUserId(Long userID) {
     var bankAccounts = bankDetailRepository.findAllByUserId(userID);
     return bankAccounts.stream().map(BankAccountDto::fromEntity).toList();

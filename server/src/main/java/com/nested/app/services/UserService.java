@@ -1,5 +1,6 @@
 package com.nested.app.services;
 
+import com.nested.app.dto.BankAccountDto;
 import com.nested.app.dto.UserDTO;
 import java.util.List;
 import org.springframework.data.domain.Pageable;
@@ -13,6 +14,10 @@ public interface UserService {
   UserDTO createUser(UserDTO userDTO);
 
   UserDTO updateUser(UserDTO userDTO);
+
+  BankAccountDto addBankAccount(Long userID, BankAccountDto bankAccountDto);
+
+  List<BankAccountDto> fetchBankAccounts(Long userID);
 
   enum Type {
     CURRENT_USER,

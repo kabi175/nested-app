@@ -4,11 +4,13 @@ import com.google.common.base.Strings;
 import com.nested.app.client.tarrakki.TarrakkiInvestorAPIClient;
 import com.nested.app.contect.UserContext;
 import com.nested.app.dto.AddressDto;
+import com.nested.app.dto.BankAccountDto;
 import com.nested.app.dto.UserDTO;
 import com.nested.app.entity.Address;
 import com.nested.app.entity.User;
 import com.nested.app.events.UserUpdateEvent;
 import com.nested.app.repository.AddressRepository;
+import com.nested.app.repository.BankDetailRepository;
 import com.nested.app.repository.UserRepository;
 import java.util.List;
 import java.util.Objects;
@@ -27,6 +29,7 @@ import org.springframework.stereotype.Service;
 @RequiredArgsConstructor
 public class UserServiceImpl implements UserService {
 
+  private final BankDetailRepository bankDetailRepository;
   private final UserRepository userRepository;
   private final AddressRepository addressRepository;
   private final TarrakkiInvestorAPIClient investorAPIClient;
@@ -138,6 +141,27 @@ public class UserServiceImpl implements UserService {
     return UserDTO.fromEntity(updated);
   }
 
+  @Override
+  public BankAccountDto addBankAccount(Long userID, BankAccountDto bankAccountDto) {
+    var bank = bankAccountDto.toEntity();
+
+    var user =
+        userRepository
+            .findById(userID)
+            .orElseThrow(() -> new IllegalArgumentException("User not found with ID: " + userID));
+    bank.setUser(user);
+
+    bank = bankDetailRepository.save(bank);
+
+    return BankAccountDto.fromEntity(bankDetailRepository.findById(bank.getId()).orElseThrow());
+  }
+
+  @Override
+  public List<BankAccountDto> fetchBankAccounts(Long userID) {
+    var bankAccounts = bankDetailRepository.findAllByUserId(userID);
+    return bankAccounts.stream().map(BankAccountDto::fromEntity).toList();
+  }
+
   private void updateAddressFields(Address address, AddressDto addressDto) {
     if (addressDto.getAddressLine() != null) {
       address.setAddressLine(addressDto.getAddressLine());
@@ -155,5 +179,4 @@ public class UserServiceImpl implements UserService {
       address.setPinCode(addressDto.getPinCode());
     }
   }
-
 }

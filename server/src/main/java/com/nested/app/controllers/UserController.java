@@ -3,10 +3,10 @@ package com.nested.app.controllers;
 import com.nested.app.contect.UserContext;
 import com.nested.app.dto.BankAccountDto;
 import com.nested.app.dto.Entity;
+import com.nested.app.dto.MinifiedUserDTO;
 import com.nested.app.dto.UserDTO;
-import com.nested.app.entity.Investor;
 import com.nested.app.entity.User;
-import com.nested.app.services.InvestorServiceTImpl;
+import com.nested.app.services.InvestorService;
 import com.nested.app.services.UserService;
 import com.nested.app.utils.AppEnvironment;
 import io.swagger.v3.oas.annotations.Operation;
@@ -42,7 +42,7 @@ import org.springframework.web.bind.annotation.RestController;
 public class UserController {
 
   private final UserService userService;
-  private final InvestorServiceTImpl investorService;
+  private final InvestorService investorService;
   private final UserContext userContext;
   private final AppEnvironment appEnvironment;
 
@@ -116,42 +116,15 @@ public class UserController {
         @ApiResponse(responseCode = "409", description = "Investor already exists for this user"),
         @ApiResponse(responseCode = "500", description = "Internal server error")
       })
-  public ResponseEntity<?> createInvestorForUser(
+  public ResponseEntity<?> createInvestor(
       @Parameter(description = "User ID", required = true) @PathVariable("user_id") Long userId) {
+    var userDto = new MinifiedUserDTO();
+    userDto.setId(userId);
+    investorService.createInvestor(userDto);
 
-    log.info("POST /api/v1/users/{}/actions/create_investor - Creating investor for user", userId);
+    log.info("Successfully created investor for user ID: {}", userId);
 
-    try {
-      Investor investor = investorService.createInvestorForUser(userId);
-
-      log.info(
-          "Successfully created investor for user ID: {} with Tarrakki ref: {}",
-          userId,
-          investor.getRef());
-
-      return ResponseEntity.status(HttpStatus.CREATED)
-          .body(
-              Map.of(
-                  "message",
-                  "Investor created successfully",
-                  "investor_id",
-                  investor.getId(),
-                  "investor_type",
-                  investor.getType(),
-                  "status",
-                  investor.getStatus()));
-
-    } catch (IllegalArgumentException e) {
-      log.warn("Validation error creating investor for user {}: {}", userId, e.getMessage());
-      return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of("error", e.getMessage()));
-    } catch (IllegalStateException e) {
-      log.warn("State error creating investor for user {}: {}", userId, e.getMessage());
-      return ResponseEntity.status(HttpStatus.CONFLICT).body(Map.of("error", e.getMessage()));
-    } catch (Exception e) {
-      log.error("Error creating investor for user {}: {}", userId, e.getMessage(), e);
-      return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-          .body(Map.of("error", "Failed to create investor: " + e.getMessage()));
-    }
+    return ResponseEntity.status(HttpStatus.CREATED).build();
   }
 
   @PostMapping(value = "/{user_id}/banks", consumes = MediaType.APPLICATION_JSON_VALUE)
@@ -175,31 +148,15 @@ public class UserController {
       @Parameter(description = "User ID", required = true) @PathVariable("user_id") Long userID,
       @Validated @org.springframework.web.bind.annotation.RequestBody
           BankAccountDto bankAccountDto) {
+    var bank = userService.addBankAccount(userID, bankAccountDto);
 
-    log.info("POST /api/v1/users/{}/banks - Adding bank account for User", userID);
-
-    try {
-      var bank = investorService.addBankAccount(userID, bankAccountDto);
-
-      return ResponseEntity.status(HttpStatus.CREATED).body(bank);
-    } catch (IllegalArgumentException e) {
-      log.warn("Validation error adding bank account for investor {}: {}", userID, e.getMessage());
-      return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of("error", e.getMessage()));
-    } catch (IllegalStateException e) {
-      log.warn("State error adding bank account for investor {}: {}", userID, e.getMessage());
-      return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of("error", e.getMessage()));
-    } catch (Exception e) {
-      log.error("Error adding bank account for investor {}: {}", userID, e.getMessage(), e);
-      return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-          .body(Map.of("error", "Failed to add bank account: " + e.getMessage()));
-    }
+    return ResponseEntity.status(HttpStatus.CREATED).body(bank);
   }
 
   @GetMapping(value = "/{user_id}/banks", produces = MediaType.APPLICATION_JSON_VALUE)
   public ResponseEntity<Entity<BankAccountDto>> getBankAccounts(
       @Parameter(description = "User ID", required = true) @PathVariable("user_id") Long userID) {
-    var banks = investorService.findBankAccountByUserId(userID);
-
+    var banks = userService.fetchBankAccounts(userID);
     if (banks == null || banks.isEmpty()) {
       return ResponseEntity.noContent().build();
     }
