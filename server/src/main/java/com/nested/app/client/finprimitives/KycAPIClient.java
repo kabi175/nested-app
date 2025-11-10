@@ -27,11 +27,10 @@ public class KycAPIClient implements com.nested.app.client.mf.KycAPIClient {
   private static final String KYC_REQUEST_API_URL = "/v2/kyc_requests";
   private static final String E_SIGN_API_URL = "/v2/esigns";
   private static final String AADHAAR_UPLOAD_API_URL = "/v2/identity_documents";
+  private final FinPrimitivesAPI api;
 
   @Value("${app.url}")
   private String APP_URL;
-
-  private final FinPrimitivesAPI api;
 
   @Override
   public Mono<KycCheck> isKycRecordAvailable(@NotEmpty String pan, @NotNull Date dob) {
