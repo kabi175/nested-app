@@ -79,10 +79,12 @@ export default function GoalScreen() {
         {hasGoals && goals ? (
           <>
             <View style={styles.contentContainer}>
-              <PortfolioSummaryCard
-                currentValue={currentValue}
-                invested={invested}
-              />
+              {currentValue && (
+                <PortfolioSummaryCard
+                  currentValue={currentValue}
+                  invested={invested}
+                />
+              )}
               <GoalsList goals={goals} />
             </View>
             <TouchableOpacity
