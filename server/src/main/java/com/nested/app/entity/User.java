@@ -72,6 +72,8 @@ public class User {
 
   @With private Date dateOfBirth;
 
+  @With private boolean isPep = false;
+
   @With
   @Builder.Default
   @Enumerated(EnumType.STRING)
@@ -157,6 +159,7 @@ public class User {
   public enum KYCStatus {
     UNKNOWN("unknown"),
     PENDING("pending"),
+    SUBMITTED("submitted"),
     COMPLETED("completed"),
     FAILED("failed");
     @JsonValue @Getter private final String value;

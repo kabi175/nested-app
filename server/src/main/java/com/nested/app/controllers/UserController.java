@@ -6,7 +6,7 @@ import com.nested.app.dto.Entity;
 import com.nested.app.dto.UserDTO;
 import com.nested.app.entity.Investor;
 import com.nested.app.entity.User;
-import com.nested.app.services.InvestorServiceImpl;
+import com.nested.app.services.InvestorServiceTImpl;
 import com.nested.app.services.UserService;
 import com.nested.app.utils.AppEnvironment;
 import io.swagger.v3.oas.annotations.Operation;
@@ -42,7 +42,7 @@ import org.springframework.web.bind.annotation.RestController;
 public class UserController {
 
   private final UserService userService;
-  private final InvestorServiceImpl investorService;
+  private final InvestorServiceTImpl investorService;
   private final UserContext userContext;
   private final AppEnvironment appEnvironment;
 
@@ -137,9 +137,9 @@ public class UserController {
                   "investor_id",
                   investor.getId(),
                   "investor_type",
-                  investor.getInvestorType(),
+                  investor.getType(),
                   "status",
-                  investor.getInvestorStatus()));
+                  investor.getStatus()));
 
     } catch (IllegalArgumentException e) {
       log.warn("Validation error creating investor for user {}: {}", userId, e.getMessage());

@@ -21,5 +21,5 @@ public interface KycAPIClient {
 
   Mono<ActionRequired> createAadhaarUploadRequest(String kycRequestID);
 
-  Mono<Boolean> isAadhaarUploadSuccess(String uploadRequestID);
+  Mono<Boolean> updateAadhaarProof(String kycRequestID);
 }

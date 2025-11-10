@@ -2,7 +2,7 @@ package com.nested.app.controllers;
 
 import com.nested.app.client.mf.dto.NomineeRequest;
 import com.nested.app.client.mf.dto.OtpResponse;
-import com.nested.app.services.InvestorServiceImpl;
+import com.nested.app.services.InvestorServiceTImpl;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -35,7 +35,7 @@ import org.springframework.web.multipart.MultipartFile;
 @Tag(name = "Investor Management", description = "APIs for managing investor operations")
 public class InvestorController {
 
-  private final InvestorServiceImpl investorService;
+  private final InvestorServiceTImpl investorService;
 
   @PostMapping(value = "/{investor_id}/documents", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
   @Operation(

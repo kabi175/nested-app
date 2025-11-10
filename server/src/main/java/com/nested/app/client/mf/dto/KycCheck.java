@@ -10,8 +10,8 @@ public class KycCheck {
   private Status status;
 
   public enum Status {
-    AVAILABLE,
     NOT_AVAILABLE,
+    AVAILABLE,
     PENDING,
     SUBMITTED,
     REJECTED,

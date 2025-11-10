@@ -11,8 +11,10 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import lombok.Data;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Primary;
+import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;
 
@@ -34,7 +36,7 @@ public class KycAPIClient implements com.nested.app.client.mf.KycAPIClient {
         .uri(KYC_REQUEST_API_URL)
         .attribute("pan", pan)
         .retrieve()
-        .bodyToMono(KYCGetResponse.class)
+        .bodyToMono(new ParameterizedTypeReference<EntityListResponse<KYCRequest>>() {})
         .map(
             kycGetResponse -> {
               var status =
@@ -95,6 +97,7 @@ public class KycAPIClient implements com.nested.app.client.mf.KycAPIClient {
 
   @Override
   public Mono<ActionRequired> createAadhaarUploadRequest(String kycRequestID) {
+    var proofID = fetchAadhaarDocument(kycRequestID).map(IdentityDocument::getId).block();
     var request = Map.of("kyc_request", kycRequestID, "type", "aadhaar");
     return api.withAuth()
         .post()
@@ -104,30 +107,61 @@ public class KycAPIClient implements com.nested.app.client.mf.KycAPIClient {
         .bodyToMono(ActionRequired.class);
   }
 
-  @Override
-  public Mono<Boolean> isAadhaarUploadSuccess(String uploadRequestID) {
+  private Mono<IdentityDocument> fetchAadhaarDocument(String kycRequestID) {
     return api.withAuth()
         .get()
-        .uri(AADHAAR_UPLOAD_API_URL + "/" + uploadRequestID)
+        .uri(AADHAAR_UPLOAD_API_URL)
+        .attribute("kyc_request", kycRequestID)
+        .attribute("fetch.status", "success")
         .retrieve()
-        .bodyToMono(HashMap.class)
+        .bodyToMono(new ParameterizedTypeReference<EntityListResponse<IdentityDocument>>() {})
         .map(
             resp -> {
-              if (!resp.containsKey("status")) {
-                return false;
+              if (resp.data.isEmpty()) {
+                return null;
               }
-              Map<String, ?> fetch = (Map<String, ?>) resp.get("status");
-              var status = (String) fetch.get("status");
-              return "successful".equalsIgnoreCase(status);
+              return resp.data.getFirst();
             });
   }
 
-  public static class KYCGetResponse {
-    public List<KYCRequest> data;
+  @Override
+  public Mono<Boolean> updateAadhaarProof(String kycRequestID) {
+    var proofID = fetchAadhaarDocument(kycRequestID).map(IdentityDocument::getId).block();
 
-    public static class KYCRequest {
-      private String id;
-      private String status;
+    if (proofID == null) {
+      return Mono.just(false);
     }
+
+    var request =
+        Map.of(
+            "identity_proof",
+            proofID,
+            "address",
+            Map.of("proof_type", "aadhaar", "proof", proofID));
+
+    api.withAuth()
+        .patch()
+        .uri(KYC_REQUEST_API_URL + "/" + kycRequestID)
+        .bodyValue(request)
+        .retrieve()
+        .bodyToMono(Void.class)
+        .block();
+
+    return Mono.just(true);
+  }
+
+  @Data
+  public static class IdentityDocument {
+    private String id;
+    private Map<String, String> fetch;
+  }
+
+  public static class EntityListResponse<T> {
+    public List<T> data;
+  }
+
+  public static class KYCRequest {
+    private String id;
+    private String status;
   }
 }

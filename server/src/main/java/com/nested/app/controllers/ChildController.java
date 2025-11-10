@@ -6,7 +6,7 @@ import com.nested.app.dto.PlaceOrderDTO;
 import com.nested.app.dto.VerifyOrderDTO;
 import com.nested.app.entity.Investor;
 import com.nested.app.services.ChildService;
-import com.nested.app.services.InvestorServiceImpl;
+import com.nested.app.services.InvestorServiceTImpl;
 import com.nested.app.services.PaymentService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -46,7 +46,7 @@ public class ChildController {
 
   private final ChildService childService;
   private final PaymentService paymentService;
-  private final InvestorServiceImpl investorService;
+  private final InvestorServiceTImpl investorService;
 
   /**
    * Retrieves all children
@@ -263,9 +263,9 @@ public class ChildController {
                   "ref",
                   investor.getRef(),
                   "investor_type",
-                  investor.getInvestorType(),
+                  investor.getType(),
                   "status",
-                  investor.getInvestorStatus()));
+                  investor.getStatus()));
 
     } catch (IllegalArgumentException e) {
       log.warn("Validation error creating investor for child {}: {}", childId, e.getMessage());

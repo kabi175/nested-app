@@ -1,7 +1,9 @@
 package com.nested.app.client.mf.dto;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import lombok.Data;
 
+@Data
 public class ActionRequired {
   private String id;
 

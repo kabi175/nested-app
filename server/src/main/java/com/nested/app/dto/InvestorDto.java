@@ -15,14 +15,14 @@ public class InvestorDto {
 
     InvestorDto dto = new InvestorDto();
     dto.setId(investor.getId());
-    dto.setStatus(investor.getInvestorStatus());
+    dto.setStatus(investor.getStatus());
     return dto;
   }
 
   public Investor toEntity() {
     Investor investor = new Investor();
     investor.setId(this.getId());
-    investor.setInvestorStatus(this.getStatus());
+    investor.setStatus(this.getStatus());
     return investor;
   }
 }
