@@ -58,6 +58,8 @@ export function GoalCard({ goal }: GoalCardProps) {
   const setCart = useSetAtom(cartAtom);
   const progressPercentage = goal.currentAmount / goal.targetAmount;
   const borderColor = getGoalBorderColor(goal.id);
+  const hasMonthlySip =
+    typeof goal.monthlySip === "number" && goal.monthlySip > 0;
 
   const handleGoalPress = async () => {
     if (goal.status === "draft") {
@@ -128,7 +130,7 @@ export function GoalCard({ goal }: GoalCardProps) {
                 {(progressPercentage * 100).toFixed(1)}% Complete
               </ThemedText>
             )}
-            {goal.monthlySip && (
+            {hasMonthlySip && (
               <ThemedText style={styles.monthlySip}>
                 Monthly SIP:{" "}
                 <ThemedText style={styles.monthlySipAmount}>
