@@ -95,7 +95,7 @@ export default function ReviewScreen() {
           )}
           <Row label="City" value={summary.address.city} />
           <Row label="State" value={summary.address.state} />
-          <Row label="Pincode" value={summary.address.pincode} />
+          <Row label="Pincode" value={summary.address.pin_code} />
         </Layout>
 
         <Layout level="1" style={{ padding: 16, borderRadius: 12 }}>

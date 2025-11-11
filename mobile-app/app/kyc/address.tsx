@@ -95,7 +95,7 @@ export default function AddressScreen() {
       addressLine2: rest.join(", "),
       city: user.address.city ?? "",
       state: user.address.state ?? "",
-      pincode: user.address.pincode ?? "",
+      pin_code: user.address.pin_code ?? "",
     });
     setHasPrefilled(true);
   }, [user, hasPrefilled, data.address, update]);
@@ -126,7 +126,7 @@ export default function AddressScreen() {
           address_line: addressLine,
           city: addressValues.city,
           state: addressValues.state,
-          pincode: addressValues.pincode,
+          pin_code: addressValues.pin_code,
           country: user.address?.country ?? "India",
         },
       });
@@ -142,7 +142,7 @@ export default function AddressScreen() {
       addressLine1: data.address.addressLine1 || "221B Baker Street",
       city: data.address.city || "Mumbai",
       state: data.address.state || "Maharashtra",
-      pincode: data.address.pincode || "400001",
+      pin_code: data.address.pin_code || "400001",
     });
   };
 
@@ -275,14 +275,14 @@ export default function AddressScreen() {
           </View>
           <Input
             placeholder="6-digit PIN"
-            value={data.address.pincode}
+            value={data.address.pin_code}
             onChangeText={(v) =>
-              update("address", { pincode: v.replace(/[^0-9]/g, "") })
+              update("address", { pin_code: v.replace(/[^0-9]/g, "") })
             }
             keyboardType="number-pad"
             maxLength={6}
-            status={errors.pincode ? "danger" : "basic"}
-            caption={errors.pincode}
+            status={errors.pin_code ? "danger" : "basic"}
+            caption={errors.pin_code}
           />
         </View>
 

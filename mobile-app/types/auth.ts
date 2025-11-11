@@ -19,6 +19,6 @@ export type Address = {
   address_line: string;
   city: string;
   state: string;
-  pincode: string;
+  pin_code: string;
   country: string;
 };

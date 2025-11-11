@@ -28,7 +28,7 @@ type KycAddress = {
   addressLine2?: string;
   city: string;
   state: string;
-  pincode: string;
+  pin_code: string;
 };
 
 type KycPhotoSignature = {
@@ -107,7 +107,7 @@ const defaultData: KycData = {
     addressLine2: "",
     city: "",
     state: "",
-    pincode: "",
+    pin_code: "",
   },
   photoSignature: {
     photoUri: undefined,
@@ -199,7 +199,10 @@ export const KycProvider: React.FC<{ children: React.ReactNode }> = ({
         addressLine2: Joi.string().allow("").optional(),
         city: Joi.string().min(2).required().label("City"),
         state: Joi.string().min(2).required().label("State"),
-        pincode: Joi.string().pattern(pincodeRegex).required().label("Pincode"),
+        pin_code: Joi.string()
+          .pattern(pincodeRegex)
+          .required()
+          .label("Pincode"),
       }),
     []
   );
