@@ -7,7 +7,7 @@ import { useKyc } from "@/providers/KycProvider";
 import { useQueryClient } from "@tanstack/react-query";
 import { Button, Input, Text } from "@ui-kitten/components";
 import { useRouter } from "expo-router";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   Alert,
   KeyboardAvoidingView,
@@ -23,8 +23,36 @@ export default function IdentityScreen() {
   const router = useRouter();
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [hasPrefilled, setHasPrefilled] = useState(false);
   const totalSteps = 6;
   const currentStep = 2;
+
+  useEffect(() => {
+    if (hasPrefilled || !user) {
+      return;
+    }
+
+    const hasExistingValues = Boolean(
+      data.identity.pan || data.identity.aadhaarLast4
+    );
+
+    if (hasExistingValues) {
+      setHasPrefilled(true);
+      return;
+    }
+
+    const panNumber = user.panNumber?.trim();
+    const aadhaarLast4 = user.aadhaar?.trim();
+
+    if (panNumber || aadhaarLast4) {
+      update("identity", {
+        pan: panNumber ? panNumber.toUpperCase() : data.identity.pan,
+        aadhaarLast4: aadhaarLast4 ?? data.identity.aadhaarLast4,
+      });
+    }
+
+    setHasPrefilled(true);
+  }, [user, hasPrefilled, data.identity, update]);
 
   const onContinue = async () => {
     const validation = validateIdentity();
