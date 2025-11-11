@@ -21,11 +21,6 @@ export default function IdentityScreen() {
     }
   };
 
-  const openAadhaarRedirect = () => {
-    // In real flow, open WebView or external browser with the redirect URL from backend
-    update("identity", { aadhaarUploaded: true });
-  };
-
   return (
     <KeyboardAvoidingView
       behavior={Platform.select({ ios: "padding", android: undefined })}
@@ -77,26 +72,6 @@ export default function IdentityScreen() {
             status={errors.aadhaarLast4 ? "danger" : "basic"}
             caption={errors.aadhaarLast4}
           />
-        </View>
-
-        <View style={{ gap: 8 }}>
-          <View style={{ flexDirection: "row", alignItems: "center" }}>
-            <Text category="label">Upload Aadhaar</Text>
-            <InfoTooltip content="Used as both ID and address proof." />
-          </View>
-          <Button
-            appearance={data.identity.aadhaarUploaded ? "filled" : "outline"}
-            onPress={openAadhaarRedirect}
-          >
-            {data.identity.aadhaarUploaded
-              ? "Aadhaar Uploaded"
-              : "Open Aadhaar Upload"}
-          </Button>
-          {!!errors.aadhaarUploaded && (
-            <Text category="c2" status="danger">
-              {errors.aadhaarUploaded}
-            </Text>
-          )}
         </View>
 
         <View

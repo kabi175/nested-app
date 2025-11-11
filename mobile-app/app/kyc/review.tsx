@@ -73,7 +73,6 @@ export default function ReviewScreen() {
             value={summary.basic.dateOfBirth?.toDateString() || ""}
           />
           <Row label="Gender" value={summary.basic.gender} />
-          <Row label="Marital Status" value={summary.basic.maritalStatus} />
           <Row label="Email" value={summary.basic.email} />
           <Row label="Mobile" value={summary.basic.mobile} />
         </Layout>
@@ -84,10 +83,6 @@ export default function ReviewScreen() {
           </Text>
           <Row label="PAN" value={summary.identity.pan} />
           <Row label="Aadhaar Last 4" value={summary.identity.aadhaarLast4} />
-          <Row
-            label="Aadhaar Uploaded"
-            value={summary.identity.aadhaarUploaded ? "Yes" : "No"}
-          />
         </Layout>
 
         <Layout level="1" style={{ padding: 16, borderRadius: 12 }}>

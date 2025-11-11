@@ -11,7 +11,6 @@ type KycBasicDetails = {
   fullName: string;
   dateOfBirth: Date | null;
   gender: "male" | "female" | "other" | "";
-  maritalStatus: "Single" | "Married" | "Divorced" | "Widowed" | "";
   email: string;
   emailOtpVerified: boolean;
   mobile: string;
@@ -22,7 +21,6 @@ type KycIdentity = {
   pan: string;
   aadhaarLast4: string;
   aadhaarRedirectUrl?: string;
-  aadhaarUploaded: boolean;
 };
 
 type KycAddress = {
@@ -68,11 +66,13 @@ export type KycData = {
   confirmed: boolean;
 };
 
+type UpdatableSection = Exclude<keyof KycData, "confirmed">;
+
 type KycContextType = {
   data: KycData;
-  update: (
-    section: keyof KycData,
-    values: Partial<KycData[typeof section]>
+  update: <Section extends UpdatableSection>(
+    section: Section,
+    values: Partial<KycData[Section]>
   ) => void;
   setConfirmed: (value: boolean) => void;
   reset: () => void;
@@ -92,7 +92,6 @@ const defaultData: KycData = {
     fullName: "",
     dateOfBirth: null,
     gender: "male",
-    maritalStatus: "",
     email: "",
     emailOtpVerified: false,
     mobile: "",
@@ -101,7 +100,6 @@ const defaultData: KycData = {
   identity: {
     pan: "",
     aadhaarLast4: "",
-    aadhaarUploaded: false,
     aadhaarRedirectUrl: undefined,
   },
   address: {
@@ -129,7 +127,6 @@ const KycContext = createContext<KycContextType | undefined>(undefined);
 
 const panRegex = /^[A-Z]{5}[0-9]{4}[A-Z]{1}$/;
 const pincodeRegex = /^[1-9][0-9]{5}$/;
-const phoneRegex = /^[6-9]\d{9}$/;
 const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 export const KycProvider: React.FC<{ children: React.ReactNode }> = ({
@@ -138,7 +135,10 @@ export const KycProvider: React.FC<{ children: React.ReactNode }> = ({
   const [data, setData] = useState<KycData>(defaultData);
 
   const update = useCallback(
-    (section: keyof KycData, values: Partial<KycData[typeof section]>) => {
+    <Section extends UpdatableSection>(
+      section: Section,
+      values: Partial<KycData[Section]>
+    ) => {
       setData((prev) => ({
         ...prev,
         [section]: { ...prev[section], ...values },
@@ -163,10 +163,6 @@ export const KycProvider: React.FC<{ children: React.ReactNode }> = ({
           .valid("male", "female", "other")
           .required()
           .label("Gender"),
-        maritalStatus: Joi.string()
-          .valid("single", "married", "divorced", "widowed")
-          .required()
-          .label("Marital Status"),
         email: Joi.string().pattern(emailRegex).required().label("Email"),
         emailOtpVerified: Joi.boolean().optional(),
         mobile: Joi.string()
@@ -191,9 +187,6 @@ export const KycProvider: React.FC<{ children: React.ReactNode }> = ({
           .pattern(/^\d{4}$/)
           .required()
           .label("Aadhaar last 4"),
-        aadhaarUploaded: Joi.boolean().valid(true).messages({
-          "any.only": "Please upload Aadhaar to continue",
-        }),
         aadhaarRedirectUrl: Joi.string().uri().optional(),
       }),
     []

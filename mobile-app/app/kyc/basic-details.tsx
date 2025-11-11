@@ -14,13 +14,6 @@ const genderOptions = [
   { label: "Other", value: "other" },
 ];
 
-const maritalOptions = [
-  { label: "Single", value: "single" },
-  { label: "Married", value: "married" },
-  { label: "Divorced", value: "divorced" },
-  { label: "Widowed", value: "widowed" },
-];
-
 export default function BasicDetailsScreen() {
   const { data, update, validateBasic } = useKyc();
   const router = useRouter();
@@ -46,7 +39,6 @@ export default function BasicDetailsScreen() {
           fullName: fullName,
           dateOfBirth: user.dob || null,
           gender: user.gender || "",
-          // maritalStatus not available on User; keep as-is
           email: user.email || "",
           mobile: user.phone_number || "",
         });
@@ -165,30 +157,6 @@ export default function BasicDetailsScreen() {
             onChange={(val) => update("basic", { gender: val as any })}
             status={errors.gender ? "danger" : "basic"}
             caption={errors.gender}
-            placeholder="Select"
-          />
-        </View>
-
-        <View>
-          <View
-            style={{
-              flexDirection: "row",
-              alignItems: "center",
-              marginBottom: 6,
-            }}
-          >
-            <Text category="label">Marital Status</Text>
-            <InfoTooltip content="Needed for demographic classification." />
-          </View>
-          <GenericSelect
-            options={maritalOptions}
-            value={(data.basic.maritalStatus || "").toLowerCase()}
-            onChange={(val) => {
-              const cap = val ? val.charAt(0).toUpperCase() + val.slice(1) : "";
-              update("basic", { maritalStatus: cap as any });
-            }}
-            status={errors.maritalStatus ? "danger" : "basic"}
-            caption={errors.maritalStatus}
             placeholder="Select"
           />
         </View>
