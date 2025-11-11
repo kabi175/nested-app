@@ -206,23 +206,6 @@ export default function AddressScreen() {
               marginBottom: 6,
             }}
           >
-            <Text category="label">Address Line 2 (optional)</Text>
-          </View>
-          <Input
-            placeholder="Area / Landmark"
-            value={data.address.addressLine2 || ""}
-            onChangeText={(v) => update("address", { addressLine2: v })}
-          />
-        </View>
-
-        <View>
-          <View
-            style={{
-              flexDirection: "row",
-              alignItems: "center",
-              marginBottom: 6,
-            }}
-          >
             <Text category="label">City</Text>
             <InfoTooltip content="Used for jurisdiction-based compliance." />
           </View>
