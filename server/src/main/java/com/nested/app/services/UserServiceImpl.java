@@ -131,6 +131,11 @@ public class UserServiceImpl implements UserService {
       updatedUser = updatedUser.withPanNumber(userDTO.getPanNumber());
     }
 
+    if (!Strings.isNullOrEmpty(userDTO.getAadhaarLast4())
+        && !Objects.equals(userDTO.getAadhaarLast4(), originalUser.getAadhaarLast4())) {
+      updatedUser = originalUser.withAadhaarLast4(userDTO.getAadhaarLast4());
+    }
+
     if (updatedUser == originalUser) {
       log.info("No changes detected for userId={}, skipping update", userId);
       return UserDTO.fromEntity(originalUser);

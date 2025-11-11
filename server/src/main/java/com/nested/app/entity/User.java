@@ -146,6 +146,10 @@ public class User {
   @Column(nullable = false)
   private PrefillStatus prefillStatus = PrefillStatus.INCOMPLETE;
 
+  @With
+  @Column(name = "aadhaar_last4", length = 4)
+  private String aadhaarLast4;
+
   @RequiredArgsConstructor
   public enum Gender {
     MALE("male"),

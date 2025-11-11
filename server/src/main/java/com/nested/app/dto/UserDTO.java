@@ -48,6 +48,9 @@ public class UserDTO {
   @JsonProperty("pan_number")
   private String panNumber;
 
+  @JsonProperty("aadhaar_last4")
+  private String aadhaarLast4;
+
   public static UserDTO fromEntity(User entity) {
     return new UserDTO(
         entity.getId(),
@@ -59,7 +62,8 @@ public class UserDTO {
         AddressDto.fromEntity(entity.getAddress()),
         entity.getDateOfBirth(),
         entity.getGender(),
-        entity.getPanNumber());
+        entity.getPanNumber(),
+        entity.getAadhaarLast4());
   }
 
   public static User fromDto(UserDTO dto) {
@@ -73,6 +77,7 @@ public class UserDTO {
         .dateOfBirth(dto.getDateOfBirth())
         .gender(dto.getGender())
         .panNumber(dto.getPanNumber())
+        .aadhaarLast4(dto.getAadhaarLast4())
         .build();
   }
 }

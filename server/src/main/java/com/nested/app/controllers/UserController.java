@@ -89,8 +89,7 @@ public class UserController {
       produces = MediaType.APPLICATION_JSON_VALUE)
   @Operation(tags = "user")
   public ResponseEntity<UserDTO> updateUser(
-      @PathVariable Long id,
-      @Validated @org.springframework.web.bind.annotation.RequestBody UserDTO userDTO) {
+      @PathVariable Long id, @org.springframework.web.bind.annotation.RequestBody UserDTO userDTO) {
     userDTO.setId(id);
     UserDTO updatedUser = userService.updateUser(userDTO);
     return ResponseEntity.ok(updatedUser);
