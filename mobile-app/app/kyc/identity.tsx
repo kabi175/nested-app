@@ -2,10 +2,10 @@ import { updateUser } from "@/api/userApi";
 import { InfoTooltip } from "@/components/ui/InfoTooltip";
 import { StepProgress } from "@/components/ui/StepProgress";
 import { QUERY_KEYS } from "@/constants/queryKeys";
-import { useKyc } from "@/providers/KycProvider";
 import { useUser } from "@/hooks/useUser";
-import { Button, Input, Text } from "@ui-kitten/components";
+import { useKyc } from "@/providers/KycProvider";
 import { useQueryClient } from "@tanstack/react-query";
+import { Button, Input, Text } from "@ui-kitten/components";
 import { useRouter } from "expo-router";
 import React, { useState } from "react";
 import {

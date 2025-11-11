@@ -1,6 +1,10 @@
+import { updateUser } from "@/api/userApi";
 import { InfoTooltip } from "@/components/ui/InfoTooltip";
 import { StepProgress } from "@/components/ui/StepProgress";
+import { QUERY_KEYS } from "@/constants/queryKeys";
+import { useUser } from "@/hooks/useUser";
 import { useKyc } from "@/providers/KycProvider";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import {
   Button,
   IndexPath,
@@ -10,13 +14,22 @@ import {
   Text,
 } from "@ui-kitten/components";
 import { useRouter } from "expo-router";
-import React, { useMemo, useState } from "react";
-import { KeyboardAvoidingView, Platform, ScrollView, View } from "react-native";
+import React, { useEffect, useMemo, useState } from "react";
+import {
+  Alert,
+  KeyboardAvoidingView,
+  Platform,
+  ScrollView,
+  View,
+} from "react-native";
 
 export default function AddressScreen() {
   const { data, update, validateAddress } = useKyc();
   const router = useRouter();
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const { data: user } = useUser();
+  const queryClient = useQueryClient();
+  const [hasPrefilled, setHasPrefilled] = useState(false);
   const totalSteps = 6;
   const currentStep = 3;
 
@@ -56,6 +69,73 @@ export default function AddressScreen() {
     []
   );
 
+  useEffect(() => {
+    if (!user?.address || hasPrefilled) {
+      return;
+    }
+
+    const hasExistingValues = Object.values(data.address).some(
+      (value) => value && value.length > 0
+    );
+
+    if (hasExistingValues) {
+      setHasPrefilled(true);
+      return;
+    }
+
+    const rawAddressLine = user.address.address_line ?? "";
+    const parts = rawAddressLine
+      .split(",")
+      .map((part) => part.trim())
+      .filter(Boolean);
+    const [line1, ...rest] = parts;
+
+    update("address", {
+      addressLine1: line1 || rawAddressLine,
+      addressLine2: rest.join(", "),
+      city: user.address.city ?? "",
+      state: user.address.state ?? "",
+      pincode: user.address.pincode ?? "",
+    });
+    setHasPrefilled(true);
+  }, [user, hasPrefilled, data.address, update]);
+
+  const selectedStateIndex = useMemo(() => {
+    if (!data.address.state) {
+      return undefined;
+    }
+    const index = states.indexOf(data.address.state);
+    return index >= 0 ? new IndexPath(index) : undefined;
+  }, [data.address.state, states]);
+
+  const { mutateAsync: saveAddress, isPending: isUpdating } = useMutation({
+    mutationFn: async (addressValues: typeof data.address) => {
+      if (!user?.id) {
+        throw new Error("User not available");
+      }
+      const addressLine = [
+        addressValues.addressLine1,
+        addressValues.addressLine2,
+      ]
+        .map((value) => value?.trim())
+        .filter((value) => value && value.length > 0)
+        .join(", ");
+
+      return updateUser(user.id, {
+        address: {
+          address_line: addressLine,
+          city: addressValues.city,
+          state: addressValues.state,
+          pincode: addressValues.pincode,
+          country: user.address?.country ?? "India",
+        },
+      });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.user] });
+    },
+  });
+
   const useCurrentLocation = () => {
     // Mock filling address using GPS - integrate with expo-location if needed
     update("address", {
@@ -66,11 +146,28 @@ export default function AddressScreen() {
     });
   };
 
-  const onContinue = () => {
+  const onContinue = async () => {
     const v = validateAddress();
     setErrors(v.errors);
     if (v.isValid) {
-      router.push("/kyc/photo-signature");
+      if (!user?.id) {
+        Alert.alert(
+          "Unable to save address",
+          "We could not verify your profile. Please try again."
+        );
+        return;
+      }
+
+      try {
+        await saveAddress(data.address);
+        router.push("/kyc/photo-signature");
+      } catch (error) {
+        console.error("Failed to update user address", error);
+        Alert.alert(
+          "Unable to save address",
+          "Something went wrong while saving your address. Please try again."
+        );
+      }
     }
   };
 
@@ -150,11 +247,7 @@ export default function AddressScreen() {
             <InfoTooltip content="Required for legal identification." />
           </View>
           <Select
-            selectedIndex={
-              data.address.state
-                ? new IndexPath(states.indexOf(data.address.state))
-                : undefined
-            }
+            selectedIndex={selectedStateIndex}
             onSelect={(index) => {
               const row = Array.isArray(index) ? index[0].row : index.row;
               update("address", { state: states[row] });
@@ -212,7 +305,12 @@ export default function AddressScreen() {
           >
             Back
           </Button>
-          <Button style={{ flex: 1 }} onPress={onContinue}>
+          <Button
+            style={{ flex: 1 }}
+            onPress={onContinue}
+            disabled={isUpdating}
+            appearance={isUpdating ? "outline" : "filled"}
+          >
             Continue
           </Button>
         </View>

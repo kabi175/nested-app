@@ -25,6 +25,7 @@ export const getUser = async (): Promise<User | null> => {
       gender: user.gender,
       created_at: user.created_at,
       updated_at: user.updated_at,
+      address: user.address,
     };
   } catch (error: any) {
     return null;
@@ -46,6 +47,7 @@ export const updateUser = async (
       ? payload.dob.toLocaleDateString("en-CA")
       : undefined,
     gender: payload.gender,
+    address: payload.address,
   };
 
   const { data } = await api.patch(`/users/${id}`, userDTO);

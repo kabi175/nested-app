@@ -12,4 +12,13 @@ export type User = {
   created_at: Date;
   updated_at: Date | null;
   status: "completed" | "pending" | "rejected";
+  address: Address | null;
+};
+
+export type Address = {
+  address_line: string;
+  city: string;
+  state: string;
+  pincode: string;
+  country: string;
 };
