@@ -1,23 +1,62 @@
+import { updateUser } from "@/api/userApi";
 import { InfoTooltip } from "@/components/ui/InfoTooltip";
 import { StepProgress } from "@/components/ui/StepProgress";
+import { QUERY_KEYS } from "@/constants/queryKeys";
 import { useKyc } from "@/providers/KycProvider";
+import { useUser } from "@/hooks/useUser";
 import { Button, Input, Text } from "@ui-kitten/components";
+import { useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "expo-router";
 import React, { useState } from "react";
-import { KeyboardAvoidingView, Platform, ScrollView, View } from "react-native";
+import {
+  Alert,
+  KeyboardAvoidingView,
+  Platform,
+  ScrollView,
+  View,
+} from "react-native";
 
 export default function IdentityScreen() {
   const { data, update, validateIdentity } = useKyc();
+  const { data: user, isLoading: isUserLoading } = useUser();
+  const queryClient = useQueryClient();
   const router = useRouter();
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const totalSteps = 6;
   const currentStep = 2;
 
-  const onContinue = () => {
-    const v = validateIdentity();
-    setErrors(v.errors);
-    if (v.isValid) {
+  const onContinue = async () => {
+    const validation = validateIdentity();
+    setErrors(validation.errors);
+    if (!validation.isValid) {
+      return;
+    }
+
+    if (!user?.id) {
+      Alert.alert(
+        "User unavailable",
+        "We couldn't find your user profile. Please try signing in again."
+      );
+      return;
+    }
+
+    try {
+      setIsSubmitting(true);
+      await updateUser(user.id, {
+        panNumber: data.identity.pan,
+        aadhaar: data.identity.aadhaarLast4,
+      });
+      await queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.user] });
       router.push("/kyc/address");
+    } catch (error) {
+      console.error("Failed to update user identity", error);
+      Alert.alert(
+        "Save failed",
+        "We couldn't save your identity details. Please try again."
+      );
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -89,8 +128,12 @@ export default function IdentityScreen() {
           >
             Back
           </Button>
-          <Button style={{ flex: 1 }} onPress={onContinue}>
-            Continue
+          <Button
+            style={{ flex: 1 }}
+            onPress={onContinue}
+            disabled={isSubmitting || isUserLoading}
+          >
+            {isSubmitting ? "Saving..." : "Continue"}
           </Button>
         </View>
       </ScrollView>

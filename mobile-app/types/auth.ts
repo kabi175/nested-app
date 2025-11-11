@@ -6,6 +6,7 @@ export type User = {
   phone_number: string;
   role: "admin" | "investor";
   panNumber: string | null;
+  aadhaar: string | null;
   dob: Date | null;
   gender: "male" | "female" | "other";
   created_at: Date;

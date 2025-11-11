@@ -19,6 +19,8 @@ export const getUser = async (): Promise<User | null> => {
       phone_number: user.phone_number,
       role: user.role,
       panNumber: user.pan_number,
+      status: user.status,
+      aadhaar: user.aadhaar_last4,
       dob: new Date(user.date_of_birth),
       gender: user.gender,
       created_at: user.created_at,
@@ -39,6 +41,7 @@ export const updateUser = async (
     email: payload.email,
     phone_number: payload.phone_number,
     pan_number: payload.panNumber,
+    aadhaar_last4: payload.aadhaar,
     date_of_birth: payload.dob
       ? payload.dob.toLocaleDateString("en-CA")
       : undefined,
