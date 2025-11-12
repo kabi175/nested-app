@@ -117,7 +117,29 @@ export const uploadUserSignature = async (
 
 export const getUserSignature = async (id: string): Promise<string | null> => {
   try {
-    const { data } = await api.get(`/users/${id}/signature`);
+    const response = await api.get(`/users/${id}/signature`, {
+      responseType: "arraybuffer",
+    });
+
+    const requestObject = response.request as unknown;
+    const responseUrl =
+      typeof requestObject === "object" &&
+      requestObject !== null &&
+      "responseURL" in requestObject
+        ? (requestObject as { responseURL?: string }).responseURL ?? undefined
+        : undefined;
+
+    const headerLocation =
+      (response.headers?.location as string | undefined) ??
+      (response.headers?.Location as string | undefined) ??
+      (response.headers?.["x-final-url"] as string | undefined);
+
+    const resolvedUrl = responseUrl ?? headerLocation;
+    if (resolvedUrl) {
+      return resolvedUrl;
+    }
+
+    const data = response.data as any;
     if (!data) {
       return null;
     }

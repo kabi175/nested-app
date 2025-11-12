@@ -1,11 +1,12 @@
+import { api } from "@/api/client";
 import { getUserSignature, uploadUserSignature } from "@/api/userApi";
 import { InfoTooltip } from "@/components/ui/InfoTooltip";
 import { StepProgress } from "@/components/ui/StepProgress";
 import { QUERY_KEYS } from "@/constants/queryKeys";
 import { useUser } from "@/hooks/useUser";
 import { useKyc } from "@/providers/KycProvider";
-import { Button, Text } from "@ui-kitten/components";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { Button, Text } from "@ui-kitten/components";
 import * as ImagePicker from "expo-image-picker";
 import { useRouter } from "expo-router";
 import React, { useEffect, useState } from "react";
@@ -27,6 +28,32 @@ export default function PhotoSignatureScreen() {
   const totalSteps = 6;
   const currentStep = 4;
 
+  const normalizeSignatureUri = (uri: string | null | undefined) => {
+    if (!uri) {
+      return null;
+    }
+    if (
+      uri.startsWith("data:") ||
+      uri.startsWith("http://") ||
+      uri.startsWith("https://") ||
+      uri.startsWith("file://") ||
+      uri.startsWith("content://")
+    ) {
+      return uri;
+    }
+
+    if (uri.startsWith("/")) {
+      const baseUrl = api.defaults.baseURL ?? "";
+      const trimmedBase = baseUrl.endsWith("/")
+        ? baseUrl.slice(0, -1)
+        : baseUrl;
+      return `${trimmedBase}${uri}`;
+    }
+
+    const defaultMime = "image/png";
+    return `data:${defaultMime};base64,${uri}`;
+  };
+
   const { data: existingSignature } = useQuery({
     queryKey: [QUERY_KEYS.userSignature, user?.id],
     queryFn: () => {
@@ -43,10 +70,16 @@ export default function PhotoSignatureScreen() {
     if (!existingSignature) {
       return;
     }
-    if (data.photoSignature.signatureUri || data.photoSignature.signatureDrawData) {
+    if (
+      data.photoSignature.signatureUri ||
+      data.photoSignature.signatureDrawData
+    ) {
       return;
     }
-    update("photoSignature", { signatureUri: existingSignature });
+    const normalized = normalizeSignatureUri(existingSignature);
+    if (normalized) {
+      update("photoSignature", { signatureUri: normalized });
+    }
   }, [
     existingSignature,
     data.photoSignature.signatureUri,
