@@ -150,6 +150,10 @@ public class User {
   @Column(name = "aadhaar_last4", length = 4)
   private String aadhaarLast4;
 
+  @With
+  @Column(name = "signature")
+  private String signatureFileID;
+
   @RequiredArgsConstructor
   public enum Gender {
     MALE("male"),

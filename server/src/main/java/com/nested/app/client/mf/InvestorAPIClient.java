@@ -7,6 +7,7 @@ import com.nested.app.client.mf.dto.CreateInvestorRequest;
 import com.nested.app.client.mf.dto.CreateInvestorResponse;
 import com.nested.app.client.mf.dto.EntityResponse;
 import com.nested.app.client.mf.dto.FATCAUploadRequest;
+import com.nested.app.client.mf.dto.FileDto;
 import com.nested.app.client.mf.dto.NomineeRequest;
 import com.nested.app.client.mf.dto.NomineeResponse;
 import jakarta.validation.constraints.Email;
@@ -28,8 +29,9 @@ public interface InvestorAPIClient {
 
   Mono<Void> uploadSignature(String investorRef, MultipartFile file);
 
-  Mono<EntityResponse> uploadDocumentForInvestor(
-      String investorRef, String documentType, MultipartFile file);
+  Mono<EntityResponse> uploadDocument(String documentType, MultipartFile file);
+
+  Mono<FileDto> fetchDocument(String fileId);
 
   Mono<NomineeResponse> addNominees(String investorRef, NomineeRequest request);
 }

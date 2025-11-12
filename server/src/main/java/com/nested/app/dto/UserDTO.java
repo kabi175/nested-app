@@ -51,6 +51,9 @@ public class UserDTO {
   @JsonProperty("aadhaar_last4")
   private String aadhaarLast4;
 
+  @JsonProperty("signature_file_id")
+  private String signatureFileID;
+
   public static UserDTO fromEntity(User entity) {
     return new UserDTO(
         entity.getId(),
@@ -63,7 +66,8 @@ public class UserDTO {
         entity.getDateOfBirth(),
         entity.getGender(),
         entity.getPanNumber(),
-        entity.getAadhaarLast4());
+        entity.getAadhaarLast4(),
+        entity.getSignatureFileID());
   }
 
   public static User fromDto(UserDTO dto) {

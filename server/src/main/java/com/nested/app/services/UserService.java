@@ -5,6 +5,7 @@ import com.nested.app.dto.UserDTO;
 import java.util.List;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 
 @Service
 public interface UserService {
@@ -20,6 +21,10 @@ public interface UserService {
   List<BankAccountDto> fetchBankAccounts(Long userID);
 
   void deleteBankAccount(Long userID, Long bankAccountID);
+
+  void uploadUserSignature(Long userId, MultipartFile file);
+
+  String fetchUserSignature(Long userId);
 
   enum Type {
     CURRENT_USER,

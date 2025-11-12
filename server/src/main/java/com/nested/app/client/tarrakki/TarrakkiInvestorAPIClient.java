@@ -7,6 +7,7 @@ import com.nested.app.client.mf.dto.CreateInvestorRequest;
 import com.nested.app.client.mf.dto.CreateInvestorResponse;
 import com.nested.app.client.mf.dto.EntityResponse;
 import com.nested.app.client.mf.dto.FATCAUploadRequest;
+import com.nested.app.client.mf.dto.FileDto;
 import com.nested.app.client.mf.dto.NomineeRequest;
 import com.nested.app.client.mf.dto.NomineeResponse;
 import lombok.RequiredArgsConstructor;
@@ -94,9 +95,9 @@ public class TarrakkiInvestorAPIClient implements com.nested.app.client.mf.Inves
    * @return Empty Mono on success
    */
   @Override
-  public Mono<EntityResponse> uploadDocumentForInvestor(
-      String investorRef, String documentType, MultipartFile file) {
+  public Mono<EntityResponse> uploadDocument(String documentType, MultipartFile file) {
 
+    String investorRef = "";
     try {
       MultipartBodyBuilder builder = new MultipartBodyBuilder();
       builder.part("document_type", documentType);
@@ -113,6 +114,11 @@ public class TarrakkiInvestorAPIClient implements com.nested.app.client.mf.Inves
     } catch (Exception e) {
       return Mono.error(new RuntimeException("Failed to upload document", e));
     }
+  }
+
+  @Override
+  public Mono<FileDto> fetchDocument(String fileId) {
+    return null;
   }
 
   /**

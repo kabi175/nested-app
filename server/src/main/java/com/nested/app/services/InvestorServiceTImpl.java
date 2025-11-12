@@ -417,9 +417,7 @@ public class InvestorServiceTImpl {
 
     // Call Tarrakki API
     try {
-      investorAPIClient
-          .uploadDocumentForInvestor(investor.getRef(), documentType.toLowerCase(), file)
-          .block();
+      investorAPIClient.uploadDocument(documentType.toLowerCase(), file).block();
     } catch (Exception e) {
       log.error("Error uploading document for investor {}: {}", investorId, e.getMessage(), e);
       throw new RuntimeException("Failed to upload document", e);

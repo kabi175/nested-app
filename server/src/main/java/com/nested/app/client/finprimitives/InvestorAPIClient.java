@@ -7,6 +7,7 @@ import com.nested.app.client.mf.dto.CreateInvestorRequest;
 import com.nested.app.client.mf.dto.CreateInvestorResponse;
 import com.nested.app.client.mf.dto.EntityResponse;
 import com.nested.app.client.mf.dto.FATCAUploadRequest;
+import com.nested.app.client.mf.dto.FileDto;
 import com.nested.app.client.mf.dto.NomineeRequest;
 import com.nested.app.client.mf.dto.NomineeResponse;
 import java.util.Map;
@@ -112,7 +113,7 @@ public class InvestorAPIClient implements com.nested.app.client.mf.InvestorAPICl
 
   @Override
   public Mono<Void> uploadSignature(String investorRef, MultipartFile file) {
-    var entity = uploadDocumentForInvestor(investorRef, "signature", file).block();
+    var entity = uploadDocument("signature", file).block();
 
     if (entity == null) {
       return Mono.error(new RuntimeException("Failed to upload signature document"));
@@ -129,8 +130,7 @@ public class InvestorAPIClient implements com.nested.app.client.mf.InvestorAPICl
   }
 
   @Override
-  public Mono<EntityResponse> uploadDocumentForInvestor(
-      String investorRef, String documentType, MultipartFile file) {
+  public Mono<EntityResponse> uploadDocument(String documentType, MultipartFile file) {
 
     if (file.getContentType() == null) {
       return Mono.error(new IllegalArgumentException("File content type cannot be null"));
@@ -148,6 +148,11 @@ public class InvestorAPIClient implements com.nested.app.client.mf.InvestorAPICl
         .bodyValue(builder.build())
         .retrieve()
         .bodyToMono(EntityResponse.class);
+  }
+
+  @Override
+  public Mono<FileDto> fetchDocument(String fileId) {
+    return api.withAuth().get().uri("/files/" + fileId).retrieve().bodyToMono(FileDto.class);
   }
 
   @Override

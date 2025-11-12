@@ -1,7 +1,7 @@
 package com.nested.app.services;
 
 import com.google.common.base.Strings;
-import com.nested.app.client.tarrakki.TarrakkiInvestorAPIClient;
+import com.nested.app.client.mf.InvestorAPIClient;
 import com.nested.app.contect.UserContext;
 import com.nested.app.dto.AddressDto;
 import com.nested.app.dto.BankAccountDto;
@@ -22,6 +22,7 @@ import org.springdoc.api.OpenApiResourceNotFoundException;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 
 // TODO: Refer this update to update all other serives
 @Slf4j
@@ -32,7 +33,7 @@ public class UserServiceImpl implements UserService {
   private final BankDetailRepository bankDetailRepository;
   private final UserRepository userRepository;
   private final AddressRepository addressRepository;
-  private final TarrakkiInvestorAPIClient investorAPIClient;
+  private final InvestorAPIClient investorAPIClient;
   private final UserContext userContext;
   private final ApplicationEventPublisher publisher;
 
@@ -171,6 +172,52 @@ public class UserServiceImpl implements UserService {
   public void deleteBankAccount(Long userID, Long bankAccountID) {
     var bankAccount = bankDetailRepository.findById(bankAccountID).orElseThrow();
     bankDetailRepository.delete(bankAccount);
+  }
+
+  @Override
+  public void uploadUserSignature(Long userId, MultipartFile file) {
+    User user =
+        userRepository
+            .findById(userId)
+            .orElseThrow(
+                () ->
+                    new OpenApiResourceNotFoundException("User with id " + userId + " not found"));
+
+    var resp = investorAPIClient.uploadDocument("signature", file).block();
+    if (resp == null || resp.getId() == null) {
+      throw new RuntimeException("Failed to upload signature document to external service");
+    }
+
+    user = user.withSignatureFileID(resp.getId());
+    userRepository.save(user);
+  }
+
+  @Override
+  public String fetchUserSignature(Long userId) {
+    User user =
+        userRepository
+            .findById(userId)
+            .orElseThrow(
+                () ->
+                    new OpenApiResourceNotFoundException("User with id " + userId + " not found"));
+
+    if (user.getSignatureFileID() == null) {
+      throw new OpenApiResourceNotFoundException("Signature not found for user with id " + userId);
+    }
+
+    var resp = investorAPIClient.fetchDocument(user.getSignatureFileID()).block();
+
+    if (resp == null || resp.getUrl() == null) {
+      throw new RuntimeException("Failed to fetch signature document from external service");
+    }
+
+    return resp.getUrl();
+  }
+
+  private String getExtension(String filename) {
+    if (filename == null) return "";
+    int dot = filename.lastIndexOf('.');
+    return (dot == -1) ? "" : filename.substring(dot + 1);
   }
 
   private void updateAddressFields(Address address, AddressDto addressDto) {

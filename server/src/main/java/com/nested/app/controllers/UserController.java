@@ -32,6 +32,8 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.servlet.view.RedirectView;
 
 @Slf4j
 @Validated
@@ -184,5 +186,20 @@ public class UserController {
     userService.deleteBankAccount(userID, bankAccountID);
 
     return ResponseEntity.accepted().build();
+  }
+
+  @PostMapping(value = "/{user_id}/signature", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+  @Operation(tags = "user", summary = "Upload user signature")
+  public ResponseEntity<?> uploadSignature(
+      @PathVariable("user_id") Long userID, @RequestParam("file") MultipartFile file) {
+    userService.uploadUserSignature(userID, file);
+    return ResponseEntity.ok(Map.of("message", "Signature uploaded successfully"));
+  }
+
+  @GetMapping(value = "/{user_id}/signature")
+  @Operation(tags = "user", summary = "Upload user signature")
+  public RedirectView getSignature(@PathVariable("user_id") Long userID) {
+    var url = userService.fetchUserSignature(userID);
+    return new RedirectView(url);
   }
 }
