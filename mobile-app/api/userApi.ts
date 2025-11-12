@@ -1,7 +1,14 @@
 import type { User } from "@/types/auth";
 import type { Child } from "@/types/child";
 import type { Goal } from "@/types/investment";
+import type { AxiosError } from "axios";
 import { api } from "./client";
+
+type UploadableFile = {
+  uri: string;
+  name?: string;
+  type?: string;
+};
 
 export const getUser = async (): Promise<User | null> => {
   try {
@@ -27,7 +34,7 @@ export const getUser = async (): Promise<User | null> => {
       updated_at: user.updated_at,
       address: user.address,
     };
-  } catch (error: any) {
+  } catch {
     return null;
   }
 };
@@ -65,6 +72,76 @@ export const createChild = async (payload: Child): Promise<Child> => {
 
   const { data } = await api.post("/children", { data: [childDTO] });
   return data;
+};
+
+export const uploadUserSignature = async (
+  id: string,
+  file: UploadableFile
+): Promise<void> => {
+  const formData = new FormData();
+  const fallbackName = "signature.jpg";
+  const fallbackType = "image/jpeg";
+
+  const filename =
+    file.name ??
+    (() => {
+      const uriParts = file.uri.split("/");
+      const lastPart = uriParts[uriParts.length - 1];
+      if (lastPart?.includes(".")) {
+        return lastPart;
+      }
+      return fallbackName;
+    })();
+
+  const extension = filename.split(".").pop()?.toLowerCase();
+  const mimeType =
+    file.type ??
+    (extension === "png"
+      ? "image/png"
+      : extension === "jpg" || extension === "jpeg"
+      ? "image/jpeg"
+      : fallbackType);
+
+  formData.append("file", {
+    uri: file.uri,
+    name: filename,
+    type: mimeType,
+  } as any);
+
+  await api.post(`/users/${id}/signature`, formData, {
+    headers: {
+      "Content-Type": "multipart/form-data",
+    },
+  });
+};
+
+export const getUserSignature = async (id: string): Promise<string | null> => {
+  try {
+    const { data } = await api.get(`/users/${id}/signature`);
+    if (!data) {
+      return null;
+    }
+
+    if (typeof data === "string") {
+      return data;
+    }
+
+    const possibleUrl =
+      data?.data?.url ??
+      data?.data?.signedUrl ??
+      data?.data?.signed_url ??
+      data?.signedUrl ??
+      data?.signed_url ??
+      data?.url;
+
+    return typeof possibleUrl === "string" ? possibleUrl : null;
+  } catch (error) {
+    const axiosError = error as AxiosError;
+    if (axiosError.response?.status === 404) {
+      return null;
+    }
+    throw error;
+  }
 };
 
 export const getChildren = async (): Promise<Child[]> => {

@@ -1,11 +1,16 @@
+import { getUserSignature, uploadUserSignature } from "@/api/userApi";
 import { InfoTooltip } from "@/components/ui/InfoTooltip";
 import { StepProgress } from "@/components/ui/StepProgress";
+import { QUERY_KEYS } from "@/constants/queryKeys";
+import { useUser } from "@/hooks/useUser";
 import { useKyc } from "@/providers/KycProvider";
 import { Button, Text } from "@ui-kitten/components";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import * as ImagePicker from "expo-image-picker";
 import { useRouter } from "expo-router";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
+  Alert,
   Image,
   KeyboardAvoidingView,
   Platform,
@@ -15,21 +20,39 @@ import {
 
 export default function PhotoSignatureScreen() {
   const { data, update, validatePhotoSignature } = useKyc();
+  const { data: user } = useUser();
+  const queryClient = useQueryClient();
   const router = useRouter();
   const [errors, setErrors] = useState<Record<string, string>>({});
   const totalSteps = 6;
   const currentStep = 4;
 
-  const pickPhoto = async () => {
-    const res = await ImagePicker.launchCameraAsync({
-      quality: 0.6,
-      base64: false,
-      allowsEditing: true,
-    });
-    if (!res.canceled && res.assets && res.assets[0]?.uri) {
-      update("photoSignature", { photoUri: res.assets[0].uri });
+  const { data: existingSignature } = useQuery({
+    queryKey: [QUERY_KEYS.userSignature, user?.id],
+    queryFn: () => {
+      if (!user?.id) {
+        return Promise.resolve(null);
+      }
+      return getUserSignature(user.id);
+    },
+    enabled: !!user?.id,
+    staleTime: 5 * 60 * 1000,
+  });
+
+  useEffect(() => {
+    if (!existingSignature) {
+      return;
     }
-  };
+    if (data.photoSignature.signatureUri || data.photoSignature.signatureDrawData) {
+      return;
+    }
+    update("photoSignature", { signatureUri: existingSignature });
+  }, [
+    existingSignature,
+    data.photoSignature.signatureUri,
+    data.photoSignature.signatureDrawData,
+    update,
+  ]);
 
   const pickSignature = async () => {
     const res = await ImagePicker.launchImageLibraryAsync({
@@ -42,14 +65,54 @@ export default function PhotoSignatureScreen() {
         signatureUri: res.assets[0].uri,
         signatureDrawData: undefined,
       });
+      setErrors((prev) => ({ ...prev, signatureUri: "" }));
     }
   };
 
-  const onContinue = () => {
-    const v = validatePhotoSignature();
-    setErrors(v.errors);
-    if (v.isValid) {
+  const { mutateAsync: submitSignature, isPending: isUploading } = useMutation({
+    mutationFn: async (fileUri: string) => {
+      if (!user?.id) {
+        throw new Error("User unavailable");
+      }
+      await uploadUserSignature(user.id, { uri: fileUri });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.user] });
+      queryClient.invalidateQueries({
+        queryKey: [QUERY_KEYS.userSignature, user?.id],
+      });
+    },
+  });
+
+  const onContinue = async () => {
+    const validation = validatePhotoSignature();
+    const normalizedErrors = { ...validation.errors };
+    if (normalizedErrors.undefined) {
+      normalizedErrors.signatureUri = normalizedErrors.undefined;
+      delete normalizedErrors.undefined;
+    }
+    setErrors(normalizedErrors);
+    if (!validation.isValid) {
+      return;
+    }
+
+    if (!data.photoSignature.signatureUri) {
+      Alert.alert(
+        "Signature required",
+        "Please upload your signature before continuing."
+      );
+      return;
+    }
+
+    try {
+      await submitSignature(data.photoSignature.signatureUri);
       router.push("/kyc/financial");
+    } catch (error) {
+      console.error("Failed to upload signature", error);
+      Alert.alert(
+        "Upload failed",
+        "We couldn't upload your signature. Please try again."
+      );
     }
   };
 
@@ -60,30 +123,6 @@ export default function PhotoSignatureScreen() {
     >
       <StepProgress current={currentStep} total={totalSteps} />
       <ScrollView contentContainerStyle={{ padding: 16, gap: 16 }}>
-        <View style={{ gap: 8 }}>
-          <View style={{ flexDirection: "row", alignItems: "center" }}>
-            <Text category="label">Capture Photo</Text>
-            <InfoTooltip content="Used to verify your face against ID documents." />
-          </View>
-          <Button
-            onPress={pickPhoto}
-            appearance={data.photoSignature.photoUri ? "filled" : "outline"}
-          >
-            {data.photoSignature.photoUri ? "Retake Photo" : "Open Camera"}
-          </Button>
-          {data.photoSignature.photoUri && (
-            <Image
-              source={{ uri: data.photoSignature.photoUri }}
-              style={{ width: "100%", height: 200, borderRadius: 8 }}
-            />
-          )}
-          {!!errors.photoUri && (
-            <Text category="c2" status="danger">
-              {errors.photoUri}
-            </Text>
-          )}
-        </View>
-
         <View style={{ gap: 8 }}>
           <View style={{ flexDirection: "row", alignItems: "center" }}>
             <Text category="label">Upload / Draw Signature</Text>
@@ -130,8 +169,12 @@ export default function PhotoSignatureScreen() {
           >
             Back
           </Button>
-          <Button style={{ flex: 1 }} onPress={onContinue}>
-            Continue
+          <Button
+            style={{ flex: 1 }}
+            onPress={onContinue}
+            disabled={isUploading}
+          >
+            {isUploading ? "Uploading..." : "Continue"}
           </Button>
         </View>
       </ScrollView>

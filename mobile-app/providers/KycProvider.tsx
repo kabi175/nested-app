@@ -32,7 +32,6 @@ type KycAddress = {
 };
 
 type KycPhotoSignature = {
-  photoUri?: string;
   signatureUri?: string;
   signatureDrawData?: string;
 };
@@ -110,7 +109,6 @@ const defaultData: KycData = {
     pin_code: "",
   },
   photoSignature: {
-    photoUri: undefined,
     signatureUri: undefined,
     signatureDrawData: undefined,
   },
@@ -210,10 +208,13 @@ export const KycProvider: React.FC<{ children: React.ReactNode }> = ({
   const photoSignatureSchema = useMemo(
     () =>
       Joi.object<KycPhotoSignature>({
-        photoUri: Joi.string().uri().required().label("Photo"),
         signatureUri: Joi.string().uri().optional(),
         signatureDrawData: Joi.string().optional(),
-      }).or("signatureUri", "signatureDrawData"),
+      })
+        .or("signatureUri", "signatureDrawData")
+        .messages({
+          "object.missing": "Please upload or draw your signature.",
+        }),
     []
   );
 
