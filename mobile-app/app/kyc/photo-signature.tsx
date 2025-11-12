@@ -25,6 +25,7 @@ export default function PhotoSignatureScreen() {
   const queryClient = useQueryClient();
   const router = useRouter();
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [hasSignatureChanged, setHasSignatureChanged] = useState(false);
   const totalSteps = 6;
   const currentStep = 4;
 
@@ -79,6 +80,7 @@ export default function PhotoSignatureScreen() {
     const normalized = normalizeSignatureUri(existingSignature);
     if (normalized) {
       update("photoSignature", { signatureUri: normalized });
+      setHasSignatureChanged(false);
     }
   }, [
     existingSignature,
@@ -86,6 +88,12 @@ export default function PhotoSignatureScreen() {
     data.photoSignature.signatureDrawData,
     update,
   ]);
+
+  useEffect(() => {
+    if (data.photoSignature.signatureDrawData) {
+      setHasSignatureChanged(true);
+    }
+  }, [data.photoSignature.signatureDrawData]);
 
   const pickSignature = async () => {
     const res = await ImagePicker.launchImageLibraryAsync({
@@ -99,6 +107,7 @@ export default function PhotoSignatureScreen() {
         signatureDrawData: undefined,
       });
       setErrors((prev) => ({ ...prev, signatureUri: "" }));
+      setHasSignatureChanged(true);
     }
   };
 
@@ -129,7 +138,9 @@ export default function PhotoSignatureScreen() {
       return;
     }
 
-    if (!data.photoSignature.signatureUri) {
+    const signatureUri = data.photoSignature.signatureUri;
+
+    if (!signatureUri) {
       Alert.alert(
         "Signature required",
         "Please upload your signature before continuing."
@@ -137,8 +148,13 @@ export default function PhotoSignatureScreen() {
       return;
     }
 
+    const shouldUpload = hasSignatureChanged && !!signatureUri;
+
     try {
-      await submitSignature(data.photoSignature.signatureUri);
+      if (shouldUpload) {
+        await submitSignature(signatureUri);
+        setHasSignatureChanged(false);
+      }
       router.push("/kyc/financial");
     } catch (error) {
       console.error("Failed to upload signature", error);
