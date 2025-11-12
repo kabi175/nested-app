@@ -178,11 +178,11 @@ public class InvestorServiceImpl implements InvestorService {
    * @param gender User.Gender gender to map
    * @return CreateInvestorRequest.Gender mapped gender
    */
-  private CreateInvestorRequest.Gender mapUserGenderToInvestorGender(User.Gender gender) {
+  private com.nested.app.client.mf.dto.Gender mapUserGenderToInvestorGender(User.Gender gender) {
     return switch (gender) {
-      case User.Gender.MALE -> CreateInvestorRequest.Gender.MALE;
-      case User.Gender.FEMALE -> CreateInvestorRequest.Gender.FEMALE;
-      default -> CreateInvestorRequest.Gender.TRANSGENDER;
+      case User.Gender.MALE -> com.nested.app.client.mf.dto.Gender.MALE;
+      case User.Gender.FEMALE -> com.nested.app.client.mf.dto.Gender.FEMALE;
+      default -> com.nested.app.client.mf.dto.Gender.TRANSGENDER;
     };
   }
 }

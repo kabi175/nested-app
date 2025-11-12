@@ -284,16 +284,6 @@ public class InvestorServiceTImpl {
         .build();
   }
 
-  private FATCAUploadRequest buildFatcaUploadRequestFromUser(User user) {
-    return FATCAUploadRequest.builder()
-        .investorID(user.getInvestor().getRef())
-        .occupation(mapUserOccupationToFatcaOccupation(user.getOccupation()))
-        .pan(user.getPanNumber())
-        .isPep(user.isPep())
-        .incomeSource(mapUserIncomeSourceToFatcaIncomeSource(user.getIncomeSource()))
-        .build();
-  }
-
   private FATCAUploadRequest.Occupation mapUserOccupationToFatcaOccupation(Occupation occupation) {
     return switch (occupation) {
       case BUSINESS -> FATCAUploadRequest.Occupation.BUSINESS;
@@ -354,11 +344,11 @@ public class InvestorServiceTImpl {
    * @param gender User.Gender gender to map
    * @return CreateInvestorRequest.Gender mapped gender
    */
-  private CreateInvestorRequest.Gender mapUserGenderToInvestorGender(User.Gender gender) {
+  private com.nested.app.client.mf.dto.Gender mapUserGenderToInvestorGender(User.Gender gender) {
     return switch (gender) {
-      case User.Gender.MALE -> CreateInvestorRequest.Gender.MALE;
-      case User.Gender.FEMALE -> CreateInvestorRequest.Gender.FEMALE;
-      default -> CreateInvestorRequest.Gender.TRANSGENDER;
+      case User.Gender.MALE -> com.nested.app.client.mf.dto.Gender.MALE;
+      case User.Gender.FEMALE -> com.nested.app.client.mf.dto.Gender.FEMALE;
+      default -> com.nested.app.client.mf.dto.Gender.TRANSGENDER;
     };
   }
 
