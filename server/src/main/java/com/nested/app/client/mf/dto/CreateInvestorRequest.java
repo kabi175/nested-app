@@ -4,6 +4,8 @@ import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonValue;
+import com.nested.app.enums.IncomeSlab;
+import jakarta.validation.constraints.NotNull;
 import java.util.Date;
 import java.util.Map;
 import lombok.Data;
@@ -12,6 +14,10 @@ import lombok.RequiredArgsConstructor;
 
 @Data
 public class CreateInvestorRequest {
+  private final String country_of_birth = "IN";
+  private final String place_of_birth = "IN";
+  private final String tax_status = "resident_individual";
+
   @JsonProperty("type")
   private InvestorType investor_type;
 
@@ -28,6 +34,22 @@ public class CreateInvestorRequest {
   private String email;
   @JsonIgnore private String mobileNumber;
   private String father_name;
+
+  @NotNull private FATCAUploadRequest.Occupation occupation;
+
+  @JsonProperty("source_of_wealth")
+  @NotNull
+  private FATCAUploadRequest.IncomeSource incomeSource;
+
+  @JsonProperty("income_slab")
+  private IncomeSlab incomeSlab;
+
+  @JsonIgnore private boolean isPep = false;
+
+  @JsonProperty("pep_details")
+  public String getPep() {
+    return isPep ? "pep_exposed" : "not_applicable";
+  }
 
   @JsonProperty("name")
   public String getName() {
@@ -47,6 +69,11 @@ public class CreateInvestorRequest {
       isd = mobileNumber.substring(0, mobileNumber.length() - 10);
     }
     return Map.of("isd", isd, "number", mobileNumber);
+  }
+
+  @JsonProperty("first_tax_residency")
+  public Map<String, String> getTaxResidency() {
+    return Map.of("country", country_of_birth, "taxid_type", "pan", "taxid_number", pan);
   }
 
   @RequiredArgsConstructor
