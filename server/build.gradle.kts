@@ -34,6 +34,7 @@ dependencies {
     testImplementation("org.springframework.boot:spring-boot-starter-test")
 
     implementation("org.springframework.boot:spring-boot-starter-thymeleaf")
+	implementation("org.apache.commons:commons-text:1.12.0")
 
     // Resilience4j dependencies for fault tolerance (Circuit Breaker)
     implementation("io.github.resilience4j:resilience4j-spring-boot3:2.2.0")

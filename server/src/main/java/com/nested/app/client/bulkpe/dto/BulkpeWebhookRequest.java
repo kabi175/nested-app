@@ -67,7 +67,7 @@ public class BulkpeWebhookRequest {
         private String paymentRemark;
         
         @JsonProperty("createdAt")
-        private Instant createdAt;
+        private String createdAt;
         
         @JsonProperty("reference_id")
         private String referenceId;

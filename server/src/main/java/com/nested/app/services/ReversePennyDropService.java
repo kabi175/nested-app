@@ -43,9 +43,10 @@ public class ReversePennyDropService {
 
       ReversePennyDrop reversePennyDrop = new ReversePennyDrop();
       reversePennyDrop.setUserId(UserID);
-      reversePennyDrop.setReferenceId(request.getReferenceId());
+      reversePennyDrop.setReferenceId(referenceId);
       reversePennyDrop.setTransactionNote(transactionNote);
       reversePennyDrop.setStatus( ReversePennyDrop.ReversePennyDropStatus.PENDING );
+      reversePennyDrop.setTransactionId(response.getData().getTransactionId());
       reversePennyDropRepository.save(reversePennyDrop);
 
       return response;
@@ -54,6 +55,62 @@ public class ReversePennyDropService {
       throw new RuntimeException("Failed to initiate reverse penny drop", e);
     }
   }
+
+  /**
+   * Fetches the status of a Reverse Penny Drop transaction.
+   *
+   * @param userId      ID of the user requesting the status
+   * @param referenceId Reference ID of the transaction
+   * @return ReversePennyDropResponse containing status and metadata
+   */
+  public ReversePennyDropResponse getStatusOfPennyDrop(Long userId, String referenceId) {
+    // Validate inputs
+    if (userId == null || referenceId == null || referenceId.isBlank()) {
+      throw new IllegalArgumentException("User ID and Reference ID must not be null or blank.");
+    }
+
+    // Fetch entity from repository
+    ReversePennyDrop reversePennyDrop = reversePennyDropRepository.findByReferenceId(referenceId);
+
+    if (reversePennyDrop == null) {
+      ReversePennyDropResponse response = new ReversePennyDropResponse();
+      response.setStatus(false);
+      response.setStatusCode(404);
+      response.setMessage("No Reverse Penny Drop record found for the given reference ID.");
+      response.setData(null);
+      return response;
+    }
+
+    // Ensure the user has permission to view this record
+    if (!reversePennyDrop.getUserId().equals(userId)) {
+      ReversePennyDropResponse response = new ReversePennyDropResponse();
+      response.setStatus(false);
+      response.setStatusCode(403);
+      response.setMessage("User not authorized to access this transaction.");
+      response.setData(null);
+      return response;
+    }
+
+    // Build response data object
+    ReversePennyDropResponse.ResponseData data = new ReversePennyDropResponse.ResponseData();
+    data.setReferenceId(reversePennyDrop.getReferenceId());
+    data.setTransactionId(reversePennyDrop.getTransactionId());
+    data.setMessage(reversePennyDrop.getTransactionNote());
+    data.setStatus(reversePennyDrop.getStatus().getValue());
+    data.setAmount(0.0); // placeholder — depends on your business logic
+    data.setUpi("N/A");  // placeholder — set real UPI if available
+
+    // Construct final response
+    ReversePennyDropResponse response = new ReversePennyDropResponse();
+    response.setStatus(true);
+    response.setStatusCode(200);
+    response.setMessage("Reverse Penny Drop status retrieved successfully.");
+    response.setData(data);
+
+    return response;
+  }
+
+
 }
 
 

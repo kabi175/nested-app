@@ -8,6 +8,7 @@ import com.nested.app.entity.User;
 import com.nested.app.repository.InvestorRepository;
 import com.nested.app.repository.ReversePennyDropRepository;
 import com.nested.app.repository.UserRepository;
+import org.apache.commons.text.similarity.LevenshteinDistance;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -65,8 +66,15 @@ public class BulkpeWebhookService {
     String referenceId = data.getReferenceId();
     String accountNumber = data.getRemitterAccountNumber();
     String ifscCode = data.getRemitterIfsc();
+    String transactionID = data.getTranscationId();
+    String remitterName = data.getRemitterName();
 
-    if (referenceId == null || accountNumber == null || ifscCode == null) {
+    if(referenceId == null) {
+        log.error("for testing");
+        return true;
+    }
+
+    if (accountNumber == null || ifscCode == null) {
       log.error(
           "Missing required fields: referenceId={}, accountNumber={}, ifscCode={}",
           referenceId,
@@ -77,7 +85,7 @@ public class BulkpeWebhookService {
 
     ReversePennyDrop reversePennyDrop = reversePennyDropRepository.findByReferenceId(referenceId);
     if (reversePennyDrop == null) {
-      log.error("No ReversePennyDrop found for referenceId: {}", referenceId);
+      log.error("No ReversePennyDrop found for transactionID: {}", transactionID);
       return false;
     }
 
@@ -87,17 +95,24 @@ public class BulkpeWebhookService {
     // Reference ID is the user ID - find the user
     Optional<User> userOptional = userRepository.findById(userID);
     if (userOptional.isEmpty()) {
-      log.error("User not found for referenceId (userId): {}", referenceId);
+      log.error("User not found for transactionID (userId): {}", transactionID);
       return false;
     }
-    User user = userOptional.get();
 
-    Optional<Investor> investorOptional = investorRepository.findById(Long.parseLong(referenceId));
-    if (investorOptional.isEmpty()) {
-      log.error("User not found for referenceId (userId): {}", referenceId);
+    User user = userOptional.get();
+    String userFirstName = user.getFirstName();
+    String userLastName = user.getLastName();
+    String userFullName = (userFirstName + " " + (userLastName != null ? userLastName : "")).trim();
+
+    double similarity = calculateNameSimilarity(userFullName, remitterName);
+    log.info("Name similarity between '{}' and '{}' = {}%", userFullName, remitterName, similarity * 100);
+
+    if (similarity < 0.5) {
+      log.warn("Name similarity below threshold ({}%), marking transaction as FAILED", similarity * 100);
+      reversePennyDrop.setStatus(ReversePennyDrop.ReversePennyDropStatus.FAILED);
+      reversePennyDropRepository.save(reversePennyDrop);
       return false;
     }
-    Investor investor = investorOptional.get();
 
     // Check if bank detail already exists for this user with same account number and IFSC
     Optional<BankDetail> existingBankDetail =
@@ -115,7 +130,7 @@ public class BulkpeWebhookService {
     } else {
       // Create new bank detail for the user
       log.info("Creating new bank detail for user: {}", user.getId());
-      bankDetail = createBankDetailFromWebhook(user, data, investor);
+      bankDetail = createBankDetailFromWebhook(user, data);
     }
 
     bankDetailRepository.save(bankDetail);
@@ -133,11 +148,11 @@ public class BulkpeWebhookService {
 
   /** Create new bank detail entity from webhook data */
   private BankDetail createBankDetailFromWebhook(
-      User user, BulkpeWebhookRequest.WebhookData data, Investor investor) {
+      User user, BulkpeWebhookRequest.WebhookData data) {
     BankDetail bankDetail = new BankDetail();
 
     bankDetail.setUser(user);
-    bankDetail.setInvestor(investor);
+    bankDetail.setInvestor(user.getInvestor());
     bankDetail.setAccountNumber(data.getRemitterAccountNumber());
     bankDetail.setIfscCode(data.getRemitterIfsc());
 
@@ -223,4 +238,22 @@ public class BulkpeWebhookService {
       default -> bankCode;
     };
   }
+
+  /**
+   * Calculates a normalized similarity between two names using Levenshtein distance.
+   * Returns a value between 0.0 and 1.0.
+   */
+  private double calculateNameSimilarity(String userName, String remitterName) {
+    if (userName == null || remitterName == null) return 0.0;
+
+    userName = userName.trim().toLowerCase();
+    remitterName = remitterName.trim().toLowerCase();
+
+    if (userName.isEmpty() || remitterName.isEmpty()) return 0.0;
+
+    int distance = LevenshteinDistance.getDefaultInstance().apply(userName, remitterName);
+    int maxLength = Math.max(userName.length(), remitterName.length());
+    return 1.0 - ((double) distance / maxLength);
+  }
+
 }

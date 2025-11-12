@@ -17,6 +17,9 @@ public class ReversePennyDrop {
     private String referenceId;
 
     @Column
+    private String transactionId;
+
+    @Column
     private String transactionNote;
 
     @Column
