@@ -7,11 +7,10 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
+import java.util.Date;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-
-import java.util.Date;
 
 /**
  * Data Transfer Object for BankDetail entity
@@ -29,19 +28,19 @@ public class BankDetailDto {
     @Schema(description = "Investor ID associated with this bank detail", example = "1")
     private Long investorId;
 
-    @NotBlank(message = "Bank name is required")
-    @Size(max = 100, message = "Bank name cannot exceed 100 characters")
-    @Schema(description = "Name of the bank", example = "State Bank of India", required = true)
-    private String bankName;
+  @NotBlank(message = "Bank name is required")
+  @Size(max = 100, message = "Bank name cannot exceed 100 characters")
+  @Schema(description = "Name of the bank", example = "State Bank of India")
+  private String bankName;
 
-    @NotBlank(message = "Account number is required")
-    @Pattern(regexp = "^[0-9]{9,18}$", message = "Account number must be between 9 and 18 digits")
-    @Schema(description = "Bank account number", example = "1234567890123456", required = true)
-    private String accountNumber;
+  @NotBlank(message = "Account number is required")
+  @Pattern(regexp = "^[0-9]{9,18}$", message = "Account number must be between 9 and 18 digits")
+  @Schema(description = "Bank account number", example = "1234567890123456")
+  private String accountNumber;
 
-    @NotNull(message = "Account type is required")
-    @Schema(description = "Type of bank account", example = "SAVINGS", required = true)
-    private BankDetail.AccountType accountType;
+  @NotNull(message = "Account type is required")
+  @Schema(description = "Type of bank account", example = "SAVINGS")
+  private BankDetail.AccountType accountType;
 
     @NotBlank(message = "IFSC code is required")
     @Pattern(regexp = "^[A-Z]{4}0[A-Z0-9]{6}$", message = "IFSC code format is invalid")
