@@ -1,9 +1,4 @@
-import {
-  fetchAadhaarUploadRedirectUrl,
-  fetchEsignUploadRedirectUrl,
-  getUser,
-  updateUser,
-} from "@/api/userApi";
+import { getUser, updateUser } from "@/api/userApi";
 import { userAtom } from "@/atoms/user";
 import { GenericSelect } from "@/components/ui/GenericSelect";
 import { InfoTooltip } from "@/components/ui/InfoTooltip";
@@ -13,18 +8,20 @@ import {
   incomeSourceOptions,
   occupationOptions,
 } from "@/constants/kycFinancialOptions";
+import { QUERY_KEYS } from "@/constants/queryKeys";
 import { useInitKyc } from "@/hooks/useInitKyc";
 import { useKyc } from "@/providers/KycProvider";
+import { useQueryClient } from "@tanstack/react-query";
 import { Button, Text, Toggle } from "@ui-kitten/components";
 import { useRouter } from "expo-router";
-import * as WebBrowser from "expo-web-browser";
-import { useAtomValue } from "jotai";
+import { useAtomValue, useSetAtom } from "jotai";
 import React, { useEffect, useRef, useState } from "react";
 import { KeyboardAvoidingView, Platform, ScrollView, View } from "react-native";
 
 export default function FinancialScreen() {
   const { data, update, validateFinancial } = useKyc();
   const router = useRouter();
+  const queryClient = useQueryClient();
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(false);
   const userIdRef = useRef<string | null>(null);
@@ -33,6 +30,7 @@ export default function FinancialScreen() {
   const currentStep = 5;
 
   const user = useAtomValue(userAtom);
+  const setUser = useSetAtom(userAtom);
 
   useEffect(() => {
     let mounted = true;
@@ -42,6 +40,8 @@ export default function FinancialScreen() {
         const user = await getUser();
         if (mounted && user) {
           userIdRef.current = user.id;
+          setUser(user);
+          queryClient.setQueryData([QUERY_KEYS.user], user);
           if (!hasPrefilledRef.current) {
             update("financial", {
               occupation: (user.occupation as any) || "",
@@ -59,14 +59,14 @@ export default function FinancialScreen() {
     return () => {
       mounted = false;
     };
-  }, [update]);
+  }, [queryClient, setUser, update]);
 
   const { mutateAsync: initKyc } = useInitKyc();
   const onContinue = () => {
     const v = validateFinancial();
     setErrors(v.errors);
     if (v.isValid) {
-      (async () => {
+      void (async () => {
         try {
           setLoading(true);
           const id = userIdRef.current;
@@ -79,33 +79,44 @@ export default function FinancialScreen() {
             });
           }
 
-          if (user?.kycStatus === "unknown" || user?.kycStatus === "pending") {
-            await initKyc(user);
+          await queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.user] });
+          let latestUser = await getUser();
+
+          if (latestUser) {
+            setUser(latestUser);
+            queryClient.setQueryData([QUERY_KEYS.user], latestUser);
           }
 
-          if (user?.kycStatus === "aadhaar_pending") {
-            const url = await fetchAadhaarUploadRedirectUrl(user);
-            await WebBrowser.openBrowserAsync(url, {
-              toolbarColor: "#0A84FF",
-              controlsColor: "#ffffff",
-              showTitle: true,
-              enableDefaultShareMenuItem: false,
-              dismissButtonStyle: "done", // iOS
-              readerMode: false,
-            });
+          let status = latestUser?.kycStatus ?? user?.kycStatus;
+
+          if (
+            status === "unknown" ||
+            status === "pending" ||
+            status === undefined
+          ) {
+            const userForInit = latestUser ?? user;
+            if (userForInit) {
+              await initKyc(userForInit);
+              await queryClient.invalidateQueries({
+                queryKey: [QUERY_KEYS.user],
+              });
+              latestUser = await getUser();
+              if (latestUser) {
+                setUser(latestUser);
+                queryClient.setQueryData([QUERY_KEYS.user], latestUser);
+              }
+              status = latestUser?.kycStatus ?? status;
+            }
           }
 
-          if (user?.kycStatus === "esign_pending") {
-            console.log("esign_pending");
-            const url = await fetchEsignUploadRedirectUrl(user);
-            await WebBrowser.openBrowserAsync(url, {
-              toolbarColor: "#0A84FF",
-              controlsColor: "#ffffff",
-              showTitle: true,
-              enableDefaultShareMenuItem: false,
-              dismissButtonStyle: "done", // iOS
-              readerMode: false,
-            });
+          if (status === "aadhaar_pending") {
+            router.push("/kyc/aadhaar-upload");
+            return;
+          }
+
+          if (status === "esign_pending") {
+            router.push("/kyc/esign-upload");
+            return;
           }
 
           router.push("/kyc/review");
