@@ -105,7 +105,7 @@ public class KycAPIClient implements com.nested.app.client.mf.KycAPIClient {
   public Mono<ActionRequired> createAadhaarUploadRequest(String kycRequestID) {
     var proofID = fetchAadhaarDocument(kycRequestID).map(IdentityDocument::getId).block();
     if (proofID != null) {
-      return Mono.empty();
+      return Mono.just(ActionRequired.builder().id(proofID).completed(true).build());
     }
     var request =
         Map.of(

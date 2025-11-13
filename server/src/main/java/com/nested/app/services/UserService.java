@@ -27,7 +27,9 @@ public interface UserService {
 
   String fetchUserSignature(Long userId);
 
-  UserActionRequest createAadhaarUploadRequest(Long userId, String kycRequestId);
+  UserActionRequest createAadhaarUploadRequest(Long userId);
+
+  UserActionRequest createEsignUploadRequest(Long userId);
 
   enum Type {
     CURRENT_USER,

@@ -247,20 +247,37 @@ public class UserServiceImpl implements UserService {
   }
 
   @Override
-  public UserActionRequest createAadhaarUploadRequest(Long userId, String kycRequestId) {
+  public UserActionRequest createAadhaarUploadRequest(Long userId) {
     // Verify user exists
-    User user =
+    var user =
         userRepository
             .findById(userId)
             .orElseThrow(
                 () ->
                     new OpenApiResourceNotFoundException("User with id " + userId + " not found"));
 
+    var kycRequestId = user.getInvestor().getKycRequestRef();
     // Call KycAPIClient to create Aadhaar upload request
-    var actionRequired = kycAPIClient.createAadhaarUploadRequest(kycRequestId).block();
+    var actionRequired =
+        kycAPIClient.createAadhaarUploadRequest(user.getInvestor().getKycRequestRef()).block();
 
-    if (actionRequired == null || actionRequired.getRedirectUrl() == null) {
+    if (actionRequired == null) {
       throw new RuntimeException("Failed to create Aadhaar upload request from KYC service");
+    }
+
+    if (actionRequired.isCompleted()) {
+
+      var isSuccess = kycAPIClient.updateAadhaarProof(kycRequestId).block();
+      if (Boolean.TRUE.equals(isSuccess)) {
+        user.setKycStatus(User.KYCStatus.E_SIGN_PENDING);
+        userRepository.save(user);
+      }
+      return null;
+    }
+
+    if (actionRequired.getRedirectUrl() == null) {
+      throw new RuntimeException(
+          "Failed to create Aadhaar upload request " + "url" + " from KYC service");
     }
 
     log.info(
@@ -272,6 +289,41 @@ public class UserServiceImpl implements UserService {
     return UserActionRequest.builder()
         .id(String.valueOf(userId))
         .type("aadhaar_upload")
+        .redirectUrl(actionRequired.getRedirectUrl())
+        .build();
+  }
+
+  @Override
+  public UserActionRequest createEsignUploadRequest(Long userId) {
+    // Verify user exists
+    User user =
+        userRepository
+            .findById(userId)
+            .orElseThrow(
+                () ->
+                    new OpenApiResourceNotFoundException("User with id " + userId + " not found"));
+
+    var kycRequestId = user.getInvestor().getKycRequestRef();
+    // Call KycAPIClient to create eSign upload request
+    var actionRequired = kycAPIClient.createESignRequest(kycRequestId).block();
+
+    if (actionRequired == null || actionRequired.getId() == null) {
+      throw new RuntimeException("Failed to create eSign upload request from KYC service");
+    }
+
+    log.info(
+        "eSign upload request created for user ID: {} with KYC request ID: {}",
+        userId,
+        kycRequestId);
+
+    // Update investor with eSign request reference
+    user.getInvestor().setESignRequestRef(actionRequired.getId());
+    userRepository.save(user);
+
+    // Return UserActionRequest with details from the KYC service
+    return UserActionRequest.builder()
+        .id(String.valueOf(userId))
+        .type("esign_upload")
         .redirectUrl(actionRequired.getRedirectUrl())
         .build();
   }

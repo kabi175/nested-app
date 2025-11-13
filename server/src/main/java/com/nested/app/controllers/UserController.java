@@ -187,12 +187,47 @@ public class UserController {
             description = "Internal server error or Aadhaar service unavailable")
       })
   public ResponseEntity<UserActionRequest> uploadAadhaar(
-      @Parameter(description = "User ID", required = true) @PathVariable("user_id") Long userId,
-      @Parameter(description = "KYC Request ID", required = true) @RequestParam("kyc_request_id")
-          String kycRequestId) {
-    UserActionRequest response = userService.createAadhaarUploadRequest(userId, kycRequestId);
+      @Parameter(description = "User ID", required = true) @PathVariable("user_id") Long userId) {
+    UserActionRequest response = userService.createAadhaarUploadRequest(userId);
 
     log.info("Aadhaar upload initiated for user ID: {}", userId);
+
+    if (response == null) {
+      return ResponseEntity.accepted().build();
+    }
+
+    return ResponseEntity.status(HttpStatus.CREATED).body(response);
+  }
+
+  @PostMapping(
+      value = "/{user_id}/actions/esign_upload",
+      produces = MediaType.APPLICATION_JSON_VALUE)
+  @Operation(
+      tags = "user",
+      summary = "Upload eSign for user",
+      description = "Initiates eSign upload for the specified user and returns an action request")
+  @ApiResponses(
+      value = {
+        @ApiResponse(
+            responseCode = "201",
+            description = "eSign upload initiated successfully",
+            content =
+                @Content(
+                    mediaType = "application/json",
+                    schema = @Schema(implementation = UserActionRequest.class))),
+        @ApiResponse(
+            responseCode = "400",
+            description = "Invalid input data or missing required fields"),
+        @ApiResponse(responseCode = "404", description = "User not found"),
+        @ApiResponse(
+            responseCode = "500",
+            description = "Internal server error or eSign service unavailable")
+      })
+  public ResponseEntity<UserActionRequest> uploadEsign(
+      @Parameter(description = "User ID", required = true) @PathVariable("user_id") Long userId) {
+    UserActionRequest response = userService.createEsignUploadRequest(userId);
+
+    log.info("eSign upload initiated for user ID: {}", userId);
 
     return ResponseEntity.status(HttpStatus.CREATED).body(response);
   }

@@ -40,7 +40,7 @@ public class FinPrimitivesAPI {
         .filter(
             ExchangeFilterFunction.ofResponseProcessor(
                 clientResponse -> {
-                  if (clientResponse.statusCode().is5xxServerError()) {
+                  if (clientResponse.statusCode().is4xxClientError()) {
                     log.error(
                         "FinPrimitives API returned 5xx error: {}", clientResponse.statusCode());
 
