@@ -6,7 +6,6 @@ import com.nested.app.client.mf.dto.BankResponse;
 import com.nested.app.client.mf.dto.CreateInvestorRequest;
 import com.nested.app.client.mf.dto.CreateInvestorResponse;
 import com.nested.app.client.mf.dto.EntityResponse;
-import com.nested.app.client.mf.dto.FATCAUploadRequest;
 import com.nested.app.client.mf.dto.FileDto;
 import com.nested.app.client.mf.dto.NomineeRequest;
 import com.nested.app.client.mf.dto.NomineeResponse;
@@ -47,16 +46,6 @@ public class InvestorAPIClient implements com.nested.app.client.mf.InvestorAPICl
                   .block();
               return r;
             });
-  }
-
-  @Override
-  public Mono<Void> updateFATCA(FATCAUploadRequest request) {
-    return api.withAuth()
-        .post()
-        .uri(INVESTOR_API_URL)
-        .bodyValue(request)
-        .retrieve()
-        .bodyToMono(Void.class);
   }
 
   @Override

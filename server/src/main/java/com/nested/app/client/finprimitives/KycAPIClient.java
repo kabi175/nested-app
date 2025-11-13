@@ -1,7 +1,7 @@
 package com.nested.app.client.finprimitives;
 
 import com.nested.app.client.mf.dto.ActionRequired;
-import com.nested.app.client.mf.dto.CreateInvestorRequest;
+import com.nested.app.client.mf.dto.CreateKYCRequest;
 import com.nested.app.client.mf.dto.EntityResponse;
 import com.nested.app.client.mf.dto.FATCAUploadRequest;
 import com.nested.app.client.mf.dto.KycCheck;
@@ -54,7 +54,7 @@ public class KycAPIClient implements com.nested.app.client.mf.KycAPIClient {
   }
 
   @Override
-  public Mono<EntityResponse> createKyc(CreateInvestorRequest request) {
+  public Mono<EntityResponse> createKyc(CreateKYCRequest request) {
     return api.withAuth()
         .post()
         .uri(KYC_REQUEST_API_URL)

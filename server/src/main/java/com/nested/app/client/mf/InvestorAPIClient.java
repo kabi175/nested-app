@@ -6,7 +6,6 @@ import com.nested.app.client.mf.dto.BankResponse;
 import com.nested.app.client.mf.dto.CreateInvestorRequest;
 import com.nested.app.client.mf.dto.CreateInvestorResponse;
 import com.nested.app.client.mf.dto.EntityResponse;
-import com.nested.app.client.mf.dto.FATCAUploadRequest;
 import com.nested.app.client.mf.dto.FileDto;
 import com.nested.app.client.mf.dto.NomineeRequest;
 import com.nested.app.client.mf.dto.NomineeResponse;
@@ -16,8 +15,6 @@ import reactor.core.publisher.Mono;
 
 public interface InvestorAPIClient {
   Mono<CreateInvestorResponse> createInvestor(CreateInvestorRequest request);
-
-  Mono<Void> updateFATCA(FATCAUploadRequest dto);
 
   Mono<BankResponse> addBankAccount(BankAccountRequest request);
 

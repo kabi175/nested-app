@@ -27,12 +27,14 @@ public abstract class BaseKYCRequest {
   @JsonIgnore protected String mobileNumber;
 
   @JsonProperty("father_name")
-  protected String father_name;
+  protected String fatherName;
 
   @JsonIgnore @NotNull protected FATCAUploadRequest.Occupation occupation;
 
   @JsonProperty("income_slab")
   protected IncomeSlab incomeSlab;
+
+  protected String signature;
 
   @JsonIgnore protected boolean isPep = false;
 

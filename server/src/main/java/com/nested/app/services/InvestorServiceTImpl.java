@@ -255,7 +255,7 @@ public class InvestorServiceTImpl {
   private CreateInvestorRequest buildInvestorRequestFromUser(User user) {
     CreateInvestorRequest request = new CreateInvestorRequest();
 
-    request.setInvestor_type(CreateInvestorRequest.InvestorType.INDIVIDUAL);
+    request.setInvestorType(CreateInvestorRequest.InvestorType.INDIVIDUAL);
 
     // Split name into first and last name
     request.setFirstName(user.getFirstName());
@@ -318,7 +318,7 @@ public class InvestorServiceTImpl {
   private CreateInvestorRequest buildInvestorRequestFromChild(Child child, User parentUser) {
     CreateInvestorRequest request = new CreateInvestorRequest();
 
-    request.setInvestor_type(CreateInvestorRequest.InvestorType.MINOR);
+    request.setInvestorType(CreateInvestorRequest.InvestorType.MINOR);
 
     // Use child's name and DOB
     request.setFirstName(child.getFirstName());

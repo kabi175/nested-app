@@ -1,7 +1,7 @@
 package com.nested.app.client.mf;
 
 import com.nested.app.client.mf.dto.ActionRequired;
-import com.nested.app.client.mf.dto.CreateInvestorRequest;
+import com.nested.app.client.mf.dto.CreateKYCRequest;
 import com.nested.app.client.mf.dto.EntityResponse;
 import com.nested.app.client.mf.dto.FATCAUploadRequest;
 import com.nested.app.client.mf.dto.KycCheck;
@@ -11,7 +11,7 @@ import reactor.core.publisher.Mono;
 public interface KycAPIClient {
   Mono<KycCheck> isKycRecordAvailable(String pan, Date dob);
 
-  Mono<EntityResponse> createKyc(CreateInvestorRequest request);
+  Mono<EntityResponse> createKyc(CreateKYCRequest request);
 
   Mono<Void> updateFATCA(String investorId, FATCAUploadRequest request);
 

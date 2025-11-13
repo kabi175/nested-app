@@ -9,6 +9,7 @@ import com.nested.app.entity.Investor;
 import com.nested.app.entity.User;
 import com.nested.app.repository.InvestorRepository;
 import com.nested.app.repository.UserRepository;
+import com.nested.app.services.mapper.CreateKYCRequestMapper;
 import java.util.List;
 import java.util.Objects;
 import lombok.RequiredArgsConstructor;
@@ -85,7 +86,8 @@ public class InvestorServiceImpl implements InvestorService {
       return;
     }
 
-    var resp = kycAPIClient.createKyc(buildInvestorRequestFromUser(user)).block();
+    var resp =
+        kycAPIClient.createKyc(CreateKYCRequestMapper.mapUserToCreateKYCRequest(user)).block();
 
     if (resp == null) {
       throw new RuntimeException("Failed to create KYC request for user ID: " + user.getId());
@@ -153,7 +155,7 @@ public class InvestorServiceImpl implements InvestorService {
   private CreateInvestorRequest buildInvestorRequestFromUser(User user) {
     CreateInvestorRequest request = new CreateInvestorRequest();
 
-    request.setInvestor_type(CreateInvestorRequest.InvestorType.INDIVIDUAL);
+    request.setInvestorType(CreateInvestorRequest.InvestorType.INDIVIDUAL);
 
     // Split name into first and last name
     request.setFirstName(user.getFirstName());

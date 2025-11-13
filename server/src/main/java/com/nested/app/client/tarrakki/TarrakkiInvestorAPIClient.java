@@ -6,7 +6,6 @@ import com.nested.app.client.mf.dto.BankResponse;
 import com.nested.app.client.mf.dto.CreateInvestorRequest;
 import com.nested.app.client.mf.dto.CreateInvestorResponse;
 import com.nested.app.client.mf.dto.EntityResponse;
-import com.nested.app.client.mf.dto.FATCAUploadRequest;
 import com.nested.app.client.mf.dto.FileDto;
 import com.nested.app.client.mf.dto.NomineeRequest;
 import com.nested.app.client.mf.dto.NomineeResponse;
@@ -32,11 +31,6 @@ public class TarrakkiInvestorAPIClient implements com.nested.app.client.mf.Inves
         .bodyValue(request)
         .retrieve()
         .bodyToMono(CreateInvestorResponse.class);
-  }
-
-  @Override
-  public Mono<Void> updateFATCA(FATCAUploadRequest dto) {
-    return null;
   }
 
   /**

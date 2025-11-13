@@ -17,7 +17,7 @@ public class CreateInvestorRequest extends BaseKYCRequest {
   private final String tax_status = "resident_individual";
 
   @JsonProperty("type")
-  private InvestorType investor_type;
+  private InvestorType investorType;
 
   @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd")
   @JsonProperty("date_of_birth")

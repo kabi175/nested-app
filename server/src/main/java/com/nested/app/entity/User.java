@@ -106,6 +106,8 @@ public class User {
 
   @With private String lastName;
 
+  @With private String fatherName;
+
   @With private String birthPlace;
 
   @With @Builder.Default private String birthCountry = "India";
