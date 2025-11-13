@@ -1,3 +1,4 @@
+import type { User } from "@/types/auth";
 import Joi from "joi";
 import React, {
   createContext,
@@ -6,6 +7,10 @@ import React, {
   useMemo,
   useState,
 } from "react";
+
+type OccupationValue = NonNullable<User["occupation"]>;
+type IncomeSourceValue = NonNullable<User["income_source"]>;
+type IncomeSlabValue = NonNullable<User["income_slab"]>;
 
 type KycBasicDetails = {
   fullName: string;
@@ -37,22 +42,9 @@ type KycPhotoSignature = {
 };
 
 type KycFinancial = {
-  occupationType:
-    | "Salaried"
-    | "Self-Employed"
-    | "Business Owner"
-    | "Student"
-    | "Retired"
-    | "Homemaker"
-    | "";
-  annualIncomeRange:
-    | "< 2.5L"
-    | "2.5L - 5L"
-    | "5L - 10L"
-    | "10L - 25L"
-    | "> 25L"
-    | "";
-  residentialStatus: "Resident" | "NRI" | "";
+  occupation: OccupationValue | "";
+  incomeSource: IncomeSourceValue | "";
+  incomeSlab: IncomeSlabValue | "";
   pep: boolean;
 };
 
@@ -113,9 +105,9 @@ const defaultData: KycData = {
     signatureDrawData: undefined,
   },
   financial: {
-    occupationType: "",
-    annualIncomeRange: "",
-    residentialStatus: "",
+    occupation: "",
+    incomeSource: "",
+    incomeSlab: "",
     pep: false,
   },
   confirmed: false,
@@ -221,25 +213,46 @@ export const KycProvider: React.FC<{ children: React.ReactNode }> = ({
   const financialSchema = useMemo(
     () =>
       Joi.object<KycFinancial>({
-        occupationType: Joi.string()
+        occupation: Joi.string()
           .valid(
-            "Salaried",
-            "Self-Employed",
-            "Business Owner",
-            "Student",
-            "Retired",
-            "Homemaker"
+            "business",
+            "service",
+            "professional",
+            "agriculture",
+            "retired",
+            "housewife",
+            "others",
+            "doctor",
+            "private_sector_service",
+            "public_sector_service",
+            "forex_dealer",
+            "government_service"
           )
           .required()
           .label("Occupation Type"),
-        annualIncomeRange: Joi.string()
-          .valid("< 2.5L", "2.5L - 5L", "5L - 10L", "10L - 25L", "> 25L")
+        incomeSource: Joi.string()
+          .valid(
+            "salary",
+            "business_income",
+            "ancestral_property",
+            "rental_income",
+            "prize_money",
+            "royalty",
+            "other"
+          )
           .required()
-          .label("Annual Income Range"),
-        residentialStatus: Joi.string()
-          .valid("Resident", "NRI")
+          .label("Income Source"),
+        incomeSlab: Joi.string()
+          .valid(
+            "upto_1lakh",
+            "above_1lakh_upto_5lakh",
+            "above_5lakh_upto_10lakh",
+            "above_10lakh_upto_25lakh",
+            "above_25lakh_upto_1cr",
+            "above_1cr"
+          )
           .required()
-          .label("Residential Status"),
+          .label("Income Slab"),
         pep: Joi.boolean().required().label("PEP Status"),
       }),
     []

@@ -1,47 +1,78 @@
+import { getUser, updateUser } from "@/api/userApi";
+import { GenericSelect } from "@/components/ui/GenericSelect";
 import { InfoTooltip } from "@/components/ui/InfoTooltip";
 import { StepProgress } from "@/components/ui/StepProgress";
-import { useKyc } from "@/providers/KycProvider";
 import {
-  Button,
-  IndexPath,
-  Select,
-  SelectItem,
-  Text,
-  Toggle,
-} from "@ui-kitten/components";
+  incomeSlabOptions,
+  incomeSourceOptions,
+  occupationOptions,
+} from "@/constants/kycFinancialOptions";
+import { useKyc } from "@/providers/KycProvider";
+import { Button, Text, Toggle } from "@ui-kitten/components";
 import { useRouter } from "expo-router";
-import React, { useMemo, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { KeyboardAvoidingView, Platform, ScrollView, View } from "react-native";
 
 export default function FinancialScreen() {
   const { data, update, validateFinancial } = useKyc();
   const router = useRouter();
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [loading, setLoading] = useState(false);
+  const userIdRef = useRef<string | null>(null);
+  const hasPrefilledRef = useRef(false);
   const totalSteps = 6;
   const currentStep = 5;
 
-  const occupations = useMemo(
-    () => [
-      "Salaried",
-      "Self-Employed",
-      "Business Owner",
-      "Student",
-      "Retired",
-      "Homemaker",
-    ],
-    []
-  );
-  const incomeRanges = useMemo(
-    () => ["< 2.5L", "2.5L - 5L", "5L - 10L", "10L - 25L", "> 25L"],
-    []
-  );
-  const residencies = useMemo(() => ["Resident", "NRI"], []);
+  useEffect(() => {
+    let mounted = true;
+    (async () => {
+      setLoading(true);
+      try {
+        const user = await getUser();
+        if (mounted && user) {
+          userIdRef.current = user.id;
+          if (!hasPrefilledRef.current) {
+            update("financial", {
+              occupation: (user.occupation as any) || "",
+              incomeSource: (user.income_source as any) || "",
+              incomeSlab: (user.income_slab as any) || "",
+              pep: !!user.pep,
+            });
+            hasPrefilledRef.current = true;
+          }
+        }
+      } finally {
+        if (mounted) setLoading(false);
+      }
+    })();
+    return () => {
+      mounted = false;
+    };
+  }, [update]);
 
   const onContinue = () => {
     const v = validateFinancial();
     setErrors(v.errors);
     if (v.isValid) {
-      router.push("/kyc/review");
+      (async () => {
+        try {
+          setLoading(true);
+          const id = userIdRef.current;
+          if (id) {
+            await updateUser(id, {
+              occupation: data.financial.occupation || null,
+              income_source: data.financial.incomeSource || null,
+              income_slab: data.financial.incomeSlab || null,
+              pep: data.financial.pep,
+            });
+          }
+          router.push("/kyc/review");
+        } catch {
+          // TODO: surface error to user (toast/snackbar) if needed
+        } finally {
+          setLoading(false);
+        }
+      })();
     }
   };
 
@@ -63,26 +94,15 @@ export default function FinancialScreen() {
             <Text category="label">Occupation Type</Text>
             <InfoTooltip content="Regulators require us to classify your occupation type." />
           </View>
-          <Select
-            selectedIndex={
-              data.financial.occupationType
-                ? new IndexPath(
-                    occupations.indexOf(data.financial.occupationType)
-                  )
-                : undefined
-            }
-            onSelect={(index) => {
-              const row = Array.isArray(index) ? index[0].row : index.row;
-              update("financial", { occupationType: occupations[row] as any });
-            }}
-            status={errors.occupationType ? "danger" : "basic"}
-            caption={errors.occupationType}
+          <GenericSelect
+            options={occupationOptions}
+            value={data.financial.occupation || undefined}
+            onChange={(val) => update("financial", { occupation: val as any })}
+            status={errors.occupation ? "danger" : "basic"}
+            caption={errors.occupation}
             placeholder="Select"
-          >
-            {occupations.map((o) => (
-              <SelectItem key={o} title={o} />
-            ))}
-          </Select>
+            disabled={loading}
+          />
         </View>
 
         <View>
@@ -93,31 +113,20 @@ export default function FinancialScreen() {
               marginBottom: 6,
             }}
           >
-            <Text category="label">Annual Income Range</Text>
-            <InfoTooltip content="Used for risk assessment as per KYC norms." />
+            <Text category="label">Income Source</Text>
+            <InfoTooltip content="Required to assess the origin of funds for compliance." />
           </View>
-          <Select
-            selectedIndex={
-              data.financial.annualIncomeRange
-                ? new IndexPath(
-                    incomeRanges.indexOf(data.financial.annualIncomeRange)
-                  )
-                : undefined
+          <GenericSelect
+            options={incomeSourceOptions}
+            value={data.financial.incomeSource || undefined}
+            onChange={(val) =>
+              update("financial", { incomeSource: val as any })
             }
-            onSelect={(index) => {
-              const row = Array.isArray(index) ? index[0].row : index.row;
-              update("financial", {
-                annualIncomeRange: incomeRanges[row] as any,
-              });
-            }}
-            status={errors.annualIncomeRange ? "danger" : "basic"}
-            caption={errors.annualIncomeRange}
+            status={errors.incomeSource ? "danger" : "basic"}
+            caption={errors.incomeSource}
             placeholder="Select"
-          >
-            {incomeRanges.map((o) => (
-              <SelectItem key={o} title={o} />
-            ))}
-          </Select>
+            disabled={loading}
+          />
         </View>
 
         <View>
@@ -128,31 +137,18 @@ export default function FinancialScreen() {
               marginBottom: 6,
             }}
           >
-            <Text category="label">Residential Status</Text>
-            <InfoTooltip content="Defines your tax residency category." />
+            <Text category="label">Income Slab</Text>
+            <InfoTooltip content="Helps us evaluate investment suitability." />
           </View>
-          <Select
-            selectedIndex={
-              data.financial.residentialStatus
-                ? new IndexPath(
-                    residencies.indexOf(data.financial.residentialStatus)
-                  )
-                : undefined
-            }
-            onSelect={(index) => {
-              const row = Array.isArray(index) ? index[0].row : index.row;
-              update("financial", {
-                residentialStatus: residencies[row] as any,
-              });
-            }}
-            status={errors.residentialStatus ? "danger" : "basic"}
-            caption={errors.residentialStatus}
+          <GenericSelect
+            options={incomeSlabOptions}
+            value={data.financial.incomeSlab || undefined}
+            onChange={(val) => update("financial", { incomeSlab: val as any })}
+            status={errors.incomeSlab ? "danger" : "basic"}
+            caption={errors.incomeSlab}
             placeholder="Select"
-          >
-            {residencies.map((o) => (
-              <SelectItem key={o} title={o} />
-            ))}
-          </Select>
+            disabled={loading}
+          />
         </View>
 
         <View
@@ -196,7 +192,7 @@ export default function FinancialScreen() {
           >
             Back
           </Button>
-          <Button style={{ flex: 1 }} onPress={onContinue}>
+          <Button style={{ flex: 1 }} onPress={onContinue} disabled={loading}>
             Continue
           </Button>
         </View>

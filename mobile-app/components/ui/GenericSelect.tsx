@@ -27,15 +27,26 @@ export const GenericSelect: React.FC<GenericSelectProps> = ({
   caption,
   disabled = false,
 }) => {
-  const selectedIdx = options.findIndex((o) => o.value === value);
-  const [selectedIndex, setSelectedIndex] = React.useState<IndexPath>(
-    selectedIdx >= 0 ? new IndexPath(selectedIdx) : new IndexPath(0)
+  const initialIndex = React.useMemo(() => {
+    const idx = options.findIndex((o) => o.value === value);
+    return idx >= 0 ? new IndexPath(idx) : null;
+  }, [options, value]);
+
+  const [selectedIndex, setSelectedIndex] = React.useState<IndexPath | null>(
+    initialIndex
   );
+
+  React.useEffect(() => {
+    const idx = options.findIndex((o) => o.value === value);
+    setSelectedIndex(idx >= 0 ? new IndexPath(idx) : null);
+  }, [options, value]);
 
   return (
     <Select
-      selectedIndex={selectedIndex}
-      value={options[selectedIndex.row].label}
+      selectedIndex={selectedIndex ?? undefined}
+      value={
+        selectedIndex != null ? options[selectedIndex.row]?.label : undefined
+      }
       onSelect={(index) => {
         const row = Array.isArray(index) ? index[0].row : index.row;
         const next = options[row];

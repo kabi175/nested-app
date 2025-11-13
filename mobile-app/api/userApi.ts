@@ -33,6 +33,18 @@ export const getUser = async (): Promise<User | null> => {
       created_at: user.created_at,
       updated_at: user.updated_at,
       address: user.address,
+      father_name: user.father_name,
+      income_source: user.income_source,
+      income_slab: user.income_slab,
+      occupation: user.occupation,
+      pep:
+        typeof user.pep === "boolean"
+          ? user.pep
+          : typeof user.pep_status === "boolean"
+          ? user.pep_status
+          : typeof user.pepStatus === "boolean"
+          ? user.pepStatus
+          : null,
     };
   } catch {
     return null;
@@ -55,6 +67,12 @@ export const updateUser = async (
       : undefined,
     gender: payload.gender,
     address: payload.address,
+    father_name: payload.father_name,
+    income_source: payload.income_source,
+    income_slab: payload.income_slab,
+    occupation: payload.occupation,
+    pep_status: payload.pep,
+    pep: payload.pep,
   };
 
   const { data } = await api.patch(`/users/${id}`, userDTO);

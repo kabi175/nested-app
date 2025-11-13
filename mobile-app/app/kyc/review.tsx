@@ -1,3 +1,8 @@
+import {
+  getIncomeSlabLabel,
+  getIncomeSourceLabel,
+  getOccupationLabel,
+} from "@/constants/kycFinancialOptions";
 import { InfoTooltip } from "@/components/ui/InfoTooltip";
 import { StepProgress } from "@/components/ui/StepProgress";
 import { useKyc } from "@/providers/KycProvider";
@@ -102,12 +107,18 @@ export default function ReviewScreen() {
           <Text category="s1" style={{ marginBottom: 8 }}>
             Financial & Residency
           </Text>
-          <Row label="Occupation" value={summary.financial.occupationType} />
           <Row
-            label="Annual Income"
-            value={summary.financial.annualIncomeRange}
+            label="Occupation"
+            value={getOccupationLabel(summary.financial.occupation)}
           />
-          <Row label="Residency" value={summary.financial.residentialStatus} />
+          <Row
+            label="Income Source"
+            value={getIncomeSourceLabel(summary.financial.incomeSource)}
+          />
+          <Row
+            label="Income Slab"
+            value={getIncomeSlabLabel(summary.financial.incomeSlab)}
+          />
           <Row label="PEP" value={summary.financial.pep ? "Yes" : "No"} />
         </Layout>
 
