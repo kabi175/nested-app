@@ -1,4 +1,4 @@
-import { getGoals } from "@/api/userApi";
+import { getGoals } from "@/api/goalApi";
 import { QUERY_KEYS } from "@/constants/queryKeys";
 import { useQuery } from "@tanstack/react-query";
 

@@ -1,0 +1,69 @@
+import type { Goal } from "@/types/investment";
+import { api } from "./client";
+
+export const getGoals = async (): Promise<Goal[]> => {
+  const { data } = await api.get("/goals");
+  return (data.data ?? []).map((goal: GoalDTO): Goal => mapGoalToGoal(goal));
+};
+
+export const getGoal = async (id: string): Promise<Goal> => {
+  const { data } = await api.get(`/goals/${id}`);
+  const goals = (data.data ?? []).map((goal: GoalDTO): Goal =>
+    mapGoalToGoal(goal)
+  );
+  if (goals.length === 0) {
+    throw new Error("Goal not found");
+  }
+  return goals[0];
+};
+
+export const createGoal = async (
+  goals: {
+    childId: string;
+    educationId: string;
+    title: string;
+    targetAmount: number;
+    targetDate: Date;
+  }[]
+): Promise<Goal[]> => {
+  const payload = goals.map((goal) => ({
+    child: { id: goal.childId },
+    education: {
+      id: goal.educationId,
+    },
+    target_amount: goal.targetAmount,
+    target_date: goal.targetDate.toLocaleDateString("en-CA"),
+    title: goal.title,
+  }));
+  const { data } = await api.post("/goals", { data: payload });
+  return (data.data ?? []).map((goal: GoalDTO): Goal => mapGoalToGoal(goal));
+};
+
+type GoalDTO = {
+  id: string;
+  title: string;
+  child_id: string;
+  target_amount: number;
+  current_amount: number;
+  monthly_sip: number | null;
+  status: Goal["status"];
+  target_date?: string;
+  createdAt?: string;
+  updatedAt?: string;
+};
+
+function mapGoalToGoal(goal: GoalDTO): Goal {
+  return {
+    id: goal.id,
+    title: goal.title,
+    childId: goal.child_id,
+    targetAmount: goal.target_amount,
+    currentAmount: goal.current_amount,
+    monthlySip: goal.monthly_sip,
+    status: goal.status,
+    targetDate: goal.target_date ? new Date(goal.target_date) : new Date(),
+    createdAt: goal.createdAt ? new Date(goal.createdAt) : new Date(),
+    updatedAt: goal.updatedAt ? new Date(goal.updatedAt) : new Date(),
+  };
+}
+

@@ -1,4 +1,4 @@
-import { getChildren } from "@/api/userApi";
+import { getChildren } from "@/api/childApi";
 import { QUERY_KEYS } from "@/constants/queryKeys";
 import { useQuery } from "@tanstack/react-query";
 
