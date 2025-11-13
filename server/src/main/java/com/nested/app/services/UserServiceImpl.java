@@ -169,6 +169,11 @@ public class UserServiceImpl implements UserService {
       updatedUser = updatedUser.withPep(userDTO.isPep());
     }
 
+    if (userDTO.getMaritalStatus() != null
+        && !Objects.equals(userDTO.getMaritalStatus(), originalUser.getMaritalStatus())) {
+      updatedUser = updatedUser.withMaritalStatus(userDTO.getMaritalStatus());
+    }
+
     if (updatedUser == originalUser) {
       log.info("No changes detected for userId={}, skipping update", userId);
       return UserDTO.fromEntity(originalUser);

@@ -33,6 +33,7 @@ public class BaseKYCRequestMapper {
     request.setOccupation(mapUserOccupationToFATCAOccupation(user.getOccupation()));
     request.setIncomeSlab(user.getIncomeSlab());
     request.setPep(user.isPep());
+    request.setSignature(user.getSignatureFileID());
 
     return request;
   }

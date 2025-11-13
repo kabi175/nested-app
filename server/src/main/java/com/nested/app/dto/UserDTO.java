@@ -80,6 +80,10 @@ public class UserDTO {
   @JsonProperty("kyc_status")
   private User.KYCStatus kycStatus;
 
+  @Enumerated(EnumType.STRING)
+  @JsonProperty("marital_status")
+  private User.MaritalStatus maritalStatus;
+
   public static UserDTO fromEntity(User entity) {
     UserDTO dto = new UserDTO();
     dto.setId(entity.getId());
@@ -101,6 +105,7 @@ public class UserDTO {
     dto.setOccupation(entity.getOccupation());
     dto.setPep(entity.isPep());
     dto.setKycStatus(entity.getKycStatus());
+    dto.setMaritalStatus(entity.getMaritalStatus());
     return dto;
   }
 
@@ -122,6 +127,7 @@ public class UserDTO {
         .incomeSlab(dto.getIncomeSlab())
         .occupation(dto.getOccupation())
         .isPep(dto.isPep())
+        .maritalStatus(dto.getMaritalStatus())
         .build();
   }
 }

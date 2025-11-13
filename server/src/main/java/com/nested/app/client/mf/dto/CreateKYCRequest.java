@@ -9,6 +9,10 @@ import lombok.EqualsAndHashCode;
 public class CreateKYCRequest extends BaseKYCRequest {
   private final String nationality_country = "in";
   private final String residential_status = "resident_individual";
+  private final boolean tax_residency_other_than_india = false;
+
+  @JsonProperty("marital_status")
+  private String maritalStatus;
 
   @JsonProperty("aadhaar_number")
   private String aadhaarNumber;

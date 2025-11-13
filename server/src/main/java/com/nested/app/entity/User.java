@@ -63,6 +63,8 @@ public class User {
   // we not are supporting phone number update
   private String phoneNumber;
 
+  @With private MaritalStatus maritalStatus = MaritalStatus.MARRIED;
+
   @Column(unique = true, nullable = false, updatable = false)
   private String firebaseUid;
 
@@ -188,5 +190,13 @@ public class User {
     UNKNOWN_FAILURE,
     COMPLETED,
     FAILED_WITH_INVALID_PHONE_NUMBER_FORAMATE
+  }
+
+  @RequiredArgsConstructor
+  public enum MaritalStatus {
+    MARRIED("married"),
+    UNMARRIED("unmarried"),
+    OTHERS("others");
+    @Getter @JsonValue private final String value;
   }
 }
