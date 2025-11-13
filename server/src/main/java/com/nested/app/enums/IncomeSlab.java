@@ -1,5 +1,6 @@
 package com.nested.app.enums;
 
+import com.fasterxml.jackson.annotation.JsonValue;
 import lombok.Getter;
 
 @Getter
@@ -11,7 +12,7 @@ public enum IncomeSlab {
   ABOVE_25_LAC_UPTO_1_CRORE("above_25lakh_upto_1cr"),
   ABOVE_1_CRORE("above_1cr");
 
-    private final String value;
+  @JsonValue private final String value;
 
     IncomeSlab(String value) {
         this.value = value;

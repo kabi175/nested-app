@@ -162,6 +162,10 @@ public class UserServiceImpl implements UserService {
       updatedUser = updatedUser.withOccupation(userDTO.getOccupation());
     }
 
+    if (userDTO.isPep() != originalUser.isPep()) {
+      updatedUser = updatedUser.withPep(userDTO.isPep());
+    }
+
     if (updatedUser == originalUser) {
       log.info("No changes detected for userId={}, skipping update", userId);
       return UserDTO.fromEntity(originalUser);

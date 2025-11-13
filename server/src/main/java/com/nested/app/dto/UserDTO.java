@@ -74,6 +74,9 @@ public class UserDTO {
   @Enumerated(EnumType.STRING)
   private Occupation occupation;
 
+  @JsonProperty("is_pep")
+  private boolean isPep;
+
   public static UserDTO fromEntity(User entity) {
     UserDTO dto = new UserDTO();
     dto.setId(entity.getId());
@@ -93,6 +96,7 @@ public class UserDTO {
     dto.setIncomeSource(entity.getIncomeSource());
     dto.setIncomeSlab(entity.getIncomeSlab());
     dto.setOccupation(entity.getOccupation());
+    dto.setPep(entity.isPep());
     return dto;
   }
 
@@ -113,6 +117,7 @@ public class UserDTO {
         .incomeSource(dto.getIncomeSource())
         .incomeSlab(dto.getIncomeSlab())
         .occupation(dto.getOccupation())
+        .isPep(dto.isPep())
         .build();
   }
 }
