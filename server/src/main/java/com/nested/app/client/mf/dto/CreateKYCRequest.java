@@ -1,6 +1,7 @@
 package com.nested.app.client.mf.dto;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import java.util.List;
 import java.util.Map;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -11,6 +12,7 @@ public class CreateKYCRequest extends BaseKYCRequest {
   private final String nationality_country = "in";
   private final String residential_status = "resident_individual";
   private final boolean tax_residency_other_than_india = false;
+  private final List<String> citizenship_countries = List.of("in");
 
   private Map<String, String> geolocation;
 
