@@ -156,11 +156,11 @@ public class UserController {
       })
   public ResponseEntity<?> initiateKyc(
       @Parameter(description = "User ID", required = true) @PathVariable("user_id") Long userId) {
-    var kycResponse = kycService.initiateKyc(userId);
+    kycService.initiateKyc(userId);
 
     log.info("Successfully initiated KYC for user ID: {}", userId);
 
-    return ResponseEntity.ok(kycResponse);
+    return ResponseEntity.ok().build();
   }
 
   @PostMapping(value = "/{user_id}/banks", consumes = MediaType.APPLICATION_JSON_VALUE)
