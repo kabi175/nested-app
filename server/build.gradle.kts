@@ -47,6 +47,9 @@ dependencies {
 	implementation("software.amazon.awssdk:s3:2.20.26")
 	implementation("software.amazon.awssdk:sts:2.20.26")
 
+    // MaxMind GeoIP2 for geolocation
+    implementation("com.maxmind.geoip2:geoip2:4.2.0")
+
 	implementation("org.flywaydb:flyway-core")
 	implementation("org.flywaydb:flyway-database-postgresql")
 
