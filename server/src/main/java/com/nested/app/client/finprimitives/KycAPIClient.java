@@ -13,6 +13,7 @@ import java.util.List;
 import java.util.Map;
 import lombok.Data;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Primary;
 import org.springframework.core.ParameterizedTypeReference;
@@ -21,6 +22,7 @@ import reactor.core.publisher.Mono;
 
 @Service
 @Primary
+@Slf4j
 @RequiredArgsConstructor
 public class KycAPIClient implements com.nested.app.client.mf.KycAPIClient {
 

@@ -1,9 +1,11 @@
 package com.nested.app.client.mf.dto;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.nested.app.enums.IncomeSlab;
 import jakarta.validation.constraints.NotNull;
+import java.util.Date;
 import java.util.Map;
 import lombok.Data;
 
@@ -14,6 +16,10 @@ public abstract class BaseKYCRequest {
 
   @JsonIgnore protected String firstName;
   @JsonIgnore protected String lastName;
+
+  @JsonProperty("date_of_birth")
+  @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd")
+  protected Date dateOfBirth;
 
   @JsonProperty("gender")
   protected Gender gender;
@@ -53,15 +59,22 @@ public abstract class BaseKYCRequest {
 
   @JsonProperty("mobile")
   public Map<String, String> getMobile() {
-    var isd = "91";
-    if (mobileNumber != null && !mobileNumber.isEmpty()) {
-      if (mobileNumber.startsWith("+")) {
-        mobileNumber = mobileNumber.substring(1);
+    var isd = "+91";
+
+    var number = this.mobileNumber;
+    if (number != null && !number.isEmpty()) {
+      if (number.startsWith("+")) {
+        number = number.substring(1);
       }
-      if (mobileNumber.length() > 10) {
-        isd = mobileNumber.substring(0, mobileNumber.length() - 10);
+      if (number.length() > 10) {
+        isd = number.substring(0, number.length() - 10);
+        number = number.substring(number.length() - 10);
       }
     }
-    return Map.of("isd", isd, "number", mobileNumber != null ? mobileNumber : "");
+
+    if (!isd.startsWith("+")) {
+      isd = "+" + isd;
+    }
+    return Map.of("isd", isd, "number", number != null ? number : "");
   }
 }

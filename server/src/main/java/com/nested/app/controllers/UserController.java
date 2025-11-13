@@ -158,8 +158,6 @@ public class UserController {
       @Parameter(description = "User ID", required = true) @PathVariable("user_id") Long userId) {
     kycService.initiateKyc(userId);
 
-    log.info("Successfully initiated KYC for user ID: {}", userId);
-
     return ResponseEntity.ok().build();
   }
 
