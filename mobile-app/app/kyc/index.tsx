@@ -1,14 +1,34 @@
+import { useUser } from "@/hooks/useUser";
 import { Button, Layout, Text } from "@ui-kitten/components";
 import { useRouter } from "expo-router";
 import React from "react";
-import { StyleSheet, View } from "react-native";
+import { Alert, StyleSheet, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function KycIntroScreen() {
   const router = useRouter();
+  const { data: user, isLoading: isUserLoading } = useUser();
 
-  const handleContinue = () => {
-    router.push("/kyc/basic-details");
+  const isButtonDisabled = isUserLoading;
+
+  const handleContinue = async () => {
+    if (!user) {
+      Alert.alert(
+        "Profile unavailable",
+        "We couldn't load your profile. Please try again."
+      );
+      return;
+    }
+
+    try {
+      router.push("/kyc/basic-details");
+    } catch (error) {
+      console.error("Failed to initiate KYC", error);
+      Alert.alert(
+        "Unable to start KYC",
+        "Something went wrong while starting your KYC. Please try again."
+      );
+    }
   };
 
   return (
@@ -33,8 +53,13 @@ export default function KycIntroScreen() {
             </Text>
           </View>
         </View>
-        <Button size="large" onPress={handleContinue} style={styles.button}>
-          Continue
+        <Button
+          size="large"
+          onPress={handleContinue}
+          style={styles.button}
+          disabled={isButtonDisabled}
+        >
+          {isButtonDisabled ? "Please wait..." : "Continue"}
         </Button>
       </Layout>
     </SafeAreaView>
@@ -93,4 +118,3 @@ const styles = StyleSheet.create({
     marginTop: 24,
   },
 });
-

@@ -35,6 +35,7 @@ export const getUser = async (): Promise<User | null> => {
       income_source: user.income_source,
       income_slab: user.income_slab,
       occupation: user.occupation,
+      kycStatus: user.kyc_status,
       pep:
         typeof user.pep === "boolean"
           ? user.pep
@@ -166,4 +167,8 @@ export const getUserSignature = async (id: string): Promise<string | null> => {
     }
     throw error;
   }
+};
+
+export const initKyc = async (user: User): Promise<void> => {
+  await api.post(`/users/${user.id}/actions/init_kyc`);
 };

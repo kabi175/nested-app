@@ -1,4 +1,5 @@
 import { getUser, updateUser } from "@/api/userApi";
+import { userAtom } from "@/atoms/user";
 import { GenericSelect } from "@/components/ui/GenericSelect";
 import { InfoTooltip } from "@/components/ui/InfoTooltip";
 import { StepProgress } from "@/components/ui/StepProgress";
@@ -7,9 +8,11 @@ import {
   incomeSourceOptions,
   occupationOptions,
 } from "@/constants/kycFinancialOptions";
+import { useInitKyc } from "@/hooks/useInitKyc";
 import { useKyc } from "@/providers/KycProvider";
 import { Button, Text, Toggle } from "@ui-kitten/components";
 import { useRouter } from "expo-router";
+import { useAtomValue } from "jotai";
 import React, { useEffect, useRef, useState } from "react";
 import { KeyboardAvoidingView, Platform, ScrollView, View } from "react-native";
 
@@ -22,6 +25,8 @@ export default function FinancialScreen() {
   const hasPrefilledRef = useRef(false);
   const totalSteps = 6;
   const currentStep = 5;
+
+  const user = useAtomValue(userAtom);
 
   useEffect(() => {
     let mounted = true;
@@ -50,6 +55,7 @@ export default function FinancialScreen() {
     };
   }, [update]);
 
+  const { mutateAsync: initKyc } = useInitKyc();
   const onContinue = () => {
     const v = validateFinancial();
     setErrors(v.errors);
@@ -66,6 +72,11 @@ export default function FinancialScreen() {
               pep: data.financial.pep,
             });
           }
+
+          if (user?.kycStatus === "unknown" || user?.kycStatus === "pending") {
+            await initKyc(user);
+          }
+
           router.push("/kyc/review");
         } catch {
           // TODO: surface error to user (toast/snackbar) if needed

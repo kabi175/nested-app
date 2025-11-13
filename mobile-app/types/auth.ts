@@ -14,6 +14,15 @@ export type User = {
   status: "completed" | "pending" | "rejected";
   address: Address | null;
   father_name: string | null;
+  kycStatus:
+    | "unknown"
+    | "pending"
+    | "aadhaar_pending"
+    | "esign_pending"
+    | "submitted"
+    | "completed"
+    | "failed";
+
   income_source:
     | "salary"
     | "business_income"
