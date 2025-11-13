@@ -4,6 +4,7 @@ import com.nested.app.contect.UserContext;
 import com.nested.app.dto.BankAccountDto;
 import com.nested.app.dto.Entity;
 import com.nested.app.dto.MinifiedUserDTO;
+import com.nested.app.dto.UserActionRequest;
 import com.nested.app.dto.UserDTO;
 import com.nested.app.entity.User;
 import com.nested.app.services.InvestorService;
@@ -159,6 +160,41 @@ public class UserController {
     kycService.initiateKyc(userId);
 
     return ResponseEntity.ok().build();
+  }
+
+  @PostMapping(
+      value = "/{user_id}/actions/aadhaar_upload",
+      produces = MediaType.APPLICATION_JSON_VALUE)
+  @Operation(
+      tags = "user",
+      summary = "Upload Aadhaar for user",
+      description = "Initiates Aadhaar upload for the specified user and returns an action request")
+  @ApiResponses(
+      value = {
+        @ApiResponse(
+            responseCode = "201",
+            description = "Aadhaar upload initiated successfully",
+            content =
+                @Content(
+                    mediaType = "application/json",
+                    schema = @Schema(implementation = UserActionRequest.class))),
+        @ApiResponse(
+            responseCode = "400",
+            description = "Invalid input data or missing required fields"),
+        @ApiResponse(responseCode = "404", description = "User not found"),
+        @ApiResponse(
+            responseCode = "500",
+            description = "Internal server error or Aadhaar service unavailable")
+      })
+  public ResponseEntity<UserActionRequest> uploadAadhaar(
+      @Parameter(description = "User ID", required = true) @PathVariable("user_id") Long userId,
+      @Parameter(description = "KYC Request ID", required = true) @RequestParam("kyc_request_id")
+          String kycRequestId) {
+    UserActionRequest response = userService.createAadhaarUploadRequest(userId, kycRequestId);
+
+    log.info("Aadhaar upload initiated for user ID: {}", userId);
+
+    return ResponseEntity.status(HttpStatus.CREATED).body(response);
   }
 
   @PostMapping(value = "/{user_id}/banks", consumes = MediaType.APPLICATION_JSON_VALUE)

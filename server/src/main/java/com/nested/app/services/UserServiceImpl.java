@@ -2,9 +2,11 @@ package com.nested.app.services;
 
 import com.google.common.base.Strings;
 import com.nested.app.client.mf.InvestorAPIClient;
+import com.nested.app.client.mf.KycAPIClient;
 import com.nested.app.contect.UserContext;
 import com.nested.app.dto.AddressDto;
 import com.nested.app.dto.BankAccountDto;
+import com.nested.app.dto.UserActionRequest;
 import com.nested.app.dto.UserDTO;
 import com.nested.app.entity.Address;
 import com.nested.app.entity.User;
@@ -34,6 +36,7 @@ public class UserServiceImpl implements UserService {
   private final UserRepository userRepository;
   private final AddressRepository addressRepository;
   private final InvestorAPIClient investorAPIClient;
+  private final KycAPIClient kycAPIClient;
   private final UserContext userContext;
   private final ApplicationEventPublisher publisher;
 
@@ -241,6 +244,36 @@ public class UserServiceImpl implements UserService {
     }
 
     return resp.getUrl();
+  }
+
+  @Override
+  public UserActionRequest createAadhaarUploadRequest(Long userId, String kycRequestId) {
+    // Verify user exists
+    User user =
+        userRepository
+            .findById(userId)
+            .orElseThrow(
+                () ->
+                    new OpenApiResourceNotFoundException("User with id " + userId + " not found"));
+
+    // Call KycAPIClient to create Aadhaar upload request
+    var actionRequired = kycAPIClient.createAadhaarUploadRequest(kycRequestId).block();
+
+    if (actionRequired == null || actionRequired.getRedirectUrl() == null) {
+      throw new RuntimeException("Failed to create Aadhaar upload request from KYC service");
+    }
+
+    log.info(
+        "Aadhaar upload request created for user ID: {} with KYC request ID: {}",
+        userId,
+        kycRequestId);
+
+    // Return UserActionRequest with details from the KYC service
+    return UserActionRequest.builder()
+        .id(String.valueOf(userId))
+        .type("aadhaar_upload")
+        .redirectUrl(actionRequired.getRedirectUrl())
+        .build();
   }
 
   private String getExtension(String filename) {

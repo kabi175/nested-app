@@ -1,6 +1,7 @@
 package com.nested.app.services;
 
 import com.nested.app.dto.BankAccountDto;
+import com.nested.app.dto.UserActionRequest;
 import com.nested.app.dto.UserDTO;
 import java.util.List;
 import org.springframework.data.domain.Pageable;
@@ -25,6 +26,8 @@ public interface UserService {
   void uploadUserSignature(Long userId, MultipartFile file);
 
   String fetchUserSignature(Long userId);
+
+  UserActionRequest createAadhaarUploadRequest(Long userId, String kycRequestId);
 
   enum Type {
     CURRENT_USER,
