@@ -1,17 +1,14 @@
 package com.nested.app.services;
 
+import com.nested.app.client.mf.dto.KycInitiateRequest;
+import com.nested.app.client.mf.dto.KycInitiateResponse;
 import com.nested.app.client.tarrakki.KycClient;
-import com.nested.app.contect.UserContext;
-import com.nested.app.dto.ChildDTO;
-import com.nested.app.entity.Child;
 import com.nested.app.entity.User;
-import com.nested.app.repository.InvestorRepository;
+import com.nested.app.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
-
-import java.util.List;
-import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -19,20 +16,38 @@ import java.util.stream.Collectors;
 public class KycService {
 
     private final KycClient kycClient;
-    private final UserContext userContext;
-    private final InvestorRepository investorRepository;
+  private final UserRepository userRepository;
 
-    public String getKycStatus(){
+  @Value("${app.kyc.callback-url:http://localhost:8080/redirects/kyc}")
+  private String kycCallbackUrl;
 
-        log.info("Getting kyc status of the investor");
-        return "";
-    }
+  public KycInitiateResponse initiateKyc(Long userId) {
+    log.info("Initiating KYC for user ID: {}", userId);
 
-    private User getCurrentUser() {
-        User currentUser = userContext.getUser();
-        if (currentUser == null) {
-            throw new IllegalArgumentException("User not found in context");
+    User user =
+        userRepository
+            .findById(userId)
+            .orElseThrow(() -> new IllegalArgumentException("User not found with ID: " + userId));
+
+    // Build KYC initiate request
+    String callbackUrl = kycCallbackUrl + "/" + user.getId();
+    KycInitiateRequest request =
+        new KycInitiateRequest(
+            user.getFirstName() + (user.getLastName() != null ? " " + user.getLastName() : ""),
+            user.getPanNumber(),
+            user.getEmail(),
+            user.getPhoneNumber(),
+            callbackUrl);
+
+    // Call KYC client synchronously (blocking)
+    KycInitiateResponse response = kycClient.initiateKyc(request).block();
+
+    if (response == null) {
+      throw new RuntimeException("Failed to initiate KYC: No response from KYC service");
         }
-        return currentUser;
+
+    log.info(
+        "KYC initiated successfully for user ID: {} with message: {}", userId, response.message());
+    return response;
     }
 }

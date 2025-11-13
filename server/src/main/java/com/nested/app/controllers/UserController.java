@@ -7,6 +7,7 @@ import com.nested.app.dto.MinifiedUserDTO;
 import com.nested.app.dto.UserDTO;
 import com.nested.app.entity.User;
 import com.nested.app.services.InvestorService;
+import com.nested.app.services.KycService;
 import com.nested.app.services.UserService;
 import com.nested.app.utils.AppEnvironment;
 import io.swagger.v3.oas.annotations.Operation;
@@ -44,6 +45,7 @@ public class UserController {
 
   private final UserService userService;
   private final InvestorService investorService;
+  private final KycService kycService;
   private final UserContext userContext;
   private final AppEnvironment appEnvironment;
 
@@ -128,6 +130,37 @@ public class UserController {
     log.info("Successfully created investor for user ID: {}", userId);
 
     return ResponseEntity.status(HttpStatus.CREATED).build();
+  }
+
+  @PostMapping("/{user_id}/actions/init_kyc")
+  @Operation(
+      tags = "user",
+      summary = "Initiate KYC for user",
+      description = "Initiates KYC (Know Your Customer) process for the specified user")
+  @ApiResponses(
+      value = {
+        @ApiResponse(
+            responseCode = "200",
+            description = "KYC initiated successfully",
+            content =
+                @Content(
+                    mediaType = "application/json",
+                    schema = @Schema(implementation = Map.class))),
+        @ApiResponse(
+            responseCode = "400",
+            description = "Invalid input data or missing required fields"),
+        @ApiResponse(responseCode = "404", description = "User not found"),
+        @ApiResponse(
+            responseCode = "500",
+            description = "Internal server error or KYC service unavailable")
+      })
+  public ResponseEntity<?> initiateKyc(
+      @Parameter(description = "User ID", required = true) @PathVariable("user_id") Long userId) {
+    var kycResponse = kycService.initiateKyc(userId);
+
+    log.info("Successfully initiated KYC for user ID: {}", userId);
+
+    return ResponseEntity.ok(kycResponse);
   }
 
   @PostMapping(value = "/{user_id}/banks", consumes = MediaType.APPLICATION_JSON_VALUE)
