@@ -63,7 +63,10 @@ public class User {
   // we not are supporting phone number update
   private String phoneNumber;
 
-  @With private MaritalStatus maritalStatus = MaritalStatus.MARRIED;
+  @With
+  @Builder.Default
+  @Enumerated(EnumType.STRING)
+  private MaritalStatus maritalStatus = MaritalStatus.MARRIED;
 
   @Column(unique = true, nullable = false, updatable = false)
   private String firebaseUid;

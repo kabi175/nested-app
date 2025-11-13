@@ -11,7 +11,6 @@ import java.time.format.DateTimeFormatter;
 import java.util.Objects;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
 @Slf4j
@@ -21,7 +20,6 @@ public class FundSyncScheduler {
   private final FundAPIClient fundAPIClient;
   private final FundRepository fundRepository;
 
-  @Scheduled(cron = "0 0 2 * * *") // Runs daily at 2 AM
   //  @Scheduled(fixedRate = 3000000000) // For testing: runs every 5 minutes
   public void syncFunds() {
     var pageable = org.springframework.data.domain.PageRequest.of(0, 100);

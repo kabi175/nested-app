@@ -11,6 +11,7 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import lombok.Data;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -38,8 +39,7 @@ public class KycAPIClient implements com.nested.app.client.mf.KycAPIClient {
   public Mono<KycCheck> isKycRecordAvailable(@NotEmpty String pan, @NotNull Date dob) {
     return api.withAuth()
         .get()
-        .uri(KYC_REQUEST_API_URL)
-        .attribute("pan", pan)
+        .uri(uriBuilder -> uriBuilder.path(KYC_REQUEST_API_URL).queryParam("pan", pan).build())
         .retrieve()
         .bodyToMono(new ParameterizedTypeReference<EntityListResponse<KYCRequest>>() {})
         .map(
@@ -103,9 +103,21 @@ public class KycAPIClient implements com.nested.app.client.mf.KycAPIClient {
 
   @Override
   public Mono<ActionRequired> createAadhaarUploadRequest(String kycRequestID) {
-    var proofID = fetchAadhaarDocument(kycRequestID).map(IdentityDocument::getId).block();
+    var proofID =
+        fetchAadhaarDocument(kycRequestID)
+            .filter(Objects::nonNull)
+            .map(IdentityDocument::getId)
+            .block();
     if (proofID != null) {
       return Mono.just(ActionRequired.builder().id(proofID).completed(true).build());
+    }
+    var proof = fetchAadhaarDocument(kycRequestID, "pending").block();
+    if (proof != null) {
+      return Mono.just(
+          ActionRequired.builder()
+              .id(proof.getId())
+              .redirectUrl(proof.getFetch().get("redirect_url"))
+              .build());
     }
     var request =
         Map.of(
@@ -120,29 +132,53 @@ public class KycAPIClient implements com.nested.app.client.mf.KycAPIClient {
         .uri(AADHAAR_UPLOAD_API_URL)
         .bodyValue(request)
         .retrieve()
-        .bodyToMono(ActionRequired.class);
+        .bodyToMono(new ParameterizedTypeReference<EntityListResponse<IdentityDocument>>() {})
+        .flatMap(
+            resp -> {
+              if (resp == null) {
+                return Mono.empty();
+              }
+              var data = resp.data.getFirst();
+              return Mono.just(
+                  ActionRequired.builder()
+                      .id(data.id)
+                      .redirectUrl(data.getFetch().get("redirect_url"))
+                      .build());
+            });
   }
 
   private Mono<IdentityDocument> fetchAadhaarDocument(String kycRequestID) {
+    return fetchAadhaarDocument(kycRequestID, "successful");
+  }
+
+  private Mono<IdentityDocument> fetchAadhaarDocument(String kycRequestID, String status) {
     return api.withAuth()
         .get()
-        .uri(AADHAAR_UPLOAD_API_URL)
-        .attribute("kyc_request", kycRequestID)
-        .attribute("fetch.status", "success")
+        .uri(
+            uriBuilder ->
+                uriBuilder
+                    .queryParam("kyc_request", kycRequestID)
+                    .queryParam("fetch.status", status)
+                    .path(AADHAAR_UPLOAD_API_URL)
+                    .build())
         .retrieve()
         .bodyToMono(new ParameterizedTypeReference<EntityListResponse<IdentityDocument>>() {})
-        .map(
+        .flatMap(
             resp -> {
               if (resp.data.isEmpty()) {
-                return null;
+                return Mono.empty();
               }
-              return resp.data.getFirst();
+              return Mono.just(resp.data.getFirst());
             });
   }
 
   @Override
   public Mono<Boolean> updateAadhaarProof(String kycRequestID) {
-    var proofID = fetchAadhaarDocument(kycRequestID).map(IdentityDocument::getId).block();
+    var proofID =
+        fetchAadhaarDocument(kycRequestID)
+            .filter(Objects::nonNull)
+            .map(IdentityDocument::getId)
+            .block();
 
     if (proofID == null) {
       return Mono.just(false);
