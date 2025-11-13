@@ -7,6 +7,7 @@ import com.nested.app.utils.IpUtils;
 import jakarta.servlet.http.HttpServletRequest;
 import java.util.HashMap;
 import java.util.Map;
+import lombok.Setter;
 import lombok.experimental.UtilityClass;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.context.request.RequestContextHolder;
@@ -20,17 +21,13 @@ import org.springframework.web.context.request.ServletRequestAttributes;
 @UtilityClass
 public class CreateKYCRequestMapper {
 
-  private static GeoIPService geoIPService;
-
   /**
-   * Sets the GeoIPService instance (for Spring dependency injection). This should be called once
-   * during application startup.
+   * -- SETTER -- Sets the GeoIPService instance (for Spring dependency injection). This should be
+   * called once during application startup.
    *
    * @param service the GeoIPService instance
    */
-  public static void setGeoIPService(GeoIPService service) {
-    geoIPService = service;
-  }
+  @Setter private static GeoIPService geoIPService;
 
   /**
    * Maps User entity to CreateKYCRequest. This method populates all base KYC fields plus
