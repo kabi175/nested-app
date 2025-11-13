@@ -12,6 +12,7 @@ export default function KYCRootLayout() {
           headerTitle: (props) => <Text category="s1">{props.children}</Text>,
         }}
       >
+        <Stack.Screen name="index" options={{ title: "KYC • Get Started" }} />
         <Stack.Screen
           name="basic-details"
           options={{ title: "KYC • Basic Details" }}

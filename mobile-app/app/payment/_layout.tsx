@@ -12,7 +12,7 @@ export default function Layout() {
   const user = useAtomValue(userAtom);
 
   if (user && user.status !== "completed") {
-    return <Redirect href="/kyc/basic-details" />;
+    return <Redirect href="/kyc" />;
   }
 
   return (
