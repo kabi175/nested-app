@@ -169,6 +169,8 @@ public class User {
   public enum KYCStatus {
     UNKNOWN("unknown"),
     PENDING("pending"),
+    AADHAAR_PENDING("aadhaar_pending"),
+    E_SIGN_PENDING("esign_pending"),
     SUBMITTED("submitted"),
     COMPLETED("completed"),
     FAILED("failed");

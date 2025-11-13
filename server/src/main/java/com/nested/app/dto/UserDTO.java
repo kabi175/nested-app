@@ -77,6 +77,9 @@ public class UserDTO {
   @JsonProperty("is_pep")
   private boolean isPep;
 
+  @JsonProperty("kyc_status")
+  private User.KYCStatus kycStatus;
+
   public static UserDTO fromEntity(User entity) {
     UserDTO dto = new UserDTO();
     dto.setId(entity.getId());
@@ -97,6 +100,7 @@ public class UserDTO {
     dto.setIncomeSlab(entity.getIncomeSlab());
     dto.setOccupation(entity.getOccupation());
     dto.setPep(entity.isPep());
+    dto.setKycStatus(entity.getKycStatus());
     return dto;
   }
 

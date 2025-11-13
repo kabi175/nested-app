@@ -10,9 +10,12 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import java.sql.Timestamp;
+import lombok.AccessLevel;
+import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.RequiredArgsConstructor;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
@@ -21,6 +24,8 @@ import org.hibernate.annotations.UpdateTimestamp;
 @Entity
 @Builder
 @Table(name = "investors")
+@NoArgsConstructor(access = AccessLevel.PROTECTED) // required by JPA
+@AllArgsConstructor
 public class Investor {
 
   @Id
