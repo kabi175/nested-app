@@ -14,6 +14,7 @@ module.exports = () => ({
       bundleIdentifier: "com.nexted.app",
     },
     plugins: [
+      "expo-web-browser",
       "expo-router",
       "@react-native-firebase/app",
       "@react-native-firebase/auth",

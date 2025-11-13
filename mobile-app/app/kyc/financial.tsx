@@ -1,4 +1,9 @@
-import { getUser, updateUser } from "@/api/userApi";
+import {
+  fetchAadhaarUploadRedirectUrl,
+  fetchEsignUploadRedirectUrl,
+  getUser,
+  updateUser,
+} from "@/api/userApi";
 import { userAtom } from "@/atoms/user";
 import { GenericSelect } from "@/components/ui/GenericSelect";
 import { InfoTooltip } from "@/components/ui/InfoTooltip";
@@ -12,6 +17,7 @@ import { useInitKyc } from "@/hooks/useInitKyc";
 import { useKyc } from "@/providers/KycProvider";
 import { Button, Text, Toggle } from "@ui-kitten/components";
 import { useRouter } from "expo-router";
+import * as WebBrowser from "expo-web-browser";
 import { useAtomValue } from "jotai";
 import React, { useEffect, useRef, useState } from "react";
 import { KeyboardAvoidingView, Platform, ScrollView, View } from "react-native";
@@ -75,6 +81,31 @@ export default function FinancialScreen() {
 
           if (user?.kycStatus === "unknown" || user?.kycStatus === "pending") {
             await initKyc(user);
+          }
+
+          if (user?.kycStatus === "aadhaar_pending") {
+            const url = await fetchAadhaarUploadRedirectUrl(user);
+            await WebBrowser.openBrowserAsync(url, {
+              toolbarColor: "#0A84FF",
+              controlsColor: "#ffffff",
+              showTitle: true,
+              enableDefaultShareMenuItem: false,
+              dismissButtonStyle: "done", // iOS
+              readerMode: false,
+            });
+          }
+
+          if (user?.kycStatus === "esign_pending") {
+            console.log("esign_pending");
+            const url = await fetchEsignUploadRedirectUrl(user);
+            await WebBrowser.openBrowserAsync(url, {
+              toolbarColor: "#0A84FF",
+              controlsColor: "#ffffff",
+              showTitle: true,
+              enableDefaultShareMenuItem: false,
+              dismissButtonStyle: "done", // iOS
+              readerMode: false,
+            });
           }
 
           router.push("/kyc/review");

@@ -172,3 +172,17 @@ export const getUserSignature = async (id: string): Promise<string | null> => {
 export const initKyc = async (user: User): Promise<void> => {
   await api.post(`/users/${user.id}/actions/init_kyc`);
 };
+
+export const fetchAadhaarUploadRedirectUrl = async (
+  user: User
+): Promise<string> => {
+  const { data } = await api.post(`/users/${user.id}/actions/aadhaar_upload`);
+  return data.redirect_url;
+};
+
+export const fetchEsignUploadRedirectUrl = async (
+  user: User
+): Promise<string> => {
+  const { data } = await api.post(`/users/${user.id}/actions/esign_upload`);
+  return data.redirect_url;
+};
