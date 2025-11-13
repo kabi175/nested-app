@@ -1,21 +1,29 @@
 package com.nested.app.client.bulkpe.dto;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Data;
 
 @Data
 public class ReversePennyDropResponse {
     private boolean status;
     private int statusCode;
-    private Data data;
+    private ResponseData data;
     private String message;
 
-    @lombok.Data
-    public static class Data {
+    @Data
+    public static class ResponseData {
         private double amount;
+
+        @JsonProperty("reference_id")
         private String referenceId;
+
+        @JsonProperty("upi")
         private String upi;
+
         private String message;
         private String status;
-    private String transactionId;
+
+        @JsonProperty("transaction_id")
+        private String transactionId;
     }
 }
