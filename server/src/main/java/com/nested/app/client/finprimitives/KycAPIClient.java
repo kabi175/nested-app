@@ -166,6 +166,16 @@ public class KycAPIClient implements com.nested.app.client.mf.KycAPIClient {
     return Mono.just(true);
   }
 
+  @Override
+  public Mono<Void> completeKycRequest(String kycRequestID) {
+    return api.withAuth()
+        .patch()
+        .uri(KYC_REQUEST_API_URL + "/" + kycRequestID + "/simulate")
+        .bodyValue(Map.of("status", "successful"))
+        .retrieve()
+        .bodyToMono(Void.class);
+  }
+
   private String callbackUrl(String kycRequestID, String feature) {
     return APP_URL + "/redirects/kyc/" + kycRequestID + "/" + feature;
   }
