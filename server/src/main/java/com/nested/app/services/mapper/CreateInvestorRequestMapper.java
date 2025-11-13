@@ -4,13 +4,11 @@ import com.nested.app.client.mf.dto.CreateInvestorRequest;
 import com.nested.app.client.mf.dto.FATCAUploadRequest;
 import com.nested.app.entity.User;
 import lombok.experimental.UtilityClass;
-import org.springframework.stereotype.Component;
 
 /**
  * Mapper for converting User entity to CreateInvestorRequest. Handles all field mappings specific
  * to investor creation requests.
  */
-@Component
 @UtilityClass
 public class CreateInvestorRequestMapper {
 

@@ -3,6 +3,9 @@ package com.nested.app.dto;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.nested.app.entity.User;
+import com.nested.app.enums.IncomeSlab;
+import com.nested.app.enums.IncomeSource;
+import com.nested.app.enums.Occupation;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
 import jakarta.validation.constraints.NotNull;
@@ -54,20 +57,43 @@ public class UserDTO {
   @JsonProperty("signature_file_id")
   private String signatureFileID;
 
+  @JsonProperty("father_name")
+  private String fatherName;
+
+  @JsonProperty("birth_place")
+  private String birthPlace;
+
+  @Enumerated(EnumType.STRING)
+  @JsonProperty("income_source")
+  private IncomeSource incomeSource;
+
+  @Enumerated(EnumType.STRING)
+  @JsonProperty("income_slab")
+  private IncomeSlab incomeSlab;
+
+  @Enumerated(EnumType.STRING)
+  private Occupation occupation;
+
   public static UserDTO fromEntity(User entity) {
-    return new UserDTO(
-        entity.getId(),
-        entity.getFirstName(),
-        entity.getLastName(),
-        entity.getEmail(),
-        entity.getPhoneNumber(),
-        entity.getRole().name().toLowerCase(),
-        AddressDto.fromEntity(entity.getAddress()),
-        entity.getDateOfBirth(),
-        entity.getGender(),
-        entity.getPanNumber(),
-        entity.getAadhaarLast4(),
-        entity.getSignatureFileID());
+    UserDTO dto = new UserDTO();
+    dto.setId(entity.getId());
+    dto.setFirstName(entity.getFirstName());
+    dto.setLastName(entity.getLastName());
+    dto.setEmail(entity.getEmail());
+    dto.setPhoneNumber(entity.getPhoneNumber());
+    dto.setRole(entity.getRole().name().toLowerCase());
+    dto.setAddress(AddressDto.fromEntity(entity.getAddress()));
+    dto.setDateOfBirth(entity.getDateOfBirth());
+    dto.setGender(entity.getGender());
+    dto.setPanNumber(entity.getPanNumber());
+    dto.setAadhaarLast4(entity.getAadhaarLast4());
+    dto.setSignatureFileID(entity.getSignatureFileID());
+    dto.setFatherName(entity.getFatherName());
+    dto.setBirthPlace(entity.getBirthPlace());
+    dto.setIncomeSource(entity.getIncomeSource());
+    dto.setIncomeSlab(entity.getIncomeSlab());
+    dto.setOccupation(entity.getOccupation());
+    return dto;
   }
 
   public static User fromDto(UserDTO dto) {
@@ -82,6 +108,11 @@ public class UserDTO {
         .gender(dto.getGender())
         .panNumber(dto.getPanNumber())
         .aadhaarLast4(dto.getAadhaarLast4())
+        .fatherName(dto.getFatherName())
+        .birthPlace(dto.getBirthPlace())
+        .incomeSource(dto.getIncomeSource())
+        .incomeSlab(dto.getIncomeSlab())
+        .occupation(dto.getOccupation())
         .build();
   }
 }

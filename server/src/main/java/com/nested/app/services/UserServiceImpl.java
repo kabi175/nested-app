@@ -137,6 +137,31 @@ public class UserServiceImpl implements UserService {
       updatedUser = originalUser.withAadhaarLast4(userDTO.getAadhaarLast4());
     }
 
+    if (!Strings.isNullOrEmpty(userDTO.getFatherName())
+        && !Objects.equals(userDTO.getFatherName(), originalUser.getFatherName())) {
+      updatedUser = updatedUser.withFatherName(userDTO.getFatherName());
+    }
+
+    if (!Strings.isNullOrEmpty(userDTO.getBirthPlace())
+        && !Objects.equals(userDTO.getBirthPlace(), originalUser.getBirthPlace())) {
+      updatedUser = updatedUser.withBirthPlace(userDTO.getBirthPlace());
+    }
+
+    if (userDTO.getIncomeSource() != null
+        && !Objects.equals(userDTO.getIncomeSource(), originalUser.getIncomeSource())) {
+      updatedUser = updatedUser.withIncomeSource(userDTO.getIncomeSource());
+    }
+
+    if (userDTO.getIncomeSlab() != null
+        && !Objects.equals(userDTO.getIncomeSlab(), originalUser.getIncomeSlab())) {
+      updatedUser = updatedUser.withIncomeSlab(userDTO.getIncomeSlab());
+    }
+
+    if (userDTO.getOccupation() != null
+        && !Objects.equals(userDTO.getOccupation(), originalUser.getOccupation())) {
+      updatedUser = updatedUser.withOccupation(userDTO.getOccupation());
+    }
+
     if (updatedUser == originalUser) {
       log.info("No changes detected for userId={}, skipping update", userId);
       return UserDTO.fromEntity(originalUser);

@@ -3,13 +3,11 @@ package com.nested.app.services.mapper;
 import com.nested.app.client.mf.dto.CreateKYCRequest;
 import com.nested.app.entity.User;
 import lombok.experimental.UtilityClass;
-import org.springframework.stereotype.Component;
 
 /**
  * Mapper for converting User entity to CreateKYCRequest. Handles all field mappings specific to KYC
  * requests.
  */
-@Component
 @UtilityClass
 public class CreateKYCRequestMapper {
 

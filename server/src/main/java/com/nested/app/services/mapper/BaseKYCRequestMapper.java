@@ -5,13 +5,11 @@ import com.nested.app.client.mf.dto.FATCAUploadRequest;
 import com.nested.app.client.mf.dto.Gender;
 import com.nested.app.entity.User;
 import lombok.experimental.UtilityClass;
-import org.springframework.stereotype.Component;
 
 /**
  * Mapper for converting User entity to BaseKYCRequest DTOs. Handles common field mappings between
  * User and KYC request objects.
  */
-@Component
 @UtilityClass
 public class BaseKYCRequestMapper {
 

@@ -72,7 +72,7 @@ public class User {
 
   @With private Date dateOfBirth;
 
-  @With private boolean isPep = false;
+  @With @Builder.Default private boolean isPep = false;
 
   @With
   @Builder.Default
