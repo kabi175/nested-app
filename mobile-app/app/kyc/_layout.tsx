@@ -34,6 +34,18 @@ export default function KYCRootLayout() {
           name="review"
           options={{ title: "KYC • Review & eSign" }}
         />
+        <Stack.Screen
+          name="aadhaar-upload"
+          options={{ title: "KYC • Aadhaar Upload" }}
+        />
+        <Stack.Screen
+          name="esign-upload"
+          options={{ title: "KYC • eSign Upload" }}
+        />
+        <Stack.Screen
+          name="waiting-for-approval"
+          options={{ title: "KYC • Waiting for Approval" }}
+        />
       </Stack>
     </KycProvider>
   );

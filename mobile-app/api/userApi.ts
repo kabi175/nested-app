@@ -175,14 +175,14 @@ export const initKyc = async (user: User): Promise<void> => {
 
 export const fetchAadhaarUploadRedirectUrl = async (
   user: User
-): Promise<string> => {
+): Promise<string | null> => {
   const { data } = await api.post(`/users/${user.id}/actions/aadhaar_upload`);
   return data.redirect_url;
 };
 
 export const fetchEsignUploadRedirectUrl = async (
   user: User
-): Promise<string> => {
+): Promise<string | null> => {
   const { data } = await api.post(`/users/${user.id}/actions/esign_upload`);
   return data.redirect_url;
 };

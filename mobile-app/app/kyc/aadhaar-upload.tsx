@@ -1,17 +1,12 @@
 import { fetchAadhaarUploadRedirectUrl } from "@/api/userApi";
 import { userAtom } from "@/atoms/user";
 import { StepProgress } from "@/components/ui/StepProgress";
+import { Button, Layout, Text } from "@ui-kitten/components";
 import { useRouter } from "expo-router";
 import * as WebBrowser from "expo-web-browser";
-import { Button, Layout, Text } from "@ui-kitten/components";
 import { useAtomValue } from "jotai";
 import React, { useCallback, useState } from "react";
-import {
-  KeyboardAvoidingView,
-  Platform,
-  ScrollView,
-  View,
-} from "react-native";
+import { KeyboardAvoidingView, Platform, ScrollView, View } from "react-native";
 
 export default function AadhaarUploadScreen() {
   const user = useAtomValue(userAtom);
@@ -31,14 +26,16 @@ export default function AadhaarUploadScreen() {
     setError(null);
     try {
       const redirectUrl = await fetchAadhaarUploadRedirectUrl(user);
-      await WebBrowser.openBrowserAsync(redirectUrl, {
-        toolbarColor: "#0A84FF",
-        controlsColor: "#ffffff",
-        showTitle: true,
-        enableDefaultShareMenuItem: false,
-        dismissButtonStyle: "done",
-        readerMode: false,
-      });
+      if (redirectUrl) {
+        await WebBrowser.openBrowserAsync(redirectUrl, {
+          toolbarColor: "#0A84FF",
+          controlsColor: "#ffffff",
+          showTitle: true,
+          enableDefaultShareMenuItem: false,
+          dismissButtonStyle: "done",
+          readerMode: false,
+        });
+      }
     } catch (err) {
       console.error("Failed to start Aadhaar upload flow", err);
       setError(
@@ -46,6 +43,7 @@ export default function AadhaarUploadScreen() {
       );
     } finally {
       setIsLaunching(false);
+      router.push("/kyc/esign-upload");
     }
   }, [user]);
 
@@ -97,4 +95,3 @@ export default function AadhaarUploadScreen() {
     </KeyboardAvoidingView>
   );
 }
-

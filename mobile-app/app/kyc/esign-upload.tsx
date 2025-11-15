@@ -1,17 +1,12 @@
 import { fetchEsignUploadRedirectUrl } from "@/api/userApi";
 import { userAtom } from "@/atoms/user";
 import { StepProgress } from "@/components/ui/StepProgress";
+import { Button, Layout, Text } from "@ui-kitten/components";
 import { useRouter } from "expo-router";
 import * as WebBrowser from "expo-web-browser";
-import { Button, Layout, Text } from "@ui-kitten/components";
 import { useAtomValue } from "jotai";
 import React, { useCallback, useState } from "react";
-import {
-  KeyboardAvoidingView,
-  Platform,
-  ScrollView,
-  View,
-} from "react-native";
+import { KeyboardAvoidingView, Platform, ScrollView, View } from "react-native";
 
 export default function EsignUploadScreen() {
   const user = useAtomValue(userAtom);
@@ -31,21 +26,22 @@ export default function EsignUploadScreen() {
     setError(null);
     try {
       const redirectUrl = await fetchEsignUploadRedirectUrl(user);
-      await WebBrowser.openBrowserAsync(redirectUrl, {
-        toolbarColor: "#0A84FF",
-        controlsColor: "#ffffff",
-        showTitle: true,
-        enableDefaultShareMenuItem: false,
-        dismissButtonStyle: "done",
-        readerMode: false,
-      });
+      if (redirectUrl) {
+        await WebBrowser.openBrowserAsync(redirectUrl, {
+          toolbarColor: "#0A84FF",
+          controlsColor: "#ffffff",
+          showTitle: true,
+          enableDefaultShareMenuItem: false,
+          dismissButtonStyle: "done",
+          readerMode: false,
+        });
+      }
     } catch (err) {
       console.error("Failed to launch eSign flow", err);
-      setError(
-        "We couldn't launch the eSign flow. Please retry in a moment."
-      );
+      setError("We couldn't launch the eSign flow. Please retry in a moment.");
     } finally {
       setIsLaunching(false);
+      router.push("/kyc/waiting-for-approval");
     }
   }, [user]);
 
@@ -96,4 +92,3 @@ export default function EsignUploadScreen() {
     </KeyboardAvoidingView>
   );
 }
-
