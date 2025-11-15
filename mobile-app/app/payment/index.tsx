@@ -8,7 +8,7 @@ import { formatCurrency } from "@/utils/formatters";
 import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
 import { useAtomValue } from "jotai";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   ActivityIndicator,
   Alert,
@@ -69,7 +69,29 @@ export default function PaymentMethodScreen() {
       return;
     }
     setSelectedMethod(method);
+
+    // Auto-select bank account if available and none is selected
+    if (!selectedBank && bankAccounts && bankAccounts.length > 0) {
+      // Prefer primary bank account, otherwise select the first one
+      const primaryBank = bankAccounts.find((bank) => bank.isPrimary);
+      setSelectedBank(primaryBank || bankAccounts[0]);
+    }
   };
+
+  // Auto-select bank account when bank accounts finish loading and a payment method is selected
+  useEffect(() => {
+    if (
+      !isLoadingBanks &&
+      selectedMethod &&
+      !selectedBank &&
+      bankAccounts &&
+      bankAccounts.length > 0
+    ) {
+      // Prefer primary bank account, otherwise select the first one
+      const primaryBank = bankAccounts.find((bank) => bank.isPrimary);
+      setSelectedBank(primaryBank || bankAccounts[0]);
+    }
+  }, [isLoadingBanks, selectedMethod, selectedBank, bankAccounts]);
 
   const handleConfirmOrder = async () => {
     if (!selectedMethod) {
@@ -303,9 +325,9 @@ export default function PaymentMethodScreen() {
                 </ThemedText>
               </View>
             ) : bankAccounts && bankAccounts.length > 0 ? (
-              bankAccounts.map((bankAccount) => (
+              bankAccounts.map((bankAccount, index) => (
                 <BankAccountCard
-                  key={bankAccount.id}
+                  key={index}
                   bankAccount={bankAccount}
                   isSelected={selectedBank?.id === bankAccount.id}
                 />
