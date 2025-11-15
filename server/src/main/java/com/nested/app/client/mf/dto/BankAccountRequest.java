@@ -18,10 +18,14 @@ public class BankAccountRequest {
   private AccountType accountType;
 
   @Length(min = 9, max = 18)
+  @JsonProperty("account_number")
   private String accountNumber;
 
   @JsonProperty("ifsc_code")
   private String ifsc;
+
+  @JsonProperty("primary_account_holder_name")
+  private String holderName;
 
   @RequiredArgsConstructor
   public enum AccountType {

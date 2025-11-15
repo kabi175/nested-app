@@ -207,6 +207,7 @@ public class UserServiceImpl implements UserService {
             .accountNumber(bankAccountDto.getAccountNumber())
             .ifsc(bankAccountDto.getIfsc())
             .accountType(BankAccountTypeMapper.toDtoAccountType(bankAccountDto.getAccountType()))
+            .holderName(user.getFullName())
             .build();
     var resp = investorAPIClient.addBankAccount(request).block();
     if (resp == null) {

@@ -166,6 +166,13 @@ public class User {
   @Column(name = "signature")
   private String signatureFileID;
 
+  public String getFullName() {
+    if (lastName == null) {
+      return firstName;
+    }
+    return firstName + " " + lastName;
+  }
+
   @RequiredArgsConstructor
   public enum Gender {
     MALE("male"),
