@@ -27,6 +27,8 @@ public class AddAddressRequest {
   @JsonProperty("postal_code")
   private String pincode;
 
+  @Builder.Default private Nature nature = Nature.Residential;
+
   @RequiredArgsConstructor
   public enum Nature {
     Residential("residential"),
