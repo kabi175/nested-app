@@ -4,9 +4,6 @@ import com.nested.app.entity.BasketFund;
 import com.nested.app.entity.BasketFundId;
 import java.util.List;
 import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.data.jpa.repository.Modifying;
-import org.springframework.data.jpa.repository.Query;
-import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 /**
@@ -37,12 +34,13 @@ public interface BasketFundRepository extends JpaRepository<BasketFund, BasketFu
 
   /**
    * Delete all basket funds for a specific basket
-   *
+   * NOTE: This method is deprecated. Use entity-based delete in service layer instead
+   * to ensure entity-level authorization filters are applied.
    * @param basketId Basket ID
+   * @deprecated Use service method that loads entities first (filtered) then deletes
    */
-  @Modifying
-  @Query("DELETE FROM BasketFund bf WHERE bf.basket.id = :basketId")
-  void deleteByBasketId(@Param("basketId") Long basketId);
+  @Deprecated
+  void deleteByBasketId(Long basketId);
 
   /**
    * Check if a basket fund exists for a specific basket and fund

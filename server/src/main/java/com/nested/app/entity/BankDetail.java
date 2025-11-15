@@ -12,10 +12,15 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import lombok.Data;
+import org.hibernate.annotations.Filter;
+import org.hibernate.annotations.FilterDef;
+import org.hibernate.annotations.ParamDef;
 
 @Entity
 @Table(name = "bank_details")
 @Data
+@FilterDef(name = "userFilterByUserId", parameters = @ParamDef(name = "userId", type = Long.class))
+@Filter(name = "userFilterByUserId", condition = "user_id = :userId")
 public class BankDetail {
 
   @Id

@@ -8,6 +8,9 @@ import java.util.List;
 import lombok.Data;
 import org.checkerframework.common.aliasing.qual.Unique;
 import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.Filter;
+import org.hibernate.annotations.FilterDef;
+import org.hibernate.annotations.ParamDef;
 import org.hibernate.annotations.UpdateTimestamp;
 
 /**
@@ -17,6 +20,8 @@ import org.hibernate.annotations.UpdateTimestamp;
 @Data
 @Entity
 @Table(name = "payments")
+@FilterDef(name = "userFilterByUserId", parameters = @ParamDef(name = "userId", type = Long.class))
+@Filter(name = "userFilterByUserId", condition = "user_id = :userId")
 public class Payment {
 
   @Id

@@ -37,3 +37,7 @@ out/
 .vscode/
 /.env
 serviceAccountKey.json
+*.json
+key/
+**/serviceAccountKey.json
+**/*key*.json
