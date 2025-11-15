@@ -1,21 +1,29 @@
 package com.nested.app.entity;
 
-import jakarta.persistence.*;
 import java.sql.Date;
 import java.sql.Timestamp;
-import lombok.Data;
+
 import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.Filter;
 import org.hibernate.annotations.UpdateTimestamp;
 
-import org.hibernate.annotations.Filter;
-import org.hibernate.annotations.FilterDef;
-import org.hibernate.annotations.ParamDef;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.OneToOne;
+import jakarta.persistence.Table;
+import lombok.Data;
 
 /** Entity representing a child associated with a user */
 @Data
 @Entity
 @Table(name = "children")
-@FilterDef(name = "userFilterByUserId", parameters = @ParamDef(name = "userId", type = Long.class))
 @Filter(name = "userFilterByUserId", condition = "user_id = :userId")
 public class Child {
 

@@ -13,8 +13,6 @@ import jakarta.persistence.Table;
 import lombok.Data;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.Filter;
-import org.hibernate.annotations.FilterDef;
-import org.hibernate.annotations.ParamDef;
 import org.hibernate.annotations.UpdateTimestamp;
 
 /**
@@ -23,7 +21,6 @@ import org.hibernate.annotations.UpdateTimestamp;
 @Data
 @Entity
 @Table(name = "holdings")
-@FilterDef(name = "userFilterByUserId", parameters = @ParamDef(name = "userId", type = Long.class))
 @Filter(name = "userFilterByUserId", condition = "user_id = :userId")
 public class Holding {
   

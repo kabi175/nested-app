@@ -16,15 +16,12 @@ import java.sql.Timestamp;
 import lombok.Data;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.Filter;
-import org.hibernate.annotations.FilterDef;
-import org.hibernate.annotations.ParamDef;
 import org.hibernate.annotations.UpdateTimestamp;
 
 /** Entity representing an investment goal */
 @Data
 @Entity
 @Table(name = "goals")
-@FilterDef(name = "userFilterByUserId", parameters = @ParamDef(name = "userId", type = Long.class))
 @Filter(name = "userFilterByUserId", condition = "user_id = :userId")
 public class Goal {
 

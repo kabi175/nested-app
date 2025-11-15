@@ -44,6 +44,7 @@ import org.hibernate.annotations.UpdateTimestamp;
 @ToString
 @Table(name = "users")
 @FilterDef(name = "userFilter", parameters = @ParamDef(name = "userId", type = Long.class))
+@FilterDef(name = "userFilterByUserId", parameters = @ParamDef(name = "userId", type = Long.class))
 @Filter(name = "userFilter", condition = "id = :userId")
 @EntityListeners(UserEntityListener.class)
 @NoArgsConstructor(access = AccessLevel.PROTECTED) // required by JPA

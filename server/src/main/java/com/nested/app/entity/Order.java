@@ -17,15 +17,12 @@ import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.Filter;
-import org.hibernate.annotations.FilterDef;
-import org.hibernate.annotations.ParamDef;
 import org.hibernate.annotations.UpdateTimestamp;
 
 /** Entity representing an investment order */
 @Data
 @Entity
 @Table(name = "orders")
-@FilterDef(name = "userFilterByUserId", parameters = @ParamDef(name = "userId", type = Long.class))
 @Filter(name = "userFilterByUserId", condition = "user_id = :userId")
 public class Order {
 
