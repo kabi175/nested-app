@@ -20,14 +20,22 @@ export default function KycIntroScreen() {
       return;
     }
 
-    try {
-      router.push("/kyc/basic-details");
-    } catch (error) {
-      console.error("Failed to initiate KYC", error);
-      Alert.alert(
-        "Unable to start KYC",
-        "Something went wrong while starting your KYC. Please try again."
-      );
+    switch (user.kycStatus) {
+      case "aadhaar_pending":
+        router.push("/kyc/aadhaar-upload");
+        break;
+      case "esign_pending":
+        router.push("/kyc/esign-upload");
+        break;
+      case "submitted":
+        router.push("/kyc/waiting-for-approval");
+        break;
+      case "completed":
+        router.push("/kyc/kyc-success");
+        break;
+      default:
+        router.push("/kyc/basic-details");
+        break;
     }
   };
 

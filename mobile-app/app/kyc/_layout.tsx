@@ -46,6 +46,10 @@ export default function KYCRootLayout() {
           name="waiting-for-approval"
           options={{ title: "KYC • Waiting for Approval" }}
         />
+        <Stack.Screen
+          name="kyc-success"
+          options={{ title: "KYC • Success" }}
+        />
       </Stack>
     </KycProvider>
   );
