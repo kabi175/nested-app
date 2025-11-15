@@ -1,5 +1,6 @@
 package com.nested.app.client.finprimitives;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.nested.app.client.mf.dto.ActionRequired;
 import com.nested.app.client.mf.dto.CreateKYCRequest;
 import com.nested.app.client.mf.dto.EntityResponse;
@@ -8,10 +9,10 @@ import com.nested.app.client.mf.dto.KycCheck;
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
 import java.util.Date;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.function.Predicate;
 import lombok.Data;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -75,8 +76,43 @@ public class KycAPIClient implements com.nested.app.client.mf.KycAPIClient {
         .bodyToMono(Void.class);
   }
 
+  public Mono<EntityListResponse<ESign>> fetchESignSuccess(String kycRequestID) {
+    return api.withAuth()
+        .get()
+        .uri(
+            uriBuilder ->
+                uriBuilder.path(E_SIGN_API_URL).queryParam("kyc_request", kycRequestID).build())
+        .retrieve()
+        .bodyToMono(new ParameterizedTypeReference<EntityListResponse<ESign>>() {});
+  }
+
   @Override
   public Mono<ActionRequired> createESignRequest(String kycRequestID) {
+    var resp = fetchESignSuccess(kycRequestID).block();
+    if (resp != null) {
+      var pendingRequest = resp.data.stream().filter(Predicate.not(ESign::isSuccess)).findFirst();
+
+      if (pendingRequest.isPresent()) {
+        return Mono.just(
+            ActionRequired.builder()
+                .type("e_sign")
+                .id(pendingRequest.get().id)
+                .redirectUrl(pendingRequest.get().redirectUrl)
+                .build());
+      }
+
+      var successRequest = resp.data.stream().filter(ESign::isSuccess).findFirst();
+
+      if (successRequest.isPresent()) {
+        return Mono.just(
+            ActionRequired.builder()
+                .type("e_sing")
+                .id(successRequest.get().id)
+                .completed(true)
+                .build());
+      }
+    }
+
     var request =
         Map.of("kyc_request", kycRequestID, "postback_url", callbackUrl(kycRequestID, "esign"));
     return api.withAuth()
@@ -93,12 +129,8 @@ public class KycAPIClient implements com.nested.app.client.mf.KycAPIClient {
         .get()
         .uri(E_SIGN_API_URL + "/" + eSignID)
         .retrieve()
-        .bodyToMono(HashMap.class)
-        .map(
-            resp -> {
-              String status = (String) resp.get("status");
-              return "successful".equalsIgnoreCase(status);
-            });
+        .bodyToMono(ESign.class)
+        .map(ESign::isSuccess);
   }
 
   @Override
@@ -220,6 +252,19 @@ public class KycAPIClient implements com.nested.app.client.mf.KycAPIClient {
   public static class IdentityDocument {
     private String id;
     private Map<String, String> fetch;
+  }
+
+  public static class ESign {
+    private String id;
+
+    @JsonProperty("redirect_url")
+    private String redirectUrl;
+
+    private String status;
+
+    private boolean isSuccess() {
+      return "successful".equalsIgnoreCase(status);
+    }
   }
 
   public static class EntityListResponse<T> {
