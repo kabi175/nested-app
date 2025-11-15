@@ -36,6 +36,7 @@ export const getUser = async (): Promise<User | null> => {
       income_slab: user.income_slab,
       occupation: user.occupation,
       kycStatus: user.kyc_status,
+      is_ready_to_invest: user.is_ready_to_invest,
       pep:
         typeof user.pep === "boolean"
           ? user.pep
@@ -185,4 +186,8 @@ export const fetchEsignUploadRedirectUrl = async (
 ): Promise<string | null> => {
   const { data } = await api.post(`/users/${user.id}/actions/esign_upload`);
   return data.redirect_url;
+};
+
+export const createInvestor = async (user: User): Promise<void> => {
+  await api.post(`/users/${user.id}/actions/create_investor`);
 };

@@ -1,3 +1,4 @@
+import { createInvestor } from "@/api/userApi";
 import { userAtom } from "@/atoms/user";
 import {
   Text,
@@ -7,9 +8,18 @@ import {
 import { Redirect, router, Stack } from "expo-router";
 import { useAtomValue } from "jotai";
 import { ArrowLeft } from "lucide-react-native";
+import { useEffect } from "react";
 
 export default function Layout() {
   const user = useAtomValue(userAtom);
+
+  useEffect(() => {
+    if (user && !user.is_ready_to_invest) {
+      createInvestor(user).catch((error) => {
+        console.error("Failed to create investor:", error);
+      });
+    }
+  }, [user]);
 
   if (user && user.kycStatus !== "completed") {
     return <Redirect href="/kyc" />;
