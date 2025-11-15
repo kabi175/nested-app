@@ -11,7 +11,6 @@ import org.springframework.web.reactive.function.client.ExchangeFilterFunction;
 import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Mono;
 
-/** Service for interacting with FinPrimitives API */
 @Slf4j
 @Service
 public class FinPrimitivesAPI {
@@ -36,6 +35,7 @@ public class FinPrimitivesAPI {
     return WebClient.builder()
         .baseUrl(baseUrl)
         .defaultHeader(HttpHeaders.AUTHORIZATION, authToken)
+        .filter(logRequestBodyFilter())
         .filter(circuitBreakerFilter(circuitBreaker))
         .filter(
             ExchangeFilterFunction.ofResponseProcessor(
@@ -56,6 +56,20 @@ public class FinPrimitivesAPI {
                   return Mono.just(clientResponse);
                 }))
         .build();
+  }
+
+  private ExchangeFilterFunction logRequestBodyFilter() {
+    return (request, next) -> {
+      return next.exchange(request)
+          .doOnSuccess(
+              response -> {
+                log.debug("FinPrimitives API Response Status: {}", response.statusCode());
+              })
+          .doOnError(
+              error -> {
+                log.error("FinPrimitives API Request Error: {}", error.getMessage());
+              });
+    };
   }
 
   private ExchangeFilterFunction circuitBreakerFilter(CircuitBreaker circuitBreaker) {

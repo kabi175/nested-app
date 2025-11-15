@@ -261,8 +261,6 @@ public class InvestorServiceTImpl {
     request.setFirstName(user.getFirstName());
     request.setLastName(user.getLastName());
 
-    request.setDob(user.getDateOfBirth());
-
     // Map gender
     request.setGender(mapUserGenderToInvestorGender(user.getGender()));
 
@@ -323,8 +321,6 @@ public class InvestorServiceTImpl {
     // Use child's name and DOB
     request.setFirstName(child.getFirstName());
     request.setLastName(child.getLastName() != null ? child.getLastName() : "");
-
-    request.setDob(child.getDateOfBirth());
 
     // Map child's gender
     request.setGender(mapUserGenderToInvestorGender(child.getGender()));

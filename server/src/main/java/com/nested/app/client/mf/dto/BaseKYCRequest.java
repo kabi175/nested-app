@@ -6,7 +6,6 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.nested.app.enums.IncomeSlab;
 import jakarta.validation.constraints.NotNull;
 import java.util.Date;
-import java.util.Map;
 import lombok.Data;
 
 @Data
@@ -55,26 +54,5 @@ public abstract class BaseKYCRequest {
       return firstName;
     }
     return firstName + " " + lastName;
-  }
-
-  @JsonProperty("mobile")
-  public Map<String, String> getMobile() {
-    var isd = "+91";
-
-    var number = this.mobileNumber;
-    if (number != null && !number.isEmpty()) {
-      if (number.startsWith("+")) {
-        number = number.substring(1);
-      }
-      if (number.length() > 10) {
-        isd = number.substring(0, number.length() - 10);
-        number = number.substring(number.length() - 10);
-      }
-    }
-
-    if (!isd.startsWith("+")) {
-      isd = "+" + isd;
-    }
-    return Map.of("isd", isd, "number", number != null ? number : "");
   }
 }

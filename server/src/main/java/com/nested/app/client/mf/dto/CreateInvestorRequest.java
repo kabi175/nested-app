@@ -1,10 +1,9 @@
 package com.nested.app.client.mf.dto;
 
-import com.fasterxml.jackson.annotation.JsonFormat;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonValue;
 import jakarta.validation.constraints.NotNull;
-import java.util.Date;
 import java.util.Map;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -13,15 +12,12 @@ import lombok.RequiredArgsConstructor;
 
 @Data
 @EqualsAndHashCode(callSuper = true)
+@JsonIgnoreProperties({"email"})
 public class CreateInvestorRequest extends BaseKYCRequest {
   private final String tax_status = "resident_individual";
 
   @JsonProperty("type")
   private InvestorType investorType;
-
-  @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd")
-  @JsonProperty("date_of_birth")
-  private Date dob;
 
   @JsonProperty("source_of_wealth")
   @NotNull

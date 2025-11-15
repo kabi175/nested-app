@@ -26,7 +26,6 @@ public class CreateInvestorRequestMapper {
     BaseKYCRequestMapper.mapUserToBaseKYCRequest(user, request);
 
     // Map CreateInvestorRequest-specific fields
-    request.setDob(user.getDateOfBirth());
     request.setIncomeSource(mapUserIncomeSourceToFATCA(user.getIncomeSource()));
     request.setInvestorType(CreateInvestorRequest.InvestorType.INDIVIDUAL);
 

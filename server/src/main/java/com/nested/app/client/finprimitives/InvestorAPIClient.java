@@ -1,5 +1,6 @@
 package com.nested.app.client.finprimitives;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.nested.app.client.mf.dto.AddAddressRequest;
 import com.nested.app.client.mf.dto.BankAccountRequest;
 import com.nested.app.client.mf.dto.BankResponse;
@@ -11,6 +12,7 @@ import com.nested.app.client.mf.dto.NomineeRequest;
 import com.nested.app.client.mf.dto.NomineeResponse;
 import java.util.Map;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Primary;
 import org.springframework.http.MediaType;
 import org.springframework.http.client.MultipartBodyBuilder;
@@ -21,6 +23,7 @@ import reactor.core.publisher.Mono;
 @Service
 @Primary
 @RequiredArgsConstructor
+@Slf4j
 public class InvestorAPIClient implements com.nested.app.client.mf.InvestorAPIClient {
   private static final String INVESTOR_API_URL = "/v2/investor_profiles";
   private static final String ACCOUNT_API_URL = "/v2/mf_investment_accounts";
@@ -30,23 +33,34 @@ public class InvestorAPIClient implements com.nested.app.client.mf.InvestorAPICl
   private static final String MOBILE_API_URL = "/v2/phone_numbers";
 
   private final FinPrimitivesAPI api;
+  private final ObjectMapper objectMapper;
 
   @Override
   public Mono<CreateInvestorResponse> createInvestor(CreateInvestorRequest request) {
-    return api.withAuth()
-        .post()
-        .uri(INVESTOR_API_URL)
-        .bodyValue(request)
-        .retrieve()
-        .bodyToMono(CreateInvestorResponse.class)
-        .map(
-            r -> {
-              Mono.zip(
-                      addEmail(r.getId(), request.getEmail()),
-                      addMobileNumber(r.getId(), request.getMobileNumber()))
-                  .block();
-              return r;
-            });
+    try {
+      log.info("Creating investor with request: {}", objectMapper.writeValueAsString(request));
+    } catch (Exception e) {
+      log.warn("Failed to serialize request for logging", e);
+    }
+
+    var resp =
+        api.withAuth()
+            .post()
+            .uri(INVESTOR_API_URL)
+            .bodyValue(request)
+            .retrieve()
+            .bodyToMono(CreateInvestorResponse.class)
+            .block();
+
+    if (resp == null) {
+      return Mono.empty();
+    }
+
+    Mono.zip(
+            addEmail(resp.getId(), request.getEmail()),
+            addMobileNumber(resp.getId(), request.getMobileNumber()))
+        .block();
+    return Mono.just(resp);
   }
 
   @Override
@@ -71,6 +85,11 @@ public class InvestorAPIClient implements com.nested.app.client.mf.InvestorAPICl
 
   @Override
   public Mono<EntityResponse> addAddress(AddAddressRequest request) {
+    try {
+      log.info("Adding address request: {}", objectMapper.writeValueAsString(request));
+    } catch (Exception e) {
+      log.warn("Failed to serialize AddAddressRequest for logging", e);
+    }
     return api.withAuth()
         .post()
         .uri(ADDRESS_API_URL)

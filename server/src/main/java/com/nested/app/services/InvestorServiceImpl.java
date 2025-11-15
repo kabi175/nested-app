@@ -3,13 +3,13 @@ package com.nested.app.services;
 import com.nested.app.client.mf.InvestorAPIClient;
 import com.nested.app.client.mf.KycAPIClient;
 import com.nested.app.client.mf.dto.AddAddressRequest;
-import com.nested.app.client.mf.dto.CreateInvestorRequest;
 import com.nested.app.client.mf.dto.KycCheck;
 import com.nested.app.dto.MinifiedUserDTO;
 import com.nested.app.entity.Investor;
 import com.nested.app.entity.User;
 import com.nested.app.repository.InvestorRepository;
 import com.nested.app.repository.UserRepository;
+import com.nested.app.services.mapper.CreateInvestorRequestMapper;
 import com.nested.app.services.mapper.CreateKYCRequestMapper;
 import java.util.List;
 import java.util.Objects;
@@ -49,7 +49,7 @@ public class InvestorServiceImpl implements InvestorService {
           HttpStatus.BAD_REQUEST, "KYC record not found", null, null, null);
     }
 
-    var investorRequest = buildInvestorRequestFromUser(user);
+    var investorRequest = CreateInvestorRequestMapper.mapUserToCreateInvestorRequest(user);
     var response = investorAPIClient.createInvestor(investorRequest).block();
     if (response == null) {
       throw new RuntimeException("Failed to create investor for user ID: " + user.getId());
@@ -165,43 +165,6 @@ public class InvestorServiceImpl implements InvestorService {
     var user = userRepository.findById(userDto.getId()).orElseThrow();
 
     investorAPIClient.uploadSignature(user.getInvestor().getRef(), signatureFile).block();
-  }
-
-  /** Builds investor request from User entity */
-  private CreateInvestorRequest buildInvestorRequestFromUser(User user) {
-    CreateInvestorRequest request = new CreateInvestorRequest();
-
-    request.setInvestorType(CreateInvestorRequest.InvestorType.INDIVIDUAL);
-
-    // Split name into first and last name
-    request.setFirstName(user.getFirstName());
-    request.setLastName(user.getLastName());
-
-    request.setDob(user.getDateOfBirth());
-
-    // Map gender
-    request.setGender(mapUserGenderToInvestorGender(user.getGender()));
-
-    request.setPan(user.getPanNumber());
-    request.setEmail(user.getEmail());
-
-    request.setMobileNumber(user.getPhoneNumber());
-
-    return request;
-  }
-
-  /**
-   * Maps User.Gender to CreateInvestorRequest.Gender
-   *
-   * @param gender User.Gender gender to map
-   * @return CreateInvestorRequest.Gender mapped gender
-   */
-  private com.nested.app.client.mf.dto.Gender mapUserGenderToInvestorGender(User.Gender gender) {
-    return switch (gender) {
-      case User.Gender.MALE -> com.nested.app.client.mf.dto.Gender.MALE;
-      case User.Gender.FEMALE -> com.nested.app.client.mf.dto.Gender.FEMALE;
-      default -> com.nested.app.client.mf.dto.Gender.TRANSGENDER;
-    };
   }
 
   /** Builds address request from User entity */
