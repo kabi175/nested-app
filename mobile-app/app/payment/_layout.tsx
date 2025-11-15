@@ -11,7 +11,7 @@ import { ArrowLeft } from "lucide-react-native";
 export default function Layout() {
   const user = useAtomValue(userAtom);
 
-  if (user && user.status !== "completed") {
+  if (user && user.kycStatus !== "completed") {
     return <Redirect href="/kyc" />;
   }
 
