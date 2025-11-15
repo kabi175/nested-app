@@ -271,6 +271,7 @@ export default function PaymentMethodScreen() {
           </ThemedText>
 
           <PaymentMethodCard
+            key="upi"
             method="upi"
             title="UPI"
             description="Pay using UPI ID or QR code"
@@ -279,6 +280,7 @@ export default function PaymentMethodScreen() {
           />
 
           <PaymentMethodCard
+            key="netbanking"
             method="netbanking"
             title="Net Banking"
             description="Pay using your bank account"
@@ -347,13 +349,18 @@ export default function PaymentMethodScreen() {
           >
             {buyOrdersAmount > 0 && (
               <OrderSummaryItem
+                key="lump-sum"
                 label="Lump Sum Investment"
                 amount={buyOrdersAmount}
               />
             )}
             <View style={styles.divider} />
             {sipOrdersAmount > 0 && (
-              <OrderSummaryItem label="Monthly SIP" amount={sipOrdersAmount} />
+              <OrderSummaryItem
+                key="monthly-sip"
+                label="Monthly SIP"
+                amount={sipOrdersAmount}
+              />
             )}
           </View>
         </View>
