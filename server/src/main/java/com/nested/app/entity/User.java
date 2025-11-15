@@ -108,6 +108,10 @@ public class User {
   @Builder.Default
   private boolean isActive = true;
 
+  @Column(nullable = false)
+  @Builder.Default
+  private boolean isReadyToInvest = false;
+
   @With private String firstName;
 
   @With private String lastName;

@@ -23,6 +23,7 @@ import reactor.core.publisher.Mono;
 @RequiredArgsConstructor
 public class InvestorAPIClient implements com.nested.app.client.mf.InvestorAPIClient {
   private static final String INVESTOR_API_URL = "/v2/investor_profiles";
+  private static final String ACCOUNT_API_URL = "/v2/mf_investment_accounts";
   private static final String BANK_API_URL = "/v2/bank_accounts";
   private static final String ADDRESS_API_URL = "/v2/addresses";
   private static final String EMAIL_API_URL = "/v2/email_addresses";
@@ -46,6 +47,16 @@ public class InvestorAPIClient implements com.nested.app.client.mf.InvestorAPICl
                   .block();
               return r;
             });
+  }
+
+  @Override
+  public Mono<EntityResponse> createInvestmentAccount(String investorRef) {
+    return api.withAuth()
+        .post()
+        .uri(ACCOUNT_API_URL)
+        .bodyValue(Map.of("primary_investor", investorRef))
+        .retrieve()
+        .bodyToMono(EntityResponse.class);
   }
 
   @Override

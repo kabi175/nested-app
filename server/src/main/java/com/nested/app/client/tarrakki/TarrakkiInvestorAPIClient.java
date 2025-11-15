@@ -33,6 +33,11 @@ public class TarrakkiInvestorAPIClient implements com.nested.app.client.mf.Inves
         .bodyToMono(CreateInvestorResponse.class);
   }
 
+  @Override
+  public Mono<EntityResponse> createInvestmentAccount(String investorRef) {
+    return null;
+  }
+
   /**
    * Adds a bank account for an investor
    *

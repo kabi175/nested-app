@@ -56,9 +56,15 @@ public class InvestorServiceImpl implements InvestorService {
 
     var investor = user.getInvestor();
     investor.setRef(response.getId());
+    var accountResp = investorAPIClient.createInvestmentAccount(response.getId()).block();
+    if (accountResp != null) {
+      investor.setAccountRef(accountResp.getId());
+    }
+
     investorRepository.save(investor);
 
     user.setKycStatus(User.KYCStatus.COMPLETED);
+    user.setReadyToInvest(true);
     userRepository.save(user);
   }
 

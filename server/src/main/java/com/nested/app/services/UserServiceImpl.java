@@ -195,6 +195,10 @@ public class UserServiceImpl implements UserService {
             .orElseThrow(() -> new IllegalArgumentException("User not found with ID: " + userID));
     bank.setUser(user);
 
+    if (!user.isReadyToInvest()) {
+      throw new RuntimeException("Complete KYC to create");
+    }
+
     bank = bankDetailRepository.save(bank);
 
     return BankAccountDto.fromEntity(bankDetailRepository.findById(bank.getId()).orElseThrow());

@@ -16,6 +16,8 @@ import reactor.core.publisher.Mono;
 public interface InvestorAPIClient {
   Mono<CreateInvestorResponse> createInvestor(CreateInvestorRequest request);
 
+  Mono<EntityResponse> createInvestmentAccount(String investorRef);
+
   Mono<BankResponse> addBankAccount(BankAccountRequest request);
 
   Mono<EntityResponse> addAddress(AddAddressRequest request);

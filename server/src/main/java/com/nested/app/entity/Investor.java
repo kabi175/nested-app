@@ -38,6 +38,8 @@ public class Investor {
 
   private String ref;
 
+  private String accountRef;
+
   @Column(nullable = false)
   @Enumerated(EnumType.STRING)
   @Builder.Default
