@@ -309,17 +309,17 @@ public class UserServiceImpl implements UserService {
                 () ->
                     new OpenApiResourceNotFoundException("User with id " + userId + " not found"));
 
+    var kycRequestId = user.getInvestor().getKycRequestRef();
     if (user.getInvestor().getESignRequestRef() != null) {
 
       var resp = kycAPIClient.isESignSuccess(user.getInvestor().getESignRequestRef()).block();
       if (Boolean.TRUE.equals(resp)) {
-        throw new RedirectRequiredException("/activate-account");
+        throw new RedirectRequiredException("/redirects/kyc/" + kycRequestId + "/esign");
       }
 
       return null;
     }
 
-    var kycRequestId = user.getInvestor().getKycRequestRef();
     // Call KycAPIClient to create eSign upload request
     var actionRequired = kycAPIClient.createESignRequest(kycRequestId).block();
 
