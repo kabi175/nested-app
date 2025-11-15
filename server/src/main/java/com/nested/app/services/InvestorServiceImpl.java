@@ -2,6 +2,7 @@ package com.nested.app.services;
 
 import com.nested.app.client.mf.InvestorAPIClient;
 import com.nested.app.client.mf.KycAPIClient;
+import com.nested.app.client.mf.dto.AddAddressRequest;
 import com.nested.app.client.mf.dto.CreateInvestorRequest;
 import com.nested.app.client.mf.dto.KycCheck;
 import com.nested.app.dto.MinifiedUserDTO;
@@ -66,6 +67,15 @@ public class InvestorServiceImpl implements InvestorService {
     user.setKycStatus(User.KYCStatus.COMPLETED);
     user.setReadyToInvest(true);
     userRepository.save(user);
+
+    // Add address using investorAPIClient
+    if (user.getAddress() != null) {
+      var addressRequest = buildAddressRequestFromUser(user, response.getId());
+      var addressResp = investorAPIClient.addAddress(addressRequest).block();
+      if (addressResp == null) {
+        log.warn("Failed to add address for investor ID: {}", response.getId());
+      }
+    }
   }
 
   @Override
@@ -192,5 +202,18 @@ public class InvestorServiceImpl implements InvestorService {
       case User.Gender.FEMALE -> com.nested.app.client.mf.dto.Gender.FEMALE;
       default -> com.nested.app.client.mf.dto.Gender.TRANSGENDER;
     };
+  }
+
+  /** Builds address request from User entity */
+  private AddAddressRequest buildAddressRequestFromUser(User user, String investorId) {
+    var address = user.getAddress();
+    return AddAddressRequest.builder()
+        .investorID(investorId)
+        .addressLine1(address.getAddressLine())
+        .city(address.getCity())
+        .state(address.getState())
+        .country(address.getCountry())
+        .pincode(address.getPinCode())
+        .build();
   }
 }
