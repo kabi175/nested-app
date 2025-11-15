@@ -78,23 +78,21 @@ export default function BankAccountsScreen() {
           </View>
 
           {/* Manual Link Option */}
-          <TouchableOpacity>
-            <Link href="/bank-accounts/add-manual" asChild>
-              <View style={styles.manualLinkCard}>
-                <View style={styles.manualLinkContent}>
-                  <Text category="h6" style={styles.manualLinkTitle}>
-                    Link manually
-                  </Text>
-                  <Text category="s2" appearance="hint">
-                    Enter your bank details manually
-                  </Text>
-                </View>
-                <View style={styles.arrowContainer}>
-                  <ArrowRight size={20} color="#2563EB" />
-                </View>
+          <Link href="/bank-accounts/add-manual" asChild>
+            <TouchableOpacity style={styles.manualLinkCard}>
+              <View style={styles.manualLinkContent}>
+                <Text category="h6" style={styles.manualLinkTitle}>
+                  Link manually
+                </Text>
+                <Text category="s2" appearance="hint">
+                  Enter your bank details manually
+                </Text>
               </View>
-            </Link>
-          </TouchableOpacity>
+              <View style={styles.arrowContainer}>
+                <ArrowRight size={20} color="#2563EB" />
+              </View>
+            </TouchableOpacity>
+          </Link>
 
           {/* Security Note */}
           <View style={styles.securityNote}>
