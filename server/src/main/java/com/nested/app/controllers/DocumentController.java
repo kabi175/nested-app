@@ -33,6 +33,8 @@ import java.util.Objects;
 public class DocumentController {
 
     private final DocumentService documentService;
+    private final com.nested.app.contect.UserContext userContext;
+    private final com.nested.app.utils.AuthorizationUtils authorizationUtils;
 
     @Operation(summary = "Upload a document", description = "Upload a document to S3 and store metadata in database")
     @ApiResponses(value = {
@@ -59,6 +61,14 @@ public class DocumentController {
 
         if (!StringUtils.hasText(userId)) {
             return ResponseEntity.badRequest().body(UploadResponse.failure("userId is required"));
+        }
+
+        // SECURITY FIX: Authorization check - users can only upload documents for themselves
+        if (!authorizationUtils.isAuthorized(userContext, userId)) {
+            log.warn("Unauthorized document upload attempt: user={} attempted to upload for userId={}", 
+                    userContext.getUser() != null ? userContext.getUser().getId() : "anonymous", userId);
+            return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                    .body(UploadResponse.failure("Access denied: You can only upload documents for yourself"));
         }
         if (file == null || file.isEmpty()) {
             return ResponseEntity.badRequest().body(UploadResponse.failure("file is required and cannot be empty"));
@@ -104,6 +114,13 @@ public class DocumentController {
             return ResponseEntity.badRequest().build();
         }
 
+        // SECURITY FIX: Authorization check - users can only access their own documents
+        if (!authorizationUtils.isAuthorized(userContext, userId)) {
+            log.warn("Unauthorized document access attempt: user={} attempted to access document for userId={}", 
+                    userContext.getUser() != null ? userContext.getUser().getId() : "anonymous", userId);
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+        }
+
         DocumentDto document = documentService.getDocument(userId, documentId);
         return ResponseEntity.ok(document);
     }
@@ -125,6 +142,13 @@ public class DocumentController {
 
         log.info("Get documents for user={} page={} size={}",
                 userId, page, pageSize);
+
+        // SECURITY FIX: Authorization check - users can only access their own documents
+        if (!authorizationUtils.isAuthorized(userContext, userId)) {
+            log.warn("Unauthorized document list access attempt: user={} attempted to list documents for userId={}", 
+                    userContext.getUser() != null ? userContext.getUser().getId() : "anonymous", userId);
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+        }
 
         List<DocumentDto> documents = documentService.getDocumentsByUserId(userId, page, pageSize);
         return ResponseEntity.ok(documents);

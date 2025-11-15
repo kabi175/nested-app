@@ -46,7 +46,23 @@ public class S3Service {
         log.info("Uploading file to s3");
         String fileName = file.getOriginalFilename();
         log.info("File name : {}", fileName);
-        String fileExtension = fileName.substring(fileName.lastIndexOf("."));
+        
+        // SECURITY FIX: Safe file extension extraction with validation
+        if (fileName == null || fileName.isEmpty()) {
+            throw new IllegalArgumentException("File name cannot be null or empty");
+        }
+        
+        int lastDotIndex = fileName.lastIndexOf(".");
+        if (lastDotIndex == -1 || lastDotIndex == fileName.length() - 1) {
+            throw new IllegalArgumentException("File must have a valid extension");
+        }
+        
+        String fileExtension = fileName.substring(lastDotIndex);
+        // Sanitize extension - only allow alphanumeric and dots
+        if (!fileExtension.matches("^\\.[a-zA-Z0-9]+$")) {
+            throw new IllegalArgumentException("Invalid file extension");
+        }
+        
         String s3Key = generateS3Key(fileExtension);
         log.info("s3 key : {}", s3Key);
         String bucketName = visibility == DocumentVisibility.PUBLIC ? publicBucketName : privateBucketName;

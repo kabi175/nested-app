@@ -52,7 +52,14 @@ public class BankDetailService {
             
             // If this is set as primary, unset other primary accounts
             if (bankDetail.isPrimary()) {
-                bankDetailRepository.setAllAsNonPrimaryForInvestor(investorId);
+                // SECURITY FIX: Load entities first (automatically filtered by entity-level authorization)
+                // This ensures users can only modify their own bank details
+                List<BankDetail> existingBankDetails = bankDetailRepository.findByInvestorId(investorId);
+                // If empty, means investor doesn't belong to current user (filtered out)
+                if (!existingBankDetails.isEmpty()) {
+                    existingBankDetails.forEach(bd -> bd.setPrimary(false));
+                    bankDetailRepository.saveAll(existingBankDetails);
+                }
             }
             
             BankDetail savedBankDetail = bankDetailRepository.save(bankDetail);
@@ -88,7 +95,15 @@ public class BankDetailService {
             // If this is being set as primary, unset other primary accounts for the same investor
             if (bankDetailDto.getIsPrimary() != null && bankDetailDto.getIsPrimary() && 
                 existingBankDetail.getInvestor() != null) {
-                bankDetailRepository.setAllAsNonPrimaryForInvestor(existingBankDetail.getInvestor().getId());
+                // SECURITY FIX: Load entities first (automatically filtered by entity-level authorization)
+                // This ensures users can only modify their own bank details
+                List<BankDetail> existingBankDetails = bankDetailRepository.findByInvestorId(
+                    existingBankDetail.getInvestor().getId());
+                // If empty, means investor doesn't belong to current user (filtered out)
+                if (!existingBankDetails.isEmpty()) {
+                    existingBankDetails.forEach(bd -> bd.setPrimary(false));
+                    bankDetailRepository.saveAll(existingBankDetails);
+                }
             }
             
             // Update fields
@@ -259,8 +274,15 @@ public class BankDetailService {
                 throw new IllegalArgumentException("Bank detail is not associated with any investor");
             }
             
-            // Unset all other primary accounts for this investor
-            bankDetailRepository.setAllAsNonPrimaryForInvestor(bankDetail.getInvestor().getId());
+            // SECURITY FIX: Load entities first (automatically filtered by entity-level authorization)
+            // This ensures users can only modify their own bank details
+            List<BankDetail> existingBankDetails = bankDetailRepository.findByInvestorId(
+                bankDetail.getInvestor().getId());
+            // Filter out the current bank detail and unset primary for others
+            existingBankDetails.stream()
+                .filter(bd -> !bd.getId().equals(bankDetailId))
+                .forEach(bd -> bd.setPrimary(false));
+            bankDetailRepository.saveAll(existingBankDetails);
             
             // Set this as primary
             bankDetail.setPrimary(true);
@@ -278,6 +300,7 @@ public class BankDetailService {
 
     /**
      * Delete bank detail by ID
+     * SECURITY: Uses entity-based delete to ensure entity-level authorization filters are applied
      * @param bankDetailId bank detail ID
      * @throws IllegalArgumentException if bank detail not found
      */
@@ -285,11 +308,13 @@ public class BankDetailService {
         log.info("Deleting bank detail with ID: {}", bankDetailId);
         
         try {
-            if (!bankDetailRepository.existsById(bankDetailId)) {
-                throw new IllegalArgumentException("Bank detail not found with ID: " + bankDetailId);
-            }
+            // SECURITY FIX: Load entity first (automatically filtered by entity-level authorization)
+            // This ensures users can only delete their own bank details
+            // If bank detail doesn't belong to current user, findById will return empty (filtered out)
+            BankDetail bankDetail = bankDetailRepository.findById(bankDetailId)
+                .orElseThrow(() -> new IllegalArgumentException("Bank detail not found with ID: " + bankDetailId));
             
-            bankDetailRepository.deleteById(bankDetailId);
+            bankDetailRepository.delete(bankDetail);
             log.info("Successfully deleted bank detail with ID: {}", bankDetailId);
             
         } catch (Exception e) {
@@ -300,14 +325,26 @@ public class BankDetailService {
 
     /**
      * Delete all bank details for a specific investor
+     * SECURITY: Uses entity-based delete to ensure entity-level authorization filters are applied
      * @param investorId investor ID
      */
     public void deleteBankDetailsByInvestorId(Long investorId) {
         log.info("Deleting all bank details for investor ID: {}", investorId);
         
         try {
-            bankDetailRepository.deleteByInvestorId(investorId);
-            log.info("Successfully deleted all bank details for investor ID: {}", investorId);
+            // SECURITY FIX: Load entities first (automatically filtered by entity-level authorization)
+            // This ensures users can only delete their own bank details
+            List<BankDetail> bankDetails = bankDetailRepository.findByInvestorId(investorId);
+            
+            // If empty, means investor doesn't belong to current user (filtered out)
+            if (bankDetails.isEmpty()) {
+                log.warn("No bank details found for investor ID: {} (may not belong to current user)", investorId);
+                return;
+            }
+            
+            bankDetailRepository.deleteAll(bankDetails);
+            log.info("Successfully deleted {} bank details for investor ID: {}", 
+                    bankDetails.size(), investorId);
             
         } catch (Exception e) {
             log.error("Failed to delete bank details for investor ID: {}. Error: {}", 

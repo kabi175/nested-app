@@ -1,7 +1,6 @@
 package com.nested.app.config;
 
 import java.util.Arrays;
-import java.util.List;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -16,17 +15,41 @@ public class CorsConfig {
   public CorsConfigurationSource corsConfigurationSource() {
     CorsConfiguration configuration = new CorsConfiguration();
     
-    // Allow requests from localhost on any port (for development)
-    configuration.setAllowedOriginPatterns(Arrays.asList("http://localhost:*", "http://127.0.0.1:*","https://verpan.in/*", "https://nested-admin-client.vercel.app"));
+    // SECURITY FIX: Use exact origins instead of wildcard patterns
+    // Only allow specific, trusted origins
+    configuration.setAllowedOrigins(Arrays.asList(
+        "http://localhost:3000",
+        "http://localhost:3001",
+        "http://127.0.0.1:3000",
+        "http://127.0.0.1:3001",
+        "https://verpan.in",
+        "https://www.verpan.in",
+        "https://nested-admin-client.vercel.app"
+    ));
     
     // Allow all HTTP methods
     configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
     
-    // Allow all headers
-    configuration.setAllowedHeaders(List.of("*"));
+    // SECURITY FIX: Restrict headers to only what's needed
+    configuration.setAllowedHeaders(Arrays.asList(
+        "Authorization",
+        "Content-Type",
+        "X-Requested-With",
+        "Accept",
+        "Origin",
+        "Access-Control-Request-Method",
+        "Access-Control-Request-Headers"
+    ));
     
     // Allow credentials (cookies, authorization headers, etc.)
+    // Safe now that we're using exact origins
     configuration.setAllowCredentials(true);
+    
+    // Expose only necessary headers
+    configuration.setExposedHeaders(Arrays.asList(
+        "Content-Type",
+        "Authorization"
+    ));
     
     // How long the response from a pre-flight request can be cached by clients (in seconds)
     configuration.setMaxAge(3600L);

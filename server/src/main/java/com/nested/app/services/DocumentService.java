@@ -30,6 +30,7 @@ public class DocumentService {
 
     private final DocumentRepository documentRepository;
     private final S3Service s3Service;
+    private final com.nested.app.utils.FileUploadValidator fileUploadValidator;
 
     @Transactional
     public UploadResponse uploadDocument(String userId,
@@ -52,6 +53,14 @@ public class DocumentService {
 
             if (Objects.isNull(visibility)) {
                 return UploadResponse.failure("Document visibility is required");
+            }
+
+            // SECURITY FIX: Validate file upload
+            com.nested.app.utils.FileUploadValidator.ValidationResult validationResult = 
+                fileUploadValidator.validateDocument(file);
+            if (!validationResult.isValid()) {
+                log.warn("File upload validation failed: {}", validationResult.getErrorMessage());
+                return UploadResponse.failure("File validation failed: " + validationResult.getErrorMessage());
             }
 
             // ---- Upload to S3 ----

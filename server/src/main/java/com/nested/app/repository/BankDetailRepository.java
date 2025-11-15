@@ -6,7 +6,6 @@ import java.util.Optional;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
@@ -96,17 +95,13 @@ public interface BankDetailRepository extends JpaRepository<BankDetail, Long> {
 
     /**
      * Delete all bank details for a specific investor
+     * NOTE: This method is deprecated. Use entity-based delete in service layer instead
+     * to ensure entity-level authorization filters are applied.
      * @param investorId investor ID
+     * @deprecated Use service method that loads entities first (filtered) then deletes
      */
+    @Deprecated
     void deleteByInvestorId(Long investorId);
-
-    /**
-     * Set all bank details as non-primary for a specific investor
-     * @param investorId investor ID
-     */
-    @Modifying
-    @Query("UPDATE BankDetail b SET b.isPrimary = false WHERE b.investor.id = :investorId")
-    void setAllAsNonPrimaryForInvestor(@Param("investorId") Long investorId);
 
     List<BankDetail> findAllByUserId(Long userId);
 

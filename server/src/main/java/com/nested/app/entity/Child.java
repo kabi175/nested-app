@@ -7,10 +7,16 @@ import lombok.Data;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
+import org.hibernate.annotations.Filter;
+import org.hibernate.annotations.FilterDef;
+import org.hibernate.annotations.ParamDef;
+
 /** Entity representing a child associated with a user */
 @Data
 @Entity
 @Table(name = "children")
+@FilterDef(name = "userFilterByUserId", parameters = @ParamDef(name = "userId", type = Long.class))
+@Filter(name = "userFilterByUserId", condition = "user_id = :userId")
 public class Child {
 
   @Id

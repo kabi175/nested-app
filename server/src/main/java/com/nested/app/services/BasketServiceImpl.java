@@ -393,7 +393,12 @@ public class BasketServiceImpl implements BasketService {
     log.debug("Updating basket funds for basket ID: {}", basket.getId());
 
     // Delete existing basket funds
-    basketFundRepository.deleteByBasketId(basket.getId());
+    // SECURITY FIX: Load entities first then delete (entity-based delete)
+    // Note: Basket doesn't have user_id filter, so this is typically admin-only operation
+    List<BasketFund> existingBasketFunds = basketFundRepository.findByBasketId(basket.getId());
+    if (!existingBasketFunds.isEmpty()) {
+        basketFundRepository.deleteAll(existingBasketFunds);
+    }
 
     // Save new basket funds
     saveBasketFunds(basket, funds);
