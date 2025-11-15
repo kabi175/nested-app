@@ -18,29 +18,31 @@ import org.springframework.web.servlet.resource.NoResourceFoundException;
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
-    @ExceptionHandler(DocumentNotFoundException.class)
-    public ResponseEntity<Map<String, Object>> handleDocumentNotFoundException(DocumentNotFoundException ex) {
-        log.error("Document not found: {}", ex.getMessage());
-        return buildErrorResponse(HttpStatus.NOT_FOUND, ex.getMessage());
-    }
-    
-    @ExceptionHandler(MaxUploadSizeExceededException.class)
-    public ResponseEntity<Map<String, Object>> handleMaxUploadSizeExceededException(MaxUploadSizeExceededException ex) {
-        log.error("File size exceeded: {}", ex.getMessage());
-        return buildErrorResponse(HttpStatus.BAD_REQUEST, "File size exceeded maximum limit");
-    }
-    
-    @ExceptionHandler(RuntimeException.class)
-    public ResponseEntity<Map<String, Object>> handleRuntimeException(RuntimeException ex) {
-        log.error("Runtime error: {}", ex.getMessage(), ex);
-        return buildErrorResponse(HttpStatus.INTERNAL_SERVER_ERROR, "An internal error occurred");
-    }
-    
-    @ExceptionHandler(Exception.class)
-    public ResponseEntity<Map<String, Object>> handleGenericException(Exception ex) {
-        log.error("Unexpected error: {}", ex.getMessage(), ex);
-        return buildErrorResponse(HttpStatus.INTERNAL_SERVER_ERROR, "An unexpected error occurred");
-    }
+  @ExceptionHandler(DocumentNotFoundException.class)
+  public ResponseEntity<Map<String, Object>> handleDocumentNotFoundException(
+      DocumentNotFoundException ex) {
+    log.error("Document not found: {}", ex.getMessage());
+    return buildErrorResponse(HttpStatus.NOT_FOUND, ex.getMessage());
+  }
+
+  @ExceptionHandler(MaxUploadSizeExceededException.class)
+  public ResponseEntity<Map<String, Object>> handleMaxUploadSizeExceededException(
+      MaxUploadSizeExceededException ex) {
+    log.error("File size exceeded: {}", ex.getMessage());
+    return buildErrorResponse(HttpStatus.BAD_REQUEST, "File size exceeded maximum limit");
+  }
+
+  @ExceptionHandler(RuntimeException.class)
+  public ResponseEntity<Map<String, Object>> handleRuntimeException(RuntimeException ex) {
+    log.error("Runtime error: {}", ex.getMessage(), ex);
+    return buildErrorResponse(HttpStatus.INTERNAL_SERVER_ERROR, "An internal error occurred");
+  }
+
+  @ExceptionHandler(Exception.class)
+  public ResponseEntity<Map<String, Object>> handleGenericException(Exception ex) {
+    log.error("Unexpected error: {}", ex.getMessage(), ex);
+    return buildErrorResponse(HttpStatus.INTERNAL_SERVER_ERROR, "An unexpected error occurred");
+  }
 
   @ExceptionHandler(value = {NoHandlerFoundException.class, NoResourceFoundException.class})
   public ResponseEntity<Map<String, Object>> handleNotFound() {
@@ -51,15 +53,16 @@ public class GlobalExceptionHandler {
     return new ResponseEntity<>(body, HttpStatus.NOT_FOUND);
   }
 
-    private ResponseEntity<Map<String, Object>> buildErrorResponse(HttpStatus status, String message) {
-        Map<String, Object> errorResponse = new HashMap<>();
-        errorResponse.put("timestamp", LocalDateTime.now());
-        errorResponse.put("status", status.value());
-        errorResponse.put("error", status.getReasonPhrase());
-        errorResponse.put("message", message);
-        
-        return new ResponseEntity<>(errorResponse, status);
-    }
+  private ResponseEntity<Map<String, Object>> buildErrorResponse(
+      HttpStatus status, String message) {
+    Map<String, Object> errorResponse = new HashMap<>();
+    errorResponse.put("timestamp", LocalDateTime.now());
+    errorResponse.put("status", status.value());
+    errorResponse.put("error", status.getReasonPhrase());
+    errorResponse.put("message", message);
+
+    return new ResponseEntity<>(errorResponse, status);
+  }
 
   @ExceptionHandler(MethodArgumentNotValidException.class)
   public ResponseEntity<com.nested.app.dto.ErrorResponse> handleValidationException(
@@ -74,5 +77,10 @@ public class GlobalExceptionHandler {
 
     var response = new com.nested.app.dto.ErrorResponse("Validation failed", fieldErrors);
     return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
+  }
+
+  @ExceptionHandler(RedirectRequiredException.class)
+  public String handle(RedirectRequiredException ex) {
+    return "redirect:" + ex.getRedirectUrl();
   }
 }

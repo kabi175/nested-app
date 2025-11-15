@@ -11,6 +11,7 @@ import com.nested.app.dto.UserDTO;
 import com.nested.app.entity.Address;
 import com.nested.app.entity.User;
 import com.nested.app.events.UserUpdateEvent;
+import com.nested.app.exception.RedirectRequiredException;
 import com.nested.app.repository.AddressRepository;
 import com.nested.app.repository.BankDetailRepository;
 import com.nested.app.repository.UserRepository;
@@ -307,6 +308,16 @@ public class UserServiceImpl implements UserService {
             .orElseThrow(
                 () ->
                     new OpenApiResourceNotFoundException("User with id " + userId + " not found"));
+
+    if (user.getInvestor().getESignRequestRef() != null) {
+
+      var resp = kycAPIClient.isESignSuccess(user.getInvestor().getESignRequestRef()).block();
+      if (Boolean.TRUE.equals(resp)) {
+        throw new RedirectRequiredException("/activate-account");
+      }
+
+      return null;
+    }
 
     var kycRequestId = user.getInvestor().getKycRequestRef();
     // Call KycAPIClient to create eSign upload request
