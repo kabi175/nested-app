@@ -3,6 +3,7 @@ package com.nested.app.services;
 import com.google.common.base.Strings;
 import com.nested.app.client.mf.InvestorAPIClient;
 import com.nested.app.client.mf.KycAPIClient;
+import com.nested.app.client.mf.dto.BankAccountRequest;
 import com.nested.app.contect.UserContext;
 import com.nested.app.dto.AddressDto;
 import com.nested.app.dto.BankAccountDto;
@@ -11,6 +12,7 @@ import com.nested.app.dto.UserDTO;
 import com.nested.app.entity.Address;
 import com.nested.app.entity.User;
 import com.nested.app.events.UserUpdateEvent;
+import com.nested.app.mapper.BankAccountTypeMapper;
 import com.nested.app.repository.AddressRepository;
 import com.nested.app.repository.BankDetailRepository;
 import com.nested.app.repository.UserRepository;
@@ -198,6 +200,19 @@ public class UserServiceImpl implements UserService {
     if (!user.isReadyToInvest()) {
       throw new RuntimeException("Complete KYC to create");
     }
+
+    var request =
+        BankAccountRequest.builder()
+            .investorID(user.getInvestor().getRef())
+            .accountNumber(bankAccountDto.getAccountNumber())
+            .ifsc(bankAccountDto.getIfsc())
+            .accountType(BankAccountTypeMapper.toDtoAccountType(bankAccountDto.getAccountType()))
+            .build();
+    var resp = investorAPIClient.addBankAccount(request).block();
+    if (resp == null) {
+      throw new RuntimeException("Exception during bank account creation");
+    }
+    bank.setRefId(resp.getBankId());
 
     bank = bankDetailRepository.save(bank);
 
