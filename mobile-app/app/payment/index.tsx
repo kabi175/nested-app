@@ -11,7 +11,6 @@ import {
   Alert,
   ScrollView,
   StyleSheet,
-  TextInput,
   TouchableOpacity,
   View,
 } from "react-native";
@@ -23,11 +22,9 @@ export default function PaymentMethodScreen() {
   const [selectedMethod, setSelectedMethod] = useState<PaymentMethod | null>(
     null
   );
-  const [upiId, setUpiId] = useState("");
   const [isProcessing, setIsProcessing] = useState(false);
 
   const backgroundColor = useThemeColor({}, "background");
-  const textColor = useThemeColor({}, "text");
   const tintColor = useThemeColor({}, "tint");
   const cardBackground = useThemeColor(
     { light: "#f8f9fa", dark: "#2a2a2a" },
@@ -49,11 +46,6 @@ export default function PaymentMethodScreen() {
   const handleConfirmOrder = async () => {
     if (!selectedMethod) {
       Alert.alert("Error", "Please select a payment method");
-      return;
-    }
-
-    if (selectedMethod === "upi" && !upiId.trim()) {
-      Alert.alert("Error", "Please enter your UPI ID");
       return;
     }
 
@@ -192,37 +184,6 @@ export default function PaymentMethodScreen() {
           />
         </View>
 
-        {/* UPI ID Input */}
-        {selectedMethod === "upi" && (
-          <View style={styles.section}>
-            <ThemedText type="subtitle" style={styles.sectionTitle}>
-              UPI Details
-            </ThemedText>
-            <View
-              style={[
-                styles.inputContainer,
-                { backgroundColor: cardBackground },
-              ]}
-            >
-              <Ionicons
-                name="person-outline"
-                size={20}
-                color={textColor}
-                style={styles.inputIcon}
-              />
-              <TextInput
-                style={[styles.textInput, { color: textColor }]}
-                placeholder="Enter your UPI ID (e.g., 1234567890@paytm)"
-                placeholderTextColor={textColor + "80"}
-                value={upiId}
-                onChangeText={setUpiId}
-                autoCapitalize="none"
-                keyboardType="email-address"
-              />
-            </View>
-          </View>
-        )}
-
         {/* Order Summary */}
         <View style={styles.section}>
           <ThemedText type="subtitle" style={styles.sectionTitle}>
@@ -254,15 +215,10 @@ export default function PaymentMethodScreen() {
           style={[
             styles.confirmButton,
             { backgroundColor: tintColor },
-            (!selectedMethod || (selectedMethod === "upi" && !upiId.trim())) &&
-              styles.disabledButton,
+            !selectedMethod && styles.disabledButton,
           ]}
           onPress={handleConfirmOrder}
-          disabled={
-            !selectedMethod ||
-            (selectedMethod === "upi" && !upiId.trim()) ||
-            isProcessing
-          }
+          disabled={!selectedMethod || isProcessing}
           activeOpacity={0.8}
         >
           {isProcessing ? (
