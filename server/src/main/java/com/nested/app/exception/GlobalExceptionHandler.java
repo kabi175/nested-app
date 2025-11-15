@@ -78,9 +78,4 @@ public class GlobalExceptionHandler {
     var response = new com.nested.app.dto.ErrorResponse("Validation failed", fieldErrors);
     return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
   }
-
-  @ExceptionHandler(RedirectRequiredException.class)
-  public String handle(RedirectRequiredException ex) {
-    return "redirect:" + ex.getRedirectUrl();
-  }
 }

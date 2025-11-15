@@ -11,7 +11,6 @@ import com.nested.app.dto.UserDTO;
 import com.nested.app.entity.Address;
 import com.nested.app.entity.User;
 import com.nested.app.events.UserUpdateEvent;
-import com.nested.app.exception.RedirectRequiredException;
 import com.nested.app.repository.AddressRepository;
 import com.nested.app.repository.BankDetailRepository;
 import com.nested.app.repository.UserRepository;
@@ -40,6 +39,7 @@ public class UserServiceImpl implements UserService {
   private final KycAPIClient kycAPIClient;
   private final UserContext userContext;
   private final ApplicationEventPublisher publisher;
+  private final KycRedirectService kycRedirectService;
 
   @Override
   public List<UserDTO> findAllUsers(Type type, Pageable pageable) {
@@ -314,7 +314,8 @@ public class UserServiceImpl implements UserService {
 
       var resp = kycAPIClient.isESignSuccess(user.getInvestor().getESignRequestRef()).block();
       if (Boolean.TRUE.equals(resp)) {
-        throw new RedirectRequiredException("/redirects/kyc/" + kycRequestId + "/esign");
+        kycRedirectService.handleESignRedirect(kycRequestId);
+        return null;
       }
 
       return null;
