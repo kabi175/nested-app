@@ -49,4 +49,38 @@ public class GoalDTO {
   private Timestamp createdAt;
 
   private Timestamp updatedAt;
+
+  public static GoalDTO fromEntity(Goal goal) {
+    if (goal == null) {
+      return null;
+    }
+    GoalDTO dto = new GoalDTO();
+    dto.setId(goal.getId());
+    dto.setTitle(goal.getTitle());
+    dto.setTargetAmount(goal.getTargetAmount());
+    dto.setCurrentAmount(goal.getCurrentAmount());
+    dto.setMonthlySip(goal.getMonthlySip());
+    dto.setTargetDate(goal.getTargetDate());
+    dto.setStatus(goal.getStatus());
+    dto.setCreatedAt(goal.getCreatedAt());
+    dto.setUpdatedAt(goal.getUpdatedAt());
+
+    // Nested objects (minified)
+    if (goal.getBasket() != null) {
+      dto.setBasket(new MinifiedBasketDto(goal.getBasket().getId()));
+    }
+    if (goal.getEducation() != null) {
+      MinifiedEducationDto educationDto = new MinifiedEducationDto();
+      educationDto.setId(goal.getEducation().getId());
+      dto.setEducation(educationDto);
+    }
+    if (goal.getUser() != null) {
+      dto.setUser(MinifiedUserDTO.fromEntity(goal.getUser()));
+    }
+    if (goal.getChild() != null) {
+      dto.setChild(MinifiedChildDTO.fromEntity(goal.getChild()));
+    }
+
+    return dto;
+  }
 }
