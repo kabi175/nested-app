@@ -1,4 +1,8 @@
-import { createPayment } from "@/api/paymentAPI";
+import {
+  createPayment,
+  initiatePayment,
+  verifyPayment,
+} from "@/api/paymentAPI";
 import { cartAtom } from "@/atoms/cart";
 import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
@@ -8,6 +12,7 @@ import { BankAccount } from "@/types/bank";
 import { formatCurrency } from "@/utils/formatters";
 import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
+import { openBrowserAsync } from "expo-web-browser";
 import { useAtomValue } from "jotai";
 import { useEffect, useState } from "react";
 import {
@@ -116,10 +121,17 @@ export default function PaymentMethodScreen() {
       const paymentMethod =
         selectedMethod === "netbanking" ? "net_banking" : "upi";
 
-      await createPayment(cart, {
+      const payment = await createPayment(cart, {
         payment_method: paymentMethod,
         bank_id: selectedBank.id,
       });
+
+      console.log("payment", payment);
+      const redirectUrl = await initiatePayment(payment.id);
+      await verifyPayment(payment.id);
+      if (redirectUrl) {
+        await openBrowserAsync(redirectUrl);
+      }
 
       Alert.alert(
         "Success",

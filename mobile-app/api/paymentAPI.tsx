@@ -56,10 +56,14 @@ type PaymentOption = {
   bank_id: string;
 };
 
+type Payment = {
+  id: string;
+};
+
 export const createPayment = async (
   orders: Order[],
   paymentOption: PaymentOption
-): Promise<string> => {
+): Promise<Payment> => {
   const payload = {
     orders: orders.map((order) => ({
       id: order.id,
@@ -67,10 +71,26 @@ export const createPayment = async (
     payment_method: paymentOption.payment_method,
     bank_id: paymentOption.bank_id,
   };
+  console.log("payload", payload);
   const { data } = await api.post(`/payments`, payload);
-  return data.data;
+  return data;
+};
+
+export const initiatePayment = async (
+  paymentId: string
+): Promise<string | null> => {
+  const { data } = await api.post(
+    `/payments/${paymentId}/buy/actions/fetch_redirect_url`,
+    {
+      timeout: 30000,
+    }
+  );
+  return data.redirect_url;
 };
 
 export const verifyPayment = async (paymentId: string): Promise<void> => {
-  await api.post(`/payments/${paymentId}/actions/verify`);
+  await api.post(`/payments/${paymentId}/buy/actions/verify`, {
+    id: paymentId,
+    verification_code: "123456",
+  });
 };
