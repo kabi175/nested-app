@@ -1,7 +1,11 @@
+import { getPendingOrdersByGoalId } from "@/api/paymentAPI";
+import { cartAtom } from "@/atoms/cart";
 import { Colors } from "@/constants/Colors";
 import { useColorScheme } from "@/hooks/useColorScheme";
 import { usePendingActivities } from "@/hooks/usePendingActivities";
+import { Goal } from "@/types";
 import { useRouter } from "expo-router";
+import { useSetAtom } from "jotai";
 import { Banknote, IdCard, Landmark, UserCog } from "lucide-react-native";
 import React from "react";
 import {
@@ -20,6 +24,7 @@ export function PendingActivityBanner({ onPress }: PendingActivityBannerProps) {
   const colorScheme = useColorScheme();
   const { data: activities, isLoading } = usePendingActivities();
   const router = useRouter();
+  const setCart = useSetAtom(cartAtom);
 
   if (isLoading || !activities || activities.length === 0) {
     return null;
@@ -44,7 +49,7 @@ export function PendingActivityBanner({ onPress }: PendingActivityBannerProps) {
     }
   };
 
-  const handlePress = (event: GestureResponderEvent) => {
+  const handlePress = async (event: GestureResponderEvent) => {
     if (onPress) {
       onPress(event);
       return;
@@ -58,6 +63,11 @@ export function PendingActivityBanner({ onPress }: PendingActivityBannerProps) {
         router.push("/bank-accounts");
         break;
       case "goal_payment_pending":
+        const goal = firstActivity.metadata as Goal;
+        const orders = await getPendingOrdersByGoalId(goal.id);
+        if (orders.length > 0) {
+          setCart(orders);
+        }
         router.push("/payment");
         break;
       case "profile_incomplete":
