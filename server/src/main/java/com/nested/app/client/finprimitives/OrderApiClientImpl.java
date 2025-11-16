@@ -10,8 +10,10 @@ import java.util.List;
 import java.util.Map;
 import lombok.RequiredArgsConstructor;
 import org.springframework.core.ParameterizedTypeReference;
+import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;
 
+@Service
 @RequiredArgsConstructor
 public class OrderApiClientImpl implements OrderApiClient {
   private static final String BUY_ORDER_API_URL = "/v2/mf_purchases";
