@@ -1,5 +1,6 @@
 package com.nested.app.dto;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.nested.app.entity.BankDetail;
 import jakarta.persistence.EnumType;
@@ -12,6 +13,10 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 public class BankAccountDto {
+
+  @JsonFormat(shape = JsonFormat.Shape.STRING)
+  private Long id;
+
   @JsonProperty("account_type")
   @Enumerated(EnumType.STRING)
   private BankDetail.AccountType accountType;
@@ -27,8 +32,11 @@ public class BankAccountDto {
 
   public static BankAccountDto fromEntity(BankDetail bankDetail) {
     return new BankAccountDto(
-        bankDetail.getAccountType(), bankDetail.getAccountNumber(),
-            bankDetail.getIfscCode(), bankDetail.isPrimary());
+        bankDetail.getId(),
+        bankDetail.getAccountType(),
+        bankDetail.getAccountNumber(),
+        bankDetail.getIfscCode(),
+        bankDetail.isPrimary());
   }
 
   public BankDetail toEntity() {
@@ -37,6 +45,7 @@ public class BankAccountDto {
     bankDetail.setAccountNumber(this.accountNumber);
     bankDetail.setIfscCode(this.ifsc);
     bankDetail.setPrimary(this.isPrimary);
+    bankDetail.setId(this.id);
     return bankDetail;
   }
 }

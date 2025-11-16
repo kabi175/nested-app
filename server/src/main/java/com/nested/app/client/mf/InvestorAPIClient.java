@@ -3,6 +3,7 @@ package com.nested.app.client.mf;
 import com.nested.app.client.mf.dto.AddAddressRequest;
 import com.nested.app.client.mf.dto.BankAccountRequest;
 import com.nested.app.client.mf.dto.BankResponse;
+import com.nested.app.client.mf.dto.CreateAccountRequest;
 import com.nested.app.client.mf.dto.CreateInvestorRequest;
 import com.nested.app.client.mf.dto.CreateInvestorResponse;
 import com.nested.app.client.mf.dto.EntityResponse;
@@ -16,9 +17,11 @@ import reactor.core.publisher.Mono;
 public interface InvestorAPIClient {
   Mono<CreateInvestorResponse> createInvestor(CreateInvestorRequest request);
 
-  Mono<EntityResponse> createInvestmentAccount(String investorRef);
+  Mono<EntityResponse> createInvestmentAccount(CreateAccountRequest createAccountRequest);
 
   Mono<BankResponse> addBankAccount(BankAccountRequest request);
+
+  Mono<Void> addPrimaryBankAccount(String accountID, String bankAccountID);
 
   Mono<EntityResponse> addAddress(AddAddressRequest request);
 

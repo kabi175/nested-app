@@ -10,6 +10,7 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
+import jakarta.persistence.PrePersist;
 import jakarta.persistence.Table;
 import java.sql.Timestamp;
 import lombok.Data;
@@ -49,6 +50,8 @@ public class Order {
   @JoinColumn(name = "payment_id")
   private Payment payment;
 
+  private String uuid;
+
   @CreationTimestamp
   @Column(nullable = false, updatable = false)
   private Timestamp createdAt;
@@ -65,6 +68,13 @@ public class Order {
 
   private String ref;
   private Long paymentRef;
+
+  @PrePersist
+  public void generateUUID() {
+    if (uuid == null) {
+      uuid = java.util.UUID.randomUUID().toString();
+    }
+  }
 
   @RequiredArgsConstructor
   public enum OrderStatus {

@@ -31,7 +31,7 @@ public class OrderDetail {
   @JsonProperty("user_ip")
   protected String userIP;
 
-  protected String sourceRef;
+  @JsonIgnore protected String sourceRef;
 
   @AllArgsConstructor
   public enum OrderType {

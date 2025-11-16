@@ -5,8 +5,10 @@ import lombok.Data;
 
 @Data
 public class OrderResponse {
-  private Long id;
+  @JsonProperty("old_id")
+  private Long paymentRef;
 
+  @JsonProperty("id")
   private String ref;
 
   @JsonProperty("source_ref_id")

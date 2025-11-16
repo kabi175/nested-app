@@ -5,6 +5,9 @@ import lombok.Data;
 
 @Data
 public class BankResponse {
-  @JsonProperty("bank_id")
+  @JsonProperty("id")
   private String bankId;
+
+  @JsonProperty("old_id")
+  private Long paymentRef;
 }

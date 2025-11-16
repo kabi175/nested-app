@@ -4,14 +4,10 @@ import com.nested.app.client.mf.PaymentsAPIClient;
 import com.nested.app.client.mf.dto.PaymentsRequest;
 import com.nested.app.client.mf.dto.PaymentsResponse;
 import lombok.AllArgsConstructor;
-import org.springframework.context.annotation.Profile;
-import org.springframework.http.*;
-import org.springframework.stereotype.Component;
+import org.springframework.http.MediaType;
 import org.springframework.validation.annotation.Validated;
 import reactor.core.publisher.Mono;
 
-@Profile("prod")
-@Component
 @AllArgsConstructor
 public class PaymentsAPIClientImpl implements PaymentsAPIClient {
   private static final String paymentsApiUrl = "/payments";
@@ -26,5 +22,10 @@ public class PaymentsAPIClientImpl implements PaymentsAPIClient {
         .bodyValue(request)
         .retrieve()
         .bodyToMono(PaymentsResponse.class);
+  }
+
+  @Override
+  public Mono<PaymentsResponse> fetchPayment(String paymentID) {
+    return null;
   }
 }

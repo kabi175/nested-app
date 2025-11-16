@@ -5,9 +5,14 @@ import lombok.Data;
 
 @Data
 public class PaymentsResponse {
-  @JsonProperty("payment_id")
+  @JsonProperty("id")
   private String paymentId;
 
-  @JsonProperty("redirect_url")
+  private String status;
+
+  @JsonProperty("failed_reason")
+  private String failedReason;
+
+  @JsonProperty("token_url")
   private String redirectUrl;
 }

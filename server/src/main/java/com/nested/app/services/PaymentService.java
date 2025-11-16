@@ -3,6 +3,7 @@ package com.nested.app.services;
 import com.nested.app.dto.PaymentDTO;
 import com.nested.app.dto.PlaceOrderDTO;
 import com.nested.app.dto.PlaceOrderPostDTO;
+import com.nested.app.dto.UserActionRequest;
 import com.nested.app.dto.VerifyOrderDTO;
 import java.util.List;
 
@@ -31,7 +32,7 @@ public interface PaymentService {
    */
   PlaceOrderDTO verifyPayment(VerifyOrderDTO verifyOrderRequest);
 
-  PaymentDTO iniatePayment(Long paymentID);
+  UserActionRequest fetchPaymentUrl(Long paymentID);
 
   /**
    * Retrieves all payments

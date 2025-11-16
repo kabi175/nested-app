@@ -3,6 +3,7 @@ package com.nested.app.client.tarrakki;
 import com.nested.app.client.mf.dto.AddAddressRequest;
 import com.nested.app.client.mf.dto.BankAccountRequest;
 import com.nested.app.client.mf.dto.BankResponse;
+import com.nested.app.client.mf.dto.CreateAccountRequest;
 import com.nested.app.client.mf.dto.CreateInvestorRequest;
 import com.nested.app.client.mf.dto.CreateInvestorResponse;
 import com.nested.app.client.mf.dto.EntityResponse;
@@ -34,7 +35,7 @@ public class TarrakkiInvestorAPIClient implements com.nested.app.client.mf.Inves
   }
 
   @Override
-  public Mono<EntityResponse> createInvestmentAccount(String investorRef) {
+  public Mono<EntityResponse> createInvestmentAccount(CreateAccountRequest createAccountRequest) {
     return null;
   }
 
@@ -63,6 +64,11 @@ public class TarrakkiInvestorAPIClient implements com.nested.app.client.mf.Inves
     } catch (Exception e) {
       return Mono.error(new RuntimeException("Failed to upload bank document", e));
     }
+  }
+
+  @Override
+  public Mono<Void> addPrimaryBankAccount(String accountID, String bankAccountID) {
+    return null;
   }
 
   @Override

@@ -5,10 +5,10 @@ import com.nested.app.client.mf.OtpApiClient;
 import com.nested.app.client.mf.PaymentsAPIClient;
 import com.nested.app.client.mf.dto.BulkOrderOtpRequest;
 import com.nested.app.client.mf.dto.BulkOrderRequest;
+import com.nested.app.client.mf.dto.ConfirmOrderRequest;
 import com.nested.app.client.mf.dto.CreateMandateRequest;
 import com.nested.app.client.mf.dto.OrderDetail;
 import com.nested.app.client.mf.dto.OtpRequest;
-import com.nested.app.client.mf.dto.OtpVerifyRequest;
 import com.nested.app.client.mf.dto.PaymentsOrder;
 import com.nested.app.client.mf.dto.PaymentsRequest;
 import com.nested.app.client.mf.dto.SipOrderDetail;
@@ -19,10 +19,12 @@ import com.nested.app.dto.OrderDTO;
 import com.nested.app.dto.PaymentDTO;
 import com.nested.app.dto.PlaceOrderDTO;
 import com.nested.app.dto.PlaceOrderPostDTO;
+import com.nested.app.dto.UserActionRequest;
 import com.nested.app.dto.VerifyOrderDTO;
 import com.nested.app.entity.BankDetail;
 import com.nested.app.entity.Basket;
 import com.nested.app.entity.BasketFund;
+import com.nested.app.entity.BuyOrder;
 import com.nested.app.entity.Fund;
 import com.nested.app.entity.Goal;
 import com.nested.app.entity.Investor;
@@ -38,7 +40,6 @@ import com.nested.app.utils.IpUtils;
 import jakarta.servlet.http.HttpServletRequest;
 import java.util.List;
 import java.util.Objects;
-import java.util.Optional;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import lombok.RequiredArgsConstructor;
@@ -192,70 +193,28 @@ public class PaymentServiceImpl implements PaymentService {
     log.info(
         "Verifying payment with verification code: {}", verifyOrderRequest.getVerificationCode());
 
-    try {
-      Optional<Payment> paymentOpt = paymentRepository.findById(verifyOrderRequest.getId());
+    var payment = paymentRepository.findById(verifyOrderRequest.getId()).orElseThrow();
 
-      if (paymentOpt.isEmpty()) {
-        throw new IllegalArgumentException(
-            "Payment not found with verification code: "
-                + verifyOrderRequest.getVerificationCode());
-      }
+    var ids =
+        payment.getOrders().stream().filter(BuyOrder.class::isInstance).map(Order::getRef).toList();
 
-      Payment payment = paymentOpt.get();
-
-      // Verify the verification code
-      var verifyReq = new OtpVerifyRequest();
-      // TODO: determine otp type based on order types
-      verifyReq.setOtp_type(OtpRequest.Type.BULK_ORDERS);
-      verifyReq.setOtp(verifyOrderRequest.getVerificationCode());
-      var isValidOtp = otpApiClient.verifyOtp(payment.getVerificationRef(), verifyReq).block();
-      if (Boolean.FALSE.equals(isValidOtp)) {
-        throw new IllegalArgumentException("Invalid verification code provided");
-      }
-
-      // TODO: use setup amount to compute this properly
-      var mandateAmount =
-          payment.getOrders().stream()
-              .filter(order -> order instanceof SIPOrder)
-              .map(SIPOrder.class::cast)
-              .map(SIPOrder::getAmount)
-              .reduce(Double::sum);
-      // Verification successful
-      payment.setVerificationStatus(Payment.VerificationStatus.VERIFIED);
-
-      if (mandateAmount.isPresent() && mandateAmount.get() > 0) {
-        // TODO: handle the CreateMandateRequest properly
-        var mandateRequest = getCreateMandateRequest(payment);
-        mandateRequest.setAuto_debit_limit(mandateAmount.get());
-        var mandateResponse = mandateApiClient.create(mandateRequest).block();
-
-        if (mandateResponse == null) {
-          throw new RuntimeException("Failed to create mandate with MF provider");
-        }
-
-        payment.setMandateConfirmationUrl(mandateResponse.getRedirection_url());
-      }
-      Payment savedPayment = paymentRepository.save(payment);
-
-      PlaceOrderDTO verifiedPayment = convertPaymentToPlaceOrderDTO(savedPayment);
-
-      log.info("Successfully verified payment with ID: {}", payment.getId());
-      return verifiedPayment;
-
-    } catch (Exception e) {
-      log.error("Error verifying payment: {}", e.getMessage(), e);
-      throw new RuntimeException("Failed to verify payment", e);
-    }
+    var request =
+        ConfirmOrderRequest.builder().email(payment.getUser().getEmail()).buyOrders(ids).build();
+    orderApiClient.confirmOrder(request);
+    return null;
   }
 
   @Override
   @Transactional
-  public PaymentDTO iniatePayment(Long paymentID) {
+  public UserActionRequest fetchPaymentUrl(Long paymentID) {
     try {
       var payment = paymentRepository.findById(paymentID).orElseThrow();
 
       var ordersDetails =
-          payment.getOrders().stream().flatMap(this::convertOrderToOrderDetail).toList();
+          payment.getOrders().stream()
+              .filter(BuyOrder.class::isInstance)
+              .flatMap(this::convertOrderToOrderDetail)
+              .toList();
       var bulkOrderRequest =
           BulkOrderRequest.builder()
               .auth_ref(payment.getVerificationRef())
@@ -265,20 +224,18 @@ public class PaymentServiceImpl implements PaymentService {
       if (orderResponse == null) {
         throw new RuntimeException("Failed to place bulk order with MF provider");
       }
-      var orderIdVsOrder =
-          payment.getOrders().stream().collect(Collectors.toMap(Order::getId, (o1) -> o1));
 
-      orderResponse.data.forEach(
-          or -> {
-            var order = orderIdVsOrder.get(Long.parseLong(or.getSourceRefId()));
-            order.setRef(or.getRef());
-            order.setPaymentRef(or.getId());
-          });
+      var morders = payment.getOrders().stream().filter(BuyOrder.class::isInstance).toList();
+      for (var idx = 0; idx < orderResponse.data.size(); idx++) {
+        var or = orderResponse.data.get(idx);
+        var order = morders.get(idx);
+        order.setRef(or.getRef());
+        order.setPaymentRef(or.getPaymentRef());
+      }
 
       paymentRepository.save(payment);
 
       var orders = orderRepository.findByPaymentId(paymentID);
-      var totalAmount = orders.stream().map(Order::getAmount).reduce(Double::sum).orElseThrow();
 
       var paymentMethod =
           payment.getPaymentType() == PlaceOrderPostDTO.PaymentMethod.UPI
@@ -287,12 +244,9 @@ public class PaymentServiceImpl implements PaymentService {
 
       var paymentRequest =
           PaymentsRequest.builder()
-              .investor_id(payment.getInvestor().getRef())
-              .bank_id(payment.getBank().getRefId())
-              .payment_method(paymentMethod)
-              .upi_id(payment.getUpiId())
-              .amount(totalAmount)
-              .orders(List.of(new PaymentsOrder(payment.getOrderRef())))
+              .bankId(payment.getBank().getRefId())
+              .paymentMethod(paymentMethod)
+              .orders(orders.stream().map(Order::getPaymentRef).map(PaymentsOrder::new).toList())
               .build();
 
       var paymentResponse = paymentsAPIClient.createPayment(paymentRequest).block();
@@ -303,7 +257,10 @@ public class PaymentServiceImpl implements PaymentService {
       payment.setRef(paymentResponse.getPaymentId());
       paymentRepository.save(payment);
 
-      return convertPaymentToDTO(payment);
+      return UserActionRequest.builder()
+          .id(payment.getId().toString())
+          .redirectUrl(payment.getPaymentUrl())
+          .build();
     } catch (WebClientResponseException e) {
       log.error(
           "Error from MF provider while initiating payment for ID {}: {}",
@@ -318,22 +275,22 @@ public class PaymentServiceImpl implements PaymentService {
   }
 
   OrderDetail convertOrderToOrderDetail(BasketFund fund, Order order) {
-    var orderID = order.getId().toString();
+    var orderUUID = order.getUuid();
     var accountID = order.getInvestor().getAccountRef();
     if (order instanceof SIPOrder sipOrder) {
       return SipOrderDetail.builder()
-          .fundID(fund.getFund().getId().toString())
+          .fundID(fund.getFund().getIsinCode())
           .mandateID(sipOrder.getMandateID())
           .startDate(sipOrder.getStartDate())
           .firstOrderToday(false)
-          .sourceRef(orderID)
+          .sourceRef(orderUUID)
           .accountID(accountID)
           .build();
     }
 
     return OrderDetail.builder()
-        .fundID(fund.getFund().getId().toString())
-        .sourceRef(orderID)
+        .fundID(fund.getFund().getIsinCode())
+        .sourceRef(orderUUID)
         .accountID(accountID)
         .build();
   }

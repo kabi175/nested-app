@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.nested.app.client.mf.dto.AddAddressRequest;
 import com.nested.app.client.mf.dto.BankAccountRequest;
 import com.nested.app.client.mf.dto.BankResponse;
+import com.nested.app.client.mf.dto.CreateAccountRequest;
 import com.nested.app.client.mf.dto.CreateInvestorRequest;
 import com.nested.app.client.mf.dto.CreateInvestorResponse;
 import com.nested.app.client.mf.dto.EntityResponse;
@@ -56,19 +57,26 @@ public class InvestorAPIClient implements com.nested.app.client.mf.InvestorAPICl
       return Mono.empty();
     }
 
-    Mono.zip(
-            addEmail(resp.getId(), request.getEmail()),
-            addMobileNumber(resp.getId(), request.getMobileNumber()))
-        .block();
+    var r =
+        Mono.zip(
+                addEmail(resp.getId(), request.getEmail()),
+                addMobileNumber(resp.getId(), request.getMobileNumber()))
+            .block();
+
+    if (r != null) {
+      resp.setEmailRef(r.getT1().getId());
+      resp.setMobileRef(r.getT2().getId());
+    }
+
     return Mono.just(resp);
   }
 
   @Override
-  public Mono<EntityResponse> createInvestmentAccount(String investorRef) {
+  public Mono<EntityResponse> createInvestmentAccount(CreateAccountRequest request) {
     return api.withAuth()
         .post()
         .uri(ACCOUNT_API_URL)
-        .bodyValue(Map.of("primary_investor", investorRef))
+        .bodyValue(request)
         .retrieve()
         .bodyToMono(EntityResponse.class);
   }
@@ -81,6 +89,17 @@ public class InvestorAPIClient implements com.nested.app.client.mf.InvestorAPICl
         .bodyValue(request)
         .retrieve()
         .bodyToMono(BankResponse.class);
+  }
+
+  @Override
+  public Mono<Void> addPrimaryBankAccount(String accountID, String bankAccountID) {
+    return api.withAuth()
+        .post()
+        .uri(ACCOUNT_API_URL)
+        .bodyValue(
+            Map.of("id", accountID, "folio_defaults", Map.of("payout_bank_account", bankAccountID)))
+        .retrieve()
+        .bodyToMono(Void.class);
   }
 
   @Override

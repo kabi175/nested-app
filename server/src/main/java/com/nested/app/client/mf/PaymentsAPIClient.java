@@ -9,4 +9,6 @@ import reactor.core.publisher.Mono;
 @Service
 public interface PaymentsAPIClient {
   Mono<PaymentsResponse> createPayment(@Validated PaymentsRequest request);
+
+  Mono<PaymentsResponse> fetchPayment(String paymentID);
 }

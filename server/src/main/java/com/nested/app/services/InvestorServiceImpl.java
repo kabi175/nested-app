@@ -3,6 +3,7 @@ package com.nested.app.services;
 import com.nested.app.client.mf.InvestorAPIClient;
 import com.nested.app.client.mf.KycAPIClient;
 import com.nested.app.client.mf.dto.AddAddressRequest;
+import com.nested.app.client.mf.dto.CreateAccountRequest;
 import com.nested.app.client.mf.dto.KycCheck;
 import com.nested.app.dto.MinifiedUserDTO;
 import com.nested.app.entity.Investor;
@@ -50,10 +51,27 @@ public class InvestorServiceImpl implements InvestorService {
     if (response == null) {
       throw new RuntimeException("Failed to create investor for user ID: " + user.getId());
     }
-
     var investor = user.getInvestor();
     investor.setRef(response.getId());
-    var accountResp = investorAPIClient.createInvestmentAccount(response.getId()).block();
+
+    var createAccountRequest =
+        CreateAccountRequest.builder()
+            .investorID(response.getId())
+            .emailRef(response.getEmailRef())
+            .mobileRef(response.getMobileRef())
+            .build();
+    // Add address using investorAPIClient
+    if (user.getAddress() != null) {
+      var addressRequest = buildAddressRequestFromUser(user, response.getId());
+      var addressResp = investorAPIClient.addAddress(addressRequest).block();
+      if (addressResp == null) {
+        log.warn("Failed to add address for investor ID: {}", response.getId());
+      } else {
+        createAccountRequest.setAddressRef(addressResp.getId());
+      }
+    }
+
+    var accountResp = investorAPIClient.createInvestmentAccount(createAccountRequest).block();
     if (accountResp != null) {
       investor.setAccountRef(accountResp.getId());
     }
@@ -63,15 +81,6 @@ public class InvestorServiceImpl implements InvestorService {
     user.setKycStatus(User.KYCStatus.COMPLETED);
     user.setReadyToInvest(true);
     userRepository.save(user);
-
-    // Add address using investorAPIClient
-    if (user.getAddress() != null) {
-      var addressRequest = buildAddressRequestFromUser(user, response.getId());
-      var addressResp = investorAPIClient.addAddress(addressRequest).block();
-      if (addressResp == null) {
-        log.warn("Failed to add address for investor ID: {}", response.getId());
-      }
-    }
   }
 
   @Override

@@ -6,5 +6,5 @@ import lombok.Data;
 @Data
 @AllArgsConstructor
 public class PaymentsOrder {
-  private String order_id;
+  private Long orderId;
 }

@@ -5,10 +5,8 @@ import com.nested.app.client.mf.dto.PaymentsRequest;
 import com.nested.app.client.mf.dto.PaymentsResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;
 
-@Service
 @RequiredArgsConstructor
 public class PaymentsAPIClientImpl implements PaymentsAPIClient {
   @Value("${app.url}")
@@ -20,5 +18,10 @@ public class PaymentsAPIClientImpl implements PaymentsAPIClient {
     resp.setPaymentId("mock_payment" + System.currentTimeMillis());
     resp.setRedirectUrl(serverAddress + "/public/payment/" + resp.getPaymentId());
     return Mono.just(resp);
+  }
+
+  @Override
+  public Mono<PaymentsResponse> fetchPayment(String paymentID) {
+    return null;
   }
 }

@@ -214,8 +214,13 @@ public class UserServiceImpl implements UserService {
       throw new RuntimeException("Exception during bank account creation");
     }
     bank.setRefId(resp.getBankId());
+    bank.setPaymentRef(resp.getPaymentRef());
 
     bank = bankDetailRepository.save(bank);
+
+    investorAPIClient
+        .addPrimaryBankAccount(user.getInvestor().getAccountRef(), bank.getRefId())
+        .block();
 
     return BankAccountDto.fromEntity(bankDetailRepository.findById(bank.getId()).orElseThrow());
   }

@@ -1,6 +1,5 @@
 package com.nested.app.controllers;
 
-import com.nested.app.dto.Entity;
 import com.nested.app.dto.PlaceOrderDTO;
 import com.nested.app.dto.PlaceOrderPostDTO;
 import com.nested.app.dto.VerifyOrderDTO;
@@ -8,7 +7,6 @@ import com.nested.app.services.PaymentService;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
-import java.util.List;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -29,8 +27,8 @@ public class PaymentController {
 
   @PostMapping
   public ResponseEntity<?> placeOrders(@Valid @RequestBody PlaceOrderPostDTO placeOrderRequest) {
-    PlaceOrderDTO paymentWithOrders = paymentService.createPaymentWithOrders(placeOrderRequest);
-    return ResponseEntity.status(HttpStatus.CREATED).body(Entity.of(List.of(paymentWithOrders)));
+    PlaceOrderDTO paymentWithOrder = paymentService.createPaymentWithOrders(placeOrderRequest);
+    return ResponseEntity.status(HttpStatus.CREATED).body(paymentWithOrder);
   }
 
   @PostMapping("{payment_id}/actions/verify")
@@ -39,9 +37,9 @@ public class PaymentController {
     return ResponseEntity.ok(verifiedPayment);
   }
 
-  @PostMapping("{payment_id}/actions/iniate")
+  @PostMapping("{payment_id}/actions/redirect_url")
   public ResponseEntity<?> initiatePayment(@PathVariable("payment_id") Long paymentID) {
-    var payment = paymentService.iniatePayment(paymentID);
+    var payment = paymentService.fetchPaymentUrl(paymentID);
     return ResponseEntity.ok(payment);
   }
 

@@ -24,8 +24,7 @@ public class BankDetail {
   @GeneratedValue(strategy = GenerationType.IDENTITY)
   private Long id;
 
-  @Column
-  private String bankName;
+  @Column private String bankName;
 
   @Column(nullable = false)
   private String accountNumber;
@@ -40,8 +39,8 @@ public class BankDetail {
   @Column(nullable = false)
   private boolean isPrimary;
 
-  @Column
-  private String refId;
+  @Column private String refId;
+  @Column private Long paymentRef;
 
   @ManyToOne()
   @JoinColumn(name = "investor_id")
