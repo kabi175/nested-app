@@ -20,6 +20,7 @@ import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
 import jakarta.validation.constraints.Email;
 import java.sql.Timestamp;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import lombok.AccessLevel;
@@ -74,7 +75,11 @@ public class User {
 
   @With private String panNumber;
 
-  @OneToMany private List<BankDetail> bankDetails;
+  // Converted to bidirectional: mappedBy refers to BankDetail.user; initialized list to avoid null
+  // issues
+  @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+  @Builder.Default
+  private List<BankDetail> bankDetails = new ArrayList<>();
 
   @With private Date dateOfBirth;
 
@@ -171,6 +176,19 @@ public class User {
       return firstName;
     }
     return firstName + " " + lastName;
+  }
+
+  // Helper methods to maintain both sides of the association
+  public void addBankDetail(BankDetail bankDetail) {
+    if (bankDetail == null) return;
+    bankDetails.add(bankDetail);
+    bankDetail.setUser(this);
+  }
+
+  public void removeBankDetail(BankDetail bankDetail) {
+    if (bankDetail == null) return;
+    bankDetails.remove(bankDetail);
+    bankDetail.setUser(null);
   }
 
   @RequiredArgsConstructor

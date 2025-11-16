@@ -175,7 +175,6 @@ public class PendingActivityServiceImpl implements PendingActivityService {
     // Check if essential profile fields are missing
     boolean isIncomplete =
         user.getFirstName() == null
-            || user.getLastName() == null
             || user.getDateOfBirth() == null
             || user.getPanNumber() == null
             || user.getAddress() == null;
@@ -183,7 +182,6 @@ public class PendingActivityServiceImpl implements PendingActivityService {
     if (isIncomplete) {
       List<String> missingFields = new ArrayList<>();
       if (user.getFirstName() == null) missingFields.add("First Name");
-      if (user.getLastName() == null) missingFields.add("Last Name");
       if (user.getDateOfBirth() == null) missingFields.add("Date of Birth");
       if (user.getPanNumber() == null) missingFields.add("PAN Number");
       if (user.getAddress() == null) missingFields.add("Address");
