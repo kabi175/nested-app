@@ -7,6 +7,10 @@ import com.nested.app.client.mf.dto.OrderResponse;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;
 
+/**
+ * @deprecated Use {@link BuyOrderApiClient} and {@link SipOrderApiClient} instead.
+ */
+@Deprecated(forRemoval = true)
 @Service
 public interface OrderApiClient {
   Mono<EntityListResponse<OrderResponse>> placeBulkOrder(BulkOrderRequest request);

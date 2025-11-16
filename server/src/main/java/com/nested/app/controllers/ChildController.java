@@ -2,8 +2,6 @@ package com.nested.app.controllers;
 
 import com.nested.app.dto.ChildDTO;
 import com.nested.app.dto.Entity;
-import com.nested.app.dto.PlaceOrderDTO;
-import com.nested.app.dto.VerifyOrderDTO;
 import com.nested.app.entity.Investor;
 import com.nested.app.services.ChildService;
 import com.nested.app.services.InvestorServiceTImpl;
@@ -163,56 +161,6 @@ public class ChildController {
           .body(Map.<String, Object>of("error", e.getMessage()));
     } catch (Exception e) {
       log.error("Error updating child: {}", e.getMessage(), e);
-      return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
-    }
-  }
-
-  /**
-   * Verifies a payment
-   *
-   * @param childId Child ID (for context, not used in verification)
-   * @param verifyOrderRequest Payment verification request data
-   * @return ResponseEntity containing verified payment data
-   */
-  @PostMapping("/{child_id}/actions/verifiy_order")
-  @Operation(
-      summary = "Verify placed orders",
-      description = "Verifies a payment using the provided verification code")
-  @ApiResponses(
-      value = {
-        @ApiResponse(
-            responseCode = "200",
-            description = "Payment verified successfully",
-            content =
-                @Content(
-                    mediaType = "application/json",
-                    schema = @Schema(implementation = Map.class))),
-        @ApiResponse(
-            responseCode = "400",
-            description = "Invalid verification code or payment not found"),
-        @ApiResponse(responseCode = "500", description = "Internal server error")
-      })
-  public ResponseEntity<?> verifyOrder(
-      @PathVariable("child_id") Long childId,
-      @Valid @RequestBody VerifyOrderDTO verifyOrderRequest) {
-
-    log.info("POST /api/v1/children/{}/actions/verifiy_order - Verifying payment", childId);
-
-    try {
-      PlaceOrderDTO verifiedPayment = paymentService.verifyPayment(verifyOrderRequest);
-
-      log.info(
-          "Successfully verified payment with verification code: {}",
-          verifyOrderRequest.getVerificationCode());
-
-      return ResponseEntity.ok(verifiedPayment);
-
-    } catch (IllegalArgumentException e) {
-      log.warn("Validation error verifying payment: {}", e.getMessage());
-      return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-          .body(Map.<String, Object>of("error", e.getMessage()));
-    } catch (Exception e) {
-      log.error("Error verifying payment: {}", e.getMessage(), e);
       return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
     }
   }

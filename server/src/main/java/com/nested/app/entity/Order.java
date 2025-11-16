@@ -1,18 +1,21 @@
 package com.nested.app.entity;
 
 import com.fasterxml.jackson.annotation.JsonValue;
+import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
+import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
-import jakarta.persistence.PrePersist;
+import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 import java.sql.Timestamp;
+import java.util.List;
 import lombok.Data;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
@@ -26,6 +29,8 @@ import org.hibernate.annotations.UpdateTimestamp;
 @Table(name = "orders")
 @Filter(name = "userFilterByUserId", condition = "user_id = :userId")
 public class Order {
+  @OneToMany(mappedBy = "order", cascade = CascadeType.ALL, fetch = FetchType.EAGER)
+  List<OrderItems> items;
 
   @Id
   @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -50,8 +55,6 @@ public class Order {
   @JoinColumn(name = "payment_id")
   private Payment payment;
 
-  private String uuid;
-
   @CreationTimestamp
   @Column(nullable = false, updatable = false)
   private Timestamp createdAt;
@@ -65,16 +68,6 @@ public class Order {
   private Investor investor;
 
   @Column private String folio;
-
-  private String ref;
-  private Long paymentRef;
-
-  @PrePersist
-  public void generateUUID() {
-    if (uuid == null) {
-      uuid = java.util.UUID.randomUUID().toString();
-    }
-  }
 
   @RequiredArgsConstructor
   public enum OrderStatus {

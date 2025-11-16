@@ -1,5 +1,6 @@
 package com.nested.app.client.mf.dto;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -28,7 +29,8 @@ public class PaymentsRequest {
 
   @NotNull
   @JsonProperty("bank_account_id")
-  private String bankId;
+  @JsonFormat(shape = JsonFormat.Shape.STRING)
+  private Long bankId;
 
   @JsonProperty("payment_postback_url")
   @JsonInclude(JsonInclude.Include.NON_NULL)

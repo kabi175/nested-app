@@ -4,13 +4,9 @@ import com.nested.app.client.mf.OrderApiClient;
 import com.nested.app.client.mf.OtpApiClient;
 import com.nested.app.client.mf.PaymentsAPIClient;
 import com.nested.app.client.mf.dto.BulkOrderOtpRequest;
-import com.nested.app.client.mf.dto.BulkOrderRequest;
-import com.nested.app.client.mf.dto.ConfirmOrderRequest;
 import com.nested.app.client.mf.dto.CreateMandateRequest;
 import com.nested.app.client.mf.dto.OrderDetail;
 import com.nested.app.client.mf.dto.OtpRequest;
-import com.nested.app.client.mf.dto.PaymentsOrder;
-import com.nested.app.client.mf.dto.PaymentsRequest;
 import com.nested.app.client.mf.dto.SipOrderDetail;
 import com.nested.app.client.tarrakki.MandateApiClient;
 import com.nested.app.contect.UserContext;
@@ -19,16 +15,14 @@ import com.nested.app.dto.OrderDTO;
 import com.nested.app.dto.PaymentDTO;
 import com.nested.app.dto.PlaceOrderDTO;
 import com.nested.app.dto.PlaceOrderPostDTO;
-import com.nested.app.dto.UserActionRequest;
-import com.nested.app.dto.VerifyOrderDTO;
 import com.nested.app.entity.BankDetail;
 import com.nested.app.entity.Basket;
 import com.nested.app.entity.BasketFund;
-import com.nested.app.entity.BuyOrder;
 import com.nested.app.entity.Fund;
 import com.nested.app.entity.Goal;
 import com.nested.app.entity.Investor;
 import com.nested.app.entity.Order;
+import com.nested.app.entity.OrderItems;
 import com.nested.app.entity.Payment;
 import com.nested.app.entity.SIPOrder;
 import com.nested.app.entity.User;
@@ -160,6 +154,9 @@ public class PaymentServiceImpl implements PaymentService {
       payment.setOrders(orders);
       orders.forEach(order -> order.setPayment(payment));
 
+      // Populate order items for each order
+      orders.forEach(this::populateOrderItems);
+
       // Save payment and orders
       Payment savedPayment = paymentRepository.save(payment);
 
@@ -183,121 +180,14 @@ public class PaymentServiceImpl implements PaymentService {
   }
 
   /**
-   * Verifies a payment using verification code
+   * Populates order items for an order based on its basket funds and allocation
    *
-   * @param verifyOrderRequest Payment verification request data
-   * @return Verified payment data
+   * @param order Order to populate items for
    */
-  @Override
-  public PlaceOrderDTO verifyPayment(VerifyOrderDTO verifyOrderRequest) {
-    log.info(
-        "Verifying payment with verification code: {}", verifyOrderRequest.getVerificationCode());
-
-    var payment = paymentRepository.findById(verifyOrderRequest.getId()).orElseThrow();
-
-    var ids =
-        payment.getOrders().stream().filter(BuyOrder.class::isInstance).map(Order::getRef).toList();
-
-    var request =
-        ConfirmOrderRequest.builder().email(payment.getUser().getEmail()).buyOrders(ids).build();
-    orderApiClient.confirmOrder(request);
-    return null;
-  }
-
-  @Override
-  @Transactional
-  public UserActionRequest fetchPaymentUrl(Long paymentID) {
-    try {
-      var payment = paymentRepository.findById(paymentID).orElseThrow();
-
-      var ordersDetails =
-          payment.getOrders().stream()
-              .filter(BuyOrder.class::isInstance)
-              .flatMap(this::convertOrderToOrderDetail)
-              .toList();
-      var bulkOrderRequest =
-          BulkOrderRequest.builder()
-              .auth_ref(payment.getVerificationRef())
-              .detail(ordersDetails)
-              .build();
-      var orderResponse = orderApiClient.placeBulkOrder(bulkOrderRequest).block();
-      if (orderResponse == null) {
-        throw new RuntimeException("Failed to place bulk order with MF provider");
-      }
-
-      var morders = payment.getOrders().stream().filter(BuyOrder.class::isInstance).toList();
-      for (var idx = 0; idx < orderResponse.data.size(); idx++) {
-        var or = orderResponse.data.get(idx);
-        var order = morders.get(idx);
-        order.setRef(or.getRef());
-        order.setPaymentRef(or.getPaymentRef());
-      }
-
-      paymentRepository.save(payment);
-
-      var orders = orderRepository.findByPaymentId(paymentID);
-
-      var paymentMethod =
-          payment.getPaymentType() == PlaceOrderPostDTO.PaymentMethod.UPI
-              ? PaymentsRequest.PaymentMethod.UPI
-              : PaymentsRequest.PaymentMethod.NET_BANKING;
-
-      var paymentRequest =
-          PaymentsRequest.builder()
-              .bankId(payment.getBank().getRefId())
-              .paymentMethod(paymentMethod)
-              .orders(orders.stream().map(Order::getPaymentRef).map(PaymentsOrder::new).toList())
-              .build();
-
-      var paymentResponse = paymentsAPIClient.createPayment(paymentRequest).block();
-      if (paymentResponse == null) {
-        throw new RuntimeException("Failed to initiate payment with MF provider");
-      }
-      payment.setPaymentUrl(paymentResponse.getRedirectUrl());
-      payment.setRef(paymentResponse.getPaymentId());
-      paymentRepository.save(payment);
-
-      return UserActionRequest.builder()
-          .id(payment.getId().toString())
-          .redirectUrl(payment.getPaymentUrl())
-          .build();
-    } catch (WebClientResponseException e) {
-      log.error(
-          "Error from MF provider while initiating payment for ID {}: {}",
-          paymentID,
-          e.getResponseBodyAsString(),
-          e);
-      throw new RuntimeException(e);
-    } catch (Exception e) {
-      log.error("Error initiating payment: {}", e.getMessage(), e);
-      throw new RuntimeException("Failed to initiate payment", e);
-    }
-  }
-
-  OrderDetail convertOrderToOrderDetail(BasketFund fund, Order order) {
-    var orderUUID = order.getUuid();
-    var accountID = order.getInvestor().getAccountRef();
-    if (order instanceof SIPOrder sipOrder) {
-      return SipOrderDetail.builder()
-          .fundID(fund.getFund().getIsinCode())
-          .mandateID(sipOrder.getMandateID())
-          .startDate(sipOrder.getStartDate())
-          .firstOrderToday(false)
-          .sourceRef(orderUUID)
-          .accountID(accountID)
-          .build();
-    }
-
-    return OrderDetail.builder()
-        .fundID(fund.getFund().getIsinCode())
-        .sourceRef(orderUUID)
-        .accountID(accountID)
-        .build();
-  }
-
-  Stream<OrderDetail> convertOrderToOrderDetail(Order order) {
+  private void populateOrderItems(Order order) {
     var basketFunds = order.getGoal().getBasket().getBasketFunds();
     var totalAmount = order.getAmount();
+
     var amountAllocation =
         new java.util.ArrayList<>(
             basketFunds.stream()
@@ -309,6 +199,21 @@ public class PaymentServiceImpl implements PaymentService {
     var correction = totalAmount - (totalAllocation - amountAllocation.getLast());
     amountAllocation.set(amountAllocation.size() - 1, correction);
 
+    var orderItemsList = new java.util.ArrayList<OrderItems>();
+    for (int i = 0; i < basketFunds.size(); i++) {
+      var basketFund = basketFunds.get(i);
+      var orderItem = new OrderItems();
+      orderItem.setOrder(order);
+      orderItem.setFund(basketFund.getFund());
+      orderItem.setAmount(amountAllocation.get(i));
+      orderItem.setUser(order.getUser());
+      orderItemsList.add(orderItem);
+    }
+
+    order.setItems(orderItemsList);
+  }
+
+  Stream<OrderDetail> convertOrderToOrderDetail(Order order) {
     ServletRequestAttributes attributes =
         (ServletRequestAttributes) RequestContextHolder.getRequestAttributes();
     if (attributes == null) {
@@ -317,15 +222,34 @@ public class PaymentServiceImpl implements PaymentService {
     HttpServletRequest request = attributes.getRequest();
     var ipAddress = IpUtils.getClientIpAddress(request);
 
-    var orders = basketFunds.stream().map(f -> convertOrderToOrderDetail(f, order)).toList();
+    var accountID = order.getInvestor().getAccountRef();
 
-    for (int i = 0; i < amountAllocation.size(); i++) {
-      var orderDetails = orders.get(i);
-      orderDetails.setAmount(amountAllocation.get(i));
-      orderDetails.setUserIP(ipAddress);
-    }
-
-    return orders.stream();
+    return order.getItems().stream()
+        .map(
+            item -> {
+              OrderDetail orderDetail;
+              if (order instanceof SIPOrder sipOrder) {
+                orderDetail =
+                    SipOrderDetail.builder()
+                        .fundID(item.getFund().getIsinCode())
+                        .mandateID(sipOrder.getMandateID())
+                        .startDate(sipOrder.getStartDate())
+                        .firstOrderToday(false)
+                        .accountID(accountID)
+                        .amount(item.getAmount())
+                        .userIP(ipAddress)
+                        .build();
+              } else {
+                orderDetail =
+                    OrderDetail.builder()
+                        .fundID(item.getFund().getIsinCode())
+                        .accountID(accountID)
+                        .amount(item.getAmount())
+                        .userIP(ipAddress)
+                        .build();
+              }
+              return orderDetail;
+            });
   }
 
   /**
@@ -485,12 +409,12 @@ public class PaymentServiceImpl implements PaymentService {
   }
 
   /**
-   * Converts Payment entity to PlaceOrderDTO
+   * Converts Payment entity to PlaceOrderDTO Public method for use by related payment services
    *
    * @param payment Payment entity
    * @return PlaceOrderDTO
    */
-  private PlaceOrderDTO convertPaymentToPlaceOrderDTO(Payment payment) {
+  public PlaceOrderDTO convertPaymentToPlaceOrderDTO(Payment payment) {
     log.debug("Converting Payment entity to PlaceOrderDTO for ID: {}", payment.getId());
 
     PlaceOrderDTO dto = new PlaceOrderDTO();

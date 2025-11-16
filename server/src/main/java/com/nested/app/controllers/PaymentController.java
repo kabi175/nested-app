@@ -3,7 +3,9 @@ package com.nested.app.controllers;
 import com.nested.app.dto.PlaceOrderDTO;
 import com.nested.app.dto.PlaceOrderPostDTO;
 import com.nested.app.dto.VerifyOrderDTO;
+import com.nested.app.services.BuyOrderPaymentService;
 import com.nested.app.services.PaymentService;
+import com.nested.app.services.SipOrderPaymentService;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
@@ -24,6 +26,8 @@ import org.springframework.web.bind.annotation.RestController;
 @Tag(name = "Payment", description = "API endpoints for managing payments")
 public class PaymentController {
   private final PaymentService paymentService;
+  private final BuyOrderPaymentService buyOrderPaymentService;
+  private final SipOrderPaymentService sipOrderPaymentService;
 
   @PostMapping
   public ResponseEntity<?> placeOrders(@Valid @RequestBody PlaceOrderPostDTO placeOrderRequest) {
@@ -31,15 +35,35 @@ public class PaymentController {
     return ResponseEntity.status(HttpStatus.CREATED).body(paymentWithOrder);
   }
 
-  @PostMapping("{payment_id}/actions/verify")
-  public ResponseEntity<?> verifyOrder(@Valid @RequestBody VerifyOrderDTO verifyOrderRequest) {
-    PlaceOrderDTO verifiedPayment = paymentService.verifyPayment(verifyOrderRequest);
+  // Buy Order Payment Endpoints
+  @PostMapping("{payment_id}/buy/actions/verify")
+  public ResponseEntity<?> verifyBuyOrder(@Valid @RequestBody VerifyOrderDTO verifyOrderRequest) {
+    log.info("Verifying buy order payment for payment ID: {}", verifyOrderRequest.getId());
+    PlaceOrderDTO verifiedPayment =
+        buyOrderPaymentService.verifyBuyOrderPayment(verifyOrderRequest);
     return ResponseEntity.ok(verifiedPayment);
   }
 
-  @PostMapping("{payment_id}/actions/redirect_url")
-  public ResponseEntity<?> initiatePayment(@PathVariable("payment_id") Long paymentID) {
-    var payment = paymentService.fetchPaymentUrl(paymentID);
+  @PostMapping("{payment_id}/buy/actions/fetch_redirect_url")
+  public ResponseEntity<?> initiateBuyOrderPayment(@PathVariable("payment_id") Long paymentID) {
+    log.info("Fetching buy order payment redirect URL for payment ID: {}", paymentID);
+    var payment = buyOrderPaymentService.fetchBuyOrderPaymentUrl(paymentID);
+    return ResponseEntity.ok(payment);
+  }
+
+  // SIP Order Payment Endpoints
+  @PostMapping("{payment_id}/sip/actions/verify")
+  public ResponseEntity<?> verifySipOrder(@Valid @RequestBody VerifyOrderDTO verifyOrderRequest) {
+    log.info("Verifying SIP order payment for payment ID: {}", verifyOrderRequest.getId());
+    PlaceOrderDTO verifiedPayment =
+        sipOrderPaymentService.verifySipOrderPayment(verifyOrderRequest);
+    return ResponseEntity.ok(verifiedPayment);
+  }
+
+  @PostMapping("{payment_id}/sip/actions/fetch_redirect_url")
+  public ResponseEntity<?> initiateSipOrderPayment(@PathVariable("payment_id") Long paymentID) {
+    log.info("Fetching SIP order payment redirect URL for payment ID: {}", paymentID);
+    var payment = sipOrderPaymentService.fetchSipOrderPaymentUrl(paymentID);
     return ResponseEntity.ok(payment);
   }
 
