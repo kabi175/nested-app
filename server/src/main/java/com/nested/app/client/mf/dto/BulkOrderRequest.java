@@ -1,6 +1,5 @@
 package com.nested.app.client.mf.dto;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
@@ -13,15 +12,7 @@ import lombok.Data;
 @Valid
 @Builder
 public class BulkOrderRequest {
-  @NotNull @NotEmpty private String investor_id;
-
-  @Builder.Default private String authenticator = "tarrakki";
-  @NotNull @NotEmpty private String auth_ref;
-
-  @NotNull
-  @NotEmpty
-  @JsonProperty("investor_ip")
-  private String investorIP;
+  @NotNull @NotNull @NotEmpty private String auth_ref;
 
   @NotNull
   @Size(min = 1)

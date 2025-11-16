@@ -9,7 +9,6 @@ import com.nested.app.client.mf.dto.KycCheck;
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
 import java.util.Date;
-import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.function.Predicate;
@@ -265,10 +264,6 @@ public class KycAPIClient implements com.nested.app.client.mf.KycAPIClient {
     private boolean isSuccess() {
       return "successful".equalsIgnoreCase(status);
     }
-  }
-
-  public static class EntityListResponse<T> {
-    public List<T> data;
   }
 
   public static class KYCRequest {

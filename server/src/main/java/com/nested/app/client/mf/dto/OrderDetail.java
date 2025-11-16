@@ -1,5 +1,6 @@
 package com.nested.app.client.mf.dto;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonValue;
 import jakarta.validation.constraints.NotNull;
@@ -12,14 +13,25 @@ import lombok.experimental.SuperBuilder;
 @Data
 @SuperBuilder
 public class OrderDetail {
-  @Builder.Default @NotNull protected OrderType order_type = OrderType.BUY;
+  @JsonIgnore @Builder.Default @NotNull protected OrderType order_type = OrderType.BUY;
 
-  @JsonProperty("fund_id")
+  @JsonProperty("mf_investment_account")
+  protected String accountID;
+
+  @JsonProperty("scheme")
   @NotNull
   protected String fundID;
 
-  protected String folio;
-  @NotNull protected double amount;
+  @JsonIgnore protected String folio;
+
+  @JsonProperty("amount")
+  @NotNull
+  protected double amount;
+
+  @JsonProperty("user_ip")
+  protected String userIP;
+
+  protected String sourceRef;
 
   @AllArgsConstructor
   public enum OrderType {
