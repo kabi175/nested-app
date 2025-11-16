@@ -40,9 +40,8 @@ public class PaymentController {
   }
 
   @PostMapping("{payment_id}/actions/iniate")
-  public ResponseEntity<?> initiatePayment(
-      @PathVariable("payment_id") Long paymentID, HttpServletRequest request) {
-    var payment = paymentService.iniatePayment(paymentID, getIpAddress(request));
+  public ResponseEntity<?> initiatePayment(@PathVariable("payment_id") Long paymentID) {
+    var payment = paymentService.iniatePayment(paymentID);
     return ResponseEntity.ok(payment);
   }
 

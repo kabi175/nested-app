@@ -34,6 +34,8 @@ import com.nested.app.repository.ChildRepository;
 import com.nested.app.repository.GoalRepository;
 import com.nested.app.repository.OrderRepository;
 import com.nested.app.repository.PaymentRepository;
+import com.nested.app.utils.IpUtils;
+import jakarta.servlet.http.HttpServletRequest;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
@@ -43,6 +45,8 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.context.request.RequestContextHolder;
+import org.springframework.web.context.request.ServletRequestAttributes;
 import org.springframework.web.reactive.function.client.WebClientResponseException;
 
 /**
@@ -246,23 +250,31 @@ public class PaymentServiceImpl implements PaymentService {
 
   @Override
   @Transactional
-  public PaymentDTO iniatePayment(Long paymentID, String ipAddress) {
+  public PaymentDTO iniatePayment(Long paymentID) {
     try {
       var payment = paymentRepository.findById(paymentID).orElseThrow();
 
+      var ordersDetails =
+          payment.getOrders().stream().flatMap(this::convertOrderToOrderDetail).toList();
       var bulkOrderRequest =
           BulkOrderRequest.builder()
-              .investor_id(payment.getInvestor().getRef())
               .auth_ref(payment.getVerificationRef())
-              .investorIP(ipAddress)
-              .detail(
-                  payment.getOrders().stream().flatMap(this::convertOrderToOrderDetail).toList())
+              .detail(ordersDetails)
               .build();
       var orderResponse = orderApiClient.placeBulkOrder(bulkOrderRequest).block();
       if (orderResponse == null) {
         throw new RuntimeException("Failed to place bulk order with MF provider");
       }
-      payment.setOrderRef(orderResponse.getBulk_order_id());
+      var orderIdVsOrder =
+          payment.getOrders().stream().collect(Collectors.toMap(Order::getId, (o1) -> o1));
+
+      orderResponse.data.forEach(
+          or -> {
+            var order = orderIdVsOrder.get(Long.parseLong(or.getSourceRefId()));
+            order.setRef(or.getRef());
+            order.setPaymentRef(or.getId());
+          });
+
       paymentRepository.save(payment);
 
       var orders = orderRepository.findByPaymentId(paymentID);
@@ -306,16 +318,24 @@ public class PaymentServiceImpl implements PaymentService {
   }
 
   OrderDetail convertOrderToOrderDetail(BasketFund fund, Order order) {
+    var orderID = order.getId().toString();
+    var accountID = order.getInvestor().getAccountRef();
     if (order instanceof SIPOrder sipOrder) {
       return SipOrderDetail.builder()
           .fundID(fund.getFund().getId().toString())
           .mandateID(sipOrder.getMandateID())
           .startDate(sipOrder.getStartDate())
           .firstOrderToday(false)
+          .sourceRef(orderID)
+          .accountID(accountID)
           .build();
     }
 
-    return OrderDetail.builder().fundID(fund.getFund().getId().toString()).build();
+    return OrderDetail.builder()
+        .fundID(fund.getFund().getId().toString())
+        .sourceRef(orderID)
+        .accountID(accountID)
+        .build();
   }
 
   Stream<OrderDetail> convertOrderToOrderDetail(Order order) {
@@ -332,10 +352,20 @@ public class PaymentServiceImpl implements PaymentService {
     var correction = totalAmount - (totalAllocation - amountAllocation.getLast());
     amountAllocation.set(amountAllocation.size() - 1, correction);
 
+    ServletRequestAttributes attributes =
+        (ServletRequestAttributes) RequestContextHolder.getRequestAttributes();
+    if (attributes == null) {
+      throw new RuntimeException("Error while getting request");
+    }
+    HttpServletRequest request = attributes.getRequest();
+    var ipAddress = IpUtils.getClientIpAddress(request);
+
     var orders = basketFunds.stream().map(f -> convertOrderToOrderDetail(f, order)).toList();
 
     for (int i = 0; i < amountAllocation.size(); i++) {
-      orders.get(i).setAmount(amountAllocation.get(i));
+      var orderDetails = orders.get(i);
+      orderDetails.setAmount(amountAllocation.get(i));
+      orderDetails.setUserIP(ipAddress);
     }
 
     return orders.stream();

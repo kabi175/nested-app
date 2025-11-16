@@ -63,6 +63,9 @@ public class Order {
 
   @Column private String folio;
 
+  private String ref;
+  private Long paymentRef;
+
   @RequiredArgsConstructor
   public enum OrderStatus {
     NOT_PLACED("not_placed"),
