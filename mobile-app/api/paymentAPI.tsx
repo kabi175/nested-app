@@ -53,7 +53,6 @@ export const getPendingOrdersByGoalId = async (
 
 type PaymentOption = {
   payment_method: "upi" | "net_banking";
-  upi_id?: string;
   bank_id: string;
 };
 
@@ -66,9 +65,12 @@ export const createPayment = async (
       id: order.id,
     })),
     payment_method: paymentOption.payment_method,
-    upi_id: paymentOption.upi_id,
     bank_id: paymentOption.bank_id,
   };
   const { data } = await api.post(`/payments`, payload);
   return data.data;
+};
+
+export const verifyPayment = async (paymentId: string): Promise<void> => {
+  await api.post(`/payments/${paymentId}/actions/verify`);
 };

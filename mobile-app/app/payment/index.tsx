@@ -1,3 +1,4 @@
+import { createPayment } from "@/api/paymentAPI";
 import { cartAtom } from "@/atoms/cart";
 import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
@@ -104,11 +105,21 @@ export default function PaymentMethodScreen() {
       return;
     }
 
+    if (!cart || cart.length === 0) {
+      Alert.alert("Error", "No orders found to process payment.");
+      return;
+    }
+
     setIsProcessing(true);
 
     try {
-      // Simulate API call
-      await new Promise((resolve) => setTimeout(resolve, 2000));
+      const paymentMethod =
+        selectedMethod === "netbanking" ? "net_banking" : "upi";
+
+      await createPayment(cart, {
+        payment_method: paymentMethod,
+        bank_id: selectedBank.id,
+      });
 
       Alert.alert(
         "Success",
@@ -117,12 +128,14 @@ export default function PaymentMethodScreen() {
           {
             text: "OK",
             onPress: () => {
-              // Navigate back or clear cart
+              // If backend returns a payment URL, you can open it here using Linking.openURL(paymentLink)
+              // and/or clear the cart or navigate as needed.
             },
           },
         ]
       );
-    } catch {
+    } catch (error) {
+      console.error("Failed to create payment", error);
       Alert.alert("Error", "Failed to process payment. Please try again.");
     } finally {
       setIsProcessing(false);
