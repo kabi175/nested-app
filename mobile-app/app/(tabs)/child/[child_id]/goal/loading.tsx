@@ -107,7 +107,7 @@ export default function LoadingScreen() {
 
     // Simulate loading completion after 5 seconds
     const loadingTimeout = setTimeout(() => {
-      router.replace("/child/1/goal/success");
+      router.replace("/child/1/goal/payment");
     }, 5000);
 
     return () => {

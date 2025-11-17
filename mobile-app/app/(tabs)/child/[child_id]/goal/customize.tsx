@@ -1,4 +1,5 @@
 import { CreateOrderRequest } from "@/api/paymentAPI";
+import { cartAtom } from "@/atoms/cart";
 import { goalsForCustomizeAtom } from "@/atoms/goals";
 import { ThemedText } from "@/components/ThemedText";
 import Slider from "@/components/ui/Slider";
@@ -11,7 +12,7 @@ import { Datepicker } from "@ui-kitten/components";
 import * as Haptics from "expo-haptics";
 import { LinearGradient } from "expo-linear-gradient";
 import { router } from "expo-router";
-import { useAtomValue } from "jotai";
+import { useAtomValue, useSetAtom } from "jotai";
 import { CalendarSync } from "lucide-react-native";
 import React, { useEffect, useState } from "react";
 import {
@@ -95,6 +96,7 @@ export default function CustomizeInvestmentScreen() {
   const [scaleAnim] = useState(new Animated.Value(0.95));
   const [pulseAnim] = useState(new Animated.Value(1));
   const [sipAmountAnim] = useState(new Animated.Value(1));
+  const setCart = useSetAtom(cartAtom);
 
   // SIP Date state
   const [sipDate, setSipDate] = useState(new Date());
@@ -195,9 +197,11 @@ export default function CustomizeInvestmentScreen() {
     });
 
     // Trigger mutation
-    await createOrdersMutation.mutateAsync({
+    const orderResponse = await createOrdersMutation.mutateAsync({
       orders,
     });
+
+    setCart(orderResponse);
 
     router.push("/child/1/goal/loading");
   };

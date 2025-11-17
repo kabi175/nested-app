@@ -55,7 +55,7 @@ export default function SuccessScreen() {
             </ThemedText>
             <ThemedText style={styles.subtitle}>
               Your customized investment plan is ready. Start your journey
-              towards your child's future goals.
+              towards your child&apos;s future goals.
             </ThemedText>
           </View>
 
