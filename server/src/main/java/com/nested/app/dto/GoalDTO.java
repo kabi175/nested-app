@@ -67,7 +67,7 @@ public class GoalDTO {
 
     // Nested objects (minified)
     if (goal.getBasket() != null) {
-      dto.setBasket(new MinifiedBasketDto(goal.getBasket().getId()));
+      dto.setBasket(MinifiedBasketDto.fromEntity(goal.getBasket()));
     }
     if (goal.getEducation() != null) {
       MinifiedEducationDto educationDto = new MinifiedEducationDto();

@@ -243,7 +243,7 @@ public class GoalServiceImpl implements GoalService {
 
     // Set basket information if available
     if (goal.getBasket() != null) {
-      dto.setBasket(new MinifiedBasketDto(goal.getBasket().getId()));
+      dto.setBasket(MinifiedBasketDto.fromEntity(goal.getBasket()));
     }
 
     dto.setEducation(new MinifiedEducationDto(goal.getEducation().getId()));

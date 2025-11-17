@@ -26,6 +26,8 @@ public class OrderRequestDTO {
 
   @Data
   public static class BuyOrderDTO {
+    private MinifiedGoalDTO goal;
+
     @NotNull(message = "Amount is required for buy order")
     @DecimalMin(value = "0.01", message = "Amount must be greater than 0")
     private Double amount;
@@ -33,6 +35,8 @@ public class OrderRequestDTO {
 
   @Data
   public static class SipOrderDTO {
+    private MinifiedGoalDTO goal;
+
     @NotNull(message = "Amount is required for SIP order")
     @DecimalMin(value = "0.01", message = "Amount must be greater than 0")
     private Double amount;

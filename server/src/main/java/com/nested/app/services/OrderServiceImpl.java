@@ -2,6 +2,7 @@ package com.nested.app.services;
 
 import com.google.common.collect.Streams;
 import com.nested.app.contect.UserContext;
+import com.nested.app.dto.MinifiedGoalDTO;
 import com.nested.app.dto.OrderDTO;
 import com.nested.app.dto.OrderRequestDTO;
 import com.nested.app.entity.BuyOrder;
@@ -73,18 +74,37 @@ public class OrderServiceImpl implements OrderService {
   }
 
   @Override
-  public List<OrderDTO> placeOrder(Long goalID, OrderRequestDTO orderRequest) {
-    var goal = goalRepository.findById(goalID).orElseThrow();
-    var investor = goal.getChild().getInvestor();
+  public List<OrderDTO> placeOrder(OrderRequestDTO orderRequest) {
 
-    // Validate goal ownership
-    if (!goal.getUser().equals(userContext.getUser())) {
-      throw new IllegalArgumentException("Goal does not belong to current user");
-    }
-    // Validate goal investable status
-    if (!goal.canInvest()) {
-      throw new IllegalStateException("Goal cannot be invested in its current status");
-    }
+    var goalIds =
+        Streams.concat(
+                orderRequest.getSipOrder().stream().map(OrderRequestDTO.SipOrderDTO::getGoal),
+                orderRequest.getBuyOrder().stream().map(OrderRequestDTO.BuyOrderDTO::getGoal))
+            .filter(Objects::nonNull)
+            .map(MinifiedGoalDTO::getId)
+            .distinct()
+            .toList();
+
+    var goals = goalRepository.findAllById(goalIds);
+    var investor = userContext.getUser().getInvestor();
+
+    goals.forEach(
+        goal -> {
+
+          // Validate goal ownership
+          if (!goal.getUser().equals(userContext.getUser())) {
+            throw new IllegalArgumentException("Goal does not belong to current user");
+          }
+          // Validate goal investable status
+          if (!goal.canInvest()) {
+            throw new IllegalStateException("Goal cannot be invested in its current status");
+          }
+          if (goal.getStatus().equals(Goal.Status.DRAFT)) {
+            goal.setStatus(Goal.Status.PAYMENT_PENDING);
+          }
+        });
+
+    var goalIdVsGoal = goals.stream().collect(Collectors.toMap(Goal::getId, o -> o));
 
     var buyOrders =
         orderRequest.getBuyOrder().stream()
@@ -93,7 +113,7 @@ public class OrderServiceImpl implements OrderService {
                   var order = new BuyOrder();
                   order.setAmount(buyOrder.getAmount());
                   order.setUser(userContext.getUser());
-                  order.setGoal(goal);
+                  order.setGoal(goalIdVsGoal.get(buyOrder.getGoal().getId()));
                   order.setInvestor(investor);
                   return order;
                 });
@@ -108,6 +128,7 @@ public class OrderServiceImpl implements OrderService {
                   if (sipOrder.getSetupOption() != null) {
                     order.setSipStepUp(sipOrder.getSetupOption().toEntity());
                   }
+                  var goal = goalIdVsGoal.get(sipOrder.getGoal().getId());
                   order.setStartDate(LocalDate.now());
                   order.setEndDate(goal.getTargetDate().toLocalDate());
                   order.setUser(userContext.getUser());
@@ -118,10 +139,7 @@ public class OrderServiceImpl implements OrderService {
 
     var orders = orderRepository.saveAll(Streams.concat(buyOrders, sipOrders).toList());
 
-    if (goal.getStatus().equals(Goal.Status.DRAFT)) {
-      goal.setStatus(Goal.Status.PAYMENT_PENDING);
-      goalRepository.save(goal);
-    }
+    goalRepository.saveAll(goals);
 
     // Return the saved orders in proper format
     return orders.stream()

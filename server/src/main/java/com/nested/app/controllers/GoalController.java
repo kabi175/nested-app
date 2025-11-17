@@ -6,7 +6,6 @@ import com.nested.app.dto.GoalDTO;
 import com.nested.app.dto.GoalUpdateDTO;
 import com.nested.app.dto.HoldingDTO;
 import com.nested.app.dto.OrderDTO;
-import com.nested.app.dto.OrderRequestDTO;
 import com.nested.app.services.GoalService;
 import com.nested.app.services.HoldingService;
 import com.nested.app.services.OrderService;
@@ -284,20 +283,4 @@ public class GoalController {
     return ResponseEntity.status(HttpStatus.CREATED).body(Map.of("data", fetchedOrders));
   }
 
-  @PostMapping("/{goal_id}/orders")
-  public ResponseEntity<?> createOrders(
-      @PathVariable("goal_id") Long goalID, @RequestBody OrderRequestDTO requestBody) {
-    log.info("POST /api/v1/goals/{}/orders - Creating orders for goal", requestBody);
-
-    try {
-      List<OrderDTO> createdOrders = orderService.placeOrder(goalID, requestBody);
-      log.info("Successfully created {} orders", createdOrders.size());
-
-      return ResponseEntity.status(HttpStatus.CREATED).body(Map.of("data", createdOrders));
-
-    } catch (Exception e) {
-      log.error("Error creating orders: {}", e.getMessage(), e);
-      return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
-    }
-  }
 }

@@ -29,5 +29,5 @@ public interface OrderService {
    * @param orderRequest
    * @return
    */
-  List<OrderDTO> placeOrder(Long goalID, OrderRequestDTO orderRequest);
+  List<OrderDTO> placeOrder(OrderRequestDTO orderRequest);
 }
