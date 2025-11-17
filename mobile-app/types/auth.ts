@@ -14,6 +14,7 @@ export type User = {
   status: "completed" | "pending" | "rejected";
   address: Address | null;
   father_name: string | null;
+  marital_status: "married" | "unmarried" | "others" | null;
   is_ready_to_invest: boolean;
   kycStatus:
     | "unknown"

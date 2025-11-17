@@ -14,6 +14,12 @@ const genderOptions = [
   { label: "Other", value: "other" },
 ];
 
+const maritalStatusOptions = [
+  { label: "Married", value: "married" },
+  { label: "Unmarried", value: "unmarried" },
+  { label: "Others", value: "others" },
+];
+
 export default function BasicDetailsScreen() {
   const { data, update, validateBasic } = useKyc();
   const router = useRouter();
@@ -41,6 +47,8 @@ export default function BasicDetailsScreen() {
           gender: user.gender || "",
           email: user.email || "",
           mobile: user.phone_number || "",
+          father_name: user.father_name || "",
+          marital_status: user.marital_status || "",
         });
       }
       if (mounted) setLoading(false);
@@ -72,6 +80,8 @@ export default function BasicDetailsScreen() {
             phone_number: data.basic.mobile,
             dob: data.basic.dateOfBirth || null,
             gender: (genderLower as any) || undefined,
+            father_name: data.basic.father_name || undefined,
+            marital_status: (data.basic.marital_status as any) || undefined,
           });
         }
         router.push("/kyc/identity");
@@ -157,6 +167,47 @@ export default function BasicDetailsScreen() {
             onChange={(val) => update("basic", { gender: val as any })}
             status={errors.gender ? "danger" : "basic"}
             caption={errors.gender}
+            placeholder="Select"
+          />
+        </View>
+
+        <View>
+          <View
+            style={{
+              flexDirection: "row",
+              alignItems: "center",
+              marginBottom: 6,
+            }}
+          >
+            <Text category="label">Father&apos;s Name</Text>
+            <InfoTooltip content="Required as per KYC regulations for identity verification." />
+          </View>
+          <Input
+            placeholder="Enter father's name"
+            value={data.basic.father_name}
+            onChangeText={(v) => update("basic", { father_name: v })}
+            status={errors.father_name ? "danger" : "basic"}
+            caption={errors.father_name}
+          />
+        </View>
+
+        <View>
+          <View
+            style={{
+              flexDirection: "row",
+              alignItems: "center",
+              marginBottom: 6,
+            }}
+          >
+            <Text category="label">Marital Status</Text>
+            <InfoTooltip content="Required for KYC compliance and demographic information." />
+          </View>
+          <GenericSelect
+            options={maritalStatusOptions}
+            value={data.basic.marital_status}
+            onChange={(val) => update("basic", { marital_status: val as any })}
+            status={errors.marital_status ? "danger" : "basic"}
+            caption={errors.marital_status}
             placeholder="Select"
           />
         </View>

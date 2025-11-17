@@ -20,6 +20,8 @@ type KycBasicDetails = {
   emailOtpVerified: boolean;
   mobile: string;
   mobileOtpVerified: boolean;
+  father_name: string;
+  marital_status: "married" | "unmarried" | "others" | "";
 };
 
 type KycIdentity = {
@@ -87,6 +89,8 @@ const defaultData: KycData = {
     emailOtpVerified: false,
     mobile: "",
     mobileOtpVerified: false,
+    father_name: "",
+    marital_status: "",
   },
   identity: {
     pan: "",
@@ -160,6 +164,11 @@ export const KycProvider: React.FC<{ children: React.ReactNode }> = ({
           .required()
           .label("Mobile Number"),
         mobileOtpVerified: Joi.boolean().optional(),
+        father_name: Joi.string().min(3).required().label("Father's Name"),
+        marital_status: Joi.string()
+          .valid("married", "unmarried", "others")
+          .required()
+          .label("Marital Status"),
       }),
     []
   );
