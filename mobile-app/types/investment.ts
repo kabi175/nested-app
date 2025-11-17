@@ -5,6 +5,12 @@ export type Goal = {
   targetAmount: number;
   currentAmount: number;
   monthlySip: number | null;
+
+  basket: {
+    id: string;
+    min_investment: number;
+  };
+
   targetDate: Date;
   status: "draft" | "payment_pending" | "active" | "completed" | "cancelled";
   createdAt: Date;

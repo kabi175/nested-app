@@ -8,8 +8,8 @@ export const getGoals = async (): Promise<Goal[]> => {
 
 export const getGoal = async (id: string): Promise<Goal> => {
   const { data } = await api.get(`/goals/${id}`);
-  const goals = (data.data ?? []).map((goal: GoalDTO): Goal =>
-    mapGoalToGoal(goal)
+  const goals = (data.data ?? []).map(
+    (goal: GoalDTO): Goal => mapGoalToGoal(goal)
   );
   if (goals.length === 0) {
     throw new Error("Goal not found");
@@ -47,6 +47,10 @@ type GoalDTO = {
   current_amount: number;
   monthly_sip: number | null;
   status: Goal["status"];
+  basket: {
+    id: string;
+    min_investment: number;
+  };
   target_date?: string;
   createdAt?: string;
   updatedAt?: string;
@@ -64,6 +68,6 @@ function mapGoalToGoal(goal: GoalDTO): Goal {
     targetDate: goal.target_date ? new Date(goal.target_date) : new Date(),
     createdAt: goal.createdAt ? new Date(goal.createdAt) : new Date(),
     updatedAt: goal.updatedAt ? new Date(goal.updatedAt) : new Date(),
+    basket: goal.basket,
   };
 }
-
