@@ -306,10 +306,10 @@ export default function CreateGoalScreen() {
     ]).start();
 
     try {
-      const visibleGoals = goals.filter(
-        (goal) => goal.childId && goal.childId === selectedChildId
-      );
-      const goalsMissingChild = visibleGoals.filter((goal) => !goal.childId);
+      // Get all goals that have a childId assigned (not just visible ones)
+      const allGoalsWithChild = goals.filter((goal) => goal.childId);
+      const goalsMissingChild = goals.filter((goal) => !goal.childId);
+
       if (goalsMissingChild.length > 0) {
         Alert.alert(
           "Select a child",
@@ -318,14 +318,29 @@ export default function CreateGoalScreen() {
         return;
       }
 
-      if (!selectedChildId) {
-        Alert.alert("Select a child", "Please select a child to continue.");
+      const goalsMissingEducation = allGoalsWithChild.filter(
+        (goal) => !goal.education?.id
+      );
+
+      if (goalsMissingEducation.length > 0) {
+        Alert.alert(
+          "Select education",
+          "Please select a course or college for each goal before proceeding."
+        );
         return;
       }
 
-      const data = visibleGoals.map((goal) => ({
+      if (allGoalsWithChild.length === 0) {
+        Alert.alert(
+          "No goals to save",
+          "Please create at least one goal with a child selected."
+        );
+        return;
+      }
+
+      const data = allGoalsWithChild.map((goal) => ({
         childId: goal.childId!,
-        educationId: goal.education?.id || "",
+        educationId: goal.education!.id,
         title:
           goal.title ||
           (goal.type === "undergraduate" ? "Undergraduate" : "Postgraduate"),

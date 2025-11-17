@@ -17,24 +17,33 @@ export const getGoal = async (id: string): Promise<Goal> => {
   return goals[0];
 };
 
+export type CreateGoalRequest = {
+  childId: string;
+  educationId: string;
+  title: string;
+  targetAmount: number;
+  targetDate: Date;
+};
 export const createGoal = async (
-  goals: {
-    childId: string;
-    educationId: string;
-    title: string;
-    targetAmount: number;
-    targetDate: Date;
-  }[]
+  goals: CreateGoalRequest[]
 ): Promise<Goal[]> => {
-  const payload = goals.map((goal) => ({
-    child: { id: goal.childId },
-    education: {
-      id: goal.educationId,
-    },
-    target_amount: goal.targetAmount,
-    target_date: goal.targetDate.toLocaleDateString("en-CA"),
-    title: goal.title,
-  }));
+  const payload = goals.map((goal) => {
+    const payloadItem: any = {
+      child: { id: goal.childId },
+      target_amount: goal.targetAmount,
+      target_date: goal.targetDate.toLocaleDateString("en-CA"),
+      title: goal.title,
+    };
+
+    // Only include education if educationId is not empty
+    if (goal.educationId && goal.educationId.trim() !== "") {
+      payloadItem.education = {
+        id: goal.educationId,
+      };
+    }
+
+    return payloadItem;
+  });
   const { data } = await api.post("/goals", { data: payload });
   return (data.data ?? []).map((goal: GoalDTO): Goal => mapGoalToGoal(goal));
 };
