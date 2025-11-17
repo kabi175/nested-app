@@ -1,20 +1,19 @@
-import { GoalForCustomize, goalsForCustomizeAtom } from "@/atoms/goals";
+import { CreateOrderRequest } from "@/api/paymentAPI";
+import { goalsForCustomizeAtom } from "@/atoms/goals";
 import { ThemedText } from "@/components/ThemedText";
-import { ThemedView } from "@/components/ThemedView";
+import Slider from "@/components/ui/Slider";
+import ToggleCard from "@/components/ui/ToggleCard";
+import { useCreateOrders } from "@/hooks/useCreateOrders";
+import { useSIPCalculator } from "@/hooks/useSIPCalculator";
 import { formatCurrency } from "@/utils/formatters";
 import { Ionicons } from "@expo/vector-icons";
+import { Datepicker } from "@ui-kitten/components";
 import * as Haptics from "expo-haptics";
 import { LinearGradient } from "expo-linear-gradient";
 import { router } from "expo-router";
-import { useAtom } from "jotai";
-import {
-  AlertCircle,
-  Calendar,
-  GraduationCap,
-  Target,
-  TrendingUp,
-} from "lucide-react-native";
-import React from "react";
+import { useAtomValue } from "jotai";
+import { CalendarSync } from "lucide-react-native";
+import React, { useEffect, useState } from "react";
 import {
   Animated,
   ScrollView,
@@ -24,276 +23,206 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
-interface CustomizeGoalCardProps {
-  goal: GoalForCustomize;
-}
+export default function CustomizeInvestmentScreen() {
+  const goalsForCustomize = useAtomValue(goalsForCustomizeAtom);
 
-function CustomizeGoalCard({ goal }: CustomizeGoalCardProps) {
-  // Get investment amounts from goal data
-  const sipInvestment = goal.investment?.find((inv) => inv.type === "sip");
-  const lumpSumInvestment = goal.investment?.find((inv) => inv.type === "buy");
+  const targetDate = goalsForCustomize
+    .map((goal) => goal.targetDate)
+    .sort((a, b) => a.getTime() - b.getTime())[0];
 
-  const displaySipAmount = sipInvestment?.amount || 0;
-  const displayLumpSumAmount = lumpSumInvestment?.amount || 0;
+  const targetAmount = goalsForCustomize
+    .map((goal) => goal.targetAmount)
+    .reduce((a, b) => a + b, 0);
 
-  const handleGoalPress = () => {
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    router.push({
-      pathname: `/child/${goal.childId}/goal/${goal.id}/customize`,
-      params: {
-        target_amount: goal.targetAmount.toString(),
-        target_date: goal.targetDate.toISOString(),
-      },
-    });
+  const {
+    sipRange,
+    lumpSumAmount,
+    stepUpAmount,
+    sipAmount,
+    setSipAmount,
+    setLumpSumAmount,
+    setStepUpAmount,
+  } = useSIPCalculator(targetDate, targetAmount);
+
+  // Calculate step size: 100 * number of goals
+  const sipStep =
+    goalsForCustomize.length > 0 ? 100 * goalsForCustomize.length : 100;
+
+  // Normalize SIP amount to be a multiple of the step
+  const normalizedSipAmount = Math.round(sipAmount / sipStep) * sipStep;
+
+  // Handler for SIP amount changes that enforces step increments
+  const handleSipAmountChange = (value: number) => {
+    const normalized = Math.round(value / sipStep) * sipStep;
+    setSipAmount(normalized);
   };
 
-  const handleCompleteSetup = () => {
+  // Handler for lump sum amount changes that enforces multiples of 100
+  const handleLumpSumAmountChange = (value: number) => {
+    const normalized = Math.round(value / 100) * 100;
+    setLumpSumAmount(normalized);
+  };
+
+  // Handler for step-up amount changes that enforces multiples of 100
+  const handleStepUpAmountChange = (value: number) => {
+    const normalized = Math.round(value / 100) * 100;
+    setStepUpAmount(normalized);
+  };
+
+  // Normalize SIP range to be multiples of step
+  const normalizedSipRange: [number, number] = [
+    Math.ceil(sipRange[0] / sipStep) * sipStep,
+    Math.floor(sipRange[1] / sipStep) * sipStep,
+  ];
+
+  // Normalize initial SIP amount to be a multiple of step
+  useEffect(() => {
+    if (goalsForCustomize.length > 0 && sipStep > 0) {
+      const normalized = Math.round(sipAmount / sipStep) * sipStep;
+      if (
+        normalized !== sipAmount &&
+        normalized >= normalizedSipRange[0] &&
+        normalized <= normalizedSipRange[1]
+      ) {
+        setSipAmount(normalized);
+      }
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [goalsForCustomize.length, sipStep]);
+
+  const [fadeAnim] = useState(new Animated.Value(0));
+  const [slideAnim] = useState(new Animated.Value(50));
+  const [scaleAnim] = useState(new Animated.Value(0.95));
+  const [pulseAnim] = useState(new Animated.Value(1));
+  const [sipAmountAnim] = useState(new Animated.Value(1));
+
+  // SIP Date state
+  const [sipDate, setSipDate] = useState(new Date());
+
+  // React Query mutation for creating orders
+  const createOrdersMutation = useCreateOrders();
+
+  useEffect(() => {
+    Animated.parallel([
+      Animated.timing(fadeAnim, {
+        toValue: 1,
+        duration: 800,
+        useNativeDriver: true,
+      }),
+      Animated.timing(slideAnim, {
+        toValue: 0,
+        duration: 600,
+        useNativeDriver: true,
+      }),
+      Animated.spring(scaleAnim, {
+        toValue: 1,
+        tension: 50,
+        friction: 8,
+        useNativeDriver: true,
+      }),
+    ]).start();
+
+    // Start pulse animation for expected value
+    const pulseAnimation = Animated.loop(
+      Animated.sequence([
+        Animated.timing(pulseAnim, {
+          toValue: 1.05,
+          duration: 2000,
+          useNativeDriver: true,
+        }),
+        Animated.timing(pulseAnim, {
+          toValue: 1,
+          duration: 2000,
+          useNativeDriver: true,
+        }),
+      ])
+    );
+    pulseAnimation.start();
+  }, [fadeAnim, slideAnim, scaleAnim, pulseAnim]);
+
+  const handleContinue = async () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-    handleGoalPress();
+
+    // Prepare orders array for all goals
+    const orders: CreateOrderRequest[] = [];
+
+    // Calculate total target amount for proportional distribution
+    const totalTargetAmount = goalsForCustomize.reduce(
+      (sum, goal) => sum + goal.targetAmount,
+      0
+    );
+
+    // Guard against empty goals or zero total
+    if (goalsForCustomize.length === 0 || totalTargetAmount === 0) {
+      return;
+    }
+
+    // Create orders for each goal with proportional distribution
+    goalsForCustomize.forEach((goal) => {
+      // Calculate proportional amounts based on target amount
+      const proportion = goal.targetAmount / totalTargetAmount;
+      // Round to nearest 100 for each goal's amount
+      const goalSipAmount =
+        Math.round((normalizedSipAmount * proportion) / 100) * 100;
+      const goalLumpSumAmount =
+        lumpSumAmount > 0
+          ? Math.round((lumpSumAmount * proportion) / 100) * 100
+          : 0;
+      const goalStepUpAmount =
+        stepUpAmount > 0
+          ? Math.round((stepUpAmount * proportion) / 100) * 100
+          : 0;
+
+      // Add SIP order for this goal
+      if (goalSipAmount > 0) {
+        orders.push({
+          type: "sip" as const,
+          amount: goalSipAmount,
+          start_date: sipDate,
+          yearly_setup: goalStepUpAmount > 0 ? goalStepUpAmount : undefined,
+          goalId: goal.id,
+        });
+      }
+
+      // Add lump sum order for this goal if specified
+      if (goalLumpSumAmount > 0) {
+        orders.push({
+          type: "buy" as const,
+          amount: goalLumpSumAmount,
+          goalId: goal.id,
+        });
+      }
+    });
+
+    // Trigger mutation
+    await createOrdersMutation.mutateAsync({
+      orders,
+    });
+
+    router.push("/child/1/goal/loading");
   };
 
-  const formatDate = (date: Date) => {
+  const formatDateForSchedule = (date: Date) => {
     return date.toLocaleDateString("en-US", {
-      year: "numeric",
-      month: "short",
       day: "numeric",
     });
   };
 
-  const timeRemaining = (future: Date) => {
-    const now = new Date();
-    if (future <= now) return "Expired";
-
-    const diffInMs = future.getTime() - now.getTime();
-    const diffInYears = Math.floor(diffInMs / (1000 * 60 * 60 * 24 * 365.25));
-
-    if (diffInYears > 1) {
-      return `${Math.floor(diffInYears)} years remaining`;
-    } else if (diffInYears === 1) {
-      return `1 year remaining`;
-    }
-
-    const diffInMonths = Math.floor(diffInMs / (1000 * 60 * 60 * 24 * 30.44));
-    if (diffInMonths > 1) {
-      return `${diffInMonths} months remaining`;
-    } else if (diffInMonths === 1) {
-      return `1 month remaining`;
-    }
-
-    const diffInDays = Math.floor(diffInMs / (1000 * 60 * 60 * 24));
-    if (diffInDays > 1) {
-      return `${diffInDays} days remaining`;
-    }
-    return `1 day remaining`;
+  const handleDateChange = (selectedDate: Date) => {
+    setSipDate(selectedDate);
   };
-
-  // Extract short title (PG, UG, etc.)
-  const getShortTitle = (title: string) => {
-    if (
-      title.toLowerCase().includes("postgraduate") ||
-      title.toLowerCase().includes("post-graduate")
-    ) {
-      return "PG";
-    }
-    if (title.toLowerCase().includes("undergraduate")) {
-      return "UG";
-    }
-    // Return first 2 uppercase letters or first 2 characters
-    const words = title.split(" ");
-    if (words.length > 1) {
-      return words
-        .map((w) => w[0])
-        .join("")
-        .substring(0, 2)
-        .toUpperCase();
-    }
-    return title.substring(0, 2).toUpperCase();
-  };
-
-  // Draft state design matching the image
-  if (goal.status === "draft") {
-    return (
-      <View style={styles.goalCard}>
-        <ThemedView style={styles.cardContent}>
-          {/* Goal Header Section */}
-          <View style={styles.goalHeader}>
-            <View style={styles.goalHeaderLeft}>
-              <View style={styles.goalIcon}>
-                <GraduationCap color="#FFFFFF" size={24} strokeWidth={2} />
-              </View>
-              <View style={styles.goalTitleContainer}>
-                <ThemedText style={styles.goalTitleShort}>
-                  {getShortTitle(goal.title)}
-                </ThemedText>
-                <View style={styles.timeRemainingContainer}>
-                  <Calendar color="#6B7280" size={12} />
-                  <ThemedText style={styles.timeRemaining}>
-                    {timeRemaining(goal.targetDate)}
-                  </ThemedText>
-                </View>
-              </View>
-            </View>
-            <View style={styles.draftBadge}>
-              <ThemedText style={styles.draftText}>Setup Pending</ThemedText>
-            </View>
-          </View>
-
-          {/* Target Amount Section */}
-          <View style={styles.targetAmountContainer}>
-            <View style={styles.targetAmountRow}>
-              <View style={styles.purpleBullet} />
-              <ThemedText style={styles.targetAmountLabel}>
-                Target Amount
-              </ThemedText>
-            </View>
-            <ThemedText style={styles.targetAmount}>
-              {formatCurrency(goal.targetAmount)}
-            </ThemedText>
-          </View>
-
-          {/* Warning/Instruction Message */}
-          <View style={styles.warningBox}>
-            <View style={styles.warningIconContainer}>
-              <AlertCircle color="#FFFFFF" size={20} />
-            </View>
-            <ThemedText style={styles.warningText}>
-              Complete setup to start investing towards your goal
-            </ThemedText>
-          </View>
-
-          {/* Complete Setup Button */}
-          <TouchableOpacity
-            style={styles.completeSetupButton}
-            onPress={handleCompleteSetup}
-            activeOpacity={0.8}
-          >
-            <LinearGradient
-              colors={["#2563EB", "#9333EA"]}
-              start={{ x: 0, y: 0 }}
-              end={{ x: 1, y: 0 }}
-              style={styles.completeSetupGradient}
-            >
-              <ThemedText style={styles.completeSetupText}>
-                Complete Setup
-              </ThemedText>
-            </LinearGradient>
-          </TouchableOpacity>
-        </ThemedView>
-      </View>
-    );
-  }
-
-  // Non-draft state - keep original design with improvements
-  return (
-    <TouchableOpacity onPress={handleGoalPress} style={styles.goalCard}>
-      <ThemedView style={styles.cardContent}>
-        {/* Header */}
-        <View style={styles.goalHeader}>
-          <View style={styles.goalIcon}>
-            <GraduationCap color="#2563EB" size={24} />
-          </View>
-          <View style={styles.goalContent}>
-            <View style={styles.goalTitleContainer}>
-              <ThemedText style={styles.goalTitle}>{goal.title}</ThemedText>
-            </View>
-            <View style={styles.timeRemainingContainer}>
-              <Calendar color="#6B7280" size={14} />
-              <ThemedText style={styles.timeRemaining}>
-                {timeRemaining(goal.targetDate)}
-              </ThemedText>
-            </View>
-          </View>
-        </View>
-
-        {/* Target Amount */}
-        <View style={styles.targetAmountContainer}>
-          <View style={styles.targetAmountRow}>
-            <Target color="#6B7280" size={16} />
-            <ThemedText style={styles.targetAmountLabel}>
-              Target Amount
-            </ThemedText>
-          </View>
-          <ThemedText style={styles.targetAmount}>
-            {formatCurrency(goal.targetAmount)}
-          </ThemedText>
-        </View>
-
-        {/* Investment Details */}
-        <View style={styles.investmentDetails}>
-          <View style={styles.investmentRow}>
-            <View style={styles.investmentItem}>
-              <TrendingUp color="#10B981" size={16} />
-              <ThemedText style={styles.investmentLabel}>
-                Monthly SIP
-                {sipInvestment ? (
-                  <ThemedText style={styles.configuredBadge}> ✓</ThemedText>
-                ) : (
-                  <ThemedText style={styles.notConfiguredBadge}>
-                    {" "}
-                    Not Set
-                  </ThemedText>
-                )}
-              </ThemedText>
-              <ThemedText style={styles.investmentAmount}>
-                {displaySipAmount > 0
-                  ? formatCurrency(displaySipAmount)
-                  : "Not configured"}
-              </ThemedText>
-            </View>
-            <View style={styles.investmentItem}>
-              <Ionicons name="cash-outline" size={16} color="#F59E0B" />
-              <ThemedText style={styles.investmentLabel}>
-                Lump Sum
-                {lumpSumInvestment ? (
-                  <ThemedText style={styles.configuredBadge}> ✓</ThemedText>
-                ) : (
-                  <ThemedText style={styles.notConfiguredBadge}>
-                    {" "}
-                    Not Set
-                  </ThemedText>
-                )}
-              </ThemedText>
-              <ThemedText style={styles.investmentAmount}>
-                {displayLumpSumAmount > 0
-                  ? formatCurrency(displayLumpSumAmount)
-                  : "Not configured"}
-              </ThemedText>
-            </View>
-          </View>
-        </View>
-
-        {/* Target Date */}
-        <View style={styles.targetDateContainer}>
-          <ThemedText style={styles.targetDateLabel}>Target Date</ThemedText>
-          <ThemedText style={styles.targetDate}>
-            {formatDate(goal.targetDate)}
-          </ThemedText>
-        </View>
-      </ThemedView>
-    </TouchableOpacity>
-  );
-}
-
-export default function CustomizeGoalScreen() {
-  const [childGoals] = useAtom(goalsForCustomizeAtom);
-
-  if (childGoals.length === 0) {
-    return (
-      <SafeAreaView style={styles.container}>
-        <View style={styles.emptyContainer}>
-          <GraduationCap color="#9CA3AF" size={48} />
-          <ThemedText style={styles.emptyTitle}>No Goals Found</ThemedText>
-          <ThemedText style={styles.emptySubtitle}>
-            Create goals for this child to customize investments
-          </ThemedText>
-        </View>
-      </SafeAreaView>
-    );
-  }
 
   return (
     <SafeAreaView style={styles.container}>
-      <Animated.View style={styles.animatedContainer}>
+      <Animated.View
+        style={[
+          styles.animatedContainer,
+          {
+            opacity: fadeAnim,
+            transform: [{ translateY: slideAnim }, { scale: scaleAnim }],
+          },
+        ]}
+      >
         {/* Header */}
         <View style={styles.headerSection}>
           <TouchableOpacity
@@ -304,23 +233,125 @@ export default function CustomizeGoalScreen() {
           </TouchableOpacity>
           <View style={styles.headerContent}>
             <ThemedText style={styles.headerTitle}>
-              Customize Investments
+              Customize Your Investment
             </ThemedText>
             <ThemedText style={styles.headerSubtitle}>
-              Select a goal to customize your investment plan
+              Tailor your plan to reach your goals
             </ThemedText>
           </View>
         </View>
 
-        {/* Goals List */}
         <ScrollView
           style={styles.scrollContainer}
           showsVerticalScrollIndicator={false}
           contentContainerStyle={styles.scrollContent}
         >
-          {childGoals.map((goal) => (
-            <CustomizeGoalCard key={goal.id} goal={goal} />
-          ))}
+          {/* Monthly SIP Amount Card */}
+          <Animated.View style={styles.investmentCard}>
+            <ThemedText style={styles.cardTitle}>Monthly SIP Amount</ThemedText>
+            <ThemedText style={styles.cardSubtitle}>
+              Required to start investing
+            </ThemedText>
+
+            <View style={styles.sipAmountContainer}>
+              <Animated.Text
+                style={[
+                  styles.sipAmount,
+                  {
+                    transform: [{ scale: sipAmountAnim }],
+                  },
+                ]}
+              >
+                {formatCurrency(normalizedSipAmount)}
+              </Animated.Text>
+            </View>
+
+            <Slider
+              min={normalizedSipRange[0]}
+              max={normalizedSipRange[1]}
+              value={normalizedSipAmount}
+              onValueChange={handleSipAmountChange}
+              step={sipStep}
+            />
+          </Animated.View>
+
+          {/* SIP Schedule Card */}
+          <Animated.View style={styles.investmentCard}>
+            <View style={styles.sipScheduleHeader}>
+              <CalendarSync color="#3B82F6" size={22} strokeWidth={2} />
+              <ThemedText style={styles.cardTitle}>SIP Schedule</ThemedText>
+            </View>
+            <View style={styles.firstInstallmentHeader}>
+              <ThemedText style={styles.firstInstallmentLabel}>
+                First Installment Today
+              </ThemedText>
+            </View>
+            <ThemedText style={styles.sipScheduleLabel}>
+              SIP Schedule Monthly on {formatDateForSchedule(sipDate)}
+            </ThemedText>
+
+            <View style={styles.datePickerContainer}>
+              <Datepicker
+                date={sipDate}
+                onSelect={handleDateChange}
+                min={new Date()}
+                accessoryRight={() => (
+                  <Ionicons name="calendar-outline" size={20} color="#3B82F6" />
+                )}
+                style={styles.datePicker}
+                placeholder="Select SIP Date"
+              />
+            </View>
+          </Animated.View>
+
+          {/* Add Lump Sum Card */}
+          <ToggleCard
+            title="Add Lump Sum"
+            subtitle="One-time investment"
+            initialValue={lumpSumAmount}
+            onValueChange={handleLumpSumAmountChange}
+            inputLabel="Lump Sum Amount"
+          />
+
+          {/* Add Step-Up Plan Card */}
+          <ToggleCard
+            title="Add Step-Up Plan"
+            subtitle="Increase SIP annually"
+            initialValue={stepUpAmount}
+            onValueChange={handleStepUpAmountChange}
+            inputLabel="Annual Step-Up Amount"
+          />
+
+          {/* Continue Button */}
+          <TouchableOpacity
+            style={[
+              styles.continueButton,
+              createOrdersMutation.isPending && styles.continueButtonDisabled,
+            ]}
+            onPress={handleContinue}
+            disabled={createOrdersMutation.isPending}
+          >
+            <LinearGradient
+              colors={
+                createOrdersMutation.isPending
+                  ? ["#9CA3AF", "#6B7280"]
+                  : ["#8B5CF6", "#3B82F6"]
+              }
+              style={styles.continueButtonGradient}
+            >
+              {createOrdersMutation.isPending ? (
+                <View style={styles.loadingContainer}>
+                  <ThemedText style={styles.continueButtonText}>
+                    Creating Orders...
+                  </ThemedText>
+                </View>
+              ) : (
+                <ThemedText style={styles.continueButtonText}>
+                  Continue
+                </ThemedText>
+              )}
+            </LinearGradient>
+          </TouchableOpacity>
         </ScrollView>
       </Animated.View>
     </SafeAreaView>
@@ -366,13 +397,11 @@ const styles = StyleSheet.create({
     padding: 20,
     paddingBottom: 40,
   },
-  goalCard: {
-    marginBottom: 16,
-  },
-  cardContent: {
+  investmentCard: {
     backgroundColor: "#FFFFFF",
     borderRadius: 16,
     padding: 20,
+    marginBottom: 16,
     shadowColor: "#000",
     shadowOffset: {
       width: 0,
@@ -382,200 +411,164 @@ const styles = StyleSheet.create({
     shadowRadius: 12,
     elevation: 8,
   },
-  goalHeader: {
-    flexDirection: "row",
-    alignItems: "flex-start",
-    justifyContent: "space-between",
-    marginBottom: 20,
-  },
-  goalHeaderLeft: {
-    flexDirection: "row",
-    alignItems: "flex-start",
-    flex: 1,
-  },
-  goalIcon: {
-    width: 48,
-    height: 48,
-    borderRadius: 12,
-    justifyContent: "center",
-    alignItems: "center",
-    marginRight: 12,
-    backgroundColor: "#2563EB",
-  },
-  goalContent: {
-    flex: 1,
-  },
-  goalTitleContainer: {
-    flex: 1,
-  },
-  goalTitle: {
-    fontSize: 16,
+  cardTitle: {
+    fontSize: 18,
     fontWeight: "600",
     color: "#1F2937",
-    flex: 1,
-  },
-  goalTitleShort: {
-    fontSize: 18,
-    fontWeight: "bold",
-    color: "#1F2937",
     marginBottom: 4,
   },
-  draftBadge: {
-    backgroundColor: "#F59E0B",
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 20,
-    alignSelf: "flex-start",
-  },
-  draftText: {
-    fontSize: 12,
-    fontWeight: "bold",
-    color: "#FFFFFF",
-  },
-  timeRemainingContainer: {
-    flexDirection: "row",
-    alignItems: "center",
-    marginTop: 4,
-  },
-  timeRemaining: {
-    fontSize: 12,
+  cardSubtitle: {
+    fontSize: 14,
     color: "#6B7280",
-    marginLeft: 4,
   },
-  targetAmountContainer: {
-    marginBottom: 16,
+  sipAmountContainer: {
+    alignItems: "center",
+    marginVertical: 20,
   },
-  targetAmountRow: {
+  sipAmount: {
+    fontSize: 32,
+    fontWeight: "bold",
+    color: "#1F2937",
+  },
+  firstInstallmentHeader: {
     flexDirection: "row",
     alignItems: "center",
     marginBottom: 4,
   },
-  targetAmountLabel: {
-    fontSize: 14,
-    color: "#6B7280",
-    marginLeft: 6,
+  firstInstallmentAmount: {
+    alignItems: "center",
+    marginTop: 16,
+    paddingVertical: 16,
+    backgroundColor: "#F0FDF4",
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: "#BBF7D0",
   },
-  targetAmount: {
-    fontSize: 20,
+  firstInstallmentValue: {
+    fontSize: 24,
     fontWeight: "bold",
-    color: "#1F2937",
+    color: "#059669",
+    marginBottom: 4,
   },
-  purpleBullet: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-    backgroundColor: "#9333EA",
-    marginRight: 8,
-  },
-  warningBox: {
-    flexDirection: "row",
-    alignItems: "center",
-    backgroundColor: "#FEF3C7",
-    borderRadius: 12,
-    padding: 12,
-    marginBottom: 16,
-  },
-  warningIconContainer: {
-    width: 24,
-    height: 24,
-    borderRadius: 12,
-    backgroundColor: "#F59E0B",
-    justifyContent: "center",
-    alignItems: "center",
-    marginRight: 12,
-  },
-  warningText: {
-    flex: 1,
+  firstInstallmentLabel: {
     fontSize: 14,
-    color: "#92400E",
+    color: "#065F46",
     fontWeight: "500",
   },
-  completeSetupButton: {
+  sipScheduleHeader: {
+    flexDirection: "row",
+    alignItems: "flex-start",
+    marginBottom: 4,
+    gap: 8,
+  },
+  sipScheduleLabel: {
+    fontSize: 16,
+    color: "#1F2937",
+    fontWeight: "500",
+    marginTop: 8,
+    marginBottom: 16,
+  },
+  datePickerContainer: {
+    marginTop: 8,
+  },
+  datePicker: {
+    backgroundColor: "#F9FAFB",
     borderRadius: 12,
-    overflow: "hidden",
+    borderColor: "#D1D5DB",
   },
-  completeSetupGradient: {
-    paddingVertical: 16,
-    paddingHorizontal: 24,
-    alignItems: "center",
-    justifyContent: "center",
+  summaryCard: {
+    borderRadius: 16,
+    padding: 20,
+    marginBottom: 20,
+    shadowColor: "#000",
+    shadowOffset: {
+      width: 0,
+      height: 4,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 12,
+    elevation: 8,
   },
-  completeSetupText: {
+  summaryTitle: {
     fontSize: 16,
     fontWeight: "bold",
     color: "#FFFFFF",
+    marginBottom: 20,
+    letterSpacing: 1,
   },
-  investmentDetails: {
-    marginBottom: 16,
-  },
-  investmentRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-  },
-  investmentItem: {
-    flex: 1,
-    alignItems: "center",
-    paddingVertical: 8,
-    paddingHorizontal: 12,
-    backgroundColor: "#F9FAFB",
-    borderRadius: 8,
-    marginHorizontal: 4,
-  },
-  investmentLabel: {
-    fontSize: 12,
-    color: "#6B7280",
-    marginTop: 4,
-    marginBottom: 2,
-  },
-  investmentAmount: {
-    fontSize: 14,
-    fontWeight: "600",
-    color: "#1F2937",
-  },
-  configuredBadge: {
-    fontSize: 12,
-    fontWeight: "600",
-    color: "#10B981",
-  },
-  notConfiguredBadge: {
-    fontSize: 12,
-    fontWeight: "600",
-    color: "#EF4444",
-  },
-  targetDateContainer: {
+  summaryRow: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    paddingTop: 12,
-    borderTopWidth: 1,
-    borderTopColor: "#E5E7EB",
+    marginBottom: 12,
   },
-  targetDateLabel: {
-    fontSize: 14,
-    color: "#6B7280",
-  },
-  targetDate: {
-    fontSize: 14,
-    fontWeight: "600",
-    color: "#1F2937",
-  },
-  emptyContainer: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-    paddingHorizontal: 40,
-  },
-  emptyTitle: {
-    fontSize: 20,
-    fontWeight: "600",
-    color: "#1F2937",
-    marginTop: 16,
-    marginBottom: 8,
-  },
-  emptySubtitle: {
+  summaryLabel: {
     fontSize: 16,
-    color: "#6B7280",
-    textAlign: "center",
-    lineHeight: 24,
+    color: "#FFFFFF",
+  },
+  summaryValue: {
+    fontSize: 16,
+    fontWeight: "600",
+    color: "#FFFFFF",
+  },
+  summarySeparator: {
+    height: 1,
+    backgroundColor: "#FFFFFF",
+    opacity: 0.3,
+    marginVertical: 16,
+  },
+  expectedValueContainer: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "flex-end",
+  },
+  expectedValueLeft: {
+    flex: 1,
+  },
+  expectedValueLabel: {
+    fontSize: 16,
+    color: "#FFFFFF",
+    marginBottom: 4,
+  },
+  expectedValueSubtext: {
+    fontSize: 12,
+    color: "#FFFFFF",
+    opacity: 0.8,
+  },
+  expectedValueAmount: {
+    fontSize: 24,
+    fontWeight: "bold",
+    color: "#FFFFFF",
+  },
+  continueButton: {
+    borderRadius: 16,
+    shadowColor: "#000",
+    shadowOffset: {
+      width: 0,
+      height: 4,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 12,
+    elevation: 8,
+  },
+  continueButtonDisabled: {
+    opacity: 0.7,
+    shadowOpacity: 0.05,
+  },
+  continueButtonGradient: {
+    paddingVertical: 20,
+    paddingHorizontal: 24,
+    alignItems: "center",
+    borderRadius: 16,
+  },
+  continueButtonText: {
+    color: "#FFFFFF",
+    fontSize: 18,
+    fontWeight: "600",
+  },
+  loadingContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
   },
 });

@@ -12,6 +12,7 @@ interface SliderProps {
   formatValue?: (value: number) => string;
   minLabel?: string;
   maxLabel?: string;
+  step?: number;
 }
 
 export default function Slider({
@@ -22,6 +23,7 @@ export default function Slider({
   formatValue,
   minLabel,
   maxLabel,
+  step = 500,
 }: SliderProps) {
   const percentage = ((value - min) / (max - min)) * 100;
 
@@ -30,7 +32,7 @@ export default function Slider({
     const trackWidth = width - 80; // Account for padding
     const pressPercentage = Math.max(0, Math.min(1, locationX / trackWidth));
     const rawValue = min + pressPercentage * (max - min);
-    const newValue = Math.round(rawValue / 500) * 500;
+    const newValue = Math.round(rawValue / step) * step;
     onValueChange(newValue);
   };
 
