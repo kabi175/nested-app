@@ -1,27 +1,29 @@
 import { Order } from "@/types";
 import { api } from "./client";
 
-type CreateOrderRequest = {
+export type CreateOrderRequest = {
   type: "buy" | "sip";
   amount: number;
   start_date?: Date;
   yearly_setup?: number;
+  goalId: string;
 };
 
 export const createOrders = async (
-  goalId: string,
-  order: CreateOrderRequest[]
+  orders: CreateOrderRequest[]
 ): Promise<Order[]> => {
-  const buyOrders = order
+  const buyOrders = orders
     .filter((order) => order.type === "buy")
     .map((order) => ({
       amount: order.amount,
+      goal: { id: order.goalId },
     }));
-  const sipOrders = order
+  const sipOrders = orders
     .filter((order) => order.type === "sip")
     .map((order) => {
       const sip = {
         amount: order.amount,
+        goal: { id: order.goalId },
         start_date: (order.start_date || new Date()).toLocaleDateString(
           "en-CA"
         ),
@@ -33,14 +35,13 @@ export const createOrders = async (
           amount: order.yearly_setup,
         };
       }
-
       return sip;
     });
   const payload = {
     buy_order: buyOrders,
     sip_order: sipOrders,
   };
-  const { data } = await api.post(`/goals/${goalId}/orders`, payload);
+  const { data } = await api.post(`/orders`, payload);
   return data.data;
 };
 
