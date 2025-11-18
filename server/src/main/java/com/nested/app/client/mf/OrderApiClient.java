@@ -3,7 +3,7 @@ package com.nested.app.client.mf;
 import com.nested.app.client.finprimitives.EntityListResponse;
 import com.nested.app.client.mf.dto.BulkOrderRequest;
 import com.nested.app.client.mf.dto.ConfirmOrderRequest;
-import com.nested.app.client.mf.dto.OrderResponse;
+import com.nested.app.client.mf.dto.OrderData;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;
 
@@ -13,7 +13,7 @@ import reactor.core.publisher.Mono;
 @Deprecated(forRemoval = true)
 @Service
 public interface OrderApiClient {
-  Mono<EntityListResponse<OrderResponse>> placeBulkOrder(BulkOrderRequest request);
+  Mono<EntityListResponse<OrderData>> placeBulkOrder(BulkOrderRequest request);
 
   Mono<Void> confirmOrder(ConfirmOrderRequest confirmOrderRequest);
 }

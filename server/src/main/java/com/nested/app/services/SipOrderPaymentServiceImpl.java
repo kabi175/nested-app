@@ -14,13 +14,16 @@ import com.nested.app.dto.VerifyOrderDTO;
 import com.nested.app.entity.Order;
 import com.nested.app.entity.OrderItems;
 import com.nested.app.entity.SIPOrder;
+import com.nested.app.events.OrderItemsRefUpdatedEvent;
 import com.nested.app.repository.OrderItemsRepository;
 import com.nested.app.repository.OrderRepository;
 import com.nested.app.repository.PaymentRepository;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Stream;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.reactive.function.client.WebClientResponseException;
@@ -44,6 +47,7 @@ public class SipOrderPaymentServiceImpl implements SipOrderPaymentService {
   private final PaymentsAPIClient paymentsAPIClient;
   private final PaymentServiceImpl paymentServiceHelper;
   private final OrderItemsRepository orderItemsRepository;
+  private final ApplicationEventPublisher eventPublisher;
 
   /**
    * Verifies a SIP order payment using verification code
@@ -163,6 +167,25 @@ public class SipOrderPaymentServiceImpl implements SipOrderPaymentService {
 
       // Persist updated SIP order items (refs/paymentRefs) explicitly before saving payment
       orderItemsRepository.saveAll(orderItems);
+
+      // Collect all order items with updated ref and publish a single batched event
+      List<OrderItemsRefUpdatedEvent.OrderItemRefInfo> orderItemRefInfos = new ArrayList<>();
+      for (var orderItem : orderItems) {
+        if (orderItem.getRef() != null && orderItem.getOrder() != null) {
+          orderItemRefInfos.add(
+              new OrderItemsRefUpdatedEvent.OrderItemRefInfo(
+                  orderItem.getOrder().getId(), orderItem.getRef(), orderItem.getId()));
+        }
+      }
+
+      if (!orderItemRefInfos.isEmpty()) {
+        var batchEvent = new OrderItemsRefUpdatedEvent(this, orderItemRefInfos, paymentID);
+        eventPublisher.publishEvent(batchEvent);
+        log.debug(
+            "Published OrderItemsRefUpdatedEvent for Payment ID: {} with {} order items",
+            paymentID,
+            orderItemRefInfos.size());
+      }
 
       paymentRepository.save(payment);
 

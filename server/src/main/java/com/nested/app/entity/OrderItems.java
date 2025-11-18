@@ -29,6 +29,10 @@ public class OrderItems {
 
   private Long paymentRef;
 
+  private Double units;
+
+  private Double unitPrice;
+
   @ManyToOne
   @JoinColumn(name = "order_id")
   private Order order;
