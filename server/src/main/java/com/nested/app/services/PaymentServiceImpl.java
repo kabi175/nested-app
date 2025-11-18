@@ -1,6 +1,5 @@
 package com.nested.app.services;
 
-import com.nested.app.client.mf.OrderApiClient;
 import com.nested.app.client.mf.OtpApiClient;
 import com.nested.app.client.mf.PaymentsAPIClient;
 import com.nested.app.client.mf.dto.BulkOrderOtpRequest;
@@ -66,7 +65,6 @@ public class PaymentServiceImpl implements PaymentService {
   private final OtpApiClient otpApiClient;
   private final MandateApiClient mandateApiClient;
   private final PaymentsAPIClient paymentsAPIClient;
-  private final OrderApiClient orderApiClient;
 
   private static CreateMandateRequest getCreateMandateRequest(Payment payment) {
     var mandateRequest = new CreateMandateRequest();
