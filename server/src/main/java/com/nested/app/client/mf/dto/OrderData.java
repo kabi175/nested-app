@@ -1,7 +1,9 @@
 package com.nested.app.client.mf.dto;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonValue;
+import java.sql.Date;
 import lombok.Data;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
@@ -24,6 +26,9 @@ public class OrderData {
   private Double purchasedPrice;
 
   private OrderState state;
+
+  @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd")
+  private Date traded_on;
 
   @RequiredArgsConstructor
   public enum OrderState {

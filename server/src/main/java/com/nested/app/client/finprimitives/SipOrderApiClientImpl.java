@@ -53,6 +53,12 @@ public class SipOrderApiClientImpl implements SipOrderApiClient {
         .bodyToMono(new ParameterizedTypeReference<>() {});
   }
 
+  @Override
+  public Mono<List<OrderData>> fetchTransactionDetails(String orderRef) {
+    // TODO: implement this
+    return null;
+  }
+
   private Map<String, Object> convertToConfirmData(
       ConfirmOrderRequest confirmOrderRequest, String orderID) {
     var consent = new HashMap<String, String>();
