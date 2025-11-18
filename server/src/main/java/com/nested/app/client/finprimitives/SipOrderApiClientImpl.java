@@ -18,6 +18,7 @@ import reactor.core.publisher.Mono;
 @RequiredArgsConstructor
 public class SipOrderApiClientImpl implements SipOrderApiClient {
   private static final String SIP_ORDER_API_URL = "/v2/mf_purchase_plans/batch";
+  private static final String SIP_ORDER_TXN_API_URL = "/v2/mf_purchases";
   private final FinPrimitivesAPI api;
 
   @Override
@@ -55,8 +56,22 @@ public class SipOrderApiClientImpl implements SipOrderApiClient {
 
   @Override
   public Mono<List<OrderData>> fetchTransactionDetails(String orderRef) {
-    // TODO: implement this
-    return null;
+    if (orderRef == null) {
+      return Mono.empty();
+    }
+    return api.withAuth()
+        .get()
+        .uri(
+            uriBuilder ->
+                uriBuilder.path(SIP_ORDER_TXN_API_URL).queryParam("plan", orderRef).build())
+        .retrieve()
+        .bodyToMono(new ParameterizedTypeReference<List<OrderData>>() {})
+        .onErrorResume(
+            ex -> {
+              log.warn(
+                  "Failed fetching SIP transactions for ref {}: {}", orderRef, ex.getMessage());
+              return Mono.empty();
+            });
   }
 
   private Map<String, Object> convertToConfirmData(
