@@ -2,7 +2,7 @@ package com.nested.app.client.finprimitives;
 
 import com.nested.app.client.mf.SipOrderApiClient;
 import com.nested.app.client.mf.dto.ConfirmOrderRequest;
-import com.nested.app.client.mf.dto.OrderResponse;
+import com.nested.app.client.mf.dto.OrderData;
 import com.nested.app.client.mf.dto.SipOrderDetail;
 import java.util.HashMap;
 import java.util.List;
@@ -21,7 +21,7 @@ public class SipOrderApiClientImpl implements SipOrderApiClient {
   private final FinPrimitivesAPI api;
 
   @Override
-  public Mono<EntityListResponse<OrderResponse>> placeSipOrder(List<SipOrderDetail> orders) {
+  public Mono<EntityListResponse<OrderData>> placeSipOrder(List<SipOrderDetail> orders) {
     if (orders.isEmpty()) {
       return Mono.empty();
     }

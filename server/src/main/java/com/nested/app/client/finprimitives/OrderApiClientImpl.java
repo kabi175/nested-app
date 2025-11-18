@@ -3,8 +3,8 @@ package com.nested.app.client.finprimitives;
 import com.nested.app.client.mf.OrderApiClient;
 import com.nested.app.client.mf.dto.BulkOrderRequest;
 import com.nested.app.client.mf.dto.ConfirmOrderRequest;
+import com.nested.app.client.mf.dto.OrderData;
 import com.nested.app.client.mf.dto.OrderDetail;
-import com.nested.app.client.mf.dto.OrderResponse;
 import com.nested.app.client.mf.dto.SipOrderDetail;
 import java.util.ArrayList;
 import java.util.List;
@@ -26,17 +26,17 @@ public class OrderApiClientImpl implements OrderApiClient {
   private final SipOrderApiClientImpl sipOrderApiClient;
 
   @Override
-  public Mono<EntityListResponse<OrderResponse>> placeBulkOrder(BulkOrderRequest request) {
+  public Mono<EntityListResponse<OrderData>> placeBulkOrder(BulkOrderRequest request) {
     List<OrderDetail> buyOrders = filterBuyOrders(request.getDetail());
     List<SipOrderDetail> sipOrders = filterSipOrders(request.getDetail());
 
-    Mono<List<OrderResponse>> buyOrdersMono =
+    Mono<List<OrderData>> buyOrdersMono =
         buyOrderApiClient
             .placeBuyOrder(buyOrders)
             .map(response -> response.data)
             .defaultIfEmpty(List.of());
 
-    Mono<List<OrderResponse>> sipOrdersMono =
+    Mono<List<OrderData>> sipOrdersMono =
         sipOrderApiClient
             .placeSipOrder(sipOrders)
             .map(response -> response.data)
@@ -45,7 +45,7 @@ public class OrderApiClientImpl implements OrderApiClient {
     return Mono.zip(buyOrdersMono, sipOrdersMono)
         .map(
             tuple -> {
-              List<OrderResponse> combinedResults = new ArrayList<>();
+              List<OrderData> combinedResults = new ArrayList<>();
               combinedResults.addAll(tuple.getT1());
               combinedResults.addAll(tuple.getT2());
               return new EntityListResponse<>(combinedResults);

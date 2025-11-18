@@ -3,8 +3,8 @@ package com.nested.app.client.finprimitives;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.nested.app.client.mf.BuyOrderApiClient;
 import com.nested.app.client.mf.dto.ConfirmOrderRequest;
+import com.nested.app.client.mf.dto.OrderData;
 import com.nested.app.client.mf.dto.OrderDetail;
-import com.nested.app.client.mf.dto.OrderResponse;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -19,11 +19,12 @@ import reactor.core.publisher.Mono;
 @RequiredArgsConstructor
 public class BuyOrderApiClientImpl implements BuyOrderApiClient {
   private static final String BUY_ORDER_BATCH_API_URL = "/v2/mf_purchases/batch";
+  private static final String BUY_ORDER_API_URL = "/v2/mf_purchases";
   private final FinPrimitivesAPI api;
   private final ObjectMapper objectMapper;
 
   @Override
-  public Mono<EntityListResponse<OrderResponse>> placeBuyOrder(List<OrderDetail> orders) {
+  public Mono<EntityListResponse<OrderData>> placeBuyOrder(List<OrderDetail> orders) {
     try {
       log.info("placeBuyOrder with request: {}", objectMapper.writeValueAsString(orders));
     } catch (Exception e) {
@@ -36,6 +37,23 @@ public class BuyOrderApiClientImpl implements BuyOrderApiClient {
         .bodyValue(Map.of("mf_purchases", orders))
         .retrieve()
         .bodyToMono(new ParameterizedTypeReference<>() {});
+  }
+
+  @Override
+  public Mono<OrderData> fetchOrderDetails(String orderRef) {
+    var resp =
+        api.withAuth()
+            .get()
+            .uri(uriBuilder -> uriBuilder.path(BUY_ORDER_API_URL).path(orderRef).build())
+            .retrieve()
+            .bodyToMono(new ParameterizedTypeReference<EntityListResponse<OrderData>>() {})
+            .block();
+
+    if (resp == null || resp.data == null || resp.data.isEmpty()) {
+      return Mono.empty();
+    }
+
+    return Mono.just(resp.data.getFirst());
   }
 
   @Override
