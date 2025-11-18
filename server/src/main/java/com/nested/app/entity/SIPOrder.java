@@ -9,12 +9,18 @@ import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
+import java.sql.Timestamp;
 import java.time.LocalDate;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 
+/**
+ * Specialized Order representing a Systematic Investment Plan (SIP). Includes scheduling metadata
+ * (nextRunDate, status, lastOrderRef) to allow internal scheduler to run executions without a
+ * separate schedule entity.
+ */
 @Data
 @Valid
 @Entity
@@ -29,9 +35,29 @@ public class SIPOrder extends Order {
 
   private String mandateID;
 
+  /** First date on which SIP executions may occur */
   @NotNull private LocalDate startDate;
 
+  /** Final date after which SIP should cease */
   @NotNull private LocalDate endDate;
+
+  /** Next scheduled execution date (updated after each successful run) */
+  private LocalDate nextRunDate; // initialized externally to startDate
+
+  /** Last provider order reference created for an execution cycle */
+  private String lastOrderRef;
+
+  /** Timestamp of last attempt to place or poll the order */
+  private Timestamp lastAttemptAt;
+
+  /** Incremented on failures (used for backoff / error threshold) */
+  private Integer failureCount = 0;
+
+  /** Last provider transaction id resolved (for idempotency) */
+  private String lastProviderTransactionId;
+
+  @Enumerated(EnumType.STRING)
+  private ScheduleStatus scheduleStatus = ScheduleStatus.ACTIVE;
 
   @Embedded private SIPStepUp sipStepUp;
 
@@ -61,5 +87,20 @@ public class SIPOrder extends Order {
 
       @JsonValue @Getter private final String value;
     }
+  }
+
+  public boolean due(LocalDate today) {
+    // Order is due if ACTIVE and today >= nextRunDate but not past endDate
+    return scheduleStatus == ScheduleStatus.ACTIVE
+        && !today.isBefore(nextRunDate)
+        && (today.isBefore(endDate) || today.isEqual(endDate));
+  }
+
+  public enum ScheduleStatus {
+    ACTIVE,
+    RUNNING,
+    ERROR,
+    COMPLETED,
+    PAUSED
   }
 }

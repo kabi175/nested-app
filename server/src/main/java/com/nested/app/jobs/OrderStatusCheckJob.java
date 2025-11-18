@@ -3,9 +3,14 @@ package com.nested.app.jobs;
 import com.nested.app.client.mf.BuyOrderApiClient;
 import com.nested.app.client.mf.dto.OrderData;
 import com.nested.app.entity.OrderItems;
+import com.nested.app.entity.Transaction;
+import com.nested.app.enums.TransactionType;
 import com.nested.app.repository.OrderItemsRepository;
+import com.nested.app.repository.TransactionRepository;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.sql.Timestamp;
+import java.time.Instant;
 import java.util.List;
 import lombok.extern.slf4j.Slf4j;
 import org.quartz.Job;
@@ -17,6 +22,13 @@ import org.quartz.SchedulerException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
+/**
+ * Quartz job that periodically checks the status of an external BUY order and, upon success,
+ * distributes allotted units and records Transaction entries. It ensures: - Idempotent unit/price
+ * population (skips if already set) - Precise unit distribution (equal or proportional) with
+ * rounding remainder adjustment - Safe transaction creation guarded by duplicate checks
+ * (sourceOrderItemId)
+ */
 @Slf4j
 @Component
 public class OrderStatusCheckJob implements Job {
@@ -27,6 +39,7 @@ public class OrderStatusCheckJob implements Job {
   @Autowired private BuyOrderApiClient buyOrderAPIClient;
   @Autowired private OrderItemsRepository orderItemsRepository;
   @Autowired private Scheduler scheduler;
+  @Autowired private TransactionRepository transactionRepository;
 
   @Override
   public void execute(JobExecutionContext context) throws JobExecutionException {
@@ -56,9 +69,24 @@ public class OrderStatusCheckJob implements Job {
       return;
     }
 
-    updateOrderItemsWithOrderData(orderItems, order, orderId);
-    orderItemsRepository.saveAll(orderItems);
-    log.info("Updated {} order items (units & price) for orderId: {}", orderItems.size(), orderId);
+    // guard: if all items already populated with units & unitPrice, skip recalculation
+    boolean alreadyPopulated =
+        orderItems.stream()
+            .allMatch(
+                i ->
+                    i.getUnits() != null
+                        && i.getUnits() > 0
+                        && i.getUnitPrice() != null
+                        && i.getUnitPrice() > 0);
+    if (!alreadyPopulated) {
+      updateOrderItemsWithOrderData(orderItems, order, orderId);
+      orderItemsRepository.saveAll(orderItems);
+      log.info(
+          "Updated {} order items (units & price) for orderId: {}", orderItems.size(), orderId);
+    } else {
+      log.debug("Order items already populated for orderId {} - skipping update", orderId);
+    }
+    createTransactionsForOrderItems(orderItems);
   }
 
   private void updateOrderItemsWithOrderData(
@@ -89,31 +117,31 @@ public class OrderStatusCheckJob implements Job {
     return orderItems.stream().mapToDouble(i -> i.getAmount() != 0 ? i.getAmount() : 0).sum();
   }
 
+  /**
+   * Split total units evenly; last item absorbs any rounding drift ensuring exact sum conservation.
+   * CALCULATION_SCALE provides high precision during division; DECIMAL_SCALE is final persisted
+   * precision.
+   */
   protected void distributeUnitsEqually(List<OrderItems> orderItems, BigDecimal totalUnits) {
+    BigDecimal sizeBD = BigDecimal.valueOf(orderItems.size());
+    BigDecimal baseShareRaw = totalUnits.divide(sizeBD, CALCULATION_SCALE, RoundingMode.HALF_UP);
     BigDecimal distributed = BigDecimal.ZERO;
-    int size = orderItems.size();
-
-    for (int idx = 0; idx < size; idx++) {
-      var item = orderItems.get(idx);
+    for (int idx = 0; idx < orderItems.size(); idx++) {
       BigDecimal unitsForItem;
-
-      if (idx == size - 1) {
-        // Last item gets the remainder to ensure total matches exactly
-        unitsForItem = totalUnits.subtract(distributed);
+      if (idx == orderItems.size() - 1) {
+        unitsForItem = totalUnits.subtract(distributed); // exact remainder
       } else {
-        // Calculate equal share for this item
-        BigDecimal remaining = totalUnits.subtract(distributed);
-        int itemsLeft = size - idx;
-        unitsForItem =
-            remaining.divide(
-                BigDecimal.valueOf(itemsLeft), CALCULATION_SCALE, RoundingMode.HALF_UP);
+        unitsForItem = baseShareRaw.setScale(DECIMAL_SCALE, RoundingMode.HALF_UP);
         distributed = distributed.add(unitsForItem);
       }
-
-      item.setUnits(unitsForItem.setScale(DECIMAL_SCALE, RoundingMode.HALF_UP).doubleValue());
+      orderItems.get(idx).setUnits(unitsForItem.doubleValue());
     }
   }
 
+  /**
+   * Allocate units proportional to monetary amount per item; last item receives remainder to handle
+   * rounding.
+   */
   protected void distributeUnitsProportionally(
       List<OrderItems> orderItems, BigDecimal totalUnits, double totalAmount) {
     BigDecimal distributed = BigDecimal.ZERO;
@@ -148,6 +176,39 @@ public class OrderStatusCheckJob implements Job {
     }
 
     orderItems.forEach(item -> item.setUnitPrice(purchasedPrice));
+  }
+
+  private void createTransactionsForOrderItems(List<OrderItems> orderItems) {
+    // Idempotent transaction creation: skip if repository missing (test context) or already exists.
+    // Negative units logic for SELL/SWP can be added here when disposal flows are implemented.
+    if (transactionRepository == null) { // test context may not inject
+      return;
+    }
+    int created = 0;
+    for (var item : orderItems) {
+      if (item.getUnits() == null || item.getUnitPrice() == null) {
+        continue; // incomplete item
+      }
+      if (transactionRepository.existsBySourceOrderItemId(item.getId())) {
+        continue; // idempotent skip
+      }
+      var txn = new Transaction();
+      txn.setUser(item.getUser());
+      txn.setGoal(item.getOrder() != null ? item.getOrder().getGoal() : null);
+      txn.setFund(item.getFund());
+      txn.setType(TransactionType.BUY); // SELL/SIP handled elsewhere
+      txn.setUnits(item.getUnits());
+      txn.setUnitPrice(item.getUnitPrice());
+      txn.setAmount(Math.abs(item.getUnits() * item.getUnitPrice()));
+      txn.setExternalRef(item.getRef());
+      txn.setSourceOrderItemId(item.getId());
+      txn.setExecutedAt(Timestamp.from(Instant.now()));
+      transactionRepository.save(txn);
+      created++;
+    }
+    if (created > 0) {
+      log.info("Created {} transaction(s) from order items", created);
+    }
   }
 
   private boolean isOrderInTerminalState(OrderData.OrderState state) {
