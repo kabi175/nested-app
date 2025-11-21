@@ -2,6 +2,7 @@ package com.nested.app.client.finprimitives;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.nested.app.client.mf.BuyOrderApiClient;
+import com.nested.app.client.mf.dto.BuyOrderConfirmRequest;
 import com.nested.app.client.mf.dto.ConfirmOrderRequest;
 import com.nested.app.client.mf.dto.OrderData;
 import com.nested.app.client.mf.dto.OrderDetail;
@@ -57,28 +58,13 @@ public class BuyOrderApiClientImpl implements BuyOrderApiClient {
   }
 
   @Override
-  public Mono<Void> confirmBuyOrder(ConfirmOrderRequest confirmOrderRequest) {
-    if (confirmOrderRequest.getBuyOrders() == null
-        || confirmOrderRequest.getBuyOrders().isEmpty()) {
-      return Mono.empty();
-    }
-    var orders =
-        confirmOrderRequest.getBuyOrders().stream()
-            .map(orderID -> convertToConfirmData(confirmOrderRequest, orderID))
-            .toList();
-
-    try {
-      log.info("confirmBuyOrder with request: {}", objectMapper.writeValueAsString(orders));
-    } catch (Exception e) {
-      log.warn("Failed to serialize request for logging", e);
-    }
-
+  public Mono<Void> confirmOrder(BuyOrderConfirmRequest request) {
     return api.withAuth()
         .patch()
-        .uri(BUY_ORDER_BATCH_API_URL)
-        .bodyValue(Map.of("mf_purchases", orders))
+        .uri(BUY_ORDER_API_URL)
+        .bodyValue(request)
         .retrieve()
-        .bodyToMono(new ParameterizedTypeReference<>() {});
+        .bodyToMono(Void.class);
   }
 
   private Map<String, Object> convertToConfirmData(

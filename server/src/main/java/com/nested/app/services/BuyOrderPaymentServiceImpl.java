@@ -2,7 +2,7 @@ package com.nested.app.services;
 
 import com.nested.app.client.mf.BuyOrderApiClient;
 import com.nested.app.client.mf.PaymentsAPIClient;
-import com.nested.app.client.mf.dto.ConfirmOrderRequest;
+import com.nested.app.client.mf.dto.BuyOrderConfirmRequest;
 import com.nested.app.client.mf.dto.OrderDetail;
 import com.nested.app.client.mf.dto.PaymentsOrder;
 import com.nested.app.client.mf.dto.PaymentsRequest;
@@ -26,6 +26,7 @@ import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.reactive.function.client.WebClientResponseException;
+import reactor.core.publisher.Flux;
 
 /**
  * Service implementation for managing Buy Order Payment operations. Handles verification and
@@ -76,13 +77,31 @@ public class BuyOrderPaymentServiceImpl implements BuyOrderPaymentService {
         throw new IllegalArgumentException("No buy orders found for this payment");
       }
 
-      var request =
-          ConfirmOrderRequest.builder()
-              .email(payment.getUser().getEmail())
-              .buyOrders(buyOrderIds)
-              .build();
+      var confirmOrderRequests =
+          buyOrderIds.stream()
+              .map(
+                  orderRef ->
+                      BuyOrderConfirmRequest.builder()
+                          .orderRef(orderRef)
+                          .email(payment.getUser().getEmail())
+                          .build())
+              .toList();
 
-      buyOrderApiClient.confirmBuyOrder(request).block();
+      // Process confirmOrder requests in parallel with a batch size of 10
+      Flux.fromIterable(confirmOrderRequests)
+          .flatMap(buyOrderApiClient::confirmOrder, 10) // Process 10 requests at a time
+          .doOnNext(
+              response ->
+                  log.debug(
+                      "Successfully confirmed order for payment ID: {}",
+                      verifyOrderRequest.getId()))
+          .doOnError(
+              error ->
+                  log.error(
+                      "Error confirming order for payment ID: {}",
+                      verifyOrderRequest.getId(),
+                      error))
+          .blockLast(); // Wait for all parallel requests to complete
 
       log.info(
           "Successfully verified {} buy orders for payment ID: {}",
