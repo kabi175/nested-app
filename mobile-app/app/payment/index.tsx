@@ -1,8 +1,4 @@
-import {
-  createPayment,
-  initiatePayment,
-  verifyPayment,
-} from "@/api/paymentAPI";
+import { createPayment } from "@/api/paymentAPI";
 import { cartAtom } from "@/atoms/cart";
 import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
@@ -12,7 +8,6 @@ import { BankAccount } from "@/types/bank";
 import { formatCurrency } from "@/utils/formatters";
 import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
-import { openBrowserAsync } from "expo-web-browser";
 import { useAtomValue } from "jotai";
 import { useEffect, useState } from "react";
 import {
@@ -126,26 +121,11 @@ export default function PaymentMethodScreen() {
         bank_id: selectedBank.id,
       });
 
-      await verifyPayment(payment.id);
-
-      const redirectUrl = await initiatePayment(payment.id);
-      if (redirectUrl) {
-        await openBrowserAsync(redirectUrl);
-      }
-
-      Alert.alert(
-        "Success",
-        "Your order has been confirmed! You will receive a payment link shortly.",
-        [
-          {
-            text: "OK",
-            onPress: () => {
-              // If backend returns a payment URL, you can open it here using Linking.openURL(paymentLink)
-              // and/or clear the cart or navigate as needed.
-            },
-          },
-        ]
-      );
+      // Redirect to verification screen
+      router.push({
+        pathname: "/payment/verify",
+        params: { paymentId: payment.id },
+      });
     } catch (error) {
       console.error("Failed to create payment", error);
       Alert.alert("Error", "Failed to process payment. Please try again.");

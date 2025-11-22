@@ -31,6 +31,14 @@ export default function Layout() {
         name="index"
         options={{ header: () => <TopNavigationSimpleUsageShowcase /> }}
       />
+      <Stack.Screen
+        name="verify"
+        options={{ 
+          headerShown: true,
+          title: "Verify Payment",
+          presentation: "card",
+        }}
+      />
     </Stack>
   );
 }
