@@ -126,9 +126,9 @@ export default function PaymentMethodScreen() {
         bank_id: selectedBank.id,
       });
 
-      console.log("payment", payment);
-      const redirectUrl = await initiatePayment(payment.id);
       await verifyPayment(payment.id);
+
+      const redirectUrl = await initiatePayment(payment.id);
       if (redirectUrl) {
         await openBrowserAsync(redirectUrl);
       }
