@@ -1,13 +1,12 @@
 package com.nested.app.services;
 
+import com.nested.app.client.mf.BuyOrderApiClient;
 import com.nested.app.client.mf.OtpApiClient;
-import com.nested.app.client.mf.PaymentsAPIClient;
 import com.nested.app.client.mf.dto.BulkOrderOtpRequest;
 import com.nested.app.client.mf.dto.CreateMandateRequest;
 import com.nested.app.client.mf.dto.OrderDetail;
 import com.nested.app.client.mf.dto.OtpRequest;
 import com.nested.app.client.mf.dto.SipOrderDetail;
-import com.nested.app.client.tarrakki.MandateApiClient;
 import com.nested.app.contect.UserContext;
 import com.nested.app.dto.MinifiedOrderDTO;
 import com.nested.app.dto.OrderDTO;
@@ -17,6 +16,7 @@ import com.nested.app.dto.PlaceOrderPostDTO;
 import com.nested.app.entity.BankDetail;
 import com.nested.app.entity.Basket;
 import com.nested.app.entity.BasketFund;
+import com.nested.app.entity.BuyOrder;
 import com.nested.app.entity.Fund;
 import com.nested.app.entity.Goal;
 import com.nested.app.entity.Investor;
@@ -25,23 +25,25 @@ import com.nested.app.entity.OrderItems;
 import com.nested.app.entity.Payment;
 import com.nested.app.entity.SIPOrder;
 import com.nested.app.entity.User;
-import com.nested.app.repository.ChildRepository;
-import com.nested.app.repository.GoalRepository;
+import com.nested.app.events.OrderItemsRefUpdatedEvent;
 import com.nested.app.repository.OrderRepository;
 import com.nested.app.repository.PaymentRepository;
 import com.nested.app.utils.IpUtils;
 import jakarta.servlet.http.HttpServletRequest;
-import java.util.List;
-import java.util.Objects;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
 import org.springframework.web.reactive.function.client.WebClientResponseException;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Objects;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 /**
  * Service implementation for managing Payment entities Provides business logic for payment-related
@@ -59,12 +61,10 @@ public class PaymentServiceImpl implements PaymentService {
   private final PaymentRepository paymentRepository;
   private final OrderRepository orderRepository;
   private final UserContext userContext;
-  private final GoalRepository goalRepository;
-  private final ChildRepository childRepository;
+  private final BuyOrderApiClient buyOrderApiClient;
+  private final ApplicationEventPublisher eventPublisher;
 
   private final OtpApiClient otpApiClient;
-  private final MandateApiClient mandateApiClient;
-  private final PaymentsAPIClient paymentsAPIClient;
 
   private static CreateMandateRequest getCreateMandateRequest(Payment payment) {
     var mandateRequest = new CreateMandateRequest();
@@ -158,6 +158,9 @@ public class PaymentServiceImpl implements PaymentService {
       // Save payment and orders
       Payment savedPayment = paymentRepository.save(payment);
 
+      // place buy orders in the external system
+      placeOrderWithExternalAPI(savedPayment);
+
       // Convert to DTO
       PlaceOrderDTO placeOrderDTO = convertPaymentToPlaceOrderDTO(savedPayment);
 
@@ -174,6 +177,64 @@ public class PaymentServiceImpl implements PaymentService {
     } catch (Exception e) {
       log.error("Error creating payment with orders: {}", e.getMessage(), e);
       throw new RuntimeException("Failed to create payment with orders", e);
+    }
+  }
+
+  private void placeOrderWithExternalAPI(Payment payment) {
+    var buyOrdersDetails =
+        payment.getOrders().stream()
+            .filter(BuyOrder.class::isInstance)
+            .flatMap(this::convertOrderToOrderDetail)
+            .toList();
+
+    if (buyOrdersDetails.isEmpty()) {
+      log.warn("No buy orders found for payment ID: {}", payment.getId());
+      throw new IllegalArgumentException("No buy orders found for this payment");
+    }
+
+    var orderResponse = buyOrderApiClient.placeBuyOrder(buyOrdersDetails).block();
+    if (orderResponse == null) {
+      throw new RuntimeException("Failed to place buy order with MF provider");
+    }
+
+    var orderItemsList =
+        payment.getOrders().stream()
+            .filter(BuyOrder.class::isInstance)
+            .map(Order::getItems)
+            .flatMap(List::stream)
+            .toList();
+
+    for (var idx = 0; idx < orderResponse.data.size(); idx++) {
+      var orderResponseItem = orderResponse.data.get(idx);
+      var orderItem = orderItemsList.get(idx);
+      log.debug(
+          "Updating OrderItems: id={}, existingRef={}, existingPaymentRef={}, newRef={}, newPaymentRef={}",
+          orderItem.getId(),
+          orderItem.getRef(),
+          orderItem.getPaymentRef(),
+          orderResponseItem.getRef(),
+          orderResponseItem.getPaymentRef());
+      orderItem.setRef(orderResponseItem.getRef());
+      orderItem.setPaymentRef(orderResponseItem.getPaymentRef());
+    }
+
+    // Collect all order items with updated ref and publish a single batched event
+    List<OrderItemsRefUpdatedEvent.OrderItemRefInfo> orderItemRefInfos = new ArrayList<>();
+    for (var orderItem : orderItemsList) {
+      if (orderItem.getRef() != null && orderItem.getOrder() != null) {
+        orderItemRefInfos.add(
+            new OrderItemsRefUpdatedEvent.OrderItemRefInfo(
+                orderItem.getOrder().getId(), orderItem.getRef(), orderItem.getId()));
+      }
+    }
+
+    if (!orderItemRefInfos.isEmpty()) {
+      var batchEvent = new OrderItemsRefUpdatedEvent(this, orderItemRefInfos, payment.getId());
+      eventPublisher.publishEvent(batchEvent);
+      log.debug(
+          "Published OrderItemsRefUpdatedEvent for Payment ID: {} with {} order items",
+          payment.getId(),
+          orderItemRefInfos.size());
     }
   }
 

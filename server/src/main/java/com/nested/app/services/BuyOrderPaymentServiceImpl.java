@@ -2,8 +2,7 @@ package com.nested.app.services;
 
 import com.nested.app.client.mf.BuyOrderApiClient;
 import com.nested.app.client.mf.PaymentsAPIClient;
-import com.nested.app.client.mf.dto.BuyOrderConfirmRequest;
-import com.nested.app.client.mf.dto.OrderDetail;
+import com.nested.app.client.mf.dto.BuyOrderConsentRequest;
 import com.nested.app.client.mf.dto.PaymentsOrder;
 import com.nested.app.client.mf.dto.PaymentsRequest;
 import com.nested.app.dto.PlaceOrderDTO;
@@ -13,13 +12,10 @@ import com.nested.app.dto.VerifyOrderDTO;
 import com.nested.app.entity.BuyOrder;
 import com.nested.app.entity.Order;
 import com.nested.app.entity.OrderItems;
-import com.nested.app.events.OrderItemsRefUpdatedEvent;
 import com.nested.app.repository.OrderItemsRepository;
 import com.nested.app.repository.OrderRepository;
 import com.nested.app.repository.PaymentRepository;
-import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Stream;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.ApplicationEventPublisher;
@@ -81,7 +77,7 @@ public class BuyOrderPaymentServiceImpl implements BuyOrderPaymentService {
           buyOrderIds.stream()
               .map(
                   orderRef ->
-                      BuyOrderConfirmRequest.builder()
+                      BuyOrderConsentRequest.builder()
                           .orderRef(orderRef)
                           .email(payment.getUser().getEmail())
                           .build())
@@ -89,7 +85,7 @@ public class BuyOrderPaymentServiceImpl implements BuyOrderPaymentService {
 
       // Process confirmOrder requests in parallel with a batch size of 10
       Flux.fromIterable(confirmOrderRequests)
-          .flatMap(buyOrderApiClient::confirmOrder, 10) // Process 10 requests at a time
+          .flatMap(buyOrderApiClient::updateConsent, 10) // Process 10 requests at a time
           .doOnNext(
               response ->
                   log.debug(
@@ -136,72 +132,6 @@ public class BuyOrderPaymentServiceImpl implements BuyOrderPaymentService {
     try {
       var payment = paymentRepository.findById(paymentID).orElseThrow();
 
-      var buyOrdersDetails =
-          payment.getOrders().stream()
-              .filter(BuyOrder.class::isInstance)
-              .flatMap(this::convertOrderToOrderDetail)
-              .toList();
-
-      if (buyOrdersDetails.isEmpty()) {
-        log.warn("No buy orders found for payment ID: {}", paymentID);
-        throw new IllegalArgumentException("No buy orders found for this payment");
-      }
-
-      var orderResponse = buyOrderApiClient.placeBuyOrder(buyOrdersDetails).block();
-      if (orderResponse == null) {
-        throw new RuntimeException("Failed to place buy order with MF provider");
-      }
-
-      var orderItemsList =
-          payment.getOrders().stream()
-              .filter(BuyOrder.class::isInstance)
-              .map(Order::getItems)
-              .flatMap(List::stream)
-              .toList();
-
-      for (var idx = 0; idx < orderResponse.data.size(); idx++) {
-        var orderResponseItem = orderResponse.data.get(idx);
-        var orderItem = orderItemsList.get(idx);
-        log.debug(
-            "Updating OrderItems: id={}, existingRef={}, existingPaymentRef={}, newRef={}, newPaymentRef={}",
-            orderItem.getId(),
-            orderItem.getRef(),
-            orderItem.getPaymentRef(),
-            orderResponseItem.getRef(),
-            orderResponseItem.getPaymentRef());
-        orderItem.setRef(orderResponseItem.getRef());
-        orderItem.setPaymentRef(orderResponseItem.getPaymentRef());
-      }
-
-      // Persist only newly created OrderItems (those without an id). Managed entities with an id
-      // will be auto-dirtied and flushed by JPA, preventing duplicate inserts.
-      var newItems = orderItemsList.stream().filter(i -> i.getId() == null).toList();
-      if (!newItems.isEmpty()) {
-        log.debug("Persisting {} new OrderItems without IDs", newItems.size());
-        orderItemsRepository.saveAll(newItems);
-      }
-
-      // Collect all order items with updated ref and publish a single batched event
-      List<OrderItemsRefUpdatedEvent.OrderItemRefInfo> orderItemRefInfos = new ArrayList<>();
-      for (var orderItem : orderItemsList) {
-        if (orderItem.getRef() != null && orderItem.getOrder() != null) {
-          orderItemRefInfos.add(
-              new OrderItemsRefUpdatedEvent.OrderItemRefInfo(
-                  orderItem.getOrder().getId(), orderItem.getRef(), orderItem.getId()));
-        }
-      }
-
-      if (!orderItemRefInfos.isEmpty()) {
-        var batchEvent = new OrderItemsRefUpdatedEvent(this, orderItemRefInfos, paymentID);
-        eventPublisher.publishEvent(batchEvent);
-        log.debug(
-            "Published OrderItemsRefUpdatedEvent for Payment ID: {} with {} order items",
-            paymentID,
-            orderItemRefInfos.size());
-      }
-
-      paymentRepository.save(payment);
-
       var orders = orderRepository.findByPaymentId(paymentID);
 
       var paymentMethod =
@@ -223,16 +153,6 @@ public class BuyOrderPaymentServiceImpl implements BuyOrderPaymentService {
                       .toList())
               .build();
 
-      // Wait 10 seconds before initiating payment creation
-      try {
-        log.info(
-            "Waiting 10 seconds before initiating payment creation for payment ID: {}", paymentID);
-        Thread.sleep(5_000L);
-      } catch (InterruptedException ie) {
-        Thread.currentThread().interrupt();
-        log.warn("Sleep interrupted before payment creation for payment ID: {}", paymentID);
-      }
-
       var paymentResponse = paymentsAPIClient.createPayment(paymentRequest).block();
       if (paymentResponse == null) {
         throw new RuntimeException("Failed to initiate payment with MF provider");
@@ -241,6 +161,16 @@ public class BuyOrderPaymentServiceImpl implements BuyOrderPaymentService {
       payment.setPaymentUrl(paymentResponse.getRedirectUrl());
       payment.setRef(paymentResponse.getPaymentId());
       paymentRepository.save(payment);
+
+      var buyOrderRefList =
+          orders.stream()
+              .filter(BuyOrder.class::isInstance)
+              .map(Order::getItems)
+              .flatMap(List::stream)
+              .map(OrderItems::getRef)
+              .toList();
+      
+      buyOrderApiClient.confirmOrder(buyOrderRefList).block();
 
       log.info("Successfully fetched buy order payment URL for payment ID: {}", paymentID);
 
@@ -260,9 +190,5 @@ public class BuyOrderPaymentServiceImpl implements BuyOrderPaymentService {
       log.error("Error fetching buy order payment URL: {}", e.getMessage(), e);
       throw new RuntimeException("Failed to fetch buy order payment URL", e);
     }
-  }
-
-  private Stream<OrderDetail> convertOrderToOrderDetail(Order order) {
-    return paymentServiceHelper.convertOrderToOrderDetail(order);
   }
 }
