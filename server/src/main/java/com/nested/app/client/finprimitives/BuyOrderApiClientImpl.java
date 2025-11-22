@@ -2,7 +2,7 @@ package com.nested.app.client.finprimitives;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.nested.app.client.mf.BuyOrderApiClient;
-import com.nested.app.client.mf.dto.BuyOrderConfirmRequest;
+import com.nested.app.client.mf.dto.BuyOrderConsentRequest;
 import com.nested.app.client.mf.dto.ConfirmOrderRequest;
 import com.nested.app.client.mf.dto.OrderData;
 import com.nested.app.client.mf.dto.OrderDetail;
@@ -58,10 +58,23 @@ public class BuyOrderApiClientImpl implements BuyOrderApiClient {
   }
 
   @Override
-  public Mono<Void> confirmOrder(BuyOrderConfirmRequest request) {
+  public Mono<Void> updateConsent(BuyOrderConsentRequest request) {
     return api.withAuth()
         .patch()
         .uri(BUY_ORDER_API_URL)
+        .bodyValue(request)
+        .retrieve()
+        .bodyToMono(Void.class);
+  }
+
+  @Override
+  public Mono<Void> confirmOrder(List<String> orderIds) {
+    var orders =
+        orderIds.stream().map(orderID -> Map.of("id", orderID, "state", "confirmed")).toList();
+    var request = Map.of("mf_purchases", orders);
+    return api.withAuth()
+        .patch()
+        .uri(BUY_ORDER_BATCH_API_URL)
         .bodyValue(request)
         .retrieve()
         .bodyToMono(Void.class);

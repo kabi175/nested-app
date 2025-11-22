@@ -9,8 +9,7 @@ import lombok.Getter;
 
 @Builder
 @Getter
-public class BuyOrderConfirmRequest {
-  private final String state = "confirmed";
+public class BuyOrderConsentRequest {
   @JsonProperty("id")
   private String orderRef;
   @JsonIgnore private String email;
