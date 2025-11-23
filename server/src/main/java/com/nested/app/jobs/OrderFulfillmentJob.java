@@ -31,7 +31,7 @@ import org.springframework.stereotype.Component;
  */
 @Slf4j
 @Component
-public class OrderStatusCheckJob implements Job {
+public class OrderFulfillmentJob implements Job {
 
   private static final int DECIMAL_SCALE = 4;
   private static final int CALCULATION_SCALE = 8;

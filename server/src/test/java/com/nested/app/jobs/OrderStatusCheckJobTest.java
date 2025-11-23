@@ -39,7 +39,7 @@ class OrderStatusCheckJobTest {
   @Mock private JobExecutionContext jobExecutionContext;
   @Mock private JobDetail jobDetail;
 
-  @InjectMocks private OrderStatusCheckJob orderStatusCheckJob;
+  @InjectMocks private OrderFulfillmentJob orderStatusCheckJob;
 
   private JobDataMap jobDataMap;
   private String orderId;

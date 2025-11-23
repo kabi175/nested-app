@@ -1,6 +1,6 @@
 package com.nested.app.services;
 
-import com.nested.app.jobs.OrderStatusCheckJob;
+import com.nested.app.jobs.OrderFulfillmentJob;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -23,7 +23,7 @@ public class OrderSchedulerService {
 
   public void scheduleOrderStatusJob(String orderId) throws SchedulerException {
     JobDetail jobDetail =
-        JobBuilder.newJob(OrderStatusCheckJob.class)
+        JobBuilder.newJob(OrderFulfillmentJob.class)
             .withIdentity("order-check-" + orderId)
             .usingJobData("orderId", orderId)
             .storeDurably()
@@ -62,7 +62,7 @@ public class OrderSchedulerService {
 
     for (String orderId : orderIds) {
       JobDetail jobDetail =
-          JobBuilder.newJob(OrderStatusCheckJob.class)
+          JobBuilder.newJob(OrderFulfillmentJob.class)
               .withIdentity("order-check-" + orderId)
               .usingJobData("orderId", orderId)
               .storeDurably()
