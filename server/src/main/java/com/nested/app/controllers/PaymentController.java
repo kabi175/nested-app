@@ -7,7 +7,6 @@ import com.nested.app.services.BuyOrderPaymentService;
 import com.nested.app.services.PaymentService;
 import com.nested.app.services.SipOrderPaymentService;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -67,16 +66,4 @@ public class PaymentController {
     return ResponseEntity.ok(payment);
   }
 
-  private String getIpAddress(HttpServletRequest request) {
-    String ipAddress = request.getHeader("X-Forwarded-For");
-    if (ipAddress == null || ipAddress.isEmpty() || "unknown".equalsIgnoreCase(ipAddress)) {
-      ipAddress = request.getRemoteAddr();
-    }
-    // If X-Forwarded-For contains multiple IPs (e.g., "client, proxy1, proxy2"),
-    // the first one is typically the actual client IP.
-    if (ipAddress != null && ipAddress.contains(",")) {
-      ipAddress = ipAddress.split(",")[0].trim();
-    }
-    return ipAddress;
-  }
 }
