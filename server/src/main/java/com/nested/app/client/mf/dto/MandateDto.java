@@ -5,9 +5,11 @@ import com.fasterxml.jackson.annotation.JsonValue;
 import java.util.Date;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
+import lombok.Data;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 
+@Data
 @Builder
 @AllArgsConstructor
 @RequiredArgsConstructor

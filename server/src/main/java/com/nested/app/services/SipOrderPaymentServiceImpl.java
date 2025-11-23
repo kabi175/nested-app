@@ -1,14 +1,11 @@
 package com.nested.app.services;
 
-import com.nested.app.client.mf.PaymentsAPIClient;
+import com.nested.app.client.mf.MandateApiClient;
 import com.nested.app.client.mf.SipOrderApiClient;
 import com.nested.app.client.mf.dto.ConfirmOrderRequest;
 import com.nested.app.client.mf.dto.OrderDetail;
-import com.nested.app.client.mf.dto.PaymentsOrder;
-import com.nested.app.client.mf.dto.PaymentsRequest;
 import com.nested.app.client.mf.dto.SipOrderDetail;
 import com.nested.app.dto.PlaceOrderDTO;
-import com.nested.app.dto.PlaceOrderPostDTO;
 import com.nested.app.dto.UserActionRequest;
 import com.nested.app.dto.VerifyOrderDTO;
 import com.nested.app.entity.Order;
@@ -16,7 +13,6 @@ import com.nested.app.entity.OrderItems;
 import com.nested.app.entity.SIPOrder;
 import com.nested.app.events.OrderItemsRefUpdatedEvent;
 import com.nested.app.repository.OrderItemsRepository;
-import com.nested.app.repository.OrderRepository;
 import com.nested.app.repository.PaymentRepository;
 import java.util.ArrayList;
 import java.util.List;
@@ -42,12 +38,11 @@ import org.springframework.web.reactive.function.client.WebClientResponseExcepti
 public class SipOrderPaymentServiceImpl implements SipOrderPaymentService {
 
   private final PaymentRepository paymentRepository;
-  private final OrderRepository orderRepository;
   private final SipOrderApiClient sipOrderApiClient;
-  private final PaymentsAPIClient paymentsAPIClient;
   private final PaymentServiceImpl paymentServiceHelper;
   private final OrderItemsRepository orderItemsRepository;
   private final ApplicationEventPublisher eventPublisher;
+  private final MandateApiClient mandateApiClient;
 
   /**
    * Verifies a SIP order payment using verification code
@@ -113,8 +108,26 @@ public class SipOrderPaymentServiceImpl implements SipOrderPaymentService {
   @Override
   @Transactional
   public UserActionRequest fetchSipOrderPaymentUrl(Long paymentID) {
-    log.info("Fetching SIP order payment URL for payment ID: {}", paymentID);
+    var payment = paymentRepository.findById(paymentID).orElseThrow();
 
+    var sipOrder =
+        payment.getOrders().stream()
+            .filter(SIPOrder.class::isInstance)
+            .map(SIPOrder.class::cast)
+            .findFirst()
+            .orElseThrow();
+
+    var resp = mandateApiClient.authorizeMandate(sipOrder.getMandateID()).block();
+    if (resp == null) {
+      return null;
+    }
+
+    return UserActionRequest.builder().redirectUrl(resp.getRedirectUrl()).build();
+  }
+
+  @Override
+  public void placeSipOrders(Long paymentID) {
+    log.info("Fetching SIP order payment URL for payment ID: {}", paymentID);
     try {
       var payment = paymentRepository.findById(paymentID).orElseThrow();
 
@@ -188,40 +201,6 @@ public class SipOrderPaymentServiceImpl implements SipOrderPaymentService {
       }
 
       paymentRepository.save(payment);
-
-      var orders = orderRepository.findByPaymentId(paymentID);
-
-      var paymentMethod =
-          payment.getPaymentType() == PlaceOrderPostDTO.PaymentMethod.UPI
-              ? PaymentsRequest.PaymentMethod.UPI
-              : PaymentsRequest.PaymentMethod.NET_BANKING;
-
-      var paymentRequest =
-          PaymentsRequest.builder()
-              .bankId(payment.getBank().getPaymentRef())
-              .paymentMethod(paymentMethod)
-              .orders(
-                  orderItems.stream()
-                      .map(OrderItems::getPaymentRef)
-                      .map(PaymentsOrder::new)
-                      .toList())
-              .build();
-
-      var paymentResponse = paymentsAPIClient.createPayment(paymentRequest).block();
-      if (paymentResponse == null) {
-        throw new RuntimeException("Failed to initiate payment with MF provider");
-      }
-
-      payment.setPaymentUrl(paymentResponse.getRedirectUrl());
-      payment.setRef(paymentResponse.getPaymentId());
-      paymentRepository.save(payment);
-
-      log.info("Successfully fetched SIP order payment URL for payment ID: {}", paymentID);
-
-      return UserActionRequest.builder()
-          .id(payment.getId().toString())
-          .redirectUrl(payment.getPaymentUrl())
-          .build();
 
     } catch (WebClientResponseException e) {
       log.error(

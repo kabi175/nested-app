@@ -28,4 +28,6 @@ public interface SipOrderPaymentService {
    * @return User action request with redirect URL
    */
   UserActionRequest fetchSipOrderPaymentUrl(Long paymentID);
+
+  void placeSipOrders(Long paymentID);
 }

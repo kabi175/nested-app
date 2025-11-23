@@ -1,9 +1,11 @@
 package com.nested.app.services;
 
 import com.nested.app.client.mf.BuyOrderApiClient;
+import com.nested.app.client.mf.MandateApiClient;
 import com.nested.app.client.mf.OtpApiClient;
 import com.nested.app.client.mf.dto.BulkOrderOtpRequest;
 import com.nested.app.client.mf.dto.CreateMandateRequest;
+import com.nested.app.client.mf.dto.MandateDto;
 import com.nested.app.client.mf.dto.OrderDetail;
 import com.nested.app.client.mf.dto.OtpRequest;
 import com.nested.app.client.mf.dto.SipOrderDetail;
@@ -30,6 +32,11 @@ import com.nested.app.repository.OrderRepository;
 import com.nested.app.repository.PaymentRepository;
 import com.nested.app.utils.IpUtils;
 import jakarta.servlet.http.HttpServletRequest;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Objects;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.ApplicationEventPublisher;
@@ -38,12 +45,6 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
 import org.springframework.web.reactive.function.client.WebClientResponseException;
-
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Objects;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 /**
  * Service implementation for managing Payment entities Provides business logic for payment-related
@@ -62,6 +63,7 @@ public class PaymentServiceImpl implements PaymentService {
   private final OrderRepository orderRepository;
   private final UserContext userContext;
   private final BuyOrderApiClient buyOrderApiClient;
+  private final MandateApiClient mandateApiClient;
   private final ApplicationEventPublisher eventPublisher;
 
   private final OtpApiClient otpApiClient;
@@ -155,6 +157,9 @@ public class PaymentServiceImpl implements PaymentService {
       // Populate order items for each order
       orders.forEach(this::populateOrderItems);
 
+      // create mandate for SIP orders
+      createMandateWithExternalAPI(payment);
+
       // Save payment and orders
       Payment savedPayment = paymentRepository.save(payment);
 
@@ -178,6 +183,30 @@ public class PaymentServiceImpl implements PaymentService {
       log.error("Error creating payment with orders: {}", e.getMessage(), e);
       throw new RuntimeException("Failed to create payment with orders", e);
     }
+  }
+
+  private void createMandateWithExternalAPI(Payment payment) {
+    var sipOrders =
+        payment.getOrders().stream()
+            .filter(SIPOrder.class::isInstance)
+            .map(SIPOrder.class::cast)
+            .toList();
+
+    // TODO: compute the  mandate amount order amount & setup amount
+    var totalAmount = sipOrders.stream().map(SIPOrder::getAmount).reduce(0d, Double::sum);
+
+    var mandate =
+        mandateApiClient.createMandate(MandateDto.builder().amount(totalAmount).build()).block();
+    if (mandate == null) {
+      log.error("mandate creation failed for payment {}", payment.getId());
+      return;
+    }
+
+    sipOrders.forEach(
+        order -> {
+          order.setMandateID(mandate.getId());
+          order.setMandateRef(mandate.getRef());
+        });
   }
 
   private void placeOrderWithExternalAPI(Payment payment) {
@@ -291,7 +320,7 @@ public class PaymentServiceImpl implements PaymentService {
                 orderDetail =
                     SipOrderDetail.builder()
                         .fundID(item.getFund().getIsinCode())
-                        .mandateID(sipOrder.getMandateID())
+                        .mandateID(sipOrder.getMandateID().toString())
                         .startDate(sipOrder.getStartDate())
                         .firstOrderToday(false)
                         .accountID(accountID)
