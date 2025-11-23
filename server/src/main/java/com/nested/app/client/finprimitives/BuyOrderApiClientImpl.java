@@ -45,7 +45,7 @@ public class BuyOrderApiClientImpl implements BuyOrderApiClient {
     var resp =
         api.withAuth()
             .get()
-            .uri(uriBuilder -> uriBuilder.path(BUY_ORDER_API_URL).path(orderRef).build())
+            .uri(uriBuilder -> uriBuilder.path(BUY_ORDER_API_URL + "/" + orderRef).build())
             .retrieve()
             .bodyToMono(new ParameterizedTypeReference<EntityListResponse<OrderData>>() {})
             .block();
