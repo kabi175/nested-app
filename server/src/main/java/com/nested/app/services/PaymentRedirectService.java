@@ -8,6 +8,7 @@ import java.time.LocalDateTime;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
 /**
@@ -27,7 +28,7 @@ public class PaymentRedirectService {
    *
    * @param mandateId The mandate ID returned from the provider
    */
-  public void handleMandateRedirect(Long mandateId) {
+  public ResponseEntity<?> handleMandateRedirect(Long mandateId) {
     log.info("Received mandate redirect for mandate ID: {}", mandateId);
 
     try {
@@ -36,7 +37,7 @@ public class PaymentRedirectService {
 
       if (payment == null) {
         log.warn("No payment found for mandate ID: {}", mandateId);
-        return;
+        return ResponseEntity.ok().build();
       }
 
       // Publish mandate process event for async processing and verification
@@ -48,7 +49,9 @@ public class PaymentRedirectService {
           mandateId);
     } catch (Exception e) {
       log.error("Error processing mandate redirect for mandate ID: {}", mandateId, e);
+      return ResponseEntity.internalServerError().build();
     }
+    return ResponseEntity.ok().build();
   }
 
   /**
@@ -57,7 +60,7 @@ public class PaymentRedirectService {
    *
    * @param paymentRef The payment reference returned from the provider
    */
-  public void handlePaymentRedirect(String paymentRef) {
+  public ResponseEntity<?> handlePaymentRedirect(String paymentRef) {
     log.info("Received payment redirect for payment reference: {}", paymentRef);
 
     try {
@@ -65,7 +68,7 @@ public class PaymentRedirectService {
 
       if (payment == null) {
         log.warn("Payment not found for reference: {}", paymentRef);
-        return;
+        return ResponseEntity.ok().build();
       }
 
       // Publish buy order process event for async processing and verification
@@ -77,6 +80,8 @@ public class PaymentRedirectService {
           paymentRef);
     } catch (Exception e) {
       log.error("Error processing payment redirect for reference: {}", paymentRef, e);
+      return ResponseEntity.internalServerError().build();
     }
+    return ResponseEntity.ok().build();
   }
 }
