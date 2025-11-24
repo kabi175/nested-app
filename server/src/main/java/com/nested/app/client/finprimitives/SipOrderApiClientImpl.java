@@ -1,10 +1,9 @@
 package com.nested.app.client.finprimitives;
 
 import com.nested.app.client.mf.SipOrderApiClient;
-import com.nested.app.client.mf.dto.ConfirmOrderRequest;
+import com.nested.app.client.mf.dto.OrderConsentRequest;
 import com.nested.app.client.mf.dto.OrderData;
 import com.nested.app.client.mf.dto.SipOrderDetail;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import lombok.RequiredArgsConstructor;
@@ -17,7 +16,8 @@ import reactor.core.publisher.Mono;
 @Service
 @RequiredArgsConstructor
 public class SipOrderApiClientImpl implements SipOrderApiClient {
-  private static final String SIP_ORDER_API_URL = "/v2/mf_purchase_plans/batch";
+  private static final String SIP_ORDER_BATCH_API_URL = "/v2/mf_purchase_plans/batch";
+  private static final String SIP_ORDER_API_URL = "/v2/mf_purchase_plans";
   private static final String SIP_ORDER_TXN_API_URL = "/v2/mf_purchases";
   private final FinPrimitivesAPI api;
 
@@ -28,30 +28,33 @@ public class SipOrderApiClientImpl implements SipOrderApiClient {
     }
     return api.withAuth()
         .post()
-        .uri(SIP_ORDER_API_URL)
+        .uri(SIP_ORDER_BATCH_API_URL)
         .bodyValue(Map.of("mf_purchase_plans", orders))
         .retrieve()
         .bodyToMono(new ParameterizedTypeReference<>() {});
   }
 
   @Override
-  public Mono<Void> confirmSipOrder(ConfirmOrderRequest confirmOrderRequest) {
-    if (confirmOrderRequest.getSipOrders() == null
-        || confirmOrderRequest.getSipOrders().isEmpty()) {
-      return Mono.empty();
-    }
-
-    var orders =
-        confirmOrderRequest.getSipOrders().stream()
-            .map(orderID -> convertToConfirmData(confirmOrderRequest, orderID))
-            .toList();
-
+  public Mono<Void> updateConsent(OrderConsentRequest request) {
     return api.withAuth()
         .patch()
         .uri(SIP_ORDER_API_URL)
-        .bodyValue(Map.of("mf_purchase_plans", orders))
+        .bodyValue(request)
         .retrieve()
-        .bodyToMono(new ParameterizedTypeReference<>() {});
+        .bodyToMono(Void.class);
+  }
+
+  @Override
+  public Mono<Void> confirmOrder(List<String> orderIds) {
+    var orders =
+        orderIds.stream().map(orderID -> Map.of("id", orderID, "state", "confirmed")).toList();
+    var request = Map.of("mf_purchases", orders);
+    return api.withAuth()
+        .patch()
+        .uri(SIP_ORDER_BATCH_API_URL)
+        .bodyValue(request)
+        .retrieve()
+        .bodyToMono(Void.class);
   }
 
   @Override
@@ -74,17 +77,4 @@ public class SipOrderApiClientImpl implements SipOrderApiClient {
             });
   }
 
-  private Map<String, Object> convertToConfirmData(
-      ConfirmOrderRequest confirmOrderRequest, String orderID) {
-    var consent = new HashMap<String, String>();
-
-    if (confirmOrderRequest.getEmail() != null) {
-      consent.put("email", confirmOrderRequest.getEmail());
-    }
-    if (confirmOrderRequest.getMobile() != null) {
-      consent.put("mobile", confirmOrderRequest.getMobile());
-    }
-
-    return Map.of("id", orderID, "state", "confirmed", "consent", consent);
-  }
 }
