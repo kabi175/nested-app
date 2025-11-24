@@ -1,8 +1,6 @@
 package com.nested.app.services;
 
-import com.nested.app.dto.PlaceOrderDTO;
 import com.nested.app.dto.UserActionRequest;
-import com.nested.app.dto.VerifyOrderDTO;
 
 /**
  * Service interface for managing SIP Order Payment operations. Handles verification and payment URL
@@ -16,10 +14,10 @@ public interface SipOrderPaymentService {
   /**
    * Verifies a SIP order payment using verification code
    *
-   * @param verifyOrderRequest Payment verification request data
+   * @param paymentID Payment ID
    * @return Verified payment data
    */
-  PlaceOrderDTO verifySipOrderPayment(VerifyOrderDTO verifyOrderRequest);
+  void verifySipOrderPayment(Long paymentID);
 
   /**
    * Fetches payment redirect URL for SIP orders

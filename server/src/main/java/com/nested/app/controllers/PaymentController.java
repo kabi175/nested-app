@@ -50,15 +50,6 @@ public class PaymentController {
     return ResponseEntity.ok(payment);
   }
 
-  // SIP Order Payment Endpoints
-  @PostMapping("{payment_id}/sip/actions/verify")
-  public ResponseEntity<?> verifySipOrder(@Valid @RequestBody VerifyOrderDTO verifyOrderRequest) {
-    log.info("Verifying SIP order payment for payment ID: {}", verifyOrderRequest.getId());
-    PlaceOrderDTO verifiedPayment =
-        sipOrderPaymentService.verifySipOrderPayment(verifyOrderRequest);
-    return ResponseEntity.ok(verifiedPayment);
-  }
-
   @PostMapping("{payment_id}/sip/actions/fetch_redirect_url")
   public ResponseEntity<?> initiateSipOrderPayment(@PathVariable("payment_id") Long paymentID) {
     log.info("Fetching SIP order payment redirect URL for payment ID: {}", paymentID);

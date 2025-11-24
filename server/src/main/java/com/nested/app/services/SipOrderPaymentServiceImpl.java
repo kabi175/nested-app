@@ -2,14 +2,13 @@ package com.nested.app.services;
 
 import com.nested.app.client.mf.MandateApiClient;
 import com.nested.app.client.mf.SipOrderApiClient;
-import com.nested.app.client.mf.dto.ConfirmOrderRequest;
+import com.nested.app.client.mf.dto.OrderConsentRequest;
 import com.nested.app.client.mf.dto.OrderDetail;
 import com.nested.app.client.mf.dto.SipOrderDetail;
-import com.nested.app.dto.PlaceOrderDTO;
 import com.nested.app.dto.UserActionRequest;
-import com.nested.app.dto.VerifyOrderDTO;
 import com.nested.app.entity.Order;
 import com.nested.app.entity.OrderItems;
+import com.nested.app.entity.Payment;
 import com.nested.app.entity.SIPOrder;
 import com.nested.app.events.OrderItemsRefUpdatedEvent;
 import com.nested.app.repository.OrderItemsRepository;
@@ -23,6 +22,7 @@ import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.reactive.function.client.WebClientResponseException;
+import reactor.core.publisher.Flux;
 
 /**
  * Service implementation for managing SIP Order Payment operations. Handles verification and
@@ -47,17 +47,14 @@ public class SipOrderPaymentServiceImpl implements SipOrderPaymentService {
   /**
    * Verifies a SIP order payment using verification code
    *
-   * @param verifyOrderRequest Payment verification request data
-   * @return Verified payment data
+   * @param paymentID Payment id
    */
   @Override
-  public PlaceOrderDTO verifySipOrderPayment(VerifyOrderDTO verifyOrderRequest) {
-    log.info(
-        "Verifying SIP order payment with verification code: {}",
-        verifyOrderRequest.getVerificationCode());
+  public void verifySipOrderPayment(Long paymentID) {
+    log.info("Verifying SIP order for payment ID: {}", paymentID);
 
     try {
-      var payment = paymentRepository.findById(verifyOrderRequest.getId()).orElseThrow();
+      var payment = paymentRepository.findById(paymentID).orElseThrow();
 
       var sipOrderIds =
           payment.getOrders().stream()
@@ -68,24 +65,32 @@ public class SipOrderPaymentServiceImpl implements SipOrderPaymentService {
               .toList();
 
       if (sipOrderIds.isEmpty()) {
-        log.warn("No SIP orders found for payment ID: {}", verifyOrderRequest.getId());
+        log.warn("No SIP orders found for payment ID: {}", paymentID);
         throw new IllegalArgumentException("No SIP orders found for this payment");
       }
+      var confirmOrderRequests =
+          sipOrderIds.stream()
+              .map(
+                  orderRef ->
+                      OrderConsentRequest.builder()
+                          .orderRef(orderRef)
+                          .email(payment.getUser().getEmail())
+                          .build())
+              .toList();
 
-      var request =
-          ConfirmOrderRequest.builder()
-              .email(payment.getUser().getEmail())
-              .sipOrders(sipOrderIds)
-              .build();
+      // Process confirmOrder requests in parallel with a batch size of 10
+      Flux.fromIterable(confirmOrderRequests)
+          .flatMap(sipOrderApiClient::updateConsent, 10) // Process 10 requests at a
+          // time
+          .doOnNext(
+              response -> log.debug("Successfully confirmed order for payment ID: {}", paymentID))
+          .doOnError(
+              error -> log.error("Error confirming order for payment ID: {}", paymentID, error))
+          .blockLast(); // Wait for all parallel requests to complete
 
-      sipOrderApiClient.confirmSipOrder(request).block();
-
+      sipOrderApiClient.confirmOrder(sipOrderIds).block();
       log.info(
-          "Successfully verified {} SIP orders for payment ID: {}",
-          sipOrderIds.size(),
-          verifyOrderRequest.getId());
-
-      return paymentServiceHelper.convertPaymentToPlaceOrderDTO(payment);
+          "Successfully verified {} SIP orders for payment ID: {}", sipOrderIds.size(), paymentID);
 
     } catch (WebClientResponseException e) {
       log.error(
@@ -128,6 +133,10 @@ public class SipOrderPaymentServiceImpl implements SipOrderPaymentService {
     log.info("Fetching SIP order payment URL for payment ID: {}", paymentID);
     try {
       var payment = paymentRepository.findById(paymentID).orElseThrow();
+
+      if (payment.getSipStatus() == Payment.PaymentStatus.NOT_AVAILABLE) {
+        throw new IllegalArgumentException("No SIP orders found for this payment");
+      }
 
       var sipOrdersDetails =
           payment.getOrders().stream()
