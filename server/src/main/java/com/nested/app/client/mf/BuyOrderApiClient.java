@@ -1,7 +1,7 @@
 package com.nested.app.client.mf;
 
 import com.nested.app.client.finprimitives.EntityListResponse;
-import com.nested.app.client.mf.dto.BuyOrderConsentRequest;
+import com.nested.app.client.mf.dto.OrderConsentRequest;
 import com.nested.app.client.mf.dto.OrderData;
 import com.nested.app.client.mf.dto.OrderDetail;
 import java.util.List;
@@ -11,7 +11,7 @@ import reactor.core.publisher.Mono;
 @Service
 public interface BuyOrderApiClient {
 
-  Mono<Void> updateConsent(BuyOrderConsentRequest confirmOrderRequest);
+  Mono<Void> updateConsent(OrderConsentRequest confirmOrderRequest);
 
   Mono<Void> confirmOrder(List<String> orderIds);
 

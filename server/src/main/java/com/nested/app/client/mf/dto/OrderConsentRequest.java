@@ -9,9 +9,10 @@ import lombok.Getter;
 
 @Builder
 @Getter
-public class BuyOrderConsentRequest {
+public class OrderConsentRequest {
   @JsonProperty("id")
   private String orderRef;
+
   @JsonIgnore private String email;
 
   @JsonIgnore private String mobile;

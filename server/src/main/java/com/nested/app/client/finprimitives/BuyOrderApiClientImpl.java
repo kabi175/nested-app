@@ -2,8 +2,8 @@ package com.nested.app.client.finprimitives;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.nested.app.client.mf.BuyOrderApiClient;
-import com.nested.app.client.mf.dto.BuyOrderConsentRequest;
 import com.nested.app.client.mf.dto.ConfirmOrderRequest;
+import com.nested.app.client.mf.dto.OrderConsentRequest;
 import com.nested.app.client.mf.dto.OrderData;
 import com.nested.app.client.mf.dto.OrderDetail;
 import java.util.HashMap;
@@ -58,7 +58,7 @@ public class BuyOrderApiClientImpl implements BuyOrderApiClient {
   }
 
   @Override
-  public Mono<Void> updateConsent(BuyOrderConsentRequest request) {
+  public Mono<Void> updateConsent(OrderConsentRequest request) {
     return api.withAuth()
         .patch()
         .uri(BUY_ORDER_API_URL)

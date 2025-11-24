@@ -2,7 +2,7 @@ package com.nested.app.services;
 
 import com.nested.app.client.mf.BuyOrderApiClient;
 import com.nested.app.client.mf.PaymentsAPIClient;
-import com.nested.app.client.mf.dto.BuyOrderConsentRequest;
+import com.nested.app.client.mf.dto.OrderConsentRequest;
 import com.nested.app.client.mf.dto.PaymentsOrder;
 import com.nested.app.client.mf.dto.PaymentsRequest;
 import com.nested.app.dto.PlaceOrderDTO;
@@ -77,7 +77,7 @@ public class BuyOrderPaymentServiceImpl implements BuyOrderPaymentService {
           buyOrderIds.stream()
               .map(
                   orderRef ->
-                      BuyOrderConsentRequest.builder()
+                      OrderConsentRequest.builder()
                           .orderRef(orderRef)
                           .email(payment.getUser().getEmail())
                           .build())
