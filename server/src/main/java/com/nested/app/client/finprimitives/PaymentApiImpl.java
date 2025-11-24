@@ -56,6 +56,10 @@ public class PaymentApiImpl implements PaymentsAPIClient {
 
   @Override
   public Mono<PaymentsResponse> fetchPayment(String paymentID) {
-    return api.withAuth().get().uri(PAYMENT_API_URL).retrieve().bodyToMono(PaymentsResponse.class);
+    return api.withAuth()
+        .get()
+        .uri(PAYMENT_API_URL + "/" + paymentID)
+        .retrieve()
+        .bodyToMono(PaymentsResponse.class);
   }
 }
