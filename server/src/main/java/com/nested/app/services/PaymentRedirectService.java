@@ -1,7 +1,8 @@
 package com.nested.app.services;
 
 import com.nested.app.entity.Payment;
-import com.nested.app.events.PaymentEvent;
+import com.nested.app.events.BuyOrderProcessEvent;
+import com.nested.app.events.MandateProcessEvent;
 import com.nested.app.repository.PaymentRepository;
 import java.time.LocalDateTime;
 import lombok.RequiredArgsConstructor;
@@ -21,8 +22,8 @@ public class PaymentRedirectService {
   private final PaymentRepository paymentRepository;
 
   /**
-   * Handle mandate redirect from external provider. Publishes a PaymentEvent for the mandate
-   * redirect.
+   * Handle mandate redirect from external provider. Publishes a MandateProcessEvent for the mandate
+   * redirect to verify and process async.
    *
    * @param mandateId The mandate ID returned from the provider
    */
@@ -38,12 +39,11 @@ public class PaymentRedirectService {
         return;
       }
 
-      // Publish mandate redirect event for async processing
-      publisher.publishEvent(
-          new PaymentEvent(payment.getRef(), Payment.PaymentStatus.SUBMITTED, LocalDateTime.now()));
+      // Publish mandate process event for async processing and verification
+      publisher.publishEvent(new MandateProcessEvent(mandateId, LocalDateTime.now()));
 
       log.info(
-          "Published mandate redirect event for Payment ID: {}, Mandate ID: {}",
+          "Published mandate process event for Payment ID: {}, Mandate ID: {}",
           payment.getId(),
           mandateId);
     } catch (Exception e) {
@@ -52,8 +52,8 @@ public class PaymentRedirectService {
   }
 
   /**
-   * Handle payment redirect from external payment provider. Publishes a PaymentEvent for the
-   * payment redirect.
+   * Handle payment redirect from external payment provider. Publishes a BuyOrderProcessEvent for
+   * the payment redirect to verify and process async.
    *
    * @param paymentRef The payment reference returned from the provider
    */
@@ -68,12 +68,11 @@ public class PaymentRedirectService {
         return;
       }
 
-      // Publish payment redirect event for async processing
-      publisher.publishEvent(
-          new PaymentEvent(payment.getRef(), Payment.PaymentStatus.COMPLETED, LocalDateTime.now()));
+      // Publish buy order process event for async processing and verification
+      publisher.publishEvent(new BuyOrderProcessEvent(paymentRef, LocalDateTime.now()));
 
       log.info(
-          "Published payment redirect event for Payment ID: {}, Ref: {}",
+          "Published buy order process event for Payment ID: {}, Ref: {}",
           payment.getId(),
           paymentRef);
     } catch (Exception e) {
