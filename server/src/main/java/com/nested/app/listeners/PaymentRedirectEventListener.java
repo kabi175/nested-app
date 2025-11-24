@@ -10,6 +10,7 @@ import com.nested.app.events.BuyOrderProcessEvent;
 import com.nested.app.events.MandateProcessEvent;
 import com.nested.app.repository.OrderRepository;
 import com.nested.app.repository.PaymentRepository;
+import com.nested.app.services.SipOrderPaymentService;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -47,6 +48,7 @@ public class PaymentRedirectEventListener {
   private final OrderRepository orderRepository;
   private final MandateApiClient mandateApiClient;
   private final PaymentsAPIClient paymentsAPIClient;
+  private final SipOrderPaymentService sipOrderPaymentService;
 
   /**
    * Handles MandateProcessEvent by verifying mandate status with MandateApiClient and updating
@@ -161,19 +163,16 @@ public class PaymentRedirectEventListener {
       }
 
       // Verify mandate is in approved state
-      if (mandate.getStatus() == MandateDto.State.APPROVED
-          || mandate.getStatus() == MandateDto.State.SUBMITTED) {
+      if (mandate.getStatus() == MandateDto.State.APPROVED) {
         log.info(
             "Mandate verified with status: {} for mandate ID: {}, payment ID: {}",
             mandate.getStatus(),
             mandateId,
             payment.getId());
 
-        // Update sipStatus to SUBMITTED
-        payment.setSipStatus(Payment.PaymentStatus.SUBMITTED);
-        paymentRepository.save(payment);
+        sipOrderPaymentService.placeSipOrders(payment.getId());
 
-        log.info("Updated payment ID: {} sipStatus to SUBMITTED", payment.getId());
+        log.info("sip orders placed for  payment ID: {} sipStatus to SUBMITTED", payment.getId());
       } else {
         log.warn(
             "Mandate status not approved: {} for mandate ID: {}, payment ID: {}",
@@ -264,8 +263,7 @@ public class PaymentRedirectEventListener {
     Payment.PaymentStatus currentSipStatus = payment.getSipStatus();
 
     // If sipStatus is already SUBMITTED or COMPLETED, consider it processed
-    return currentSipStatus == Payment.PaymentStatus.SUBMITTED
-        || currentSipStatus == Payment.PaymentStatus.COMPLETED;
+    return currentSipStatus != Payment.PaymentStatus.PENDING;
   }
 
   /**
@@ -280,159 +278,6 @@ public class PaymentRedirectEventListener {
 
     // If buyStatus is already COMPLETED, consider it processed
     return currentBuyStatus == Payment.PaymentStatus.COMPLETED;
-  }
-
-  // Existing helper methods for legacy PaymentEvent handling
-  /**
-   * Handle mandate verification and status update. Fetches mandate details from API and updates
-   * payment/orders if mandate is approved.
-   *
-   * @param payment The payment entity to update
-   */
-  private void handleMandateVerification(Payment payment) {
-    log.debug("Verifying mandate status for payment ID: {}", payment.getId());
-
-    // Get mandate ID from Payment
-    Long mandateId = payment.getMandateID();
-
-    if (mandateId == null) {
-      log.warn("No mandate ID found for payment ID: {}", payment.getId());
-      return;
-    }
-
-    try {
-      // Fetch actual mandate status from API
-      MandateDto mandate = mandateApiClient.fetchMandate(mandateId).block();
-
-      if (mandate == null) {
-        log.warn(
-            "Mandate fetch returned null for mandate ID: {}, payment ID: {}",
-            mandateId,
-            payment.getId());
-        return;
-      }
-
-      // Verify mandate is in approved state
-      if (mandate.getStatus() == MandateDto.State.APPROVED
-          || mandate.getStatus() == MandateDto.State.SUBMITTED) {
-        log.info(
-            "Mandate verified with status: {} for mandate ID: {}, payment ID: {}",
-            mandate.getStatus(),
-            mandateId,
-            payment.getId());
-
-        updatePaymentAndOrdersToSubmitted(payment);
-      } else {
-        log.warn(
-            "Mandate status not approved: {} for mandate ID: {}, payment ID: {}",
-            mandate.getStatus(),
-            mandateId,
-            payment.getId());
-      }
-    } catch (Exception e) {
-      log.error(
-          "Error verifying mandate status for mandate ID: {}, payment ID: {}",
-          mandateId,
-          payment.getId(),
-          e);
-    }
-  }
-
-  /**
-   * Handle payment verification and status update. Fetches payment details from API and updates
-   * payment/orders if payment is successful.
-   *
-   * @param payment The payment entity to update
-   */
-  private void handlePaymentVerification(Payment payment) {
-    log.debug("Verifying payment status for payment ID: {}", payment.getId());
-
-    try {
-      // Fetch actual payment status from API
-      PaymentsResponse paymentResponse = paymentsAPIClient.fetchPayment(payment.getRef()).block();
-
-      if (paymentResponse == null) {
-        log.warn(
-            "Payment fetch returned null for payment ref: {}, payment ID: {}",
-            payment.getRef(),
-            payment.getId());
-        return;
-      }
-
-      // Verify payment is in success state (exact status value depends on API)
-      if (isPaymentSuccessful(paymentResponse.getStatus())) {
-        log.info(
-            "Payment verified with status: {} for payment ref: {}, payment ID: {}",
-            paymentResponse.getStatus(),
-            payment.getRef(),
-            payment.getId());
-
-        updatePaymentAndOrdersToCompleted(payment);
-      } else {
-        log.warn(
-            "Payment status not successful: {} for payment ref: {}, payment ID: {}",
-            paymentResponse.getStatus(),
-            payment.getRef(),
-            payment.getId());
-      }
-    } catch (Exception e) {
-      log.error(
-          "Error verifying payment status for payment ref: {}, payment ID: {}",
-          payment.getRef(),
-          payment.getId(),
-          e);
-    }
-  }
-
-  /**
-   * Update payment and all associated orders to SUBMITTED status.
-   *
-   * @param payment The payment to update
-   */
-  @Transactional
-  private void updatePaymentAndOrdersToSubmitted(Payment payment) {
-    payment.setBuyStatus(Payment.PaymentStatus.SUBMITTED);
-    paymentRepository.save(payment);
-
-    // Update all orders to PLACED status
-    List<Order> orders = payment.getOrders();
-    if (orders != null) {
-      for (Order order : orders) {
-        order.setStatus(Order.OrderStatus.PLACED);
-        orderRepository.save(order);
-      }
-    }
-
-    log.info(
-        "Updated payment ID: {} and {} orders to SUBMITTED/PLACED status",
-        payment.getId(),
-        orders != null ? orders.size() : 0);
-  }
-
-  /**
-   * Update payment and all associated orders to COMPLETED status.
-   *
-   * @param payment The payment to update
-   */
-  @Transactional
-  private void updatePaymentAndOrdersToCompleted(Payment payment) {
-    payment.setBuyStatus(Payment.PaymentStatus.COMPLETED);
-    payment.setVerificationStatus(Payment.VerificationStatus.VERIFIED);
-    paymentRepository.save(payment);
-
-    // Update all orders to COMPLETED status
-    List<Order> orders = payment.getOrders();
-    if (orders != null) {
-      for (Order order : orders) {
-        order.setStatus(Order.OrderStatus.COMPLETED);
-        orderRepository.save(order);
-      }
-    }
-
-    log.info(
-        "Updated payment ID: {} and {} orders to COMPLETED status",
-        payment.getId(),
-        orders != null ? orders.size() : 0);
   }
 
   /**

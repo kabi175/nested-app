@@ -5,6 +5,7 @@ import com.nested.app.client.mf.dto.OrderData;
 import com.nested.app.entity.SIPOrder;
 import com.nested.app.entity.Transaction;
 import com.nested.app.enums.TransactionType;
+import com.nested.app.jobs.SipOrderVerificationJob;
 import com.nested.app.repository.SIPOrderRepository;
 import com.nested.app.repository.TransactionRepository;
 import java.time.LocalDate;
@@ -12,6 +13,12 @@ import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.quartz.JobBuilder;
+import org.quartz.JobDetail;
+import org.quartz.Scheduler;
+import org.quartz.SimpleScheduleBuilder;
+import org.quartz.Trigger;
+import org.quartz.TriggerBuilder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -37,6 +44,7 @@ public class SipOrderSchedulerService {
   private final SipOrderApiClient sipOrderApiClient;
   // Ledger repository for idempotent transaction writes
   private final TransactionRepository transactionRepository;
+  private final Scheduler scheduler;
 
   /**
    * Scan for due SIPOrders (scheduleStatus=ACTIVE) and mark them RUNNING with a generated orderRef.
@@ -121,7 +129,7 @@ public class SipOrderSchedulerService {
                   .getItems()
                   .getFirst()
                   .getFund()); // Simplified: using first fund; TODO multi-fund proportional
-                               // allocation if basket evolves.
+          // allocation if basket evolves.
           txn.setType(TransactionType.SIP);
           txn.setUnits(units);
           txn.setUnitPrice(price);
@@ -150,6 +158,47 @@ public class SipOrderSchedulerService {
         sipOrderRepository.save(order);
         log.error("Error polling SIPOrder id={}: {}", order.getId(), e.getMessage(), e);
       }
+    }
+  }
+
+  /**
+   * Schedules a SIP order verification job to run 10 seconds after this method is called.
+   *
+   * @param paymentID The payment ID to verify
+   */
+  public void scheduleVerificationJob(Long paymentID) {
+    try {
+      String jobIdentity = "sip-verify-" + paymentID;
+
+      JobDetail jobDetail =
+          JobBuilder.newJob(SipOrderVerificationJob.class)
+              .withIdentity(jobIdentity)
+              .usingJobData("paymentID", paymentID)
+              .storeDurably()
+              .build();
+
+      Trigger trigger =
+          TriggerBuilder.newTrigger()
+              .withIdentity(jobIdentity + "-trigger")
+              .forJob(jobDetail)
+              .withSchedule(
+                  SimpleScheduleBuilder.simpleSchedule()
+                      .withIntervalInSeconds(10)
+                      .withRepeatCount(0)) // Run once
+              .startNow()
+              .build();
+
+      scheduler.scheduleJob(jobDetail, trigger);
+      log.info(
+          "Scheduled SIP order verification job for payment ID: {} to run in 10 seconds",
+          paymentID);
+
+    } catch (Exception e) {
+      log.warn(
+          "Failed to schedule SIP order verification job for payment ID: {}. Error: {}",
+          paymentID,
+          e.getMessage());
+      // Graceful error handling - log warning but don't throw exception
     }
   }
 

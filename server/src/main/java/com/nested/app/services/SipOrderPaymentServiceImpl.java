@@ -43,6 +43,7 @@ public class SipOrderPaymentServiceImpl implements SipOrderPaymentService {
   private final OrderItemsRepository orderItemsRepository;
   private final ApplicationEventPublisher eventPublisher;
   private final MandateApiClient mandateApiClient;
+  private final SipOrderSchedulerService sipOrderSchedulerService;
 
   /**
    * Verifies a SIP order payment using verification code
@@ -208,6 +209,17 @@ public class SipOrderPaymentServiceImpl implements SipOrderPaymentService {
       }
 
       paymentRepository.save(payment);
+
+      // Schedule verification job to run 10 seconds after successful placement
+      try {
+        sipOrderSchedulerService.scheduleVerificationJob(paymentID);
+      } catch (Exception e) {
+        log.warn(
+            "Failed to schedule verification job for payment ID: {}. Error: {}",
+            paymentID,
+            e.getMessage());
+        // Continue without throwing - payment was already saved successfully
+      }
 
     } catch (WebClientResponseException e) {
       log.error(
