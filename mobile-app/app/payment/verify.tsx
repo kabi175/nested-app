@@ -9,10 +9,9 @@ import { openBrowserAsync } from "expo-web-browser";
 import { useEffect, useState } from "react";
 import {
   Alert,
-  Image,
-  ImageProps,
   ScrollView,
   StyleSheet,
+  TouchableOpacity,
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -20,24 +19,18 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { initiatePayment, verifyPayment } from "@/api/paymentAPI";
 import { OtpInput } from "@/components/ui/OtpInput";
 import { useAuth } from "@/hooks/auth";
-import {
-  Button,
-  Layout,
-  Spinner,
-  Text,
-} from "@ui-kitten/components";
-import { LinearGradient } from "expo-linear-gradient";
-
-const LoadingIndicator = (props: ImageProps) => (
-  <View
-    style={[props.style, { justifyContent: "center", alignItems: "center" }]}
-  >
-    <Spinner size="small" />
-  </View>
-);
+import { Spinner, Text } from "@ui-kitten/components";
 
 export default function PaymentVerificationScreen() {
-  const { paymentId } = useLocalSearchParams<{ paymentId: string }>();
+  const {
+    paymentId,
+    paymentMethod = "UPI",
+    bankName = "Bank",
+  } = useLocalSearchParams<{
+    paymentId: string;
+    paymentMethod?: string;
+    bankName?: string;
+  }>();
   const auth = useAuth();
   const [confirm, setConfirm] =
     useState<FirebaseAuthTypes.ConfirmationResult | null>(null);
@@ -67,6 +60,7 @@ export default function PaymentVerificationScreen() {
         ]
       );
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [userPhoneNumber, auth.isLoaded]);
 
   const sendOTP = async () => {
@@ -165,164 +159,146 @@ export default function PaymentVerificationScreen() {
     return () => clearInterval(interval);
   }, [resendTimer]);
 
-  const maskedPhoneNumber = userPhoneNumber
-    ? `${userPhoneNumber.slice(0, -4)}****`
-    : "";
-
   return (
-    <SafeAreaView style={styles.safeArea} edges={["top", "bottom"]}>
-      <Layout style={styles.container}>
-        <LinearGradient
-          colors={[
-            "rgb(221, 236, 254)",
-            "rgb(232, 242, 255)",
-            "rgb(240, 246, 255)",
-            "rgb(255, 255, 255)",
-            "rgb(255, 255, 255)",
-          ]}
-          locations={[0, 0.4, 0.7, 0.8, 1]}
-          start={{ x: 0.5, y: 0 }}
-          end={{ x: 0.5, y: 1 }}
-          style={styles.gradient}
-        />
-
+    <SafeAreaView style={styles.safeArea} edges={["bottom"]}>
+      <View style={styles.container}>
         <ScrollView
           style={styles.scrollView}
           contentContainerStyle={styles.scrollContent}
           showsVerticalScrollIndicator={false}
         >
-          <Layout style={styles.contentContainer}>
-            {/* Title */}
-            <Layout style={styles.logoContainer}>
-              <Image
-                source={require("@/assets/images/splash-icon.png")}
-                style={styles.logoImage}
-                resizeMode="contain"
-              />
-              <Text category="h6" style={styles.title}>
-                Verify Payment
-              </Text>
-            </Layout>
+          <View style={styles.contentContainer}>
+            {/* Shield Icon */}
+            <View style={styles.shieldContainer}>
+              <View style={styles.shieldIcon}>
+                <Ionicons name="shield" size={48} color="#FFFFFF" />
+              </View>
+            </View>
 
-            <Layout
-              style={[
-                styles.titleContainer,
-                { backgroundColor: "transparent" },
-              ]}
-            >
-              <Text category="h4" style={styles.formTitle}>
-                Enter Verification Code
-              </Text>
-              <Text category="s1" appearance="hint" style={styles.subtitle}>
-                {confirm
-                  ? `We've sent a 6-digit code to ${maskedPhoneNumber}`
-                  : "Sending verification code..."}
-              </Text>
-            </Layout>
+            {/* Enter OTP Heading */}
+            <Text category="h3" style={styles.otpHeading}>
+              Enter OTP
+            </Text>
 
-            {/* OTP Input */}
-            {confirm && (
-              <Layout
-                style={[
-                  styles.otpContainer,
-                  { backgroundColor: "transparent" },
-                ]}
-              >
-                <OtpInput
-                  length={6}
-                  onComplete={handleOtpComplete}
-                  onChange={handleOtpChange}
-                  disabled={isVerifying || isProcessingPayment}
-                />
-              </Layout>
-            )}
+            {/* Subtitle */}
+            <Text category="s1" style={styles.subtitle}>
+              We&apos;ve sent a 6-digit code to your registered mobile number
+              and email.
+            </Text>
 
             {/* Loading state while sending OTP */}
             {!confirm && isLoading && (
-              <Layout
-                style={[
-                  styles.loadingContainer,
-                  { backgroundColor: "transparent" },
-                ]}
-              >
-                <Spinner size="small" />
-                <Text category="s1" appearance="hint" style={styles.loadingText}>
+              <View style={styles.loadingContainer}>
+                <Spinner size="small" status="primary" />
+                <Text category="s1" style={styles.loadingText}>
                   Sending verification code...
                 </Text>
-              </Layout>
+              </View>
             )}
 
-            {/* Verify Button */}
-            {confirm && (
-              <Layout
-                style={[
-                  styles.buttonContainer,
-                  { backgroundColor: "transparent" },
-                ]}
-              >
-                <Button
-                  onPress={handleVerifyAndContinue}
-                  disabled={
-                    otpCode.length !== 6 ||
-                    isVerifying ||
-                    isProcessingPayment
-                  }
-                  style={styles.sendButton}
-                  size="large"
-                  accessoryLeft={() =>
-                    isVerifying || isProcessingPayment ? (
-                      <LoadingIndicator />
-                    ) : (
-                      <></>
-                    )
-                  }
-                >
-                  {isProcessingPayment
-                    ? "Processing Payment..."
-                    : isVerifying
-                    ? "Verifying..."
-                    : "Verify & Continue"}
-                </Button>
+            {/* OTP Input - shown when confirmed */}
+            {confirm && !isLoading && (
+              <>
+                <View style={styles.otpContainer}>
+                  <OtpInput
+                    length={6}
+                    onComplete={handleOtpComplete}
+                    onChange={handleOtpChange}
+                    disabled={isVerifying || isProcessingPayment}
+                  />
+                </View>
 
-                <Button
-                  onPress={handleResendOtp}
-                  disabled={resendTimer > 0 || isLoading}
-                  appearance="outline"
-                  style={styles.resendButton}
-                  size="large"
-                >
-                  {isLoading
-                    ? "Resending..."
-                    : resendTimer > 0
-                    ? `Resend OTP in ${resendTimer}s`
-                    : "Resend OTP"}
-                </Button>
-              </Layout>
+                {/* Verify Button */}
+                <View style={styles.buttonContainer}>
+                  <TouchableOpacity
+                    onPress={handleVerifyAndContinue}
+                    disabled={
+                      otpCode.length !== 6 || isVerifying || isProcessingPayment
+                    }
+                    style={[
+                      styles.verifyButton,
+                      (otpCode.length !== 6 ||
+                        isVerifying ||
+                        isProcessingPayment) &&
+                        styles.verifyButtonDisabled,
+                    ]}
+                    activeOpacity={0.8}
+                  >
+                    {!isVerifying && !isProcessingPayment && (
+                      <View style={styles.checkmarkCircle}>
+                        <Ionicons name="checkmark" size={16} color="#FFFFFF" />
+                      </View>
+                    )}
+                    {(isVerifying || isProcessingPayment) && (
+                      <Spinner size="small" status="control" />
+                    )}
+                    <Text style={styles.verifyButtonText}>
+                      {isProcessingPayment
+                        ? "Processing Payment..."
+                        : isVerifying
+                        ? "Verifying..."
+                        : "Verify & Continue"}
+                    </Text>
+                  </TouchableOpacity>
+
+                  <TouchableOpacity
+                    onPress={handleResendOtp}
+                    disabled={resendTimer > 0 || isLoading}
+                    style={styles.resendButton}
+                    activeOpacity={0.7}
+                  >
+                    <Text style={styles.resendButtonText}>
+                      Resend OTP{" "}
+                      {resendTimer > 0 && (
+                        <Text style={styles.resendTimerText}>
+                          in {resendTimer}s
+                        </Text>
+                      )}
+                    </Text>
+                  </TouchableOpacity>
+                </View>
+
+                {/* Payment Details Section */}
+                <View style={styles.paymentDetailsContainer}>
+                  <View style={styles.paymentDetailsRow}>
+                    <View style={styles.paymentDetailsLeft}>
+                      <Text category="s2" style={styles.paymentDetailsLabel}>
+                        Payment Method
+                      </Text>
+                      <Text category="s2" style={styles.paymentDetailsLabel}>
+                        Bank
+                      </Text>
+                    </View>
+                    <View style={styles.paymentDetailsRight}>
+                      <Text category="s1" style={styles.paymentDetailsValue}>
+                        {paymentMethod}
+                      </Text>
+                      <Text category="s1" style={styles.paymentDetailsValue}>
+                        {bankName}
+                      </Text>
+                    </View>
+                  </View>
+                </View>
+              </>
             )}
 
-            {/* Security Info */}
-            <Layout
-              style={[
-                styles.securityContainer,
-                { backgroundColor: "transparent" },
-              ]}
-            >
-              <Layout
-                style={[styles.securityRow, { backgroundColor: "transparent" }]}
-              >
-                <Ionicons name="shield-checkmark" size={16} color="#3B82F6" />
-                <Text
-                  category="c1"
-                  appearance="hint"
-                  style={styles.securityText}
-                >
-                  Your payment is secure and encrypted
-                </Text>
-              </Layout>
-            </Layout>
-          </Layout>
+            {/* Security Message - Always at bottom */}
+            <View style={styles.securityContainer}>
+              <View style={styles.securityBox}>
+                <Ionicons name="lock-closed" size={16} color="#854D0E" />
+                <View style={styles.securityTextContainer}>
+                  <Text category="c2" style={styles.securityTitle}>
+                    Secure Payment
+                  </Text>
+                  <Text category="c2" style={styles.securityMessage}>
+                    Never share your OTP with anyone.
+                  </Text>
+                </View>
+              </View>
+            </View>
+          </View>
         </ScrollView>
-      </Layout>
+      </View>
     </SafeAreaView>
   );
 }
@@ -330,89 +306,164 @@ export default function PaymentVerificationScreen() {
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
+    backgroundColor: "#2D2D2D",
   },
   container: {
     flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  gradient: {
-    flex: 1,
-    position: "absolute",
-    left: 0,
-    right: 0,
-    top: 0,
-    bottom: 0,
+    backgroundColor: "#2D2D2D",
   },
   scrollView: {
-    width: "100%",
-    height: "100%",
-    maxWidth: 400,
-    marginHorizontal: 16,
+    flex: 1,
   },
   scrollContent: {
     flexGrow: 1,
     justifyContent: "center",
+    paddingVertical: 20,
+    paddingBottom: 32,
   },
   contentContainer: {
+    backgroundColor: "#FFFFFF",
+    marginHorizontal: 16,
+    borderRadius: 20,
     padding: 24,
-    backgroundColor: "transparent",
   },
-  titleContainer: {
+  shieldContainer: {
     alignItems: "center",
-    marginBottom: 32,
+    marginBottom: 24,
+    marginTop: 8,
   },
-  title: {
+  shieldIcon: {
+    width: 80,
+    height: 80,
+    borderRadius: 16,
+    backgroundColor: "#3B82F6",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  otpHeading: {
     textAlign: "center",
-    marginBottom: 8,
+    marginBottom: 12,
+    fontWeight: "bold",
+    color: "#000000",
+    fontSize: 24,
   },
   subtitle: {
     textAlign: "center",
-  },
-  sendButton: {
-    marginBottom: 16,
-  },
-  buttonContainer: {
-    gap: 12,
-  },
-  resendButton: {
-    marginBottom: 16,
-  },
-  securityContainer: {
-    alignItems: "center",
-    marginTop: 24,
-    gap: 12,
-  },
-  securityRow: {
-    flexDirection: "row",
-    alignItems: "center",
-  },
-  securityText: {
-    marginLeft: 8,
+    marginBottom: 32,
+    color: "#6B7280",
+    paddingHorizontal: 8,
+    fontSize: 14,
+    lineHeight: 20,
   },
   otpContainer: {
     marginBottom: 24,
   },
-  logoImage: {
-    width: 150,
-    height: 150,
-  },
-  logoContainer: {
-    alignItems: "center",
-    marginBottom: 24,
-    backgroundColor: "transparent",
-  },
-  formTitle: {
-    textAlign: "center",
-    marginBottom: 8,
-  },
   loadingContainer: {
     alignItems: "center",
-    marginBottom: 24,
+    marginBottom: 32,
+    marginTop: 8,
     gap: 12,
   },
   loadingText: {
+    color: "#6B7280",
+    fontSize: 14,
+  },
+  buttonContainer: {
+    gap: 16,
     marginTop: 8,
+    marginBottom: 24,
+  },
+  verifyButton: {
+    borderRadius: 12,
+    backgroundColor: "#2563EB",
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    paddingVertical: 16,
+    paddingHorizontal: 24,
+    gap: 8,
+  },
+  verifyButtonDisabled: {
+    opacity: 0.6,
+    backgroundColor: "#D1D5DB",
+  },
+  checkmarkCircle: {
+    width: 20,
+    height: 20,
+    borderRadius: 10,
+    backgroundColor: "rgba(255, 255, 255, 0.3)",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  verifyButtonText: {
+    color: "#FFFFFF",
+    fontSize: 16,
+    fontWeight: "600",
+  },
+  resendButton: {
+    alignItems: "center",
+    paddingVertical: 8,
+  },
+  resendButtonText: {
+    color: "#000000",
+    fontSize: 14,
+    fontWeight: "500",
+  },
+  resendTimerText: {
+    color: "#3B82F6",
+    fontWeight: "600",
+  },
+  paymentDetailsContainer: {
+    backgroundColor: "#F3F4F6",
+    borderRadius: 12,
+    padding: 16,
+    marginTop: 16,
+    marginBottom: 24,
+  },
+  paymentDetailsRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "flex-start",
+  },
+  paymentDetailsLeft: {
+    flex: 1,
+  },
+  paymentDetailsRight: {
+    flex: 1,
+    alignItems: "flex-end",
+  },
+  paymentDetailsLabel: {
+    color: "#6B7280",
+    marginBottom: 4,
+    fontSize: 12,
+  },
+  paymentDetailsValue: {
+    color: "#000000",
+    fontWeight: "500",
+    fontSize: 14,
+  },
+  securityContainer: {
+    marginTop: 32,
+  },
+  securityBox: {
+    backgroundColor: "#FEF3C7",
+    borderRadius: 12,
+    padding: 12,
+    flexDirection: "row",
+    alignItems: "flex-start",
+    gap: 8,
+  },
+  securityTextContainer: {
+    flex: 1,
+  },
+  securityTitle: {
+    color: "#854D0E",
+    fontWeight: "600",
+    marginBottom: 2,
+    fontSize: 12,
+  },
+  securityMessage: {
+    color: "#92400E",
+    fontSize: 11,
   },
 });
-
