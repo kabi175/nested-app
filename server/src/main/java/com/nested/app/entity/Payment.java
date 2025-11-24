@@ -18,6 +18,8 @@ import jakarta.persistence.Table;
 import java.sql.Timestamp;
 import java.util.List;
 import lombok.Data;
+import lombok.Getter;
+import lombok.RequiredArgsConstructor;
 import org.checkerframework.common.aliasing.qual.Unique;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.Filter;
@@ -92,6 +94,7 @@ public class Payment {
   @Column(nullable = false)
   private Timestamp updatedAt;
 
+  @RequiredArgsConstructor
   public enum PaymentStatus {
     PENDING("pending"),
     SUBMITTED("submitted"),
@@ -99,32 +102,15 @@ public class Payment {
     FAILED("failed"),
     CANCELLED("cancelled");
 
-    private final String value;
-
-    PaymentStatus(String value) {
-      this.value = value;
-    }
-
-    @JsonValue
-    public String getValue() {
-      return value;
-    }
+    @JsonValue @Getter private final String value;
   }
 
+  @RequiredArgsConstructor
   public enum VerificationStatus {
     PENDING("pending"),
     VERIFIED("verified"),
     FAILED("failed");
 
-    private final String value;
-
-    VerificationStatus(String value) {
-      this.value = value;
-    }
-
-    @JsonValue
-    public String getValue() {
-      return value;
-    }
+    @JsonValue @Getter private final String value;
   }
 }
