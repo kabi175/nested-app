@@ -4,6 +4,7 @@ import com.nested.app.client.mf.MandateApiClient;
 import com.nested.app.client.mf.PaymentsAPIClient;
 import com.nested.app.client.mf.dto.MandateDto;
 import com.nested.app.client.mf.dto.PaymentsResponse;
+import com.nested.app.entity.BuyOrder;
 import com.nested.app.entity.Goal;
 import com.nested.app.entity.Order;
 import com.nested.app.entity.Payment;
@@ -232,7 +233,9 @@ public class PaymentRedirectEventListener {
                 if (goal.getStatus() == Goal.Status.PAYMENT_PENDING) {
                   goal.setStatus(Goal.Status.ACTIVE);
                 }
-                goal.setCurrentAmount(goal.getCurrentAmount() + order.getAmount());
+                if (order instanceof BuyOrder) {
+                  goal.setCurrentAmount(goal.getCurrentAmount() + order.getAmount());
+                }
                 goalRepository.save(goal);
               });
         }
