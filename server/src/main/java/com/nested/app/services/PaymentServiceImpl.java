@@ -114,7 +114,7 @@ public class PaymentServiceImpl implements PaymentService {
 
       // Create payment entity
       Payment payment = new Payment();
-      payment.setStatus(Payment.PaymentStatus.PENDING);
+      payment.setBuyStatus(Payment.PaymentStatus.PENDING);
       payment.setVerificationStatus(Payment.VerificationStatus.PENDING);
       payment.setUser(user);
       payment.setInvestor(investor);
@@ -152,6 +152,13 @@ public class PaymentServiceImpl implements PaymentService {
       payment.setVerificationRef(otpResp.getOtpId());
 
       payment.setOrders(orders);
+      if (orders.stream().anyMatch(BuyOrder.class::isInstance)) {
+        payment.setBuyStatus(Payment.PaymentStatus.PENDING);
+      }
+      if (orders.stream().anyMatch(SIPOrder.class::isInstance)) {
+        payment.setSipStatus(Payment.PaymentStatus.PENDING);
+      }
+
       orders.forEach(order -> order.setPayment(payment));
 
       // Populate order items for each order
@@ -345,129 +352,6 @@ public class PaymentServiceImpl implements PaymentService {
   }
 
   /**
-   * Retrieves all payments
-   *
-   * @return List of all payments
-   */
-  @Override
-  @Transactional(readOnly = true)
-  public List<PaymentDTO> getAllPayments() {
-    log.info("Retrieving all payments from database");
-
-    try {
-      List<Payment> payments = paymentRepository.findAll();
-      List<PaymentDTO> paymentDTOs =
-          payments.stream().map(this::convertPaymentToDTO).collect(Collectors.toList());
-
-      log.info("Successfully retrieved {} payments", paymentDTOs.size());
-      return paymentDTOs;
-
-    } catch (Exception e) {
-      log.error("Error retrieving all payments: {}", e.getMessage(), e);
-      throw new RuntimeException("Failed to retrieve payments", e);
-    }
-  }
-
-  /**
-   * Retrieves payment by ID
-   *
-   * @param paymentId Payment ID
-   * @return Payment data
-   */
-  @Override
-  @Transactional(readOnly = true)
-  public PaymentDTO getPaymentById(Long paymentId) {
-    log.info("Retrieving payment with ID: {}", paymentId);
-
-    try {
-      Payment payment =
-          paymentRepository
-              .findById(paymentId)
-              .orElseThrow(
-                  () -> new IllegalArgumentException("Payment not found with ID: " + paymentId));
-
-      PaymentDTO paymentDTO = convertPaymentToDTO(payment);
-
-      log.info("Successfully retrieved payment with ID: {}", paymentId);
-      return paymentDTO;
-
-    } catch (Exception e) {
-      log.error("Error retrieving payment with ID {}: {}", paymentId, e.getMessage(), e);
-      throw new RuntimeException("Failed to retrieve payment", e);
-    }
-  }
-
-  /**
-   * Retrieves payments by child ID
-   *
-   * @param childId Child ID
-   * @return List of payments for the specified child
-   */
-  @Override
-  @Transactional(readOnly = true)
-  public List<PaymentDTO> getPaymentsByChildId(Long childId) {
-    log.info("Retrieving payments for child ID: {}", childId);
-
-    try {
-      List<Payment> payments = paymentRepository.findByChildId(childId);
-      List<PaymentDTO> paymentDTOs =
-          payments.stream().map(this::convertPaymentToDTO).collect(Collectors.toList());
-
-      log.info("Successfully retrieved {} payments for child ID: {}", paymentDTOs.size(), childId);
-      return paymentDTOs;
-
-    } catch (Exception e) {
-      log.error("Error retrieving payments for child ID {}: {}", childId, e.getMessage(), e);
-      throw new RuntimeException("Failed to retrieve payments for child", e);
-    }
-  }
-
-  /**
-   * Retrieves payments by user ID
-   *
-   * @param userId User ID
-   * @return List of payments for the specified user
-   */
-  @Override
-  @Transactional(readOnly = true)
-  public List<PaymentDTO> getPaymentsByUserId(Long userId) {
-    log.info("Retrieving payments for user ID: {}", userId);
-
-    try {
-      List<Payment> payments = paymentRepository.findByUserId(userId);
-      List<PaymentDTO> paymentDTOs =
-          payments.stream().map(this::convertPaymentToDTO).collect(Collectors.toList());
-
-      log.info("Successfully retrieved {} payments for user ID: {}", paymentDTOs.size(), userId);
-      return paymentDTOs;
-
-    } catch (Exception e) {
-      log.error("Error retrieving payments for user ID {}: {}", userId, e.getMessage(), e);
-      throw new RuntimeException("Failed to retrieve payments for user", e);
-    }
-  }
-
-  @Override
-  public void markPaymentSuccess(String paymentRef) {
-    var payment = paymentRepository.findByRef(paymentRef).orElseThrow();
-
-    payment.getOrders().forEach(order -> order.setStatus(Order.OrderStatus.COMPLETED));
-    payment.setStatus(Payment.PaymentStatus.COMPLETED);
-
-    paymentRepository.save(payment);
-  }
-
-  @Override
-  public void markPaymentFailure(String paymentRef) {
-    var payment = paymentRepository.findByRef(paymentRef).orElseThrow();
-
-    payment.getOrders().forEach(order -> order.setStatus(Order.OrderStatus.FAILED));
-    payment.setStatus(Payment.PaymentStatus.FAILED);
-
-    paymentRepository.save(payment);
-  }
-
-  /**
    * Converts Payment entity to PaymentDTO
    *
    * @param payment Payment entity
@@ -478,7 +362,7 @@ public class PaymentServiceImpl implements PaymentService {
 
     PaymentDTO dto = new PaymentDTO();
     dto.setId(payment.getId());
-    dto.setStatus(PaymentDTO.PaymentStatus.valueOf(payment.getStatus().name()));
+    dto.setStatus(PaymentDTO.PaymentStatus.valueOf(payment.getBuyStatus().name()));
     dto.setVerificationStatus(
         PaymentDTO.VerificationStatus.valueOf(payment.getVerificationStatus().name()));
     dto.setPaymentUrl(payment.getPaymentUrl());
@@ -513,7 +397,7 @@ public class PaymentServiceImpl implements PaymentService {
     dto.setId(payment.getId());
     dto.setVerificationStatus(
         PaymentDTO.VerificationStatus.valueOf(payment.getVerificationStatus().name()));
-    dto.setStatus(PaymentDTO.PaymentStatus.valueOf(payment.getStatus().name()));
+    dto.setStatus(PaymentDTO.PaymentStatus.valueOf(payment.getBuyStatus().name()));
     dto.setPaymentUrl(payment.getPaymentUrl());
     dto.setPaymentMethod(payment.getPaymentType());
 

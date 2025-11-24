@@ -41,7 +41,11 @@ public class Payment {
 
   @Column(nullable = false)
   @Enumerated(EnumType.STRING)
-  private PaymentStatus status = PaymentStatus.PENDING;
+  private PaymentStatus buyStatus = PaymentStatus.NOT_AVAILABLE;
+
+  @Column(nullable = false)
+  @Enumerated(EnumType.STRING)
+  private PaymentStatus sipStatus = PaymentStatus.NOT_AVAILABLE;
 
   @Column(nullable = false)
   @Enumerated(EnumType.STRING)
@@ -96,6 +100,7 @@ public class Payment {
 
   @RequiredArgsConstructor
   public enum PaymentStatus {
+    NOT_AVAILABLE("not_available"),
     PENDING("pending"),
     SUBMITTED("submitted"),
     COMPLETED("completed"),
