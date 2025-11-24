@@ -65,7 +65,7 @@ public class PaymentRedirectEventListener {
         log.debug(
             "PaymentEvent already processed for payment ref: {}, current status: {}",
             event.ref(),
-            payment.getStatus());
+            payment.getBuyStatus());
         return;
       }
 
@@ -79,7 +79,7 @@ public class PaymentRedirectEventListener {
       log.info(
           "Successfully processed PaymentEvent for payment ref: {}, new status: {}",
           event.ref(),
-          payment.getStatus());
+          payment.getBuyStatus());
     } catch (Exception e) {
       log.error(
           "Error processing PaymentEvent for payment ref: {}, status: {}",
@@ -197,7 +197,7 @@ public class PaymentRedirectEventListener {
    */
   @Transactional
   private void updatePaymentAndOrdersToSubmitted(Payment payment) {
-    payment.setStatus(Payment.PaymentStatus.SUBMITTED);
+    payment.setBuyStatus(Payment.PaymentStatus.SUBMITTED);
     paymentRepository.save(payment);
 
     // Update all orders to PLACED status
@@ -222,7 +222,7 @@ public class PaymentRedirectEventListener {
    */
   @Transactional
   private void updatePaymentAndOrdersToCompleted(Payment payment) {
-    payment.setStatus(Payment.PaymentStatus.COMPLETED);
+    payment.setBuyStatus(Payment.PaymentStatus.COMPLETED);
     payment.setVerificationStatus(Payment.VerificationStatus.VERIFIED);
     paymentRepository.save(payment);
 
@@ -251,7 +251,7 @@ public class PaymentRedirectEventListener {
    * @return true if already processed, false otherwise
    */
   private boolean isEventAlreadyProcessed(Payment payment, Payment.PaymentStatus targetStatus) {
-    Payment.PaymentStatus currentStatus = payment.getStatus();
+    Payment.PaymentStatus currentStatus = payment.getBuyStatus();
 
     // If target is SUBMITTED, already processed if current status is SUBMITTED or COMPLETED
     if (targetStatus == Payment.PaymentStatus.SUBMITTED) {
