@@ -16,7 +16,6 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
-import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.event.TransactionPhase;
 import org.springframework.transaction.event.TransactionalEventListener;
 
@@ -57,9 +56,8 @@ public class PaymentRedirectEventListener {
    *
    * @param event The MandateProcessEvent containing mandate ID
    */
-  @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
   @Async
-  @Transactional
+  @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
   public void handleMandateProcessEvent(MandateProcessEvent event) {
     log.info("Processing MandateProcessEvent for mandate ID: {}", event.mandateId());
 
@@ -101,7 +99,6 @@ public class PaymentRedirectEventListener {
    */
   @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
   @Async
-  @Transactional
   public void handleBuyOrderProcessEvent(BuyOrderProcessEvent event) {
     log.info("Processing BuyOrderProcessEvent for payment ref: {}", event.paymentRef());
 
