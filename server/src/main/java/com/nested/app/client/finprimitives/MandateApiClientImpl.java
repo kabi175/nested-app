@@ -21,7 +21,7 @@ public class MandateApiClientImpl implements MandateApiClient {
   private final ObjectMapper objectMapper;
 
   @Value("${app.url}")
-  private final String APP_URL;
+  private String APP_URL;
 
   @Override
   public Mono<MandateDto> createMandate(MandateDto dto) {
