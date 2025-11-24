@@ -29,11 +29,22 @@ export default function Layout() {
     <Stack>
       <Stack.Screen
         name="index"
-        options={{ header: () => <TopNavigationSimpleUsageShowcase /> }}
+        options={{
+          headerShown: true,
+          title: "Complete Your Payment",
+          headerStyle: {
+            backgroundColor: "#FFFFFF",
+          },
+          headerTintColor: "#000000",
+          headerTitleStyle: {
+            fontWeight: "600",
+            fontSize: 20,
+          },
+        }}
       />
       <Stack.Screen
         name="verify"
-        options={{ 
+        options={{
           headerShown: true,
           title: "Verify Payment",
           presentation: "card",
@@ -53,6 +64,6 @@ const BackAction = (): React.ReactElement => (
 export const TopNavigationSimpleUsageShowcase = (): React.ReactElement => (
   <TopNavigation
     accessoryLeft={BackAction}
-    title={() => <Text category="h6">Payment Method</Text>}
+    title={() => <Text category="h6">Complete Your Payment</Text>}
   />
 );
