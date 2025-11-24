@@ -28,10 +28,12 @@ import com.nested.app.entity.Payment;
 import com.nested.app.entity.SIPOrder;
 import com.nested.app.entity.User;
 import com.nested.app.events.OrderItemsRefUpdatedEvent;
+import com.nested.app.repository.BankDetailRepository;
 import com.nested.app.repository.OrderRepository;
 import com.nested.app.repository.PaymentRepository;
 import com.nested.app.utils.IpUtils;
 import jakarta.servlet.http.HttpServletRequest;
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -61,6 +63,7 @@ public class PaymentServiceImpl implements PaymentService {
 
   private final PaymentRepository paymentRepository;
   private final OrderRepository orderRepository;
+  private final BankDetailRepository bankDetailRepository;
   private final UserContext userContext;
   private final BuyOrderApiClient buyOrderApiClient;
   private final MandateApiClient mandateApiClient;
@@ -202,8 +205,17 @@ public class PaymentServiceImpl implements PaymentService {
     // TODO: compute the  mandate amount order amount & setup amount
     var totalAmount = sipOrders.stream().map(SIPOrder::getAmount).reduce(0d, Double::sum);
 
+    var bank = bankDetailRepository.findById(payment.getBank().getId()).orElseThrow();
     var mandate =
-        mandateApiClient.createMandate(MandateDto.builder().amount(totalAmount).build()).block();
+        mandateApiClient
+            .createMandate(
+                MandateDto.builder()
+                    .amount(totalAmount)
+                    .bankAccount(bank.getPaymentRef().toString())
+                    .startDate(LocalDate.now())
+                    .endDate(LocalDate.now().plusYears(29))
+                    .build())
+            .block();
     if (mandate == null) {
       log.error("mandate creation failed for payment {}", payment.getId());
       return;

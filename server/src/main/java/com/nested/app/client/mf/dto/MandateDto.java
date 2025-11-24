@@ -1,8 +1,10 @@
 package com.nested.app.client.mf.dto;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonValue;
-import java.util.Date;
+import java.time.LocalDate;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -13,6 +15,7 @@ import lombok.RequiredArgsConstructor;
 @Builder
 @AllArgsConstructor
 @RequiredArgsConstructor
+@JsonInclude(JsonInclude.Include.NON_NULL)
 public class MandateDto {
   @JsonProperty("mandate_ref")
   String ref;
@@ -37,10 +40,12 @@ public class MandateDto {
   String provider = "CYBRILLAPOA";
 
   @JsonProperty("valid_from")
-  Date startDate;
+  @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd")
+  LocalDate startDate;
 
   @JsonProperty("valid_to")
-  Date endDate;
+  @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd")
+  LocalDate endDate;
 
   @RequiredArgsConstructor
   public enum State {
