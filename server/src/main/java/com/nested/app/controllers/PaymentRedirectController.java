@@ -23,7 +23,7 @@ public class PaymentRedirectController {
     return paymentRedirectService.handleMandateRedirect(mandateID);
   }
 
-  @GetMapping("/payment/{payment_ref}")
+  @GetMapping("/payment/{payment_id}")
   public ResponseEntity<?> paymentRedirectHandler(@PathVariable("payment_id") Long paymentID) {
     return paymentRedirectService.handlePaymentRedirect(paymentID);
   }

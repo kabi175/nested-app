@@ -4,20 +4,20 @@ import com.nested.app.client.mf.MandateApiClient;
 import com.nested.app.client.mf.PaymentsAPIClient;
 import com.nested.app.client.mf.dto.MandateDto;
 import com.nested.app.client.mf.dto.PaymentsResponse;
+import com.nested.app.entity.Goal;
 import com.nested.app.entity.Order;
 import com.nested.app.entity.Payment;
 import com.nested.app.events.BuyOrderProcessEvent;
 import com.nested.app.events.MandateProcessEvent;
+import com.nested.app.repository.GoalRepository;
 import com.nested.app.repository.OrderRepository;
 import com.nested.app.repository.PaymentRepository;
 import com.nested.app.services.SipOrderPaymentService;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.scheduling.annotation.Async;
+import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
-import org.springframework.transaction.event.TransactionPhase;
-import org.springframework.transaction.event.TransactionalEventListener;
 
 /**
  * Event listener for payment redirect events. Verifies payment and mandate statuses with external
@@ -45,6 +45,7 @@ public class PaymentRedirectEventListener {
 
   private final PaymentRepository paymentRepository;
   private final OrderRepository orderRepository;
+  private final GoalRepository goalRepository;
   private final MandateApiClient mandateApiClient;
   private final PaymentsAPIClient paymentsAPIClient;
   private final SipOrderPaymentService sipOrderPaymentService;
@@ -56,8 +57,7 @@ public class PaymentRedirectEventListener {
    *
    * @param event The MandateProcessEvent containing mandate ID
    */
-  @Async
-  @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
+  @EventListener
   public void handleMandateProcessEvent(MandateProcessEvent event) {
     log.info("Processing MandateProcessEvent for mandate ID: {}", event.mandateId());
 
@@ -97,8 +97,7 @@ public class PaymentRedirectEventListener {
    *
    * @param event The BuyOrderProcessEvent containing payment reference
    */
-  @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
-  @Async
+  @EventListener
   public void handleBuyOrderProcessEvent(BuyOrderProcessEvent event) {
     log.info("Processing BuyOrderProcessEvent for payment ref: {}", event.paymentRef());
 
@@ -227,6 +226,15 @@ public class PaymentRedirectEventListener {
             order.setStatus(Order.OrderStatus.COMPLETED);
             orderRepository.save(order);
           }
+          orders.forEach(
+              order -> {
+                var goal = goalRepository.findById(order.getGoal().getId()).orElseThrow();
+                if (goal.getStatus() == Goal.Status.PAYMENT_PENDING) {
+                  goal.setStatus(Goal.Status.ACTIVE);
+                }
+                goal.setCurrentAmount(goal.getCurrentAmount() + order.getAmount());
+                goalRepository.save(goal);
+              });
         }
 
         log.info(
