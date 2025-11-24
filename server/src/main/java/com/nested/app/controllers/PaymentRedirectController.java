@@ -24,7 +24,7 @@ public class PaymentRedirectController {
   }
 
   @GetMapping("/payment/{payment_ref}")
-  public ResponseEntity<?> paymentRedirectHandler(@PathVariable("payment_ref") String paymentRef) {
-    return paymentRedirectService.handlePaymentRedirect(paymentRef);
+  public ResponseEntity<?> paymentRedirectHandler(@PathVariable("payment_id") Long paymentID) {
+    return paymentRedirectService.handlePaymentRedirect(paymentID);
   }
 }

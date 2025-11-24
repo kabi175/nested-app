@@ -6,7 +6,6 @@ import com.nested.app.client.mf.dto.PaymentsRequest;
 import com.nested.app.client.mf.dto.PaymentsResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;
 
@@ -21,9 +20,6 @@ public class PaymentApiImpl implements PaymentsAPIClient {
   private final FinPrimitivesAPI api;
   private final ObjectMapper objectMapper;
 
-  @Value("${app.url}")
-  private String APP_URL;
-
   @Override
   public Mono<PaymentsResponse> createPayment(PaymentsRequest request) {
     var paymentMethod =
@@ -37,7 +33,7 @@ public class PaymentApiImpl implements PaymentsAPIClient {
       log.warn("Failed to serialize request for logging", e);
     }
 
-    request.setCallback_url(callbackUrl());
+    //    request.setCallback_url(callbackUrl());
 
     return api.withAuth()
         .post()
@@ -61,9 +57,5 @@ public class PaymentApiImpl implements PaymentsAPIClient {
   @Override
   public Mono<PaymentsResponse> fetchPayment(String paymentID) {
     return api.withAuth().get().uri(PAYMENT_API_URL).retrieve().bodyToMono(PaymentsResponse.class);
-  }
-
-  private String callbackUrl() {
-    return APP_URL + "/redirects/payment";
   }
 }

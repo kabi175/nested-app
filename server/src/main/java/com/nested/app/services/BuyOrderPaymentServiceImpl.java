@@ -12,13 +12,12 @@ import com.nested.app.dto.VerifyOrderDTO;
 import com.nested.app.entity.BuyOrder;
 import com.nested.app.entity.Order;
 import com.nested.app.entity.OrderItems;
-import com.nested.app.repository.OrderItemsRepository;
 import com.nested.app.repository.OrderRepository;
 import com.nested.app.repository.PaymentRepository;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.reactive.function.client.WebClientResponseException;
@@ -42,8 +41,9 @@ public class BuyOrderPaymentServiceImpl implements BuyOrderPaymentService {
   private final BuyOrderApiClient buyOrderApiClient;
   private final PaymentsAPIClient paymentsAPIClient;
   private final PaymentServiceImpl paymentServiceHelper;
-  private final OrderItemsRepository orderItemsRepository;
-  private final ApplicationEventPublisher eventPublisher;
+
+  @Value("${app.url}")
+  private String APP_URL;
 
   /**
    * Verifies a buy order payment using verification code
@@ -143,6 +143,7 @@ public class BuyOrderPaymentServiceImpl implements BuyOrderPaymentService {
           PaymentsRequest.builder()
               .bankId(payment.getBank().getPaymentRef())
               .paymentMethod(paymentMethod)
+              .callback_url(callbackUrl(paymentID))
               .orders(
                   orders.stream()
                       .filter(BuyOrder.class::isInstance)
@@ -169,7 +170,7 @@ public class BuyOrderPaymentServiceImpl implements BuyOrderPaymentService {
               .flatMap(List::stream)
               .map(OrderItems::getRef)
               .toList();
-      
+
       buyOrderApiClient.confirmOrder(buyOrderRefList).block();
 
       log.info("Successfully fetched buy order payment URL for payment ID: {}", paymentID);
@@ -190,5 +191,9 @@ public class BuyOrderPaymentServiceImpl implements BuyOrderPaymentService {
       log.error("Error fetching buy order payment URL: {}", e.getMessage(), e);
       throw new RuntimeException("Failed to fetch buy order payment URL", e);
     }
+  }
+
+  private String callbackUrl(Long paymentID) {
+    return APP_URL + "/redirects/payment/" + paymentID;
   }
 }

@@ -58,19 +58,15 @@ public class PaymentRedirectService {
    * Handle payment redirect from external payment provider. Publishes a BuyOrderProcessEvent for
    * the payment redirect to verify and process async.
    *
-   * @param paymentRef The payment reference returned from the provider
+   * @param paymentID The internal payment id
    */
-  public ResponseEntity<?> handlePaymentRedirect(String paymentRef) {
-    log.info("Received payment redirect for payment reference: {}", paymentRef);
+  public ResponseEntity<?> handlePaymentRedirect(Long paymentID) {
+    log.info("Received payment redirect for payment id: {}", paymentID);
 
     try {
-      Payment payment = paymentRepository.findByRef(paymentRef).orElse(null);
+      Payment payment = paymentRepository.findById(paymentID).orElseThrow();
 
-      if (payment == null) {
-        log.warn("Payment not found for reference: {}", paymentRef);
-        return ResponseEntity.ok().build();
-      }
-
+      var paymentRef = payment.getRef();
       // Publish buy order process event for async processing and verification
       publisher.publishEvent(new BuyOrderProcessEvent(paymentRef, LocalDateTime.now()));
 
@@ -79,7 +75,7 @@ public class PaymentRedirectService {
           payment.getId(),
           paymentRef);
     } catch (Exception e) {
-      log.error("Error processing payment redirect for reference: {}", paymentRef, e);
+      log.error("Error processing payment redirect for payment id: {}", paymentID, e);
       return ResponseEntity.internalServerError().build();
     }
     return ResponseEntity.ok().build();
