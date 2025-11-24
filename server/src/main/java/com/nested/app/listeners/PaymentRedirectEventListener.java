@@ -6,12 +6,10 @@ import com.nested.app.client.mf.dto.MandateDto;
 import com.nested.app.client.mf.dto.PaymentsResponse;
 import com.nested.app.entity.Order;
 import com.nested.app.entity.Payment;
-import com.nested.app.entity.SIPOrder;
 import com.nested.app.events.PaymentEvent;
 import com.nested.app.repository.OrderRepository;
 import com.nested.app.repository.PaymentRepository;
 import java.util.List;
-import java.util.Objects;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Async;
@@ -100,14 +98,8 @@ public class PaymentRedirectEventListener {
   private void handleMandateVerification(Payment payment) {
     log.debug("Verifying mandate status for payment ID: {}", payment.getId());
 
-    // Find mandate ID from associated orders
-    Long mandateId =
-        payment.getOrders().stream()
-            .filter(order -> order instanceof SIPOrder)
-            .map(order -> ((SIPOrder) order).getMandateID())
-            .filter(Objects::nonNull)
-            .findFirst()
-            .orElse(null);
+    // Get mandate ID from Payment
+    Long mandateId = payment.getMandateID();
 
     if (mandateId == null) {
       log.warn("No mandate ID found for payment ID: {}", payment.getId());

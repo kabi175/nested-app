@@ -202,11 +202,9 @@ public class PaymentServiceImpl implements PaymentService {
       return;
     }
 
-    sipOrders.forEach(
-        order -> {
-          order.setMandateID(mandate.getId());
-          order.setMandateRef(mandate.getRef());
-        });
+    // Store mandate details in Payment
+    payment.setMandateID(mandate.getId());
+    payment.setMandateRef(mandate.getRef());
   }
 
   private void placeOrderWithExternalAPI(Payment payment) {
@@ -317,10 +315,16 @@ public class PaymentServiceImpl implements PaymentService {
             item -> {
               OrderDetail orderDetail;
               if (order instanceof SIPOrder sipOrder) {
+                Payment payment = order.getPayment();
+                Long mandateID = payment != null ? payment.getMandateID() : null;
+                if (mandateID == null) {
+                  throw new IllegalArgumentException(
+                      "SIP order must have a mandate ID assigned via Payment");
+                }
                 orderDetail =
                     SipOrderDetail.builder()
                         .fundID(item.getFund().getIsinCode())
-                        .mandateID(sipOrder.getMandateID().toString())
+                        .mandateID(mandateID.toString())
                         .startDate(sipOrder.getStartDate())
                         .firstOrderToday(false)
                         .accountID(accountID)

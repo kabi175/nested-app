@@ -33,8 +33,6 @@ public class SIPOrder extends Order {
 
   @NotNull private boolean isActive = false;
 
-  private Long mandateID;
-  private String mandateRef;
 
   /** First date on which SIP executions may occur */
   @NotNull private LocalDate startDate;

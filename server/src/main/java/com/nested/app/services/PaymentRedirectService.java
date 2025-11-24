@@ -1,13 +1,9 @@
 package com.nested.app.services;
 
-import com.nested.app.entity.Order;
 import com.nested.app.entity.Payment;
-import com.nested.app.entity.SIPOrder;
 import com.nested.app.events.PaymentEvent;
-import com.nested.app.repository.OrderRepository;
 import com.nested.app.repository.PaymentRepository;
 import java.time.LocalDateTime;
-import java.util.List;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.ApplicationEventPublisher;
@@ -23,7 +19,6 @@ import org.springframework.stereotype.Service;
 public class PaymentRedirectService {
   private final ApplicationEventPublisher publisher;
   private final PaymentRepository paymentRepository;
-  private final OrderRepository orderRepository;
 
   /**
    * Handle mandate redirect from external provider. Publishes a PaymentEvent for the mandate
@@ -35,23 +30,8 @@ public class PaymentRedirectService {
     log.info("Received mandate redirect for mandate ID: {}", mandateId);
 
     try {
-      // Find orders with this mandate ID
-      List<Order> orders =
-          orderRepository.findAll().stream()
-              .filter(
-                  order ->
-                      order instanceof SIPOrder
-                          && ((SIPOrder) order).getMandateID() != null
-                          && ((SIPOrder) order).getMandateID().equals(mandateId))
-              .toList();
-
-      if (orders.isEmpty()) {
-        log.warn("No orders found for mandate ID: {}", mandateId);
-        return;
-      }
-
-      Order firstOrder = orders.getFirst();
-      Payment payment = firstOrder.getPayment();
+      // Find payment with this mandate ID
+      Payment payment = paymentRepository.findByMandateID(mandateId).orElse(null);
 
       if (payment == null) {
         log.warn("No payment found for mandate ID: {}", mandateId);

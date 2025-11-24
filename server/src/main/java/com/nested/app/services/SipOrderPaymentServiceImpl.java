@@ -110,14 +110,12 @@ public class SipOrderPaymentServiceImpl implements SipOrderPaymentService {
   public UserActionRequest fetchSipOrderPaymentUrl(Long paymentID) {
     var payment = paymentRepository.findById(paymentID).orElseThrow();
 
-    var sipOrder =
-        payment.getOrders().stream()
-            .filter(SIPOrder.class::isInstance)
-            .map(SIPOrder.class::cast)
-            .findFirst()
-            .orElseThrow();
+    Long mandateID = payment.getMandateID();
+    if (mandateID == null) {
+      throw new IllegalArgumentException("Payment does not have a mandate ID");
+    }
 
-    var resp = mandateApiClient.authorizeMandate(sipOrder.getMandateID()).block();
+    var resp = mandateApiClient.authorizeMandate(mandateID).block();
     if (resp == null) {
       return null;
     }

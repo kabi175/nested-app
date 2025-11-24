@@ -39,4 +39,12 @@ public interface PaymentRepository extends JpaRepository<Payment, Long> {
    * @return Optional of Payment
    */
   Optional<Payment> findByRef(String ref);
+
+  /**
+   * Find payment by mandate ID
+   *
+   * @param mandateID - Mandate ID
+   * @return Optional of Payment
+   */
+  Optional<Payment> findByMandateID(Long mandateID);
 }
