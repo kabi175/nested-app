@@ -12,6 +12,9 @@ module.exports = () => ({
     ios: {
       googleServicesFile: "./GoogleService-Info.plist",
       bundleIdentifier: "com.nexted.app",
+      infoPlist: {
+        LSApplicationQueriesSchemes: ["whatsapp"],
+      },
     },
     plugins: [
       "expo-web-browser",
