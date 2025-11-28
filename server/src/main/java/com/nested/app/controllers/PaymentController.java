@@ -35,7 +35,7 @@ public class PaymentController {
   }
 
   // Buy Order Payment Endpoints
-  @PostMapping("{payment_id}/buy/actions/verify")
+  @PostMapping("{payment_id}/actions/verify")
   public ResponseEntity<?> verifyBuyOrder(@Valid @RequestBody VerifyOrderDTO verifyOrderRequest) {
     log.info("Verifying buy order payment for payment ID: {}", verifyOrderRequest.getId());
     PlaceOrderDTO verifiedPayment =
