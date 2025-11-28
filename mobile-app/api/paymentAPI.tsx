@@ -77,7 +77,7 @@ export const createPayment = async (
   return data;
 };
 
-export const initiatePayment = async (
+export const fetchLumpsumPaymentUrl = async (
   paymentId: string
 ): Promise<string | null> => {
   const { data } = await api.post(
@@ -90,8 +90,20 @@ export const initiatePayment = async (
 };
 
 export const verifyPayment = async (paymentId: string): Promise<void> => {
-  await api.post(`/payments/${paymentId}/buy/actions/verify`, {
+  await api.post(`/payments/${paymentId}/actions/verify`, {
     id: paymentId,
     verification_code: "123456",
   });
+};
+
+export const fetchMandatePaymentUrl = async (
+  paymentId: string
+): Promise<string | null> => {
+  const { data } = await api.post(
+    `/payments/${paymentId}/sip/actions/fetch_redirect_url`,
+    {
+      timeout: 30000,
+    }
+  );
+  return data.redirect_url;
 };

@@ -159,6 +159,7 @@ export default function PaymentMethodScreen() {
           paymentId: payment.id,
           paymentMethod: selectedMethod === "upi" ? "UPI" : "Net Banking",
           bankName: getBankNameFromIFSC(selectedBank.ifscCode),
+          buyOrdersAmount: buyOrdersAmount.toString(),
         },
       });
     } catch (error) {

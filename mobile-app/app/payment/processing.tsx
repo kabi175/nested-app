@@ -1,9 +1,16 @@
+import {
+  fetchLumpsumPaymentUrl,
+  fetchMandatePaymentUrl,
+} from "@/api/paymentAPI";
 import { ThemedText } from "@/components/ThemedText";
+import { formatCurrency } from "@/utils/formatters";
 import { Ionicons } from "@expo/vector-icons";
 import { router, useLocalSearchParams } from "expo-router";
+import { openBrowserAsync } from "expo-web-browser";
 import { useState } from "react";
 import {
   ActivityIndicator,
+  Alert,
   ScrollView,
   StyleSheet,
   TouchableOpacity,
@@ -12,26 +19,39 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function PaymentProcessingScreen() {
-  const { amount, bankName } = useLocalSearchParams<{
-    amount?: string;
-    bankName?: string;
-    paymentMethod?: string;
-  }>();
+  const { buyOrdersAmount, bankName, paymentId, paymentMethod } =
+    useLocalSearchParams<{
+      buyOrdersAmount?: string;
+      bankName?: string;
+      paymentMethod?: "net_banking" | "upi";
+      paymentId?: string;
+    }>();
 
   const [selectedPaymentMethod, setSelectedPaymentMethod] = useState<
     "bank" | "upi"
-  >("bank");
+  >(() => (paymentMethod === "upi" ? "upi" : "bank"));
 
   // Default values for demo
-  const displayAmount = amount || "25,000";
+  const displayAmount = formatCurrency(Number(buyOrdersAmount));
+
   const displayBankName = bankName || "Kotak Mahindra Bank";
 
-  const handleStep1Click = () => {
-    // Empty onClick handler for Step 1
+  const handleLumpsumPayment = async () => {
+    const redirectUrl = await fetchLumpsumPaymentUrl(paymentId as string);
+    if (redirectUrl) {
+      await openBrowserAsync(redirectUrl);
+    } else {
+      Alert.alert("Error", "Failed to get payment redirect URL.");
+    }
   };
 
-  const handleStep2Click = () => {
-    // Empty onClick handler for Step 2
+  const handleMandatePayment = async () => {
+    const redirectUrl = await fetchMandatePaymentUrl(paymentId as string);
+    if (redirectUrl) {
+      await openBrowserAsync(redirectUrl);
+    } else {
+      Alert.alert("Error", "Failed to get payment redirect URL.");
+    }
   };
 
   return (
@@ -104,7 +124,7 @@ export default function PaymentProcessingScreen() {
           {/* Step 1: One-time Purchase */}
           <TouchableOpacity
             style={[styles.stepCard, styles.step1Card]}
-            onPress={handleStep1Click}
+            onPress={handleLumpsumPayment}
             activeOpacity={0.9}
           >
             <View style={styles.stepContent}>
@@ -139,7 +159,7 @@ export default function PaymentProcessingScreen() {
           {/* Step 2: SIP Auto-Debit */}
           <TouchableOpacity
             style={[styles.stepCard, styles.step2Card]}
-            onPress={handleStep2Click}
+            onPress={handleMandatePayment}
             activeOpacity={0.9}
           >
             <View style={styles.stepContent}>

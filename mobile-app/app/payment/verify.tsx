@@ -5,7 +5,6 @@ import {
   signInWithPhoneNumber,
 } from "@react-native-firebase/auth";
 import { router, useLocalSearchParams } from "expo-router";
-import { openBrowserAsync } from "expo-web-browser";
 import { useEffect, useState } from "react";
 import {
   Alert,
@@ -16,7 +15,7 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
-import { initiatePayment, verifyPayment } from "@/api/paymentAPI";
+import { verifyPayment } from "@/api/paymentAPI";
 import { OtpInput } from "@/components/ui/OtpInput";
 import { useAuth } from "@/hooks/auth";
 import { Spinner, Text } from "@ui-kitten/components";
@@ -26,10 +25,12 @@ export default function PaymentVerificationScreen() {
     paymentId,
     paymentMethod = "UPI",
     bankName = "Bank",
+    buyOrdersAmount,
   } = useLocalSearchParams<{
     paymentId: string;
     paymentMethod?: string;
     bankName?: string;
+    buyOrdersAmount?: string;
   }>();
   const auth = useAuth();
   const [confirm, setConfirm] =
@@ -126,15 +127,17 @@ export default function PaymentVerificationScreen() {
       setIsProcessingPayment(true);
       await verifyPayment(paymentId);
 
+      router.push({
+        pathname: "/payment/processing",
+        params: {
+          paymentId,
+          paymentMethod,
+          bankName,
+          buyOrdersAmount,
+        },
+      });
+
       // Then initiate payment and redirect
-      const redirectUrl = await initiatePayment(paymentId);
-      if (redirectUrl) {
-        await openBrowserAsync(redirectUrl);
-        // Navigate back or to success screen
-        router.back();
-      } else {
-        Alert.alert("Error", "Failed to get payment redirect URL.");
-      }
     } catch (error: any) {
       console.error("Verification error", error);
       if (error.code === "auth/invalid-verification-code") {
