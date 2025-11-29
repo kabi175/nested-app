@@ -275,6 +275,7 @@ function HoldingsContent({
           holding.invested_amount > 0
             ? (holding.returns_amount / holding.invested_amount) * 100
             : 0;
+        const isNegative = returnsPercentage < 0;
 
         return (
           <ThemedView
@@ -313,11 +314,11 @@ function HoldingsContent({
                 <ThemedText
                   style={[
                     styles.returnsText,
-                    holding.returns_amount < 0 && styles.returnsTextNegative,
+                    isNegative && styles.returnsTextNegative,
                   ]}
                 >
-                  {holding.returns_amount >= 0 ? "+" : "-"}
-                  {returnsPercentage.toFixed(2)}%
+                  {isNegative ? "-" : "+"}
+                  {Math.abs(returnsPercentage).toFixed(2)}%
                 </ThemedText>
               </View>
               <ThemedText
