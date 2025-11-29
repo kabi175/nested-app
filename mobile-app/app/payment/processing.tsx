@@ -7,7 +7,6 @@ import { formatCurrency } from "@/utils/formatters";
 import { Ionicons } from "@expo/vector-icons";
 import { router, useLocalSearchParams } from "expo-router";
 import { openBrowserAsync } from "expo-web-browser";
-import { useState } from "react";
 import {
   ActivityIndicator,
   Alert,
@@ -19,22 +18,13 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function PaymentProcessingScreen() {
-  const { buyOrdersAmount, bankName, paymentId, paymentMethod } =
-    useLocalSearchParams<{
-      buyOrdersAmount?: string;
-      bankName?: string;
-      paymentMethod?: "net_banking" | "upi";
-      paymentId?: string;
-    }>();
-
-  const [selectedPaymentMethod, setSelectedPaymentMethod] = useState<
-    "bank" | "upi"
-  >(() => (paymentMethod === "upi" ? "upi" : "bank"));
+  const { buyOrdersAmount, paymentId } = useLocalSearchParams<{
+    buyOrdersAmount?: string;
+    paymentId?: string;
+  }>();
 
   // Default values for demo
   const displayAmount = formatCurrency(Number(buyOrdersAmount));
-
-  const displayBankName = bankName || "Kotak Mahindra Bank";
 
   const handleLumpsumPayment = async () => {
     const redirectUrl = await fetchLumpsumPaymentUrl(paymentId as string);
@@ -77,50 +67,6 @@ export default function PaymentProcessingScreen() {
           contentContainerStyle={styles.scrollContent}
           showsVerticalScrollIndicator={false}
         >
-          {/* Payment Method Section */}
-          <View style={styles.paymentMethodCard}>
-            <ThemedText type="subtitle" style={styles.sectionTitle}>
-              Payment Method
-            </ThemedText>
-            <View style={styles.paymentMethodContent}>
-              <View style={styles.paymentMethodLeft}>
-                <View style={styles.bankIconContainer}>
-                  <Ionicons name="business" size={20} color="#FFFFFF" />
-                </View>
-                <View style={styles.paymentMethodInfo}>
-                  <ThemedText style={styles.paymentMethodLabel}>
-                    Bank Account
-                  </ThemedText>
-                  <ThemedText style={styles.bankNameText}>
-                    {displayBankName}
-                  </ThemedText>
-                </View>
-              </View>
-              <TouchableOpacity
-                style={styles.upiOption}
-                onPress={() =>
-                  setSelectedPaymentMethod(
-                    selectedPaymentMethod === "upi" ? "bank" : "upi"
-                  )
-                }
-                activeOpacity={0.7}
-              >
-                <Ionicons
-                  name={
-                    selectedPaymentMethod === "upi"
-                      ? "checkbox"
-                      : "square-outline"
-                  }
-                  size={24}
-                  color={
-                    selectedPaymentMethod === "upi" ? "#2563EB" : "#9CA3AF"
-                  }
-                />
-                <ThemedText style={styles.upiText}>UPI</ThemedText>
-              </TouchableOpacity>
-            </View>
-          </View>
-
           {/* Step 1: One-time Purchase */}
           <TouchableOpacity
             style={[styles.stepCard, styles.step1Card]}
