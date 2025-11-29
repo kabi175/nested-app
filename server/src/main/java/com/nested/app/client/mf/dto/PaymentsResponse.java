@@ -21,14 +21,13 @@ public class PaymentsResponse {
 
   @RequiredArgsConstructor
   public enum Status {
-      PENDING("PENDING"),
-      SUBMITTED("SUBMITTED"),
-      SUCCESS("SUCCESS"),
-      FAILED("FAILED"),
-      INITIATED("INITIATED"),
-      APPROVED("APPROVED");
+    PENDING("PENDING"),
+    SUBMITTED("SUBMITTED"),
+    SUCCESS("SUCCESS"),
+    FAILED("FAILED"),
+    INITIATED("INITIATED"),
+    APPROVED("APPROVED");
 
-      @JsonValue @Getter
-      private final String value;
+    @JsonValue @Getter private final String value;
   }
 }
