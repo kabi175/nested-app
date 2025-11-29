@@ -82,6 +82,10 @@ export function GoalCard({ goal }: GoalCardProps) {
           pathname: `/payment`,
         });
       }
+    } else {
+      router.push({
+        pathname: `/goal/${goal.id}`,
+      });
     }
   };
 
