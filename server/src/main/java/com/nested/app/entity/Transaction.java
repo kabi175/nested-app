@@ -1,5 +1,6 @@
 package com.nested.app.entity;
 
+import com.nested.app.enums.TransactionStatus;
 import com.nested.app.enums.TransactionType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -53,6 +54,10 @@ public class Transaction {
   @Enumerated(EnumType.STRING)
   @Column(nullable = false)
   private TransactionType type;
+
+  @Enumerated(EnumType.STRING)
+  @Column(nullable = false)
+  private TransactionStatus status = TransactionStatus.PENDING;
 
   /** Signed units: positive for acquisitions (BUY/SIP), negative for disposals (SELL/SWP) */
   @Column(nullable = false)
