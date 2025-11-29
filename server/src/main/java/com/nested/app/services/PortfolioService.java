@@ -1,8 +1,11 @@
 package com.nested.app.services;
 
 import com.nested.app.contect.UserContext;
+import com.nested.app.dto.GoalHoldingDTO;
+import com.nested.app.dto.MinifiedGoalDTO;
 import com.nested.app.dto.PortfolioGoalDTO;
 import com.nested.app.dto.PortfolioOverallDTO;
+import com.nested.app.dto.TransactionDTO;
 import com.nested.app.entity.Fund;
 import com.nested.app.entity.Goal;
 import com.nested.app.entity.Transaction;
@@ -15,6 +18,7 @@ import java.util.Map;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -101,17 +105,6 @@ public class PortfolioService {
   }
 
   @Transactional(readOnly = true)
-  public List<PortfolioGoalDTO> getGoalsPortfolio() {
-    var user = userContext.getUser();
-    if (user == null) {
-      return List.of();
-    }
-    List<Transaction> txns = transactionRepository.findByUserId(user.getId());
-    double totalCurrentValue = computeTotalCurrentValue(txns);
-    return buildGoalBreakdown(txns, totalCurrentValue);
-  }
-
-  @Transactional(readOnly = true)
   public PortfolioGoalDTO getGoalPortfolio(Long goalId) {
     var user = userContext.getUser();
     if (user == null) return null;
@@ -121,19 +114,12 @@ public class PortfolioService {
     double invested =
         txns.stream().filter(t -> t.getUnits() > 0).mapToDouble(Transaction::getAmount).sum();
     double units = txns.stream().mapToDouble(Transaction::getUnits).sum();
-    Goal goal = txns.get(0).getGoal();
+    Goal goal = txns.getFirst().getGoal();
     double progress =
         goal.getTargetAmount() > 0 ? currentValue / goal.getTargetAmount() * 100.0 : 0.0;
     // allocation determined externally; set 0 for single view
     return new PortfolioGoalDTO(
-        goal.getId(),
-        goal.getTitle(),
-        goal.getTargetAmount(),
-        invested,
-        currentValue,
-        units,
-        progress,
-        0.0);
+        new MinifiedGoalDTO(goal.getId()), invested, currentValue, units, progress, 0.0);
   }
 
   private List<PortfolioGoalDTO> buildGoalBreakdown(
@@ -150,15 +136,13 @@ public class PortfolioService {
           gTxns.stream().filter(t -> t.getUnits() > 0).mapToDouble(Transaction::getAmount).sum();
       double units = gTxns.stream().mapToDouble(Transaction::getUnits).sum();
       double currentValue = computeTotalCurrentValue(gTxns);
-      Goal goal = gTxns.get(0).getGoal();
+      Goal goal = gTxns.getFirst().getGoal();
       double progress =
           goal.getTargetAmount() > 0 ? currentValue / goal.getTargetAmount() * 100.0 : 0.0;
       double allocation = totalCurrentValue > 0 ? currentValue / totalCurrentValue * 100.0 : 0.0;
       result.add(
           new PortfolioGoalDTO(
-              goal.getId(),
-              goal.getTitle(),
-              goal.getTargetAmount(),
+              new MinifiedGoalDTO(goal.getId()),
               invested,
               currentValue,
               units,
@@ -187,5 +171,67 @@ public class PortfolioService {
               return e.getValue() * f.getNav();
             })
         .sum();
+  }
+
+  @Transactional(readOnly = true)
+  public List<TransactionDTO> getGoalTransactions(Long goalId, Pageable pageable) {
+    var user = userContext.getUser();
+    if (user == null) {
+      return List.of();
+    }
+
+    // Fetch transactions with pagination applied at the database level
+    var txnPage = transactionRepository.findByUserIdAndGoalId(user.getId(), goalId, pageable);
+
+    // Map to DTOs
+    return txnPage.getContent().stream()
+        .map(
+            t ->
+                new TransactionDTO(
+                    t.getId(),
+                    t.getFund().getLabel(),
+                    t.getType(),
+                    t.getUnits(),
+                    t.getUnitPrice(),
+                    t.getAmount(),
+                    t.getExecutedAt()))
+        .collect(Collectors.toList());
+  }
+
+  @Transactional(readOnly = true)
+  public List<GoalHoldingDTO> getGoalHoldings(Long goalId) {
+    var user = userContext.getUser();
+    if (user == null) {
+      return List.of();
+    }
+
+    // Fetch aggregated holdings data from database with grouping and calculations done in SQL
+    var holdingProjections = transactionRepository.findGoalHoldingsAggregated(user.getId(), goalId);
+
+    if (holdingProjections.isEmpty()) {
+      return List.of();
+    }
+
+    // Calculate total goal current value for allocation percentages
+    double totalGoalCurrentValue =
+        holdingProjections.stream().mapToDouble(h -> h.getTotalUnits() * h.getCurrentNav()).sum();
+
+    // Map projections to DTOs with calculated fields
+    return holdingProjections.stream()
+        .map(
+            h -> {
+              double currentValue = h.getTotalUnits() * h.getCurrentNav();
+              double returnsAmount = currentValue - h.getInvestedAmount();
+              double allocationPercentage =
+                  totalGoalCurrentValue > 0 ? (currentValue / totalGoalCurrentValue * 100.0) : 0.0;
+
+              return new GoalHoldingDTO(
+                  h.getFundLabel(),
+                  allocationPercentage,
+                  h.getInvestedAmount(),
+                  currentValue,
+                  returnsAmount);
+            })
+        .collect(Collectors.toList());
   }
 }

@@ -8,9 +8,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class PortfolioGoalDTO {
-  private Long goalId;
-  private String title;
-  private Double targetAmount;
+  private MinifiedGoalDTO goal;
   private Double investedAmount;
   private Double currentValue;
   private Double units;
