@@ -13,6 +13,7 @@ import { ArrowLeft, TrendingDown, TrendingUp } from "lucide-react-native";
 import React, { useMemo } from "react";
 import {
   ActivityIndicator,
+  FlatList,
   ScrollView,
   StyleSheet,
   TouchableOpacity,
@@ -348,9 +349,109 @@ function HoldingsContent({
 
 // Transactions Content Component
 function TransactionsContent({ goalId }: { goalId: string }) {
-  const { data: transactions, isLoading } = usePortfolioTransactions(goalId, 0);
+  const [currentPage, setCurrentPage] = React.useState(0);
+  const [allTransactions, setAllTransactions] = React.useState<any[]>([]);
+  const [hasMore, setHasMore] = React.useState(true);
+  const [isLoadingMore, setIsLoadingMore] = React.useState(false);
 
-  if (isLoading) {
+  const { data: transactions, isLoading } = usePortfolioTransactions(
+    goalId,
+    currentPage
+  );
+
+  // Generate colors for transactions - moved before hooks
+  const colors = React.useMemo(
+    () => ["#FBCFE8", "#FFE4B5", "#E6E6FA", "#D1FAE5", "#DBEAFE"],
+    []
+  );
+
+  // Accumulate transactions when new page data arrives
+  React.useEffect(() => {
+    if (transactions) {
+      if (currentPage === 0) {
+        // First page - replace all transactions
+        setAllTransactions(transactions);
+        setHasMore(transactions.length > 0);
+      } else {
+        // Subsequent pages - append if not empty
+        if (transactions.length > 0) {
+          setAllTransactions((prev) => [...prev, ...transactions]);
+          setHasMore(true);
+        } else {
+          setHasMore(false);
+        }
+      }
+      setIsLoadingMore(false);
+    }
+  }, [transactions, currentPage]);
+
+  const handleLoadMore = React.useCallback(() => {
+    if (!isLoading && !isLoadingMore && hasMore) {
+      setIsLoadingMore(true);
+      setCurrentPage((prev) => prev + 1);
+    }
+  }, [isLoading, isLoadingMore, hasMore]);
+
+  const handleEndReached = React.useCallback(() => {
+    handleLoadMore();
+  }, [handleLoadMore]);
+
+  const renderTransaction = React.useCallback(
+    ({ item: transaction, index }: { item: any; index: number }) => {
+      const borderColor = colors[index % colors.length];
+      const date = new Date(transaction.executed_at);
+      const formattedDate = date.toLocaleDateString("en-CA", {
+        year: "numeric",
+        month: "2-digit",
+        day: "2-digit",
+      });
+
+      return (
+        <ThemedView
+          style={[
+            styles.transactionCard,
+            { borderLeftColor: borderColor, borderLeftWidth: 4 },
+          ]}
+        >
+          <View style={styles.transactionHeader}>
+            <View style={styles.transactionLeft}>
+              <View style={styles.transactionTypeContainer}>
+                <ThemedText style={styles.transactionType}>
+                  {transaction.type}
+                </ThemedText>
+                <View style={styles.statusBadge}>
+                  <ThemedText style={styles.statusText}>Completed</ThemedText>
+                </View>
+              </View>
+              <ThemedText style={styles.transactionFund}>
+                {transaction.fund}
+              </ThemedText>
+              <ThemedText style={styles.transactionDate}>
+                {formattedDate}
+              </ThemedText>
+            </View>
+            <View style={styles.transactionRight}>
+              <ThemedText style={styles.transactionAmount}>
+                {formatCurrency(transaction.amount)}
+              </ThemedText>
+            </View>
+          </View>
+        </ThemedView>
+      );
+    },
+    [colors]
+  );
+
+  const renderFooter = React.useCallback(() => {
+    if (!isLoadingMore) return null;
+    return (
+      <View style={styles.loadMoreContainer}>
+        <ActivityIndicator size="small" color="#3B82F6" />
+      </View>
+    );
+  }, [isLoadingMore]);
+
+  if (isLoading && currentPage === 0) {
     return (
       <View style={styles.loadingContainer}>
         <ActivityIndicator size="large" color="#3B82F6" />
@@ -358,7 +459,7 @@ function TransactionsContent({ goalId }: { goalId: string }) {
     );
   }
 
-  if (!transactions || transactions.length === 0) {
+  if (!allTransactions || allTransactions.length === 0) {
     return (
       <View style={styles.emptyContainer}>
         <ThemedText style={styles.emptyText}>No transactions found</ThemedText>
@@ -366,55 +467,22 @@ function TransactionsContent({ goalId }: { goalId: string }) {
     );
   }
 
-  // Generate colors for transactions
-  const colors = ["#FBCFE8", "#FFE4B5", "#E6E6FA", "#D1FAE5", "#DBEAFE"];
-
   return (
-    <View style={styles.contentContainer}>
-      {transactions.map((transaction, index) => {
-        const borderColor = colors[index % colors.length];
-        const date = new Date(transaction.executed_at);
-        const formattedDate = date.toLocaleDateString("en-CA", {
-          year: "numeric",
-          month: "2-digit",
-          day: "2-digit",
-        });
-
-        return (
-          <ThemedView
-            key={`${transaction.fund}-${transaction.executed_at}-${index}`}
-            style={[
-              styles.transactionCard,
-              { borderLeftColor: borderColor, borderLeftWidth: 4 },
-            ]}
-          >
-            <View style={styles.transactionHeader}>
-              <View style={styles.transactionLeft}>
-                <View style={styles.transactionTypeContainer}>
-                  <ThemedText style={styles.transactionType}>
-                    {transaction.type}
-                  </ThemedText>
-                  <View style={styles.statusBadge}>
-                    <ThemedText style={styles.statusText}>Completed</ThemedText>
-                  </View>
-                </View>
-                <ThemedText style={styles.transactionFund}>
-                  {transaction.fund}
-                </ThemedText>
-                <ThemedText style={styles.transactionDate}>
-                  {formattedDate}
-                </ThemedText>
-              </View>
-              <View style={styles.transactionRight}>
-                <ThemedText style={styles.transactionAmount}>
-                  {formatCurrency(transaction.amount)}
-                </ThemedText>
-              </View>
-            </View>
-          </ThemedView>
-        );
-      })}
-    </View>
+    <FlatList
+      data={allTransactions}
+      renderItem={renderTransaction}
+      keyExtractor={(item, index) =>
+        `${item.fund}-${item.executed_at}-${index}`
+      }
+      onEndReached={handleEndReached}
+      onEndReachedThreshold={0.5}
+      ListFooterComponent={renderFooter}
+      scrollEnabled={true}
+      nestedScrollEnabled={true}
+      contentContainerStyle={styles.contentContainer}
+      showsVerticalScrollIndicator={false}
+      style={styles.transactionsFlatList}
+    />
   );
 }
 
@@ -706,6 +774,14 @@ const styles = StyleSheet.create({
   emptyText: {
     fontSize: 14,
     color: "#6B7280",
+  },
+  transactionsFlatList: {
+    maxHeight: 600,
+  },
+  loadMoreContainer: {
+    padding: 20,
+    alignItems: "center",
+    justifyContent: "center",
   },
   investButton: {
     backgroundColor: "#3B82F6",
