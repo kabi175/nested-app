@@ -1,5 +1,6 @@
 package com.nested.app.dto;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -16,9 +17,18 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class GoalHoldingDTO {
 
+  @JsonProperty("fund")
   private String fundLabel;
+
+  @JsonProperty("allocation_percentage")
   private Double allocationPercentage; // Fund current value / total goal current value * 100
+
+  @JsonProperty("invested_amount")
   private Double investedAmount; // Sum of positive transaction amounts for this fund
+
+  @JsonProperty("current_value")
   private Double currentValue; // Units * current NAV
+
+  @JsonProperty("returns_amount")
   private Double returnsAmount; // Current value - invested amount
 }

@@ -1,5 +1,8 @@
 package com.nested.app.dto;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.nested.app.enums.TransactionType;
 import java.sql.Timestamp;
 import lombok.AllArgsConstructor;
@@ -16,11 +19,20 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class TransactionDTO {
-  private Long id;
+  @JsonIgnore private Long id;
+
+  @JsonProperty("fund")
   private String fundLabel;
+
   private TransactionType type;
   private Double units;
+
+  @JsonProperty("unit_price")
   private Double unitPrice;
+
   private Double amount;
+
+  @JsonProperty("executed_at")
+  @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd")
   private Timestamp executedAt;
 }
