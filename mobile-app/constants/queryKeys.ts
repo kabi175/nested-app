@@ -6,4 +6,5 @@ export const QUERY_KEYS = {
   goals: "goals",
   goal: "goal",
   pendingActivities: "pendingActivities",
+  portfolio: "portfolio",
 };

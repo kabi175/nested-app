@@ -1,0 +1,702 @@
+import { ThemedText } from "@/components/ThemedText";
+import { ThemedView } from "@/components/ThemedView";
+import { useGoal } from "@/hooks/useGoal";
+import {
+  usePortfolioHoldings,
+  usePortfolioTransactions,
+} from "@/hooks/usePortfolio";
+import { formatCurrency } from "@/utils/formatters";
+import { router, useLocalSearchParams } from "expo-router";
+import { ArrowLeft, TrendingDown, TrendingUp } from "lucide-react-native";
+import React, { useMemo } from "react";
+import {
+  ActivityIndicator,
+  ScrollView,
+  StyleSheet,
+  TouchableOpacity,
+  View,
+} from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
+
+type TabType = "holdings" | "transactions";
+
+export default function GoalDetailScreen() {
+  const { goal_id, tab } = useLocalSearchParams<{
+    goal_id: string;
+    tab?: string;
+  }>();
+  const { data: goal, isLoading: goalLoading } = useGoal(goal_id);
+  const { data: holdings, isLoading: holdingsLoading } =
+    usePortfolioHoldings(goal_id);
+  const [activeTab, setActiveTab] = React.useState<TabType>(
+    (tab as TabType) || "holdings"
+  );
+
+  // Update tab when route parameter changes
+  React.useEffect(() => {
+    if (tab && (tab === "holdings" || tab === "transactions")) {
+      setActiveTab(tab as TabType);
+    }
+  }, [tab]);
+
+  // Calculate portfolio summary from holdings
+  const portfolioSummary = useMemo(() => {
+    if (!holdings || holdings.length === 0) {
+      return {
+        currentValue: 0,
+        investedAmount: 0,
+        returnsAmount: 0,
+        returnsPercentage: 0,
+      };
+    }
+
+    const currentValue = holdings.reduce((sum, holding) => {
+      const value = Number(holding.current_value) || 0;
+      return sum + value;
+    }, 0);
+
+    const investedAmount = holdings.reduce((sum, holding) => {
+      const value = Number(holding.invested_amount) || 0;
+      return sum + value;
+    }, 0);
+
+    const returnsAmount = holdings.reduce((sum, holding) => {
+      const value = Number(holding.returns_amount) || 0;
+      return sum + value;
+    }, 0);
+
+    const returnsPercentage =
+      investedAmount > 0 ? (returnsAmount / investedAmount) * 100 : 0;
+
+    return {
+      currentValue: isNaN(currentValue) ? 0 : currentValue,
+      investedAmount: isNaN(investedAmount) ? 0 : investedAmount,
+      returnsAmount: isNaN(returnsAmount) ? 0 : returnsAmount,
+      returnsPercentage: isNaN(returnsPercentage) ? 0 : returnsPercentage,
+    };
+  }, [holdings]);
+
+  const isLoading = goalLoading || holdingsLoading;
+
+  if (isLoading) {
+    return (
+      <SafeAreaView style={styles.container} edges={["top"]}>
+        <View style={styles.header}>
+          <TouchableOpacity
+            onPress={() => router.back()}
+            style={styles.backButton}
+          >
+            <ArrowLeft size={24} color="#1F2937" />
+          </TouchableOpacity>
+          <ThemedText style={styles.headerTitle}>
+            {goal?.title || "Goal"}
+          </ThemedText>
+          <View style={styles.backButton} />
+        </View>
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="large" color="#3B82F6" />
+        </View>
+      </SafeAreaView>
+    );
+  }
+
+  return (
+    <SafeAreaView style={styles.container} edges={["top"]}>
+      {/* Header */}
+      <View style={styles.header}>
+        <TouchableOpacity
+          onPress={() => router.back()}
+          style={styles.backButton}
+        >
+          <ArrowLeft size={24} color="#1F2937" />
+        </TouchableOpacity>
+        <ThemedText style={styles.headerTitle}>
+          {goal?.title || "Goal"}
+        </ThemedText>
+        <View style={styles.backButton} />
+      </View>
+
+      <ScrollView
+        style={styles.scrollView}
+        contentContainerStyle={styles.scrollContent}
+        showsVerticalScrollIndicator={false}
+      >
+        {/* Summary Card */}
+        <ThemedView style={styles.summaryCard}>
+          <ThemedText style={styles.summaryLabel}>Current Value</ThemedText>
+          <ThemedText style={styles.summaryValue}>
+            {formatCurrency(
+              isNaN(portfolioSummary.currentValue)
+                ? 0
+                : portfolioSummary.currentValue
+            )}
+          </ThemedText>
+
+          <View style={styles.summaryBottom}>
+            <View style={styles.summaryItem}>
+              <ThemedText style={styles.summaryItemLabel}>Invested</ThemedText>
+              <ThemedText style={styles.summaryItemValue}>
+                {formatCurrency(
+                  isNaN(portfolioSummary.investedAmount)
+                    ? 0
+                    : portfolioSummary.investedAmount
+                )}
+              </ThemedText>
+            </View>
+
+            <View
+              style={[
+                styles.returnsContainer,
+                portfolioSummary.returnsAmount < 0 &&
+                  styles.returnsContainerNegative,
+              ]}
+            >
+              <ThemedText style={styles.returnsLabel}>Returns</ThemedText>
+              <View style={styles.returnsContent}>
+                {portfolioSummary.returnsAmount >= 0 ? (
+                  <TrendingUp size={16} color="#10B981" />
+                ) : (
+                  <TrendingDown size={16} color="#EF4444" />
+                )}
+                <ThemedText
+                  style={[
+                    styles.returnsAmount,
+                    portfolioSummary.returnsAmount < 0 &&
+                      styles.returnsAmountNegative,
+                  ]}
+                >
+                  {portfolioSummary.returnsAmount >= 0 ? "+" : "-"}
+                  {formatCurrency(
+                    Math.abs(
+                      isNaN(portfolioSummary.returnsAmount)
+                        ? 0
+                        : portfolioSummary.returnsAmount
+                    )
+                  )}
+                </ThemedText>
+              </View>
+              <ThemedText
+                style={[
+                  styles.returnsPercentage,
+                  portfolioSummary.returnsPercentage < 0 &&
+                    styles.returnsPercentageNegative,
+                ]}
+              >
+                {portfolioSummary.returnsPercentage >= 0 ? "+" : ""}
+                {isNaN(portfolioSummary.returnsPercentage)
+                  ? "0.0"
+                  : portfolioSummary.returnsPercentage.toFixed(1)}
+                %
+              </ThemedText>
+            </View>
+          </View>
+        </ThemedView>
+
+        {/* Tabs */}
+        <View style={styles.tabsContainer}>
+          <TouchableOpacity
+            style={[styles.tab, activeTab === "holdings" && styles.tabActive]}
+            onPress={() => setActiveTab("holdings")}
+          >
+            <ThemedText
+              style={[
+                styles.tabText,
+                activeTab === "holdings" && styles.tabTextActive,
+              ]}
+            >
+              Holdings
+            </ThemedText>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={[
+              styles.tab,
+              activeTab === "transactions" && styles.tabActive,
+            ]}
+            onPress={() => setActiveTab("transactions")}
+          >
+            <ThemedText
+              style={[
+                styles.tabText,
+                activeTab === "transactions" && styles.tabTextActive,
+              ]}
+            >
+              Transactions
+            </ThemedText>
+          </TouchableOpacity>
+        </View>
+
+        {/* Tab Content */}
+        {activeTab === "holdings" ? (
+          <HoldingsContent goalId={goal_id} holdings={holdings || []} />
+        ) : (
+          <TransactionsContent goalId={goal_id} />
+        )}
+
+        {/* Invest More Button */}
+        <TouchableOpacity
+          style={styles.investButton}
+          onPress={() => {
+            // Navigate to payment screen to add more investments
+            // TODO: Update this navigation based on actual invest more flow
+            router.push("/payment");
+          }}
+        >
+          <ThemedText style={styles.investButtonText}>Invest More</ThemedText>
+        </TouchableOpacity>
+      </ScrollView>
+    </SafeAreaView>
+  );
+}
+
+// Holdings Content Component
+function HoldingsContent({
+  goalId,
+  holdings,
+}: {
+  goalId: string;
+  holdings: any[];
+}) {
+  if (holdings.length === 0) {
+    return (
+      <View style={styles.emptyContainer}>
+        <ThemedText style={styles.emptyText}>No holdings found</ThemedText>
+      </View>
+    );
+  }
+
+  // Generate colors for holdings
+  const colors = ["#FBCFE8", "#FEF3C7", "#D1FAE5", "#DBEAFE", "#FCE7F3"];
+
+  return (
+    <View style={styles.contentContainer}>
+      {holdings.map((holding, index) => {
+        const borderColor = colors[index % colors.length];
+        const returnsPercentage =
+          holding.invested_amount > 0
+            ? (holding.returns_amount / holding.invested_amount) * 100
+            : 0;
+
+        return (
+          <ThemedView
+            key={holding.fund}
+            style={[
+              styles.holdingCard,
+              { borderLeftColor: borderColor, borderLeftWidth: 4 },
+            ]}
+          >
+            <View style={styles.holdingHeader}>
+              <View style={styles.holdingInfo}>
+                <ThemedText style={styles.holdingFundName}>
+                  {holding.fund}
+                </ThemedText>
+                <ThemedText style={styles.holdingAllocation}>
+                  {holding.allocation_percentage}% allocation
+                </ThemedText>
+                <ThemedText style={styles.holdingInvested}>
+                  Invested: {formatCurrency(holding.invested_amount)}
+                </ThemedText>
+              </View>
+              <View style={styles.holdingValue}>
+                <ThemedText style={styles.holdingCurrentValue}>
+                  {formatCurrency(holding.current_value)}
+                </ThemedText>
+              </View>
+            </View>
+
+            <View style={styles.holdingReturns}>
+              <View style={styles.returnsRow}>
+                {holding.returns_amount >= 0 ? (
+                  <TrendingUp size={14} color="#10B981" />
+                ) : (
+                  <TrendingDown size={14} color="#EF4444" />
+                )}
+                <ThemedText
+                  style={[
+                    styles.returnsText,
+                    holding.returns_amount < 0 && styles.returnsTextNegative,
+                  ]}
+                >
+                  {holding.returns_amount >= 0 ? "+" : "-"}
+                  {returnsPercentage.toFixed(2)}%
+                </ThemedText>
+              </View>
+              <ThemedText
+                style={[
+                  styles.returnsAmountText,
+                  holding.returns_amount < 0 &&
+                    styles.returnsAmountTextNegative,
+                ]}
+              >
+                {holding.returns_amount >= 0 ? "+" : "-"}
+                {formatCurrency(Math.abs(holding.returns_amount))}
+              </ThemedText>
+            </View>
+          </ThemedView>
+        );
+      })}
+    </View>
+  );
+}
+
+// Transactions Content Component
+function TransactionsContent({ goalId }: { goalId: string }) {
+  const { data: transactions, isLoading } = usePortfolioTransactions(goalId, 0);
+
+  if (isLoading) {
+    return (
+      <View style={styles.loadingContainer}>
+        <ActivityIndicator size="large" color="#3B82F6" />
+      </View>
+    );
+  }
+
+  if (!transactions || transactions.length === 0) {
+    return (
+      <View style={styles.emptyContainer}>
+        <ThemedText style={styles.emptyText}>No transactions found</ThemedText>
+      </View>
+    );
+  }
+
+  // Generate colors for transactions
+  const colors = ["#FBCFE8", "#FFE4B5", "#E6E6FA", "#D1FAE5", "#DBEAFE"];
+
+  return (
+    <View style={styles.contentContainer}>
+      {transactions.map((transaction, index) => {
+        const borderColor = colors[index % colors.length];
+        const date = new Date(transaction.executed_at);
+        const formattedDate = date.toLocaleDateString("en-CA", {
+          year: "numeric",
+          month: "2-digit",
+          day: "2-digit",
+        });
+
+        return (
+          <ThemedView
+            key={`${transaction.fund}-${transaction.executed_at}-${index}`}
+            style={[
+              styles.transactionCard,
+              { borderLeftColor: borderColor, borderLeftWidth: 4 },
+            ]}
+          >
+            <View style={styles.transactionHeader}>
+              <View style={styles.transactionTypeContainer}>
+                <ThemedText style={styles.transactionType}>
+                  {transaction.type}
+                </ThemedText>
+                <View style={styles.statusBadge}>
+                  <ThemedText style={styles.statusText}>Completed</ThemedText>
+                </View>
+              </View>
+            </View>
+            <ThemedText style={styles.transactionFund}>
+              {transaction.fund}
+            </ThemedText>
+            <ThemedText style={styles.transactionDate}>
+              {formattedDate}
+            </ThemedText>
+            <ThemedText style={styles.transactionAmount}>
+              {formatCurrency(transaction.amount)}
+            </ThemedText>
+          </ThemedView>
+        );
+      })}
+    </View>
+  );
+}
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: "#FFFFFF",
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  header: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: "#F3F4F6",
+  },
+  backButton: {
+    width: 40,
+    height: 40,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  headerTitle: {
+    fontSize: 20,
+    fontWeight: "700",
+    color: "#1F2937",
+    flex: 1,
+    textAlign: "center",
+  },
+  scrollView: {
+    flex: 1,
+  },
+  scrollContent: {
+    padding: 16,
+  },
+  summaryCard: {
+    borderRadius: 12,
+    padding: 20,
+    marginBottom: 20,
+    backgroundColor: "#F9FAFB",
+  },
+  summaryLabel: {
+    fontSize: 14,
+    color: "#6B7280",
+    marginBottom: 8,
+  },
+  summaryValue: {
+    fontSize: 32,
+    fontWeight: "700",
+    color: "#1F2937",
+    marginBottom: 20,
+  },
+  summaryBottom: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "flex-end",
+    gap: 12,
+  },
+  summaryItem: {
+    flex: 1,
+    minWidth: 0,
+  },
+  summaryItemLabel: {
+    fontSize: 12,
+    color: "#6B7280",
+    marginBottom: 4,
+  },
+  summaryItemValue: {
+    fontSize: 18,
+    fontWeight: "700",
+    color: "#1F2937",
+  },
+  returnsContainer: {
+    backgroundColor: "#EDE9FE",
+    borderRadius: 8,
+    padding: 12,
+    alignItems: "flex-end",
+    minWidth: 120,
+    flex: 0,
+    flexShrink: 1,
+  },
+  returnsLabel: {
+    fontSize: 12,
+    color: "#6B7280",
+    marginBottom: 4,
+  },
+  returnsContent: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: 4,
+  },
+  returnsAmount: {
+    fontSize: 16,
+    fontWeight: "700",
+    color: "#10B981",
+    marginLeft: 4,
+  },
+  returnsPercentage: {
+    fontSize: 14,
+    fontWeight: "600",
+    color: "#10B981",
+  },
+  returnsContainerNegative: {
+    backgroundColor: "#FEE2E2",
+  },
+  returnsAmountNegative: {
+    color: "#EF4444",
+  },
+  returnsPercentageNegative: {
+    color: "#EF4444",
+  },
+  tabsContainer: {
+    flexDirection: "row",
+    marginBottom: 20,
+    backgroundColor: "#F3F4F6",
+    borderRadius: 8,
+    padding: 4,
+  },
+  tab: {
+    flex: 1,
+    paddingVertical: 10,
+    alignItems: "center",
+    borderRadius: 6,
+  },
+  tabActive: {
+    backgroundColor: "#FFFFFF",
+  },
+  tabText: {
+    fontSize: 14,
+    fontWeight: "600",
+    color: "#6B7280",
+  },
+  tabTextActive: {
+    color: "#1F2937",
+  },
+  contentContainer: {
+    marginBottom: 20,
+  },
+  holdingCard: {
+    borderRadius: 12,
+    padding: 16,
+    marginBottom: 12,
+    backgroundColor: "#FFFFFF",
+    shadowColor: "#000",
+    shadowOffset: {
+      width: 0,
+      height: 1,
+    },
+    shadowOpacity: 0.05,
+    shadowRadius: 2,
+    elevation: 2,
+  },
+  holdingHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    marginBottom: 12,
+  },
+  holdingInfo: {
+    flex: 1,
+  },
+  holdingFundName: {
+    fontSize: 16,
+    fontWeight: "700",
+    color: "#1F2937",
+    marginBottom: 4,
+  },
+  holdingAllocation: {
+    fontSize: 12,
+    color: "#6B7280",
+    marginBottom: 4,
+  },
+  holdingInvested: {
+    fontSize: 12,
+    color: "#6B7280",
+  },
+  holdingValue: {
+    alignItems: "flex-end",
+  },
+  holdingCurrentValue: {
+    fontSize: 16,
+    fontWeight: "700",
+    color: "#1F2937",
+  },
+  holdingReturns: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    paddingTop: 12,
+    borderTopWidth: 1,
+    borderTopColor: "#F3F4F6",
+  },
+  returnsRow: {
+    flexDirection: "row",
+    alignItems: "center",
+  },
+  returnsText: {
+    fontSize: 14,
+    fontWeight: "600",
+    color: "#10B981",
+    marginLeft: 4,
+  },
+  returnsAmountText: {
+    fontSize: 14,
+    fontWeight: "600",
+    color: "#10B981",
+  },
+  returnsTextNegative: {
+    color: "#EF4444",
+  },
+  returnsAmountTextNegative: {
+    color: "#EF4444",
+  },
+  transactionCard: {
+    borderRadius: 12,
+    padding: 16,
+    marginBottom: 12,
+    backgroundColor: "#FFFFFF",
+    shadowColor: "#000",
+    shadowOffset: {
+      width: 0,
+      height: 1,
+    },
+    shadowOpacity: 0.05,
+    shadowRadius: 2,
+    elevation: 2,
+  },
+  transactionHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: 8,
+  },
+  transactionTypeContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+  },
+  transactionType: {
+    fontSize: 14,
+    fontWeight: "600",
+    color: "#1F2937",
+  },
+  statusBadge: {
+    backgroundColor: "#10B981",
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    borderRadius: 4,
+  },
+  statusText: {
+    fontSize: 10,
+    fontWeight: "600",
+    color: "#FFFFFF",
+  },
+  transactionFund: {
+    fontSize: 16,
+    fontWeight: "700",
+    color: "#1F2937",
+    marginBottom: 4,
+  },
+  transactionDate: {
+    fontSize: 12,
+    color: "#6B7280",
+    marginBottom: 8,
+  },
+  transactionAmount: {
+    fontSize: 16,
+    fontWeight: "700",
+    color: "#1F2937",
+  },
+  emptyContainer: {
+    padding: 40,
+    alignItems: "center",
+  },
+  emptyText: {
+    fontSize: 14,
+    color: "#6B7280",
+  },
+  investButton: {
+    backgroundColor: "#3B82F6",
+    borderRadius: 12,
+    paddingVertical: 16,
+    alignItems: "center",
+    marginTop: 8,
+    marginBottom: 20,
+  },
+  investButtonText: {
+    fontSize: 16,
+    fontWeight: "700",
+    color: "#FFFFFF",
+  },
+});

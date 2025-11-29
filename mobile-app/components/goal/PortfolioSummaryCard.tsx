@@ -7,47 +7,42 @@ import { StyleSheet, View } from "react-native";
 
 interface PortfolioSummaryCardProps {
   currentValue: number;
-  invested: number;
+  investedAmount: number;
+  returnsAmount: number;
 }
 
 export function PortfolioSummaryCard({
   currentValue,
-  invested,
+  investedAmount,
+  returnsAmount,
 }: PortfolioSummaryCardProps) {
-  const returns = currentValue - invested;
   const returnsPercentage =
-    invested > 0 ? ((returns / invested) * 100).toFixed(2) : "0.00";
+    investedAmount > 0 ? (returnsAmount / investedAmount) * 100 : 0;
 
   return (
-    <ThemedView style={styles.card}>
-      <View style={styles.currentValueContainer}>
-        <ThemedText style={styles.currentValueLabel}>Current Value</ThemedText>
-        <ThemedText style={styles.currentValueAmount}>
-          {formatCurrency(currentValue)}
-        </ThemedText>
-      </View>
+    <ThemedView style={styles.summaryCard}>
+      <ThemedText style={styles.currentValueLabel}>Current Value</ThemedText>
+      <ThemedText style={styles.currentValue}>
+        {formatCurrency(currentValue)}
+      </ThemedText>
       <View style={styles.bottomRow}>
         <View style={styles.investedContainer}>
-          <ThemedText style={styles.label}>Invested</ThemedText>
-          <ThemedText style={styles.amount}>
-            {formatCurrency(invested)}
+          <ThemedText style={styles.investedLabel}>Invested</ThemedText>
+          <ThemedText style={styles.investedAmount}>
+            {formatCurrency(investedAmount)}
           </ThemedText>
         </View>
         <View style={styles.returnsContainer}>
-          <View style={styles.returnsBox}>
-            <ThemedText style={styles.returnsLabel}>Returns</ThemedText>
-            <View style={styles.returnsContent}>
-              <View style={styles.returnsAmountRow}>
-                <TrendingUp color="#10B981" size={16} strokeWidth={2.5} />
-                <ThemedText style={styles.returnsAmount}>
-                  {formatCurrency(Math.abs(returns))}
-                </ThemedText>
-              </View>
-              <ThemedText style={styles.returnsPercentage}>
-                +{returnsPercentage}%
-              </ThemedText>
-            </View>
+          <ThemedText style={styles.returnsLabel}>Returns</ThemedText>
+          <View style={styles.returnsRow}>
+            <TrendingUp color="#10B981" size={16} />
+            <ThemedText style={styles.returnsAmount}>
+              {formatCurrency(returnsAmount)}
+            </ThemedText>
           </View>
+          <ThemedText style={styles.returnsPercentage}>
+            {returnsPercentage.toFixed(1)}%
+          </ThemedText>
         </View>
       </View>
     </ThemedView>
@@ -55,87 +50,69 @@ export function PortfolioSummaryCard({
 }
 
 const styles = StyleSheet.create({
-  card: {
-    backgroundColor: "#F3F4F6",
-    borderRadius: 16,
+  summaryCard: {
+    borderRadius: 12,
     padding: 20,
-    marginBottom: 12,
-    shadowColor: "#000",
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.05,
-    shadowRadius: 8,
-    elevation: 3,
-  },
-  currentValueContainer: {
-    alignItems: "center",
-    marginBottom: 20,
+    marginHorizontal: 16,
+    marginTop: 16,
+    marginBottom: 24,
+    backgroundColor: "#F9FAFB",
   },
   currentValueLabel: {
-    fontSize: 12,
+    fontSize: 14,
     color: "#6B7280",
-    marginBottom: 6,
+    marginBottom: 8,
   },
-  currentValueAmount: {
-    fontSize: 28,
-    fontWeight: "bold",
+  currentValue: {
+    fontSize: 32,
+    fontWeight: "700",
     color: "#1F2937",
+    marginBottom: 20,
   },
   bottomRow: {
     flexDirection: "row",
     justifyContent: "space-between",
+    alignItems: "flex-end",
   },
   investedContainer: {
     flex: 1,
   },
-  label: {
-    fontSize: 14,
+  investedLabel: {
+    fontSize: 12,
     color: "#6B7280",
     marginBottom: 4,
   },
-  amount: {
-    fontSize: 16,
+  investedAmount: {
+    fontSize: 18,
     fontWeight: "600",
     color: "#1F2937",
   },
   returnsContainer: {
-    flex: 1,
-    alignItems: "flex-end",
-  },
-  returnsBox: {
     backgroundColor: "#E0E7FF",
-    borderRadius: 10,
+    borderRadius: 8,
     padding: 12,
-    minWidth: 140,
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
+    minWidth: 120,
+    alignItems: "flex-end",
   },
   returnsLabel: {
     fontSize: 12,
     color: "#6B7280",
-    marginBottom: 8,
+    marginBottom: 4,
   },
-  returnsContent: {
-    flexDirection: "column",
-    alignItems: "center",
-  },
-  returnsAmountRow: {
+  returnsRow: {
     flexDirection: "row",
     alignItems: "center",
+    marginBottom: 4,
   },
   returnsAmount: {
     fontSize: 16,
     fontWeight: "600",
     color: "#10B981",
-    marginLeft: 6,
+    marginLeft: 4,
   },
   returnsPercentage: {
-    fontSize: 12,
+    fontSize: 14,
     fontWeight: "600",
     color: "#10B981",
-    marginTop: 4,
   },
 });
