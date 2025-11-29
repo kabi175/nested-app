@@ -1,6 +1,6 @@
 import { api } from "./client";
 
-type Transaction = {
+export type Transaction = {
   fund: string;
   type: "BUY" | "SELL" | "SIP";
   units: number;
@@ -9,7 +9,7 @@ type Transaction = {
   executed_at: Date;
 };
 
-type Holding = {
+export type Holding = {
   fund: string;
   allocation_percentage: number;
   invested_amount: number;
