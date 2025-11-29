@@ -381,24 +381,28 @@ function TransactionsContent({ goalId }: { goalId: string }) {
             ]}
           >
             <View style={styles.transactionHeader}>
-              <View style={styles.transactionTypeContainer}>
-                <ThemedText style={styles.transactionType}>
-                  {transaction.type}
-                </ThemedText>
-                <View style={styles.statusBadge}>
-                  <ThemedText style={styles.statusText}>Completed</ThemedText>
+              <View style={styles.transactionLeft}>
+                <View style={styles.transactionTypeContainer}>
+                  <ThemedText style={styles.transactionType}>
+                    {transaction.type}
+                  </ThemedText>
+                  <View style={styles.statusBadge}>
+                    <ThemedText style={styles.statusText}>Completed</ThemedText>
+                  </View>
                 </View>
+                <ThemedText style={styles.transactionFund}>
+                  {transaction.fund}
+                </ThemedText>
+                <ThemedText style={styles.transactionDate}>
+                  {formattedDate}
+                </ThemedText>
+              </View>
+              <View style={styles.transactionRight}>
+                <ThemedText style={styles.transactionAmount}>
+                  {formatCurrency(transaction.amount)}
+                </ThemedText>
               </View>
             </View>
-            <ThemedText style={styles.transactionFund}>
-              {transaction.fund}
-            </ThemedText>
-            <ThemedText style={styles.transactionDate}>
-              {formattedDate}
-            </ThemedText>
-            <ThemedText style={styles.transactionAmount}>
-              {formatCurrency(transaction.amount)}
-            </ThemedText>
           </ThemedView>
         );
       })}
@@ -448,7 +452,9 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     padding: 20,
     marginBottom: 20,
-    backgroundColor: "#F9FAFB",
+    backgroundColor: "#FFFFFF",
+    borderWidth: 1,
+    borderColor: "#EDE9FE",
   },
   summaryLabel: {
     fontSize: 14,
@@ -459,13 +465,13 @@ const styles = StyleSheet.create({
     fontSize: 32,
     fontWeight: "700",
     color: "#1F2937",
-    marginBottom: 20,
+    marginBottom: 24,
   },
   summaryBottom: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "flex-end",
-    gap: 12,
+    gap: 16,
   },
   summaryItem: {
     flex: 1,
@@ -474,7 +480,7 @@ const styles = StyleSheet.create({
   summaryItemLabel: {
     fontSize: 12,
     color: "#6B7280",
-    marginBottom: 4,
+    marginBottom: 6,
   },
   summaryItemValue: {
     fontSize: 18,
@@ -486,19 +492,18 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     padding: 12,
     alignItems: "flex-end",
-    minWidth: 120,
-    flex: 0,
-    flexShrink: 1,
+    minWidth: 130,
+    flexShrink: 0,
   },
   returnsLabel: {
     fontSize: 12,
     color: "#6B7280",
-    marginBottom: 4,
+    marginBottom: 6,
   },
   returnsContent: {
     flexDirection: "row",
     alignItems: "center",
-    marginBottom: 4,
+    marginBottom: 6,
   },
   returnsAmount: {
     fontSize: 16,
@@ -639,22 +644,31 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    marginBottom: 8,
+  },
+  transactionLeft: {
+    flex: 1,
+    marginRight: 16,
+  },
+  transactionRight: {
+    alignItems: "flex-end",
+    justifyContent: "center",
   },
   transactionTypeContainer: {
     flexDirection: "row",
     alignItems: "center",
     gap: 8,
+    marginBottom: 6,
   },
   transactionType: {
     fontSize: 14,
     fontWeight: "600",
     color: "#1F2937",
+    textTransform: "uppercase",
   },
   statusBadge: {
     backgroundColor: "#10B981",
     paddingHorizontal: 8,
-    paddingVertical: 2,
+    paddingVertical: 3,
     borderRadius: 4,
   },
   statusText: {
@@ -671,7 +685,6 @@ const styles = StyleSheet.create({
   transactionDate: {
     fontSize: 12,
     color: "#6B7280",
-    marginBottom: 8,
   },
   transactionAmount: {
     fontSize: 16,
