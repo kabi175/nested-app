@@ -51,6 +51,12 @@ export default function Layout() {
           },
         }}
       />
+      <Stack.Screen
+        name="processing"
+        options={{
+          headerShown: false,
+        }}
+      />
     </Stack>
   );
 }
