@@ -11,7 +11,6 @@ export default function GoalLayout() {
       <Stack.Screen name="create" />
       <Stack.Screen name="customize" />
       <Stack.Screen name="loading" />
-      <Stack.Screen name="success" />
     </Stack>
   );
 }
