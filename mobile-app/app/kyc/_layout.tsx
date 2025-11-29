@@ -27,6 +27,10 @@ export default function KYCRootLayout() {
           options={{ title: "KYC • Photo & Signature" }}
         />
         <Stack.Screen
+          name="fatca-decleration"
+          options={{ title: "KYC • FATCA Declaration" }}
+        />
+        <Stack.Screen
           name="financial"
           options={{ title: "KYC • Financial & Residency" }}
         />
