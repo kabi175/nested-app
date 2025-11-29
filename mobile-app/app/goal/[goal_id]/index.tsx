@@ -1,3 +1,4 @@
+import { goalsForCustomizeAtom } from "@/atoms/goals";
 import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
 import { useGoal } from "@/hooks/useGoal";
@@ -7,6 +8,7 @@ import {
 } from "@/hooks/usePortfolio";
 import { formatCurrency } from "@/utils/formatters";
 import { router, useLocalSearchParams } from "expo-router";
+import { useSetAtom } from "jotai";
 import { ArrowLeft, TrendingDown, TrendingUp } from "lucide-react-native";
 import React, { useMemo } from "react";
 import {
@@ -28,6 +30,7 @@ export default function GoalDetailScreen() {
   const { data: goal, isLoading: goalLoading } = useGoal(goal_id);
   const { data: holdings, isLoading: holdingsLoading } =
     usePortfolioHoldings(goal_id);
+  const setGoalsForCustomize = useSetAtom(goalsForCustomizeAtom);
   const [activeTab, setActiveTab] = React.useState<TabType>(
     (tab as TabType) || "holdings"
   );
@@ -236,9 +239,13 @@ export default function GoalDetailScreen() {
         <TouchableOpacity
           style={styles.investButton}
           onPress={() => {
-            // Navigate to payment screen to add more investments
-            // TODO: Update this navigation based on actual invest more flow
-            router.push("/payment");
+            if (goal == null) {
+              return;
+            }
+            // Set the goal in the atom for customize screen
+            setGoalsForCustomize([goal]);
+            // Navigate to customize screen
+            router.push(`/child/${goal.childId}/goal/customize`);
           }}
         >
           <ThemedText style={styles.investButtonText}>Invest More</ThemedText>
