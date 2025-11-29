@@ -3,6 +3,7 @@ import { api } from "./client";
 export type Transaction = {
   fund: string;
   type: "BUY" | "SELL" | "SIP";
+  status: "completed" | "in_progress" | "failed" | "refunded";
   units: number;
   unit_price: number;
   amount: number;
@@ -30,6 +31,7 @@ export const getTranscationsForGoal = async (
   return data.data.map((transaction: any) => ({
     fund: transaction.fund,
     type: transaction.type,
+    status: transaction.status,
     units: transaction.units,
     unit_price: transaction.unit_price,
     amount: transaction.amount,

@@ -1,3 +1,4 @@
+import { Transaction } from "@/api/portfolioAPI";
 import { goalsForCustomizeAtom } from "@/atoms/goals";
 import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
@@ -13,7 +14,6 @@ import { ArrowLeft, TrendingDown, TrendingUp } from "lucide-react-native";
 import React, { useMemo } from "react";
 import {
   ActivityIndicator,
-  FlatList,
   ScrollView,
   StyleSheet,
   TouchableOpacity,
@@ -35,6 +35,7 @@ export default function GoalDetailScreen() {
   const [activeTab, setActiveTab] = React.useState<TabType>(
     (tab as TabType) || "holdings"
   );
+  const transactionsLoadMoreRef = React.useRef<(() => void) | null>(null);
 
   // Update tab when route parameter changes
   React.useEffect(() => {
@@ -124,27 +125,34 @@ export default function GoalDetailScreen() {
         style={styles.scrollView}
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
+        onScroll={(event) => {
+          if (activeTab === "transactions" && transactionsLoadMoreRef.current) {
+            const { layoutMeasurement, contentOffset, contentSize } =
+              event.nativeEvent;
+            const paddingToBottom = 200; // Trigger 200px before bottom
+            const isCloseToBottom =
+              layoutMeasurement.height + contentOffset.y >=
+              contentSize.height - paddingToBottom;
+
+            if (isCloseToBottom) {
+              transactionsLoadMoreRef.current();
+            }
+          }
+        }}
+        scrollEventThrottle={400}
       >
         {/* Summary Card */}
         <ThemedView style={styles.summaryCard}>
           <ThemedText style={styles.summaryLabel}>Current Value</ThemedText>
           <ThemedText style={styles.summaryValue}>
-            {formatCurrency(
-              isNaN(portfolioSummary.currentValue)
-                ? 0
-                : portfolioSummary.currentValue
-            )}
+            {formatCurrency(portfolioSummary.currentValue)}
           </ThemedText>
 
           <View style={styles.summaryBottom}>
             <View style={styles.summaryItem}>
               <ThemedText style={styles.summaryItemLabel}>Invested</ThemedText>
               <ThemedText style={styles.summaryItemValue}>
-                {formatCurrency(
-                  isNaN(portfolioSummary.investedAmount)
-                    ? 0
-                    : portfolioSummary.investedAmount
-                )}
+                {formatCurrency(portfolioSummary.investedAmount)}
               </ThemedText>
             </View>
 
@@ -233,7 +241,12 @@ export default function GoalDetailScreen() {
         {activeTab === "holdings" ? (
           <HoldingsContent goalId={goal_id} holdings={holdings || []} />
         ) : (
-          <TransactionsContent goalId={goal_id} />
+          <TransactionsContent
+            goalId={goal_id}
+            onLoadMoreTrigger={(loadMore) => {
+              transactionsLoadMoreRef.current = loadMore;
+            }}
+          />
         )}
 
         {/* Invest More Button */}
@@ -348,9 +361,17 @@ function HoldingsContent({
 }
 
 // Transactions Content Component
-function TransactionsContent({ goalId }: { goalId: string }) {
+function TransactionsContent({
+  goalId,
+  onLoadMoreTrigger,
+}: {
+  goalId: string;
+  onLoadMoreTrigger?: (loadMore: () => void) => void;
+}) {
   const [currentPage, setCurrentPage] = React.useState(0);
-  const [allTransactions, setAllTransactions] = React.useState<any[]>([]);
+  const [allTransactions, setAllTransactions] = React.useState<Transaction[]>(
+    []
+  );
   const [hasMore, setHasMore] = React.useState(true);
   const [isLoadingMore, setIsLoadingMore] = React.useState(false);
 
@@ -392,64 +413,47 @@ function TransactionsContent({ goalId }: { goalId: string }) {
     }
   }, [isLoading, isLoadingMore, hasMore]);
 
-  const handleEndReached = React.useCallback(() => {
-    handleLoadMore();
-  }, [handleLoadMore]);
+  // Expose loadMore function to parent via callback
+  React.useEffect(() => {
+    if (onLoadMoreTrigger) {
+      onLoadMoreTrigger(handleLoadMore);
+    }
+  }, [onLoadMoreTrigger, handleLoadMore]);
 
-  const renderTransaction = React.useCallback(
-    ({ item: transaction, index }: { item: any; index: number }) => {
-      const borderColor = colors[index % colors.length];
-      const date = new Date(transaction.executed_at);
-      const formattedDate = date.toLocaleDateString("en-CA", {
-        year: "numeric",
-        month: "2-digit",
-        day: "2-digit",
-      });
-
-      return (
-        <ThemedView
-          style={[
-            styles.transactionCard,
-            { borderLeftColor: borderColor, borderLeftWidth: 4 },
-          ]}
-        >
-          <View style={styles.transactionHeader}>
-            <View style={styles.transactionLeft}>
-              <View style={styles.transactionTypeContainer}>
-                <ThemedText style={styles.transactionType}>
-                  {transaction.type}
-                </ThemedText>
-                <View style={styles.statusBadge}>
-                  <ThemedText style={styles.statusText}>Completed</ThemedText>
-                </View>
-              </View>
-              <ThemedText style={styles.transactionFund}>
-                {transaction.fund}
-              </ThemedText>
-              <ThemedText style={styles.transactionDate}>
-                {formattedDate}
-              </ThemedText>
-            </View>
-            <View style={styles.transactionRight}>
-              <ThemedText style={styles.transactionAmount}>
-                {formatCurrency(transaction.amount)}
-              </ThemedText>
-            </View>
-          </View>
-        </ThemedView>
-      );
-    },
-    [colors]
-  );
-
-  const renderFooter = React.useCallback(() => {
-    if (!isLoadingMore) return null;
-    return (
-      <View style={styles.loadMoreContainer}>
-        <ActivityIndicator size="small" color="#3B82F6" />
-      </View>
-    );
-  }, [isLoadingMore]);
+  const getStatusConfig = React.useCallback((status: Transaction["status"]) => {
+    switch (status) {
+      case "completed":
+        return {
+          text: "Completed",
+          backgroundColor: "#10B981",
+          textColor: "#FFFFFF",
+        };
+      case "in_progress":
+        return {
+          text: "In Progress",
+          backgroundColor: "#F59E0B",
+          textColor: "#FFFFFF",
+        };
+      case "failed":
+        return {
+          text: "Failed",
+          backgroundColor: "#EF4444",
+          textColor: "#FFFFFF",
+        };
+      case "refunded":
+        return {
+          text: "Refunded",
+          backgroundColor: "#6B7280",
+          textColor: "#FFFFFF",
+        };
+      default:
+        return {
+          text: "Unknown",
+          backgroundColor: "#6B7280",
+          textColor: "#FFFFFF",
+        };
+    }
+  }, []);
 
   if (isLoading && currentPage === 0) {
     return (
@@ -468,21 +472,70 @@ function TransactionsContent({ goalId }: { goalId: string }) {
   }
 
   return (
-    <FlatList
-      data={allTransactions}
-      renderItem={renderTransaction}
-      keyExtractor={(item, index) =>
-        `${item.fund}-${item.executed_at}-${index}`
-      }
-      onEndReached={handleEndReached}
-      onEndReachedThreshold={0.5}
-      ListFooterComponent={renderFooter}
-      scrollEnabled={true}
-      nestedScrollEnabled={true}
-      contentContainerStyle={styles.contentContainer}
-      showsVerticalScrollIndicator={false}
-      style={styles.transactionsFlatList}
-    />
+    <View style={styles.contentContainer}>
+      {allTransactions.map((transaction, index) => {
+        const borderColor = colors[index % colors.length];
+        const date = new Date(transaction.executed_at);
+        const formattedDate = date.toLocaleDateString("en-CA", {
+          year: "numeric",
+          month: "2-digit",
+          day: "2-digit",
+        });
+
+        const statusConfig = getStatusConfig(transaction.status || "completed");
+
+        return (
+          <ThemedView
+            key={`${transaction.fund}-${transaction.executed_at}-${index}`}
+            style={[
+              styles.transactionCard,
+              { borderLeftColor: borderColor, borderLeftWidth: 4 },
+            ]}
+          >
+            <View style={styles.transactionHeader}>
+              <View style={styles.transactionLeft}>
+                <View style={styles.transactionTypeContainer}>
+                  <ThemedText style={styles.transactionType}>
+                    {transaction.type}
+                  </ThemedText>
+                  <View
+                    style={[
+                      styles.statusBadge,
+                      { backgroundColor: statusConfig.backgroundColor },
+                    ]}
+                  >
+                    <ThemedText
+                      style={[
+                        styles.statusText,
+                        { color: statusConfig.textColor },
+                      ]}
+                    >
+                      {statusConfig.text}
+                    </ThemedText>
+                  </View>
+                </View>
+                <ThemedText style={styles.transactionFund}>
+                  {transaction.fund}
+                </ThemedText>
+                <ThemedText style={styles.transactionDate}>
+                  {formattedDate}
+                </ThemedText>
+              </View>
+              <View style={styles.transactionRight}>
+                <ThemedText style={styles.transactionAmount}>
+                  {formatCurrency(transaction.amount)}
+                </ThemedText>
+              </View>
+            </View>
+          </ThemedView>
+        );
+      })}
+      {isLoadingMore && (
+        <View style={styles.loadMoreContainer}>
+          <ActivityIndicator size="small" color="#3B82F6" />
+        </View>
+      )}
+    </View>
   );
 }
 
@@ -774,9 +827,6 @@ const styles = StyleSheet.create({
   emptyText: {
     fontSize: 14,
     color: "#6B7280",
-  },
-  transactionsFlatList: {
-    maxHeight: 600,
   },
   loadMoreContainer: {
     padding: 20,
