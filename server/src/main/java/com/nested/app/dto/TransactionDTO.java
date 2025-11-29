@@ -26,8 +26,8 @@ public class TransactionDTO {
   private String fundLabel;
 
   private TransactionType type;
-  private TransactionStatus status;
   private Double units;
+  private TransactionStatus status;
 
   @JsonProperty("unit_price")
   private Double unitPrice;

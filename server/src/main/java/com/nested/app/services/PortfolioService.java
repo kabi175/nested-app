@@ -191,8 +191,8 @@ public class PortfolioService {
                     t.getId(),
                     t.getFund().getLabel(),
                     t.getType(),
-                    t.getStatus(),
                     t.getUnits(),
+                    t.getStatus(),
                     t.getUnitPrice(),
                     t.getAmount(),
                     t.getExecutedAt()))
