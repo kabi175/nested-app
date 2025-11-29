@@ -3,6 +3,7 @@ package com.nested.app.dto;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.nested.app.enums.TransactionStatus;
 import com.nested.app.enums.TransactionType;
 import java.sql.Timestamp;
 import lombok.AllArgsConstructor;
@@ -25,6 +26,7 @@ public class TransactionDTO {
   private String fundLabel;
 
   private TransactionType type;
+  private TransactionStatus status;
   private Double units;
 
   @JsonProperty("unit_price")
