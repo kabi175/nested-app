@@ -7,7 +7,7 @@ import { formatCurrency } from "@/utils/formatters";
 import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
 import { useAtomValue } from "jotai";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   ActivityIndicator,
   Alert,
@@ -22,7 +22,13 @@ type PaymentMethod = "upi" | "netbanking";
 
 export default function PaymentMethodScreen() {
   const cart = useAtomValue(cartAtom);
-  const { data: bankAccounts, isLoading: isLoadingBanks } = useBankAccounts();
+  const { data: bankAccountsData, isLoading: isLoadingBanks } =
+    useBankAccounts();
+  // Ensure bankAccounts is always an array
+  const bankAccounts = useMemo(
+    () => (Array.isArray(bankAccountsData) ? bankAccountsData : []),
+    [bankAccountsData]
+  );
   const [selectedMethod, setSelectedMethod] = useState<PaymentMethod | null>(
     "upi"
   );
@@ -69,7 +75,7 @@ export default function PaymentMethodScreen() {
 
   const handlePaymentMethodSelect = (method: PaymentMethod) => {
     // Check if banks are available before selecting any payment method
-    if (!isLoadingBanks && bankAccounts && bankAccounts.length === 0) {
+    if (!isLoadingBanks && bankAccounts.length === 0) {
       const methodName = method === "upi" ? "UPI" : "net banking";
       Alert.alert(
         "No Bank Account",
@@ -90,7 +96,7 @@ export default function PaymentMethodScreen() {
     setSelectedMethod(method);
 
     // Auto-select bank account if available and none is selected
-    if (!selectedBank && bankAccounts && bankAccounts.length > 0) {
+    if (!selectedBank && bankAccounts.length > 0) {
       // Prefer primary bank account, otherwise select the first one
       const primaryBank = bankAccounts.find((bank) => bank.isPrimary);
       setSelectedBank(primaryBank || bankAccounts[0]);
@@ -103,7 +109,6 @@ export default function PaymentMethodScreen() {
       !isLoadingBanks &&
       selectedMethod &&
       !selectedBank &&
-      bankAccounts &&
       bankAccounts.length > 0
     ) {
       // Prefer primary bank account, otherwise select the first one
@@ -114,12 +119,7 @@ export default function PaymentMethodScreen() {
 
   // Auto-select bank when method is pre-selected (UPI)
   useEffect(() => {
-    if (
-      selectedMethod === "upi" &&
-      !selectedBank &&
-      bankAccounts &&
-      bankAccounts.length > 0
-    ) {
+    if (selectedMethod === "upi" && !selectedBank && bankAccounts.length > 0) {
       const primaryBank = bankAccounts.find((bank) => bank.isPrimary);
       setSelectedBank(primaryBank || bankAccounts[0]);
     }
@@ -368,7 +368,7 @@ export default function PaymentMethodScreen() {
                       Loading banks...
                     </ThemedText>
                   </View>
-                ) : bankAccounts && bankAccounts.length > 0 ? (
+                ) : bankAccounts.length > 0 ? (
                   <ScrollView
                     style={styles.bankAccountsScroll}
                     showsVerticalScrollIndicator={false}
