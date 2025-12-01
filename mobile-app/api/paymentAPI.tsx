@@ -122,5 +122,10 @@ export const fetchMandatePaymentUrl = async (
 
 export const fetchPayment = async (paymentId: string): Promise<Payment> => {
   const { data } = await api.get(`/payments/${paymentId}`);
-  return data.data;
+  // Handle both possible response structures: data.data or data
+  const payment = data.data ?? data;
+  if (!payment) {
+    throw new Error(`Payment with id ${paymentId} not found`);
+  }
+  return payment;
 };
