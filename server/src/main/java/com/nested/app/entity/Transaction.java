@@ -50,6 +50,11 @@ public class Transaction {
   @JoinColumn(name = "fund_id")
   private Fund fund;
 
+  /** Folio number associated with this transaction */
+  @ManyToOne
+  @JoinColumn(name = "folio_id")
+  private Folio folio;
+
   /** Type of transaction (BUY/SIP/SELL/SWP) */
   @Enumerated(EnumType.STRING)
   @Column(nullable = false)

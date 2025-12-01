@@ -2,9 +2,11 @@ package com.nested.app.jobs;
 
 import com.nested.app.client.mf.BuyOrderApiClient;
 import com.nested.app.client.mf.dto.OrderData;
+import com.nested.app.entity.Folio;
 import com.nested.app.entity.OrderItems;
 import com.nested.app.entity.Transaction;
 import com.nested.app.enums.TransactionType;
+import com.nested.app.repository.FolioRepository;
 import com.nested.app.repository.OrderItemsRepository;
 import com.nested.app.repository.TransactionRepository;
 import java.math.BigDecimal;
@@ -40,6 +42,7 @@ public class OrderFulfillmentJob implements Job {
   @Autowired private OrderItemsRepository orderItemsRepository;
   @Autowired private Scheduler scheduler;
   @Autowired private TransactionRepository transactionRepository;
+  @Autowired private FolioRepository folioRepository;
 
   @Override
   public void execute(JobExecutionContext context) throws JobExecutionException {
@@ -86,7 +89,7 @@ public class OrderFulfillmentJob implements Job {
     } else {
       log.debug("Order items already populated for orderId {} - skipping update", orderId);
     }
-    createTransactionsForOrderItems(orderItems);
+    createTransactionsForOrderItems(orderItems, order);
   }
 
   private void updateOrderItemsWithOrderData(
@@ -178,12 +181,19 @@ public class OrderFulfillmentJob implements Job {
     orderItems.forEach(item -> item.setUnitPrice(purchasedPrice));
   }
 
-  private void createTransactionsForOrderItems(List<OrderItems> orderItems) {
+  private void createTransactionsForOrderItems(List<OrderItems> orderItems, OrderData order) {
     // Idempotent transaction creation: skip if repository missing (test context) or already exists.
     // Negative units logic for SELL/SWP can be added here when disposal flows are implemented.
     if (transactionRepository == null) { // test context may not inject
       return;
     }
+
+    // Create or retrieve Folio entity using folioRef from OrderData
+    Folio folio = null;
+    if (order.getFolioRef() != null && !order.getFolioRef().isEmpty() && folioRepository != null) {
+      folio = getOrCreateFolio(order.getFolioRef(), orderItems);
+    }
+
     int created = 0;
     for (var item : orderItems) {
       if (item.getUnits() == null || item.getUnitPrice() == null) {
@@ -196,6 +206,7 @@ public class OrderFulfillmentJob implements Job {
       txn.setUser(item.getUser());
       txn.setGoal(item.getOrder() != null ? item.getOrder().getGoal() : null);
       txn.setFund(item.getFund());
+      txn.setFolio(folio); // associate with folio
       txn.setType(TransactionType.BUY); // SELL/SIP handled elsewhere
       txn.setUnits(item.getUnits());
       txn.setUnitPrice(item.getUnitPrice());
@@ -209,6 +220,40 @@ public class OrderFulfillmentJob implements Job {
     if (created > 0) {
       log.info("Created {} transaction(s) from order items", created);
     }
+  }
+
+  /**
+   * Retrieves an existing Folio by reference or creates a new one if not found. Associates the
+   * folio with the first order item's user, investor, and fund.
+   */
+  private Folio getOrCreateFolio(String folioRef, List<OrderItems> orderItems) {
+    return folioRepository
+        .findByRef(folioRef)
+        .orElseGet(
+            () -> {
+              if (orderItems.isEmpty()) {
+                log.warn("Cannot create folio {} - no order items available", folioRef);
+                return null;
+              }
+
+              var firstItem = orderItems.getFirst();
+              var newFolio = new Folio();
+              newFolio.setRef(folioRef);
+              newFolio.setUser(firstItem.getUser());
+              newFolio.setFund(firstItem.getFund());
+              // Set investor if available from user relationship
+              if (firstItem.getUser() != null && firstItem.getUser().getInvestor() != null) {
+                newFolio.setInvestor(firstItem.getUser().getInvestor());
+              }
+
+              Folio savedFolio = folioRepository.save(newFolio);
+              log.info(
+                  "Created new Folio with ref: {} for user: {} and fund: {}",
+                  folioRef,
+                  firstItem.getUser().getId(),
+                  firstItem.getFund().getId());
+              return savedFolio;
+            });
   }
 
   private boolean isOrderInTerminalState(OrderData.OrderState state) {
