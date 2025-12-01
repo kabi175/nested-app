@@ -57,8 +57,20 @@ type PaymentOption = {
   bank_id: string;
 };
 
-type Payment = {
+export type PaymentStatus =
+  | "not_available" // No payment is available for the goal
+  | "pending" // Payment is pending
+  | "submitted" // Payment is submitted
+  | "completed" // Payment is completed
+  | "failed" // Payment is failed
+  | "cancelled"; // Payment is cancelled
+
+export type Payment = {
   id: string;
+  buy_status: PaymentStatus;
+  sip_status: PaymentStatus;
+  verification_status: "pending" | "verified" | "failed";
+  payment_method: "net_banking" | "upi";
 };
 
 export const createPayment = async (
@@ -106,4 +118,9 @@ export const fetchMandatePaymentUrl = async (
     }
   );
   return data.redirect_url;
+};
+
+export const fetchPayment = async (paymentId: string): Promise<Payment> => {
+  const { data } = await api.get(`/payments/${paymentId}`);
+  return data.data;
 };

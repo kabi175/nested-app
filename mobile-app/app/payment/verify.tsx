@@ -18,19 +18,13 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { verifyPayment } from "@/api/paymentAPI";
 import { OtpInput } from "@/components/ui/OtpInput";
 import { useAuth } from "@/hooks/auth";
+import { usePayment } from "@/hooks/usePayment";
 import { Spinner, Text } from "@ui-kitten/components";
 
 export default function PaymentVerificationScreen() {
-  const {
-    paymentId,
-    paymentMethod = "UPI",
-    bankName = "Bank",
-    buyOrdersAmount,
-  } = useLocalSearchParams<{
+  const { paymentId, bankName = "Bank" } = useLocalSearchParams<{
     paymentId: string;
-    paymentMethod?: string;
     bankName?: string;
-    buyOrdersAmount?: string;
   }>();
   const auth = useAuth();
   const [confirm, setConfirm] =
@@ -40,6 +34,9 @@ export default function PaymentVerificationScreen() {
   const [isLoading, setIsLoading] = useState(false);
   const [isVerifying, setIsVerifying] = useState(false);
   const [isProcessingPayment, setIsProcessingPayment] = useState(false);
+  const { data: payment } = usePayment(paymentId);
+
+  const paymentMethod = payment?.payment_method;
 
   // Get user's phone number from auth
   const userPhoneNumber =
@@ -133,7 +130,6 @@ export default function PaymentVerificationScreen() {
           paymentId,
           paymentMethod,
           bankName,
-          buyOrdersAmount,
         },
       });
 

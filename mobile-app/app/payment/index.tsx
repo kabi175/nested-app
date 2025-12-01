@@ -418,7 +418,7 @@ export default function PaymentMethodScreen() {
                     : "Complete the step to finish your investment"}
                 </ThemedText>
                 <View style={styles.paymentSteps}>
-                  {/* Step 1: Complete Purchase */}
+                  {/* Complete Purchase Step */}
                   {buyOrdersAmount > 0 && (
                     <>
                       <View style={styles.paymentStep}>
@@ -432,7 +432,9 @@ export default function PaymentMethodScreen() {
                         <View style={styles.stepContent}>
                           <View style={styles.stepHeader}>
                             <ThemedText style={styles.stepTitle}>
-                              Step 1: Complete Purchase
+                              {buyOrdersAmount > 0 && sipOrdersAmount > 0
+                                ? "Step 1: Complete Purchase"
+                                : "Step 1: Complete Purchase"}
                             </ThemedText>
                             <View style={styles.pendingBadge}>
                               <ThemedText style={styles.pendingBadgeText}>
@@ -455,7 +457,7 @@ export default function PaymentMethodScreen() {
                     </>
                   )}
 
-                  {/* Step 2: Setup SIP Auto-Debit */}
+                  {/* Setup SIP Auto-Debit Step */}
                   {sipOrdersAmount > 0 && (
                     <View style={styles.paymentStep}>
                       <View style={styles.stepIconContainer}>
@@ -468,7 +470,9 @@ export default function PaymentMethodScreen() {
                       <View style={styles.stepContent}>
                         <View style={styles.stepHeader}>
                           <ThemedText style={styles.stepTitle}>
-                            Step 2: Setup SIP Auto-Debit
+                            {buyOrdersAmount > 0 && sipOrdersAmount > 0
+                              ? "Step 2: Setup SIP Auto-Debit"
+                              : "Step 1: Setup SIP Auto-Debit"}
                           </ThemedText>
                           <View style={styles.pendingBadge}>
                             <ThemedText style={styles.pendingBadgeText}>
