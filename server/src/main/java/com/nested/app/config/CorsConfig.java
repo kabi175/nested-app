@@ -1,7 +1,7 @@
 package com.nested.app.config;
 
 import java.util.Arrays;
-
+import java.util.List;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.cors.CorsConfiguration;
@@ -55,8 +55,18 @@ public class CorsConfig {
     configuration.setMaxAge(3600L);
     
     UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+
+    // Exclude /redirect/** URLs from CORS configuration
+    // This allows redirect endpoints to work without CORS restrictions
     source.registerCorsConfiguration("/**", configuration);
-    
+
+    // Register permissive configuration for /redirect/** to allow all origins without restrictions
+    CorsConfiguration redirectConfig = new CorsConfiguration();
+    redirectConfig.setAllowedOriginPatterns(List.of("*"));
+    redirectConfig.setAllowedMethods(List.of("*"));
+    redirectConfig.setAllowedHeaders(List.of("*"));
+    source.registerCorsConfiguration("/redirect/**", redirectConfig);
+
     return source;
   }
 }
