@@ -67,8 +67,6 @@ public class Order {
   @JoinColumn(name = "investor_id")
   private Investor investor;
 
-  @Column private String folio;
-
   @RequiredArgsConstructor
   public enum OrderStatus {
     NOT_PLACED("not_placed"),

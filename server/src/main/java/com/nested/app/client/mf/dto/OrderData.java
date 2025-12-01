@@ -27,6 +27,9 @@ public class OrderData {
 
   private OrderState state;
 
+  @JsonProperty("folio_number")
+  private String folioRef;
+
   @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd")
   private Date traded_on;
 
