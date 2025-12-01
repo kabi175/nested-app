@@ -33,7 +33,7 @@ import org.springframework.stereotype.Component;
  */
 @Slf4j
 @Component
-public class OrderFulfillmentJob implements Job {
+public class BuyOrderFulfillmentJob implements Job {
 
   private static final int DECIMAL_SCALE = 4;
   private static final int CALCULATION_SCALE = 8;

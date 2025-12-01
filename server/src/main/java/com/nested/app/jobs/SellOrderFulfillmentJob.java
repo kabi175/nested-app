@@ -26,7 +26,7 @@ import org.springframework.stereotype.Component;
 
 /**
  * Quartz job that periodically checks the status of an external SELL order and, upon success,
- * records negative units to reflect redemption. Similar to OrderFulfillmentJob but handles
+ * records negative units to reflect redemption. Similar to BuyOrderFulfillmentJob but handles
  * sell-specific logic with negative units for disposals.
  *
  * @author Nested App Team
