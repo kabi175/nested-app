@@ -1,6 +1,7 @@
 package com.nested.app.client.mf.dto;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonValue;
 import jakarta.validation.constraints.NotNull;
@@ -22,6 +23,7 @@ public class OrderDetail {
   @NotNull
   protected String fundID;
 
+  @JsonInclude(JsonInclude.Include.NON_NULL)
   @JsonProperty("folio_number")
   protected String folio;
 

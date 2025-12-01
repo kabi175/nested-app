@@ -29,6 +29,7 @@ import com.nested.app.entity.SIPOrder;
 import com.nested.app.entity.User;
 import com.nested.app.events.OrderItemsRefUpdatedEvent;
 import com.nested.app.repository.BankDetailRepository;
+import com.nested.app.repository.FolioRepository;
 import com.nested.app.repository.OrderRepository;
 import com.nested.app.repository.PaymentRepository;
 import com.nested.app.utils.IpUtils;
@@ -64,6 +65,7 @@ public class PaymentServiceImpl implements PaymentService {
   private final PaymentRepository paymentRepository;
   private final OrderRepository orderRepository;
   private final BankDetailRepository bankDetailRepository;
+  private final FolioRepository folioRepository;
   private final UserContext userContext;
   private final BuyOrderApiClient buyOrderApiClient;
   private final MandateApiClient mandateApiClient;
@@ -332,6 +334,13 @@ public class PaymentServiceImpl implements PaymentService {
     return order.getItems().stream()
         .map(
             item -> {
+              // Fetch folio for the fund
+              String folioNumber = null;
+              var folioOptional = folioRepository.findByFundId(item.getFund().getId());
+              if (folioOptional.isPresent()) {
+                folioNumber = folioOptional.get().getRef();
+              }
+
               OrderDetail orderDetail;
               if (order instanceof SIPOrder sipOrder) {
                 Payment payment = order.getPayment();
@@ -349,6 +358,7 @@ public class PaymentServiceImpl implements PaymentService {
                         .accountID(accountID)
                         .amount(item.getAmount())
                         .userIP(ipAddress)
+                        .folio(folioNumber)
                         .build();
               } else {
                 orderDetail =
@@ -357,6 +367,7 @@ public class PaymentServiceImpl implements PaymentService {
                         .accountID(accountID)
                         .amount(item.getAmount())
                         .userIP(ipAddress)
+                        .folio(folioNumber)
                         .build();
               }
               return orderDetail;
