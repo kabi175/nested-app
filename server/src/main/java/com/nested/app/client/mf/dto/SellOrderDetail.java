@@ -2,7 +2,9 @@ package com.nested.app.client.mf.dto;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.validation.constraints.NotNull;
+import lombok.Data;
 
+@Data
 public class SellOrderDetail {
 
   @JsonProperty("mf_investment_account")
@@ -16,4 +18,7 @@ public class SellOrderDetail {
   protected String folio;
 
   private double amount;
+
+  @JsonProperty("id")
+  private String ref;
 }
