@@ -22,7 +22,8 @@ public class OrderDetail {
   @NotNull
   protected String fundID;
 
-  @JsonIgnore protected String folio;
+  @JsonProperty("folio_number")
+  protected String folio;
 
   @JsonProperty("amount")
   @NotNull

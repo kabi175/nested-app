@@ -2,11 +2,9 @@ package com.nested.app.client.finprimitives;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.nested.app.client.mf.BuyOrderApiClient;
-import com.nested.app.client.mf.dto.ConfirmOrderRequest;
 import com.nested.app.client.mf.dto.OrderConsentRequest;
 import com.nested.app.client.mf.dto.OrderData;
 import com.nested.app.client.mf.dto.OrderDetail;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import lombok.RequiredArgsConstructor;
@@ -80,17 +78,4 @@ public class BuyOrderApiClientImpl implements BuyOrderApiClient {
         .bodyToMono(Void.class);
   }
 
-  private Map<String, Object> convertToConfirmData(
-      ConfirmOrderRequest confirmOrderRequest, String orderID) {
-    var consent = new HashMap<String, String>();
-
-    if (confirmOrderRequest.getEmail() != null) {
-      consent.put("email", confirmOrderRequest.getEmail());
-    }
-    if (confirmOrderRequest.getMobile() != null) {
-      consent.put("mobile", confirmOrderRequest.getMobile());
-    }
-
-    return Map.of("id", orderID, "consent", consent);
-  }
 }
