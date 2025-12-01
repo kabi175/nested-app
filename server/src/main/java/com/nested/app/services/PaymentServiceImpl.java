@@ -374,15 +374,14 @@ public class PaymentServiceImpl implements PaymentService {
 
     PaymentDTO dto = new PaymentDTO();
     dto.setId(payment.getId());
-    dto.setStatus(PaymentDTO.PaymentStatus.valueOf(payment.getBuyStatus().name()));
-    dto.setVerificationStatus(
-        PaymentDTO.VerificationStatus.valueOf(payment.getVerificationStatus().name()));
+    dto.setBuyStatus(payment.getBuyStatus());
+    dto.setSipStatus(payment.getSipStatus());
+    dto.setVerificationStatus(payment.getVerificationStatus());
     dto.setPaymentUrl(payment.getPaymentUrl());
     dto.setMandateType(PaymentDTO.MandateType.valueOf(payment.getPaymentType().name()));
     dto.setUpiId(payment.getUpiId());
     dto.setConfirmationUrl(payment.getMandateConfirmationUrl());
     dto.setUserId(payment.getUser().getId());
-    dto.setChildId(payment.getChild().getId());
     dto.setCreatedAt(payment.getCreatedAt());
     dto.setUpdatedAt(payment.getUpdatedAt());
 
@@ -407,9 +406,9 @@ public class PaymentServiceImpl implements PaymentService {
 
     PlaceOrderDTO dto = new PlaceOrderDTO();
     dto.setId(payment.getId());
-    dto.setVerificationStatus(
-        PaymentDTO.VerificationStatus.valueOf(payment.getVerificationStatus().name()));
-    dto.setStatus(PaymentDTO.PaymentStatus.valueOf(payment.getBuyStatus().name()));
+    dto.setVerificationStatus(payment.getVerificationStatus());
+    dto.setBuyStatus(payment.getBuyStatus());
+    dto.setSipStaus(payment.getSipStatus());
     dto.setPaymentUrl(payment.getPaymentUrl());
     dto.setPaymentMethod(payment.getPaymentType());
 
@@ -438,5 +437,23 @@ public class PaymentServiceImpl implements PaymentService {
   private OrderDTO convertOrderToDTO(Order order) {
     log.debug("Converting Order entity to DTO for ID: {}", order.getId());
     return OrderDTO.fromEntity(order);
+  }
+
+  /**
+   * Retrieves a payment by ID
+   *
+   * @param paymentId Payment ID
+   * @return Payment details with orders
+   */
+  @Override
+  public PaymentDTO getPaymentById(Long paymentId) {
+    log.info("Fetching payment with ID: {}", paymentId);
+
+    Payment payment =
+        paymentRepository
+            .findById(paymentId)
+            .orElseThrow(() -> new RuntimeException("Payment not found with ID: " + paymentId));
+
+    return convertPaymentToDTO(payment);
   }
 }

@@ -1,6 +1,8 @@
 package com.nested.app.dto;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.nested.app.entity.Payment;
 import java.util.List;
 import lombok.Data;
 
@@ -17,14 +19,19 @@ public class PlaceOrderDTO {
   private Long id;
 
   @JsonProperty("verification_status")
-  private PaymentDTO.VerificationStatus verificationStatus;
+  private Payment.VerificationStatus verificationStatus;
 
-  private PaymentDTO.PaymentStatus status;
+  @JsonProperty("buy_status")
+  private Payment.PaymentStatus buyStatus;
 
-  @JsonProperty("payment_url")
-  private String paymentUrl;
+  @JsonProperty("sip_status")
+  private Payment.PaymentStatus sipStaus;
+
+  @JsonIgnore private String paymentUrl;
 
   private MandateDTO mandate;
+
+  @JsonProperty("payment_method")
   private PlaceOrderPostDTO.PaymentMethod paymentMethod;
 
   private List<OrderDTO> orders;

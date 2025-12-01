@@ -3,6 +3,7 @@ package com.nested.app.dto;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonValue;
+import com.nested.app.entity.Payment;
 import java.sql.Timestamp;
 import java.util.List;
 import lombok.AllArgsConstructor;
@@ -21,13 +22,16 @@ public class PaymentDTO {
 
   private Long id;
 
-  private PaymentStatus status;
+  @JsonProperty("buy_status")
+  private Payment.PaymentStatus buyStatus;
+
+  @JsonProperty("sip_status")
+  private Payment.PaymentStatus sipStatus;
 
   @JsonProperty("verification_status")
-  private VerificationStatus verificationStatus;
+  private Payment.VerificationStatus verificationStatus;
 
-  @JsonProperty("payment_url")
-  private String paymentUrl;
+  @JsonIgnore private String paymentUrl;
 
   @JsonProperty("mandate_type")
   private MandateType mandateType;
@@ -43,8 +47,6 @@ public class PaymentDTO {
 
   private Long userId;
 
-  private Long childId;
-
   @JsonIgnore private List<OrderDTO> orders;
 
   @JsonProperty("created_at")
@@ -52,25 +54,6 @@ public class PaymentDTO {
 
   @JsonProperty("updated_at")
   private Timestamp updatedAt;
-
-  @AllArgsConstructor
-  public enum PaymentStatus {
-    PENDING("pending"),
-    COMPLETED("completed"),
-    FAILED("failed"),
-    CANCELLED("cancelled");
-
-    @JsonValue @Getter private final String value;
-  }
-
-  @AllArgsConstructor
-  public enum VerificationStatus {
-    PENDING("pending"),
-    VERIFIED("verified"),
-    FAILED("failed");
-
-    @JsonValue @Getter private final String value;
-  }
 
   @AllArgsConstructor
   public enum MandateType {

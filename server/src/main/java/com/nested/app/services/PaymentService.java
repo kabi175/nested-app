@@ -1,5 +1,6 @@
 package com.nested.app.services;
 
+import com.nested.app.dto.PaymentDTO;
 import com.nested.app.dto.PlaceOrderDTO;
 import com.nested.app.dto.PlaceOrderPostDTO;
 
@@ -19,4 +20,12 @@ public interface PaymentService {
    * @return Created payment with orders
    */
   PlaceOrderDTO createPaymentWithOrders(PlaceOrderPostDTO placeOrderRequest);
+
+  /**
+   * Retrieves a payment by ID
+   *
+   * @param paymentId Payment ID
+   * @return Payment details with orders
+   */
+  PaymentDTO getPaymentById(Long paymentId);
 }
