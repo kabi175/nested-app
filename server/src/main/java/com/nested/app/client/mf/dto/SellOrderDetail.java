@@ -6,7 +6,6 @@ import lombok.Data;
 
 @Data
 public class SellOrderDetail {
-
   @JsonProperty("mf_investment_account")
   protected String accountID;
 
@@ -17,8 +16,8 @@ public class SellOrderDetail {
   @JsonProperty("folio_number")
   protected String folio;
 
-  private double amount;
-
   @JsonProperty("id")
   private String ref;
+
+  private double amount;
 }
