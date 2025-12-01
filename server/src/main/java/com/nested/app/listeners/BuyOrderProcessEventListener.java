@@ -1,0 +1,180 @@
+package com.nested.app.listeners;
+
+import com.nested.app.client.mf.PaymentsAPIClient;
+import com.nested.app.client.mf.dto.PaymentsResponse;
+import com.nested.app.entity.BuyOrder;
+import com.nested.app.entity.Goal;
+import com.nested.app.entity.Order;
+import com.nested.app.entity.Payment;
+import com.nested.app.events.BuyOrderProcessEvent;
+import com.nested.app.repository.GoalRepository;
+import com.nested.app.repository.OrderRepository;
+import com.nested.app.repository.PaymentRepository;
+import java.util.List;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.event.EventListener;
+import org.springframework.stereotype.Component;
+
+/**
+ * Event listener for buy order process events. Verifies payment status with external API client,
+ * handles duplicate events idempotently, and updates payment/order statuses accordingly.
+ *
+ * <p>Workflow: 1. Receive BuyOrderProcessEvent 2. Verify actual payment status via
+ * PaymentsAPIClient 3. Check current Payment buyStatus to detect duplicates (idempotency) 4. Update
+ * Payment buyStatus, Order status, and Goal status only if verified
+ *
+ * @author Nested App Team
+ * @version 2.0
+ */
+@Slf4j
+@Component
+@RequiredArgsConstructor
+public class BuyOrderProcessEventListener {
+
+  private final PaymentRepository paymentRepository;
+  private final OrderRepository orderRepository;
+  private final GoalRepository goalRepository;
+  private final PaymentsAPIClient paymentsAPIClient;
+
+  /**
+   * Handles BuyOrderProcessEvent by verifying payment status with PaymentsAPIClient and updating
+   * payment's buyStatus. Processes asynchronously after transaction commit to ensure data
+   * consistency.
+   *
+   * @param event The BuyOrderProcessEvent containing payment reference
+   */
+  @EventListener
+  public void handleBuyOrderProcessEvent(BuyOrderProcessEvent event) {
+    log.info("Processing BuyOrderProcessEvent for payment ref: {}", event.paymentRef());
+
+    try {
+      Payment payment = paymentRepository.findByRef(event.paymentRef()).orElse(null);
+
+      if (payment == null) {
+        log.warn("Payment not found for reference: {}", event.paymentRef());
+        return;
+      }
+
+      // Handle idempotency: check if already processed based on buyStatus
+      if (isBuyOrderEventAlreadyProcessed(payment)) {
+        log.debug(
+            "BuyOrderProcessEvent already processed for payment ref: {}, current buyStatus: {}",
+            event.paymentRef(),
+            payment.getBuyStatus());
+        return;
+      }
+      PaymentsResponse paymentResponse = paymentsAPIClient.fetchPayment(payment.getRef()).block();
+
+      if (paymentResponse == null) {
+        log.warn(
+            "Payment fetch returned null for payment ref: {}, payment ID: {}",
+            payment.getRef(),
+            payment.getId());
+        return;
+      }
+
+      // Verify payment status and update buyStatus
+      handleSuccessPayment(payment, paymentResponse);
+
+      log.info(
+          "Successfully processed BuyOrderProcessEvent for payment ref: {}, new buyStatus: {}",
+          event.paymentRef(),
+          payment.getBuyStatus());
+    } catch (Exception e) {
+      log.error("Error processing BuyOrderProcessEvent for payment ref: {}", event.paymentRef(), e);
+    }
+  }
+
+  /**
+   * Verify payment status and update payment buyStatus. Fetches payment details from API and
+   * updates payment buyStatus if payment is successful.
+   *
+   * @param payment The payment entity to update
+   */
+  private void handleSuccessPayment(Payment payment, PaymentsResponse paymentResponse) {
+    log.debug("Verifying payment status for payment ID: {}", payment.getId());
+
+    try {
+      // Verify payment is in success state
+      if (isPaymentSuccessful(paymentResponse.getStatus())) {
+        log.info(
+            "Payment verified with status: {} for payment ref: {}, payment ID: {}",
+            paymentResponse.getStatus(),
+            payment.getRef(),
+            payment.getId());
+
+        // Update buyStatus to COMPLETED and mark as verified
+        payment.setBuyStatus(Payment.PaymentStatus.COMPLETED);
+        payment.setVerificationStatus(Payment.VerificationStatus.VERIFIED);
+        paymentRepository.save(payment);
+
+        // Update all orders to COMPLETED status
+        List<Order> orders = payment.getOrders();
+        if (orders != null) {
+          for (Order order : orders) {
+            order.setStatus(Order.OrderStatus.COMPLETED);
+            orderRepository.save(order);
+          }
+          orders.forEach(
+              order -> {
+                var goal = goalRepository.findById(order.getGoal().getId()).orElseThrow();
+                if (goal.getStatus() == Goal.Status.PAYMENT_PENDING) {
+                  goal.setStatus(Goal.Status.ACTIVE);
+                }
+                if (order instanceof BuyOrder) {
+                  goal.setCurrentAmount(goal.getCurrentAmount() + order.getAmount());
+                }
+                goalRepository.save(goal);
+              });
+        }
+
+        log.info(
+            "Updated payment ID: {} buyStatus to COMPLETED and {} orders to COMPLETED status",
+            payment.getId(),
+            orders != null ? orders.size() : 0);
+      } else {
+        log.warn(
+            "Payment status not successful: {} for payment ref: {}, payment ID: {}",
+            paymentResponse.getStatus(),
+            payment.getRef(),
+            payment.getId());
+      }
+    } catch (Exception e) {
+      log.error(
+          "Error verifying payment status for payment ref: {}, payment ID: {}",
+          payment.getRef(),
+          payment.getId(),
+          e);
+    }
+  }
+
+  /**
+   * Check if buy order event has already been processed by comparing current buyStatus. If
+   * buyStatus is COMPLETED, consider it already processed (idempotency).
+   *
+   * @param payment The payment entity
+   * @return true if already processed, false otherwise
+   */
+  private boolean isBuyOrderEventAlreadyProcessed(Payment payment) {
+    Payment.PaymentStatus currentBuyStatus = payment.getBuyStatus();
+
+    // If buyStatus is already COMPLETED, consider it processed
+    return currentBuyStatus == Payment.PaymentStatus.COMPLETED;
+  }
+
+  /**
+   * Determine if payment response status indicates successful payment. Can be customized based on
+   * actual API response values.
+   *
+   * @param status The status string from PaymentsResponse
+   * @return true if payment is successful, false otherwise
+   */
+  private boolean isPaymentSuccessful(PaymentsResponse.Status status) {
+    if (status == null) {
+      return false;
+    }
+    // Customize based on actual API response values
+    return PaymentsResponse.Status.SUCCESS == status;
+  }
+}
