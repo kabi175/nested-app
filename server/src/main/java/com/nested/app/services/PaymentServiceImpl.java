@@ -119,7 +119,6 @@ public class PaymentServiceImpl implements PaymentService {
 
       // Create payment entity
       Payment payment = new Payment();
-      payment.setBuyStatus(Payment.PaymentStatus.PENDING);
       payment.setVerificationStatus(Payment.VerificationStatus.PENDING);
       payment.setUser(user);
       payment.setInvestor(investor);
@@ -169,14 +168,18 @@ public class PaymentServiceImpl implements PaymentService {
       // Populate order items for each order
       orders.forEach(this::populateOrderItems);
 
-      // create mandate for SIP orders
-      createMandateWithExternalAPI(payment);
+      if (payment.getSipStatus() == Payment.PaymentStatus.PENDING) {
+        // create mandate for SIP orders
+        createMandateWithExternalAPI(payment);
+      }
 
       // Save payment and orders
       Payment savedPayment = paymentRepository.save(payment);
 
-      // place buy orders in the external system
-      placeOrderWithExternalAPI(savedPayment);
+      if (payment.getBuyStatus() == Payment.PaymentStatus.PENDING) {
+        // place buy orders in the external system
+        placeOrderWithExternalAPI(savedPayment);
+      }
 
       // Convert to DTO
       PlaceOrderDTO placeOrderDTO = convertPaymentToPlaceOrderDTO(savedPayment);

@@ -70,7 +70,7 @@ public class BuyOrderPaymentServiceImpl implements BuyOrderPaymentService {
 
       if (buyOrderIds.isEmpty()) {
         log.warn("No buy orders found for payment ID: {}", verifyOrderRequest.getId());
-        throw new IllegalArgumentException("No buy orders found for this payment");
+        return paymentServiceHelper.convertPaymentToPlaceOrderDTO(payment);
       }
 
       var confirmOrderRequests =
