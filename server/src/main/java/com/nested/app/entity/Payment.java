@@ -103,6 +103,7 @@ public class Payment {
     NOT_AVAILABLE("not_available"),
     PENDING("pending"),
     SUBMITTED("submitted"),
+    ACTIVE("active"),
     COMPLETED("completed"),
     FAILED("failed"),
     CANCELLED("cancelled");

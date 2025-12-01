@@ -108,6 +108,7 @@ public class MandateProcessEventListener {
             payment.getId());
 
         sipOrderPaymentService.placeSipOrders(payment.getId());
+        payment.setSipStatus(Payment.PaymentStatus.ACTIVE);
 
         log.info("sip orders placed for payment ID: {} sipStatus to SUBMITTED", payment.getId());
       } else {

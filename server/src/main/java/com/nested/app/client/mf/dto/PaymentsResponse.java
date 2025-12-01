@@ -11,7 +11,7 @@ public class PaymentsResponse {
   @JsonProperty("id")
   private String paymentId;
 
-  private String status;
+  private Status status;
 
   @JsonProperty("failed_reason")
   private String failedReason;
