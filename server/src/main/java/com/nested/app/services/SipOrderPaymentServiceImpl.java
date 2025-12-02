@@ -2,7 +2,6 @@ package com.nested.app.services;
 
 import com.nested.app.client.mf.MandateApiClient;
 import com.nested.app.client.mf.SipOrderApiClient;
-import com.nested.app.client.mf.dto.OrderConsentRequest;
 import com.nested.app.client.mf.dto.OrderDetail;
 import com.nested.app.client.mf.dto.SipOrderDetail;
 import com.nested.app.dto.UserActionRequest;
@@ -11,6 +10,7 @@ import com.nested.app.entity.OrderItems;
 import com.nested.app.entity.Payment;
 import com.nested.app.entity.SIPOrder;
 import com.nested.app.events.OrderItemsRefUpdatedEvent;
+import com.nested.app.repository.GoalRepository;
 import com.nested.app.repository.OrderItemsRepository;
 import com.nested.app.repository.PaymentRepository;
 import java.util.ArrayList;
@@ -40,6 +40,7 @@ public class SipOrderPaymentServiceImpl implements SipOrderPaymentService {
   private final SipOrderApiClient sipOrderApiClient;
   private final PaymentServiceImpl paymentServiceHelper;
   private final OrderItemsRepository orderItemsRepository;
+  private final GoalRepository goalRepository;
   private final ApplicationEventPublisher eventPublisher;
   private final MandateApiClient mandateApiClient;
   private final SipOrderSchedulerService sipOrderSchedulerService;
@@ -56,9 +57,9 @@ public class SipOrderPaymentServiceImpl implements SipOrderPaymentService {
     try {
       var payment = paymentRepository.findById(paymentID).orElseThrow();
 
+      var sipOrders = payment.getOrders().stream().filter(SIPOrder.class::isInstance).toList();
       var sipOrderIds =
-          payment.getOrders().stream()
-              .filter(SIPOrder.class::isInstance)
+          sipOrders.stream()
               .map(Order::getItems)
               .flatMap(List::stream)
               .map(OrderItems::getRef)
@@ -68,17 +69,16 @@ public class SipOrderPaymentServiceImpl implements SipOrderPaymentService {
         log.warn("No SIP orders found for payment ID: {}", paymentID);
         throw new IllegalArgumentException("No SIP orders found for this payment");
       }
-      var confirmOrderRequests =
-          sipOrderIds.stream()
-              .map(
-                  orderRef ->
-                      OrderConsentRequest.builder()
-                          .orderRef(orderRef)
-                          .email(payment.getUser().getEmail())
-                          .build())
-              .toList();
 
       sipOrderApiClient.confirmOrder(sipOrderIds).block();
+
+      sipOrders.forEach(
+          sipOrder -> {
+            var goal = goalRepository.findById(sipOrder.getGoal().getId()).orElseThrow();
+            var goalSIPAmount = goal.getMonthlySip() + sipOrder.getAmount();
+            goal.setMonthlySip(goalSIPAmount);
+            goalRepository.save(goal);
+          });
 
       log.info(
           "Successfully verified {} SIP orders for payment ID: {}", sipOrderIds.size(), paymentID);
@@ -198,6 +198,7 @@ public class SipOrderPaymentServiceImpl implements SipOrderPaymentService {
             orderItemRefInfos.size());
       }
 
+      payment.setSipStatus(Payment.PaymentStatus.ACTIVE);
       paymentRepository.save(payment);
 
       // Schedule verification job to run 10 seconds after successful placement
