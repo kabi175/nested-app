@@ -45,11 +45,13 @@ public class OrderItemsDTO {
   @JsonProperty("user_id")
   private Long userId;
 
-  @JsonProperty("processing_state")
+  @JsonProperty("status")
   private String processingState;
 
   @JsonProperty("version")
   private Long version;
+
+  private String type = "SIP";
 
   private LocalDate sipDate;
 
@@ -68,7 +70,7 @@ public class OrderItemsDTO {
     dto.setProcessingState(
         orderItems.getProcessingState() != null
             ? orderItems.getProcessingState().getValue()
-            : null);
+            : OrderItems.ProcessingState.PENDING.getValue());
     dto.setVersion(orderItems.getVersion());
 
     if (orderItems.getOrder() != null && orderItems.getOrder() instanceof SIPOrder sipOrder) {
