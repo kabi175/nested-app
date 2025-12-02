@@ -1,9 +1,6 @@
-import { ThemedText } from "@/components/ThemedText";
-import { ThemedView } from "@/components/ThemedView";
-import { formatCurrency } from "@/utils/formatters";
-import { TrendingUp } from "lucide-react-native";
 import React from "react";
-import { StyleSheet, View } from "react-native";
+import { StyleSheet } from "react-native";
+import { PortfolioOverview } from "../PortfolioOverview";
 
 interface PortfolioSummaryCardProps {
   currentValue: number;
@@ -20,32 +17,12 @@ export function PortfolioSummaryCard({
     investedAmount > 0 ? (returnsAmount / investedAmount) * 100 : 0;
 
   return (
-    <ThemedView style={styles.summaryCard}>
-      <ThemedText style={styles.currentValueLabel}>Current Value</ThemedText>
-      <ThemedText style={styles.currentValue}>
-        {formatCurrency(currentValue)}
-      </ThemedText>
-      <View style={styles.bottomRow}>
-        <View style={styles.investedContainer}>
-          <ThemedText style={styles.investedLabel}>Invested</ThemedText>
-          <ThemedText style={styles.investedAmount}>
-            {formatCurrency(investedAmount)}
-          </ThemedText>
-        </View>
-        <View style={styles.returnsContainer}>
-          <ThemedText style={styles.returnsLabel}>Returns</ThemedText>
-          <View style={styles.returnsRow}>
-            <TrendingUp color="#10B981" size={16} />
-            <ThemedText style={styles.returnsAmount}>
-              {formatCurrency(returnsAmount)}
-            </ThemedText>
-          </View>
-          <ThemedText style={styles.returnsPercentage}>
-            {returnsPercentage.toFixed(1)}%
-          </ThemedText>
-        </View>
-      </View>
-    </ThemedView>
+    <PortfolioOverview
+      currentValue={currentValue}
+      invested={investedAmount}
+      returns={returnsAmount}
+      returnsPercentage={returnsPercentage}
+    />
   );
 }
 

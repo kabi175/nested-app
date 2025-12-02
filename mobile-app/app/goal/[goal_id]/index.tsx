@@ -1,5 +1,6 @@
 import { Holding, Transaction } from "@/api/portfolioAPI";
 import { goalsForCustomizeAtom } from "@/atoms/goals";
+import { PortfolioOverview } from "@/components/PortfolioOverview";
 import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
 import { useGoal } from "@/hooks/useGoal";
@@ -141,68 +142,12 @@ export default function GoalDetailScreen() {
         }}
         scrollEventThrottle={400}
       >
-        {/* Summary Card */}
-        <ThemedView style={styles.summaryCard}>
-          <ThemedText style={styles.summaryLabel}>Current Value</ThemedText>
-          <ThemedText style={styles.summaryValue}>
-            {formatCurrency(portfolioSummary.currentValue)}
-          </ThemedText>
-
-          <View style={styles.summaryBottom}>
-            <View style={styles.summaryItem}>
-              <ThemedText style={styles.summaryItemLabel}>Invested</ThemedText>
-              <ThemedText style={styles.summaryItemValue}>
-                {formatCurrency(portfolioSummary.investedAmount)}
-              </ThemedText>
-            </View>
-
-            <View
-              style={[
-                styles.returnsContainer,
-                portfolioSummary.returnsAmount < 0 &&
-                  styles.returnsContainerNegative,
-              ]}
-            >
-              <ThemedText style={styles.returnsLabel}>Returns</ThemedText>
-              <View style={styles.returnsContent}>
-                {portfolioSummary.returnsAmount >= 0 ? (
-                  <TrendingUp size={16} color="#10B981" />
-                ) : (
-                  <TrendingDown size={16} color="#EF4444" />
-                )}
-                <ThemedText
-                  style={[
-                    styles.returnsAmount,
-                    portfolioSummary.returnsAmount < 0 &&
-                      styles.returnsAmountNegative,
-                  ]}
-                >
-                  {portfolioSummary.returnsAmount >= 0 ? "+" : "-"}
-                  {formatCurrency(
-                    Math.abs(
-                      isNaN(portfolioSummary.returnsAmount)
-                        ? 0
-                        : portfolioSummary.returnsAmount
-                    )
-                  )}
-                </ThemedText>
-              </View>
-              <ThemedText
-                style={[
-                  styles.returnsPercentage,
-                  portfolioSummary.returnsPercentage < 0 &&
-                    styles.returnsPercentageNegative,
-                ]}
-              >
-                {portfolioSummary.returnsPercentage >= 0 ? "+" : ""}
-                {isNaN(portfolioSummary.returnsPercentage)
-                  ? "0.0"
-                  : portfolioSummary.returnsPercentage.toFixed(1)}
-                %
-              </ThemedText>
-            </View>
-          </View>
-        </ThemedView>
+        <PortfolioOverview
+          currentValue={portfolioSummary.currentValue}
+          invested={portfolioSummary.investedAmount}
+          returns={portfolioSummary.returnsAmount}
+          returnsPercentage={portfolioSummary.returnsPercentage}
+        />
 
         {/* Tabs */}
         <View style={styles.tabsContainer}>
