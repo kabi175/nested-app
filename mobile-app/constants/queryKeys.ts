@@ -8,4 +8,5 @@ export const QUERY_KEYS = {
   pendingActivities: "pendingActivities",
   portfolio: "portfolio",
   payment: "payment",
+  sipOrders: "sipOrders",
 };
