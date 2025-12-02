@@ -22,3 +22,21 @@ export const getSipOrders = async (page: number) => {
   });
   return data.data;
 };
+
+export type Transaction = {
+  status: "in_progress" | "completed" | "failed" | "refunded";
+  type: "SIP" | "BUY" | "SELL";
+  amount: number;
+  units: number;
+  fund: string;
+  executed_at: Date;
+};
+
+export const getTransactions = async (page: number) => {
+  const { data } = await api.get("/transactions", {
+    params: {
+      page,
+    },
+  });
+  return data.data;
+};
