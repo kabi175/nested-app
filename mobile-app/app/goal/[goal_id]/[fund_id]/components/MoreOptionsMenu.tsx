@@ -45,7 +45,7 @@ export function MoreOptionsMenu({
               <ThemedText style={styles.menuItemText}>Redeem</ThemedText>
             </TouchableOpacity>
 
-            <TouchableOpacity style={styles.menuItem} onPress={onSTP}>
+            {/* <TouchableOpacity style={styles.menuItem} onPress={onSTP}>
               <ThemedText style={styles.menuItemText}>STP (Transfer)</ThemedText>
             </TouchableOpacity>
 
@@ -62,7 +62,7 @@ export function MoreOptionsMenu({
               onPress={onCancelSIP}
             >
               <ThemedText style={styles.menuItemText}>Cancel SIP</ThemedText>
-            </TouchableOpacity>
+            </TouchableOpacity> */}
           </ThemedView>
         </View>
       </TouchableOpacity>
@@ -119,4 +119,3 @@ const styles = StyleSheet.create({
     fontWeight: "500",
   },
 });
-
