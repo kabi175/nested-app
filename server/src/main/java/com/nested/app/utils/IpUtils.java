@@ -56,9 +56,10 @@ public class IpUtils {
           ip = ip.split(",")[0].trim();
         }
 
-        if (isValidIpAddress(ip)) {
-          log.debug("Found client IP '{}' from header '{}'", ip, header);
-          return handleLocalhostIp(ip);
+        String ipv4 = extractIpv4(ip);
+        if (ipv4 != null) {
+          log.debug("Found client IPv4 '{}' from header '{}'", ipv4, header);
+          return handleLocalhostIp(ipv4);
         }
       }
     }
@@ -66,7 +67,26 @@ public class IpUtils {
     // Fallback to remote address
     String remoteAddr = request.getRemoteAddr();
     log.debug("Using remote address: {}", remoteAddr);
-    return handleLocalhostIp(remoteAddr);
+    String ipv4 = extractIpv4(remoteAddr);
+    return handleLocalhostIp(ipv4 != null ? ipv4 : FALLBACK_IP);
+  }
+
+  /**
+   * Extracts IPv4 address from a given IP string. Returns null if not IPv4.
+   */
+  private static String extractIpv4(String ip) {
+    if (ip == null) return null;
+    if (ip.matches("^(?:[0-9]{1,3}\\.){3}[0-9]{1,3}$")) {
+      return ip;
+    }
+    // Try to resolve IPv6 to IPv4 if possible
+    try {
+      java.net.InetAddress inet = java.net.InetAddress.getByName(ip);
+      if (inet instanceof java.net.Inet4Address) {
+        return inet.getHostAddress();
+      }
+    } catch (Exception ignored) {}
+    return null;
   }
 
   /**
