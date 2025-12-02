@@ -32,11 +32,25 @@ export type Transaction = {
   executed_at: Date;
 };
 
-export const getTransactions = async (page: number) => {
+export const getTransactions = async (
+  page: number,
+  fromDate?: Date,
+  toDate?: Date
+) => {
+  const params: Record<string, any> = {
+    page,
+  };
+
+  if (fromDate) {
+    params.from_date = fromDate.toISOString().split("T")[0];
+  }
+
+  if (toDate) {
+    params.to_date = toDate.toISOString().split("T")[0];
+  }
+
   const { data } = await api.get("/transactions", {
-    params: {
-      page,
-    },
+    params,
   });
   return data.data.map((transaction: Transaction) => ({
     ...transaction,
