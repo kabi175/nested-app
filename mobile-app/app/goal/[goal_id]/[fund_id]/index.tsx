@@ -16,12 +16,12 @@ import {
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { FundActionButtons } from "./components/FundActionButtons";
-import { FundDetailCard } from "./components/FundDetailCard";
-import { FundDetailHeader } from "./components/FundDetailHeader";
-import { MoreOptionsMenu } from "./components/MoreOptionsMenu";
-import { RedeemModal } from "./components/RedeemModal";
-import { useFundData } from "./hooks/useFundData";
+import { FundActionButtons } from "@/components/goal/fund/FundActionButtons";
+import { FundDetailCard } from "@/components/goal/fund/FundDetailCard";
+import { FundDetailHeader } from "@/components/goal/fund/FundDetailHeader";
+import { MoreOptionsMenu } from "@/components/goal/fund/MoreOptionsMenu";
+import { RedeemModal } from "@/components/goal/fund/RedeemModal";
+import { useFundData } from "@/hooks/useFundData";
 
 export default function FundDetailScreen() {
   const { goal_id, fund_id } = useLocalSearchParams<{
