@@ -176,7 +176,8 @@ public class SellOrderServiceImpl implements SellOrderService {
       orderItem.setFund(fund);
       orderItem.setAmount(sellOrderItem.getAmount() != null ? sellOrderItem.getAmount() : 0.0);
       orderItem.setUser(user);
-      orderItem.setProcessingState(OrderItems.ProcessingState.PENDING);
+      orderItem.setProcessingState(OrderItems.ProcessingState.SUCCESS);
+      // TODO: handle the  processing state properly
 
       orderItemsRepository.save(orderItem);
 

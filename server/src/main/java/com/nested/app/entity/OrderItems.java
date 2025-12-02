@@ -1,5 +1,6 @@
 package com.nested.app.entity;
 
+import com.fasterxml.jackson.annotation.JsonValue;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
@@ -11,6 +12,8 @@ import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import jakarta.persistence.Version;
 import lombok.Data;
+import lombok.Getter;
+import lombok.RequiredArgsConstructor;
 import org.hibernate.annotations.Filter;
 
 /**
@@ -59,10 +62,13 @@ public class OrderItems {
   @Enumerated(EnumType.STRING)
   private ProcessingState processingState = ProcessingState.PENDING;
 
+  @RequiredArgsConstructor
   public enum ProcessingState {
-    PENDING,
-    AWAITING_NAV,
-    SUCCESS,
-    FAILED
+    PENDING("pending"),
+    AWAITING_NAV("awaiting_nav"),
+    SUCCESS("success"),
+    FAILED("failed");
+
+    @JsonValue @Getter private final String value;
   }
 }
