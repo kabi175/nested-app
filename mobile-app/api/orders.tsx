@@ -38,5 +38,8 @@ export const getTransactions = async (page: number) => {
       page,
     },
   });
-  return data.data;
+  return data.data.map((transaction: Transaction) => ({
+    ...transaction,
+    executed_at: new Date(transaction.executed_at),
+  }));
 };
