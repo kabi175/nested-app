@@ -56,7 +56,7 @@ public class OrderDTO {
     dto.setUpdatedAt(order.getUpdatedAt());
 
     if (order.getGoal() != null) {
-      dto.setGoal(new MinifiedGoalDTO(order.getGoal().getId()));
+      dto.setGoal(MinifiedGoalDTO.fromEntity(order.getGoal()));
     }
 
     switch (order) {

@@ -119,7 +119,7 @@ public class PortfolioService {
         goal.getTargetAmount() > 0 ? currentValue / goal.getTargetAmount() * 100.0 : 0.0;
     // allocation determined externally; set 0 for single view
     return new PortfolioGoalDTO(
-        new MinifiedGoalDTO(goal.getId()), invested, currentValue, units, progress, 0.0);
+        MinifiedGoalDTO.fromEntity(goal), invested, currentValue, units, progress, 0.0);
   }
 
   private List<PortfolioGoalDTO> buildGoalBreakdown(
@@ -142,7 +142,7 @@ public class PortfolioService {
       double allocation = totalCurrentValue > 0 ? currentValue / totalCurrentValue * 100.0 : 0.0;
       result.add(
           new PortfolioGoalDTO(
-              new MinifiedGoalDTO(goal.getId()),
+              MinifiedGoalDTO.fromEntity(goal),
               invested,
               currentValue,
               units,
