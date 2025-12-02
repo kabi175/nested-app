@@ -35,6 +35,7 @@ public class OrderData {
 
   @RequiredArgsConstructor
   public enum OrderState {
+    CREATED("created"),
     PENDING("pending"),
     UNDER_REVIEW("under_review"),
     CONFIRMED("confirmed"),

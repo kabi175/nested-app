@@ -6,8 +6,8 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
-import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 
 @Slf4j
@@ -18,12 +18,12 @@ import org.springframework.web.bind.annotation.RequestMapping;
 public class PaymentRedirectController {
   private final PaymentRedirectService paymentRedirectService;
 
-  @GetMapping("/mandate/{mandate_id}")
+  @PostMapping("/mandate/{mandate_id}")
   public ResponseEntity<?> mandateRedirectHandler(@PathVariable("mandate_id") Long mandateID) {
     return paymentRedirectService.handleMandateRedirect(mandateID);
   }
 
-  @GetMapping("/payment/{payment_id}")
+  @PostMapping("/payment/{payment_id}")
   public ResponseEntity<?> paymentRedirectHandler(@PathVariable("payment_id") Long paymentID) {
     return paymentRedirectService.handlePaymentRedirect(paymentID);
   }

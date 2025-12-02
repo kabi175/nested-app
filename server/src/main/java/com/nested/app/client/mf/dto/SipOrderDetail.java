@@ -1,8 +1,10 @@
 package com.nested.app.client.mf.dto;
 
-import com.fasterxml.jackson.annotation.JsonFormat;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import java.time.LocalDate;
+import java.util.HashMap;
+import java.util.Map;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -19,15 +21,31 @@ public class SipOrderDetail extends OrderDetail {
   @JsonProperty("payment_source")
   String mandateID;
 
-  @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd")
-  @JsonProperty("start_date")
-  LocalDate startDate;
+  @JsonIgnore LocalDate startDate;
 
-  @JsonProperty("first_order_today")
+  @JsonProperty("generate_first_installment_now")
   boolean firstOrderToday;
 
   @Builder.Default String frequency = "monthly";
 
   @JsonProperty("installment_day")
   private String installmentDay;
+
+  @JsonProperty("user_ip")
+  private String userIP;
+
+  @JsonIgnore private String email;
+
+  @JsonIgnore private String mobile;
+
+  @JsonProperty("consent")
+  private Map<String, String> getConsent() {
+    var map = new HashMap<String, String>();
+    if (email != null && !email.isBlank()) {
+      map.put("email", email);
+    }
+    // TODO: handle conversion for mobile
+
+    return map;
+  }
 }

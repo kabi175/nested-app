@@ -362,6 +362,8 @@ public class PaymentServiceImpl implements PaymentService {
                         .amount(item.getAmount())
                         .userIP(ipAddress)
                         .folio(folioNumber)
+                        .userIP(ipAddress)
+                        .installmentDay(String.valueOf(sipOrder.getStartDate().getDayOfMonth()))
                         .build();
               } else {
                 orderDetail =

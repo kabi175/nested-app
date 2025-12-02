@@ -22,7 +22,6 @@ import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.reactive.function.client.WebClientResponseException;
-import reactor.core.publisher.Flux;
 
 /**
  * Service implementation for managing SIP Order Payment operations. Handles verification and
@@ -79,17 +78,8 @@ public class SipOrderPaymentServiceImpl implements SipOrderPaymentService {
                           .build())
               .toList();
 
-      // Process confirmOrder requests in parallel with a batch size of 10
-      Flux.fromIterable(confirmOrderRequests)
-          .flatMap(sipOrderApiClient::updateConsent, 10) // Process 10 requests at a
-          // time
-          .doOnNext(
-              response -> log.debug("Successfully confirmed order for payment ID: {}", paymentID))
-          .doOnError(
-              error -> log.error("Error confirming order for payment ID: {}", paymentID, error))
-          .blockLast(); // Wait for all parallel requests to complete
-
       sipOrderApiClient.confirmOrder(sipOrderIds).block();
+
       log.info(
           "Successfully verified {} SIP orders for payment ID: {}", sipOrderIds.size(), paymentID);
 

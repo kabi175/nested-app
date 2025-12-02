@@ -1,5 +1,6 @@
 package com.nested.app.client.finprimitives;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.nested.app.client.mf.SipOrderApiClient;
 import com.nested.app.client.mf.dto.OrderConsentRequest;
 import com.nested.app.client.mf.dto.OrderData;
@@ -20,6 +21,7 @@ public class SipOrderApiClientImpl implements SipOrderApiClient {
   private static final String SIP_ORDER_API_URL = "/v2/mf_purchase_plans";
   private static final String SIP_ORDER_TXN_API_URL = "/v2/mf_purchases";
   private final FinPrimitivesAPI api;
+  private final ObjectMapper objectMapper;
 
   @Override
   public Mono<EntityListResponse<OrderData>> placeSipOrder(List<SipOrderDetail> orders) {
@@ -36,6 +38,12 @@ public class SipOrderApiClientImpl implements SipOrderApiClient {
 
   @Override
   public Mono<Void> updateConsent(OrderConsentRequest request) {
+    try {
+      log.info("updateConsent with request: {}", objectMapper.writeValueAsString(request));
+    } catch (Exception e) {
+      log.warn("Failed to serialize request for logging", e);
+    }
+
     return api.withAuth()
         .patch()
         .uri(SIP_ORDER_API_URL)
@@ -48,7 +56,7 @@ public class SipOrderApiClientImpl implements SipOrderApiClient {
   public Mono<Void> confirmOrder(List<String> orderIds) {
     var orders =
         orderIds.stream().map(orderID -> Map.of("id", orderID, "state", "confirmed")).toList();
-    var request = Map.of("mf_purchases", orders);
+    var request = Map.of("mf_purchase_plans", orders);
     return api.withAuth()
         .patch()
         .uri(SIP_ORDER_BATCH_API_URL)
