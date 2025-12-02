@@ -127,10 +127,13 @@ const styles = StyleSheet.create({
   },
   investedContainer: {
     flex: 1,
+    marginRight: 16,
+    minWidth: 0,
   },
   returnsContainer: {
     flex: 1,
     alignItems: "flex-end",
+    minWidth: 0,
   },
   iconLabelRow: {
     flexDirection: "row",
