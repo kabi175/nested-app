@@ -2,19 +2,19 @@ package com.nested.app.jobs;
 
 import com.nested.app.services.SipOrderSchedulerService;
 import lombok.extern.slf4j.Slf4j;
-import org.quartz.Job;
-import org.quartz.JobExecutionContext;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
 /** Quartz job that promotes due ACTIVE SIPOrders to RUNNING state each day. */
 @Slf4j
 @Component
-public class SipDueSchedulesJob implements Job {
+public class SipDueSchedulesJob {
   @Autowired private SipOrderSchedulerService sipOrderSchedulerService;
 
-  @Override
-  public void execute(JobExecutionContext context) {
+  // runs  05:00:00 every day
+  @Scheduled(cron = "0 0 5 * * ?")
+  public void execute() {
     try {
       sipOrderSchedulerService.runDueOrders();
     } catch (Exception e) {
