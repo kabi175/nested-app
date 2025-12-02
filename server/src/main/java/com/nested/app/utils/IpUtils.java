@@ -71,9 +71,7 @@ public class IpUtils {
     return handleLocalhostIp(ipv4 != null ? ipv4 : FALLBACK_IP);
   }
 
-  /**
-   * Extracts IPv4 address from a given IP string. Returns null if not IPv4.
-   */
+  /** Extracts IPv4 address from a given IP string. Returns null if not IPv4. */
   private static String extractIpv4(String ip) {
     if (ip == null) return null;
     if (ip.matches("^(?:[0-9]{1,3}\\.){3}[0-9]{1,3}$")) {
@@ -85,7 +83,8 @@ public class IpUtils {
       if (inet instanceof java.net.Inet4Address) {
         return inet.getHostAddress();
       }
-    } catch (Exception ignored) {}
+    } catch (Exception ignored) {
+    }
     return null;
   }
 
