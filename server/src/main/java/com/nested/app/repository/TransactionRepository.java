@@ -30,6 +30,11 @@ public interface TransactionRepository extends JpaRepository<Transaction, Long> 
 
   boolean existsByProviderTransactionId(String providerTransactionId);
 
+  Page<Transaction> findByUserId(Long userId, Pageable pageable);
+
+  Page<Transaction> findByUserIdAndCreatedAtBetween(
+      Long userId, Timestamp startDate, Timestamp endDate, Pageable pageable);
+
   /**
    * Retrieves aggregated holdings data for a specific goal using database-level grouping and
    * calculations. This query groups transactions by fund and computes: - Total units (sum of all
