@@ -70,14 +70,14 @@ public class TransactionController {
                   "Start date for filtering transactions (format: yyyy-MM-dd). "
                       + "If provided, returns transactions from this date onwards.",
               example = "2024-01-01")
-          @RequestParam(required = false)
+          @RequestParam(name = "from_date", required = false)
           String startDate,
       @Parameter(
               description =
                   "End date for filtering transactions (format: yyyy-MM-dd). "
                       + "If provided, returns transactions up to this date.",
               example = "2024-12-31")
-          @RequestParam(required = false)
+          @RequestParam(name = "to_date", required = false)
           String endDate,
       @PageableDefault(sort = "createdAt", direction = Sort.Direction.DESC, size = 20)
           Pageable pageable) {

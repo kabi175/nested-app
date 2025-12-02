@@ -133,6 +133,6 @@ public class TransactionServiceImpl implements TransactionService {
         transaction.getStatus(),
         transaction.getUnitPrice(),
         transaction.getAmount(),
-        transaction.getExecutedAt());
+        transaction.getCreatedAt());
   }
 }
