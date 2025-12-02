@@ -84,7 +84,6 @@ export const createPayment = async (
     payment_method: paymentOption.payment_method,
     bank_id: paymentOption.bank_id,
   };
-  console.log("payload", payload);
   const { data } = await api.post(`/payments`, payload);
   return data;
 };
