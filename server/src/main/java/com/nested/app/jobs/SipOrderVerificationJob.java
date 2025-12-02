@@ -1,12 +1,12 @@
 package com.nested.app.jobs;
 
 import com.nested.app.services.SipOrderPaymentService;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.quartz.Job;
 import org.quartz.JobDataMap;
 import org.quartz.JobExecutionContext;
 import org.quartz.JobExecutionException;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 /**
@@ -15,9 +15,9 @@ import org.springframework.stereotype.Component;
  */
 @Slf4j
 @Component
+@RequiredArgsConstructor
 public class SipOrderVerificationJob implements Job {
-
-  @Autowired private SipOrderPaymentService sipOrderPaymentService;
+  private final SipOrderPaymentService sipOrderPaymentService;
 
   @Override
   public void execute(JobExecutionContext context) throws JobExecutionException {
