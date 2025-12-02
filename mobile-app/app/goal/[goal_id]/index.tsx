@@ -1,4 +1,4 @@
-import { Transaction } from "@/api/portfolioAPI";
+import { Holding, Transaction } from "@/api/portfolioAPI";
 import { goalsForCustomizeAtom } from "@/atoms/goals";
 import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
@@ -269,13 +269,95 @@ export default function GoalDetailScreen() {
   );
 }
 
+// Holding Card Component
+function HoldingCard({
+  holding,
+  borderColor,
+  index,
+  goalId,
+}: {
+  holding: Holding;
+  borderColor: string;
+  index: number;
+  goalId: string;
+}) {
+  const returnsPercentage =
+    holding.invested_amount > 0
+      ? (holding.returns_amount / holding.invested_amount) * 100
+      : 0;
+  const isNegative = returnsPercentage < 0;
+
+  return (
+    <TouchableOpacity
+      onPress={() => {
+        router.push(`/goal/${goalId}/${holding.fund}`);
+      }}
+      activeOpacity={0.7}
+    >
+      <ThemedView
+        style={[
+          styles.holdingCard,
+          { borderLeftColor: borderColor, borderLeftWidth: 4 },
+        ]}
+      >
+        <View style={styles.holdingHeader}>
+          <View style={styles.holdingInfo}>
+            <ThemedText style={styles.holdingFundName}>
+              {holding.fund}
+            </ThemedText>
+            <ThemedText style={styles.holdingAllocation}>
+              {holding.allocation_percentage}% allocation
+            </ThemedText>
+            <ThemedText style={styles.holdingInvested}>
+              Invested: {formatCurrency(holding.invested_amount)}
+            </ThemedText>
+          </View>
+          <View style={styles.holdingValue}>
+            <ThemedText style={styles.holdingCurrentValue}>
+              {formatCurrency(holding.current_value)}
+            </ThemedText>
+          </View>
+        </View>
+
+        <View style={styles.holdingReturns}>
+          <View style={styles.returnsRow}>
+            {holding.returns_amount >= 0 ? (
+              <TrendingUp size={14} color="#10B981" />
+            ) : (
+              <TrendingDown size={14} color="#EF4444" />
+            )}
+            <ThemedText
+              style={[
+                styles.returnsText,
+                isNegative && styles.returnsTextNegative,
+              ]}
+            >
+              {isNegative ? "-" : "+"}
+              {Math.abs(returnsPercentage).toFixed(2)}%
+            </ThemedText>
+          </View>
+          <ThemedText
+            style={[
+              styles.returnsAmountText,
+              holding.returns_amount < 0 && styles.returnsAmountTextNegative,
+            ]}
+          >
+            {holding.returns_amount >= 0 ? "+" : "-"}
+            {formatCurrency(Math.abs(holding.returns_amount))}
+          </ThemedText>
+        </View>
+      </ThemedView>
+    </TouchableOpacity>
+  );
+}
+
 // Holdings Content Component
 function HoldingsContent({
   goalId,
   holdings,
 }: {
   goalId: string;
-  holdings: any[];
+  holdings: Holding[];
 }) {
   if (holdings.length === 0) {
     return (
@@ -292,68 +374,14 @@ function HoldingsContent({
     <View style={styles.contentContainer}>
       {holdings.map((holding, index) => {
         const borderColor = colors[index % colors.length];
-        const returnsPercentage =
-          holding.invested_amount > 0
-            ? (holding.returns_amount / holding.invested_amount) * 100
-            : 0;
-        const isNegative = returnsPercentage < 0;
-
         return (
-          <ThemedView
+          <HoldingCard
             key={holding.fund}
-            style={[
-              styles.holdingCard,
-              { borderLeftColor: borderColor, borderLeftWidth: 4 },
-            ]}
-          >
-            <View style={styles.holdingHeader}>
-              <View style={styles.holdingInfo}>
-                <ThemedText style={styles.holdingFundName}>
-                  {holding.fund}
-                </ThemedText>
-                <ThemedText style={styles.holdingAllocation}>
-                  {holding.allocation_percentage}% allocation
-                </ThemedText>
-                <ThemedText style={styles.holdingInvested}>
-                  Invested: {formatCurrency(holding.invested_amount)}
-                </ThemedText>
-              </View>
-              <View style={styles.holdingValue}>
-                <ThemedText style={styles.holdingCurrentValue}>
-                  {formatCurrency(holding.current_value)}
-                </ThemedText>
-              </View>
-            </View>
-
-            <View style={styles.holdingReturns}>
-              <View style={styles.returnsRow}>
-                {holding.returns_amount >= 0 ? (
-                  <TrendingUp size={14} color="#10B981" />
-                ) : (
-                  <TrendingDown size={14} color="#EF4444" />
-                )}
-                <ThemedText
-                  style={[
-                    styles.returnsText,
-                    isNegative && styles.returnsTextNegative,
-                  ]}
-                >
-                  {isNegative ? "-" : "+"}
-                  {Math.abs(returnsPercentage).toFixed(2)}%
-                </ThemedText>
-              </View>
-              <ThemedText
-                style={[
-                  styles.returnsAmountText,
-                  holding.returns_amount < 0 &&
-                    styles.returnsAmountTextNegative,
-                ]}
-              >
-                {holding.returns_amount >= 0 ? "+" : "-"}
-                {formatCurrency(Math.abs(holding.returns_amount))}
-              </ThemedText>
-            </View>
-          </ThemedView>
+            holding={holding}
+            borderColor={borderColor}
+            index={index}
+            goalId={goalId}
+          />
         );
       })}
     </View>
