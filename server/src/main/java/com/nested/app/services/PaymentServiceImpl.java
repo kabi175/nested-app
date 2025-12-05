@@ -232,8 +232,17 @@ public class PaymentServiceImpl implements PaymentService {
   }
 
   private void placeOrderWithExternalAPI(Payment payment) {
+    var goalVsOrders = payment.getOrders().stream().collect(Collectors.groupingBy(Order::getGoal));
+
+    goalVsOrders.forEach(
+        (g, orders) -> {
+          placeOrderWithExternalAPI(payment, orders);
+        });
+  }
+
+  private void placeOrderWithExternalAPI(Payment payment, List<Order> orders) {
     var buyOrdersDetails =
-        payment.getOrders().stream()
+        orders.stream()
             .filter(BuyOrder.class::isInstance)
             .flatMap(this::convertOrderToOrderDetail)
             .toList();
@@ -249,7 +258,7 @@ public class PaymentServiceImpl implements PaymentService {
     }
 
     var orderItemsList =
-        payment.getOrders().stream()
+        orders.stream()
             .filter(BuyOrder.class::isInstance)
             .map(Order::getItems)
             .flatMap(List::stream)
