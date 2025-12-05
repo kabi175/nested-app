@@ -33,6 +33,9 @@ public class OrderData {
   @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd")
   private Date traded_on;
 
+  @JsonProperty("scheme")
+  private String fundId;
+
   @RequiredArgsConstructor
   public enum OrderState {
     CREATED("created"),

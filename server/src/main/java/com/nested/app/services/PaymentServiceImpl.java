@@ -232,15 +232,8 @@ public class PaymentServiceImpl implements PaymentService {
   }
 
   private void placeOrderWithExternalAPI(Payment payment) {
-    var goalVsOrders = payment.getOrders().stream().collect(Collectors.groupingBy(Order::getGoal));
+    var orders = payment.getOrders();
 
-    goalVsOrders.forEach(
-        (g, orders) -> {
-          placeOrderWithExternalAPI(payment, orders);
-        });
-  }
-
-  private void placeOrderWithExternalAPI(Payment payment, List<Order> orders) {
     var buyOrdersDetails =
         orders.stream()
             .filter(BuyOrder.class::isInstance)
@@ -251,6 +244,23 @@ public class PaymentServiceImpl implements PaymentService {
       log.warn("No buy orders found for payment ID: {}", payment.getId());
       throw new IllegalArgumentException("No buy orders found for this payment");
     }
+
+    var groupedOrders =
+        buyOrdersDetails.stream().collect(Collectors.groupingBy(OrderDetail::getFundID));
+
+    buyOrdersDetails =
+        groupedOrders.values().stream()
+            .map(
+                orderList -> {
+                  var o1 = orderList.getFirst();
+
+                  var total =
+                      orderList.stream().map(OrderDetail::getAmount).reduce(0d, Double::sum);
+
+                  o1.setAmount(total);
+                  return o1;
+                })
+            .toList();
 
     var orderResponse = buyOrderApiClient.placeBuyOrder(buyOrdersDetails).block();
     if (orderResponse == null) {
@@ -264,18 +274,23 @@ public class PaymentServiceImpl implements PaymentService {
             .flatMap(List::stream)
             .toList();
 
-    for (var idx = 0; idx < orderResponse.data.size(); idx++) {
-      var orderResponseItem = orderResponse.data.get(idx);
-      var orderItem = orderItemsList.get(idx);
-      log.debug(
-          "Updating OrderItems: id={}, existingRef={}, existingPaymentRef={}, newRef={}, newPaymentRef={}",
-          orderItem.getId(),
-          orderItem.getRef(),
-          orderItem.getPaymentRef(),
-          orderResponseItem.getRef(),
-          orderResponseItem.getPaymentRef());
-      orderItem.setRef(orderResponseItem.getRef());
-      orderItem.setPaymentRef(orderResponseItem.getPaymentRef());
+    for (var orderResponseItem : orderResponse.data) {
+      orderItemsList.stream()
+          .filter(
+              orderItems ->
+                  orderItems.getFund().getIsinCode().equals(orderResponseItem.getFundId()))
+          .forEach(
+              orderItem -> {
+                log.debug(
+                    "Updating OrderItems: id={}, existingRef={}, existingPaymentRef={}, newRef={}, newPaymentRef={}",
+                    orderItem.getId(),
+                    orderItem.getRef(),
+                    orderItem.getPaymentRef(),
+                    orderResponseItem.getRef(),
+                    orderResponseItem.getPaymentRef());
+                orderItem.setRef(orderResponseItem.getRef());
+                orderItem.setPaymentRef(orderResponseItem.getPaymentRef());
+              });
     }
 
     // Collect all order items with updated ref and publish a single batched event

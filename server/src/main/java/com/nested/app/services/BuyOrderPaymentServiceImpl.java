@@ -66,6 +66,7 @@ public class BuyOrderPaymentServiceImpl implements BuyOrderPaymentService {
               .map(Order::getItems)
               .flatMap(List::stream)
               .map(OrderItems::getRef)
+              .distinct()
               .toList();
 
       if (buyOrderIds.isEmpty()) {
