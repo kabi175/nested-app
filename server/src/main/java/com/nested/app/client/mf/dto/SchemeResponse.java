@@ -1,20 +1,25 @@
 package com.nested.app.client.mf.dto;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import java.util.List;
 import lombok.Data;
 
 @Data
-public class FundResponse {
+public class SchemeResponse {
   private int count;
+
+  @JsonProperty("scheme_plans")
   private List<FundDTO> results;
-  private String next;
-  private String previous;
+
+  private boolean last;
+
+  private boolean first;
 
   public boolean hasNext() {
-    return next != null && !next.isEmpty();
+    return !last;
   }
 
   public boolean hasPrevious() {
-    return previous != null && !previous.isEmpty();
+    return !first;
   }
 }

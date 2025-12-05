@@ -1,16 +1,16 @@
 package com.nested.app.services;
 
+import com.nested.app.client.finprimitives.FundAPIClient;
 import com.nested.app.client.mf.dto.FundDTO;
-import com.nested.app.client.mf.dto.FundResponse;
-import com.nested.app.client.tarrakki.FundAPIClient;
+import com.nested.app.client.mf.dto.SchemeResponse;
 import com.nested.app.entity.Fund;
 import com.nested.app.repository.FundRepository;
 import java.sql.Timestamp;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
-import java.util.Objects;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
 @Slf4j
@@ -20,33 +20,20 @@ public class FundSyncScheduler {
   private final FundAPIClient fundAPIClient;
   private final FundRepository fundRepository;
 
-  //  @Scheduled(fixedRate = 3000000000) // For testing: runs every 5 minutes
+  @Scheduled(fixedRate = 30000) // For testing: runs every 5 minutes
   public void syncFunds() {
     var pageable = org.springframework.data.domain.PageRequest.of(0, 100);
     var hasMore = true;
     while (hasMore) {
-      FundResponse response = fundAPIClient.fetchFundsList(pageable).block();
+      SchemeResponse response = fundAPIClient.fetchFundsList(pageable).block();
       hasMore = response != null && response.hasNext();
       pageable = pageable.next();
 
       if (response != null && response.getResults() != null) {
         for (FundDTO dto : response.getResults()) {
           try {
-            Long fundId = Long.valueOf(dto.getId());
-            Fund fund = fundRepository.findById(fundId).orElse(null);
-            if (fund != null) {
-              // Update only nav and navDate
-              if (dto.getNav_date() != null) {
-                fund.setNav(dto.getNav());
-                fund.setNavDate(parseDate(dto.getNav_date()));
-              }
-              if (dto.getStatus() != null) {
-                fund.setActive(Objects.equals(dto.getStatus(), "active"));
-              }
-            } else {
-              fund = mapToFund(dto);
-            }
-            // TODO: handle bulk save
+            Fund fund = fundRepository.findFundByIsinCode(dto.getIsin()).orElse(new Fund());
+            mapToFund(dto, fund);
             fundRepository.save(fund);
           } catch (Exception e) {
             // Log and continue
@@ -57,30 +44,16 @@ public class FundSyncScheduler {
     }
   }
 
-  private Fund mapToFund(FundDTO dto) {
-    Fund fund = new Fund();
-    fund.setId(Long.valueOf(dto.getId()));
-    fund.setLabel(dto.getName());
-    fund.setDescription(dto.getCategory() + " - " + dto.getSub_category());
-    fund.setName(dto.getName());
-    if (dto.getNav_date() != null) {
-      fund.setNavDate(parseDate(dto.getNav_date()));
-    }
-    if (dto.getNav() != null) {
-      fund.setNav(dto.getNav());
-    }
-    if (dto.getMin_initial() != null) {
-      fund.setMimPurchaseAmount(dto.getMin_initial());
-    }
-    if (dto.getMin_additional() != null) {
-      fund.setMimAdditionalPurchaseAmount(dto.getMin_additional());
-    }
-    if (dto.getStatus() != null) {
-      fund.setActive("active".equalsIgnoreCase(dto.getStatus()));
-    }
+  private void mapToFund(FundDTO dto, Fund fund) {
+
+    fund.setLabel(dto.getSchemeName());
+    fund.setName(dto.getSchemeName());
+
+    fund.setMimPurchaseAmount(Math.max(dto.getMinAmountBuy(), 100));
+    fund.setMinSipAmount(Math.max(dto.getMinAmountBuy(), 500));
+
+    fund.setActive(dto.isActive());
     fund.setIsinCode(dto.getIsin());
-    fund.setAmcCode(dto.getAmc_id());
-    return fund;
   }
 
   private Timestamp parseDate(String dateStr) {
