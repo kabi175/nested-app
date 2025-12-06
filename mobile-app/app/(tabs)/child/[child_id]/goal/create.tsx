@@ -1,22 +1,18 @@
 import { goalsForCustomizeAtom } from "@/atoms/goals";
-import { ThemedText } from "@/components/ThemedText";
+import { AddGoalButton } from "@/components/goal/create/AddGoalButton";
+import { ChildSelector } from "@/components/goal/create/ChildSelector";
+import { CreateGoalHeader } from "@/components/goal/create/CreateGoalHeader";
+import { GoalFormCard } from "@/components/goal/create/GoalFormCard";
+import { SaveGoalButton } from "@/components/goal/create/SaveGoalButton";
 import { useChildren } from "@/hooks/useChildren";
 import { useEducation } from "@/hooks/useEducation";
 import { useGoalCreation } from "@/hooks/useGoalCreation";
-import { Education } from "@/types/education";
-import { expectedFee } from "@/utils/education";
-import { Ionicons } from "@expo/vector-icons";
+import { useGoalFormAnimations } from "@/hooks/useGoalFormAnimations";
+import { GoalForm } from "@/types/goalForm";
+import { calculateFutureCost } from "@/utils/goalForm";
 import * as Haptics from "expo-haptics";
-import { LinearGradient } from "expo-linear-gradient";
 import { router, useLocalSearchParams } from "expo-router";
 import { useSetAtom } from "jotai";
-import {
-  ChevronDown,
-  ChevronUp,
-  Edit3,
-  Plus,
-  Trash2,
-} from "lucide-react-native";
 import React, { useEffect, useState } from "react";
 import {
   ActivityIndicator,
@@ -24,25 +20,8 @@ import {
   Animated,
   ScrollView,
   StyleSheet,
-  TextInput,
-  TouchableOpacity,
-  View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-
-interface Goal {
-  id: string;
-  type: "undergraduate" | "postgraduate";
-  title: string;
-  degree: string;
-  college: string;
-  currentCost: number;
-  targetYear: number;
-  futureCost: number;
-  selectionMode: "course" | "college";
-  education?: Education;
-  childId: string | null;
-}
 
 export default function CreateGoalScreen() {
   const { child_id } = useLocalSearchParams<{ child_id?: string | string[] }>();
@@ -56,20 +35,36 @@ export default function CreateGoalScreen() {
     institutions,
     isLoading: isLoadingEducation,
   } = useEducation();
-  const [goals, setGoals] = useState<Goal[]>([
-    {
-      id: "1",
-      type: "undergraduate",
-      title: "Undergraduate",
-      degree: "Choose a course",
-      college: "Select Dream College",
-      currentCost: 2500000,
-      targetYear: 2030,
-      futureCost: 4500000,
-      selectionMode: "course",
-      childId: null,
-    },
-  ]);
+
+  const [goals, setGoals] = useState<GoalForm[]>([]);
+
+  useEffect(() => {
+    const selectedChild = children?.find(
+      (child) => child.id === selectedChildId
+    );
+
+    if (
+      selectedChild &&
+      !goals.find((goal) => goal.childId === selectedChildId)
+    ) {
+      console.log("goal added for child", selectedChild.firstName);
+      setGoals((prev) => [
+        ...prev,
+        {
+          id: Date.now().toString(),
+          type: "undergraduate",
+          title: `${selectedChild?.firstName}'s Graduation`,
+          degree: "Choose a course",
+          college: "Select Dream College",
+          currentCost: 2500000,
+          targetYear: 2030,
+          futureCost: 4500000,
+          selectionMode: "course",
+          childId: selectedChildId,
+        },
+      ]);
+    }
+  }, [children, selectedChildId]);
 
   const [expandedDropdowns, setExpandedDropdowns] = useState<{
     [key: string]: boolean;
@@ -77,52 +72,15 @@ export default function CreateGoalScreen() {
   const [editingTitle, setEditingTitle] = useState<{
     [key: string]: boolean;
   }>({});
-  const [inputSectionAnimations, setInputSectionAnimations] = useState<{
-    [key: string]: Animated.Value;
-  }>({});
 
-  const [fadeAnim] = useState(new Animated.Value(0));
-  const [slideAnim] = useState(new Animated.Value(50));
-  const [scaleAnim] = useState(new Animated.Value(0.95));
-  const [pulseAnim] = useState(new Animated.Value(1));
-
-  useEffect(() => {
-    Animated.parallel([
-      Animated.timing(fadeAnim, {
-        toValue: 1,
-        duration: 800,
-        useNativeDriver: true,
-      }),
-      Animated.timing(slideAnim, {
-        toValue: 0,
-        duration: 600,
-        useNativeDriver: true,
-      }),
-      Animated.spring(scaleAnim, {
-        toValue: 1,
-        tension: 50,
-        friction: 8,
-        useNativeDriver: true,
-      }),
-    ]).start();
-
-    // Start pulse animation for future cost
-    const pulseAnimation = Animated.loop(
-      Animated.sequence([
-        Animated.timing(pulseAnim, {
-          toValue: 1.02,
-          duration: 2000,
-          useNativeDriver: true,
-        }),
-        Animated.timing(pulseAnim, {
-          toValue: 1,
-          duration: 2000,
-          useNativeDriver: true,
-        }),
-      ])
-    );
-    pulseAnimation.start();
-  }, [fadeAnim, slideAnim, scaleAnim, pulseAnim]);
+  const {
+    fadeAnim,
+    slideAnim,
+    scaleAnim,
+    pulseAnim,
+    inputSectionAnimations,
+    animateInputSection,
+  } = useGoalFormAnimations();
 
   useEffect(() => {
     if (!children || children.length === 0) {
@@ -150,18 +108,8 @@ export default function CreateGoalScreen() {
       })
     );
   }, [children, routeChildId]);
-  const selectedChild = children?.find((child) => child.id === selectedChildId);
 
-  const calculateFutureCost = (
-    education: Education | undefined,
-    targetYear: number
-  ) => {
-    if (!education) return 0;
-    const targetDate = new Date(targetYear, 0, 1);
-    return Math.round(expectedFee(targetDate, education));
-  };
-
-  const updateGoal = (goalId: string, field: keyof Goal, value: any) => {
+  const updateGoal = (goalId: string, field: keyof GoalForm, value: any) => {
     setGoals((prev) =>
       prev.map((goal) => {
         if (goal.id === goalId) {
@@ -186,28 +134,7 @@ export default function CreateGoalScreen() {
 
   const updateSelectionMode = (goalId: string, mode: "course" | "college") => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-
-    // Animate the input section transition
-    const currentAnim = inputSectionAnimations[goalId] || new Animated.Value(1);
-
-    Animated.sequence([
-      Animated.timing(currentAnim, {
-        toValue: 0,
-        duration: 150,
-        useNativeDriver: true,
-      }),
-      Animated.timing(currentAnim, {
-        toValue: 1,
-        duration: 150,
-        useNativeDriver: true,
-      }),
-    ]).start();
-
-    setInputSectionAnimations((prev) => ({
-      ...prev,
-      [goalId]: currentAnim,
-    }));
-
+    animateInputSection(goalId);
     updateGoal(goalId, "selectionMode", mode);
   };
 
@@ -237,12 +164,13 @@ export default function CreateGoalScreen() {
   };
 
   const addGoal = () => {
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-
-    const newGoal: Goal = {
+    const selectedChild = children?.find(
+      (child) => child.id === selectedChildId
+    );
+    const newGoal: GoalForm = {
       id: Date.now().toString(),
-      type: "undergraduate",
-      title: "Undergraduate",
+      type: "postgraduate",
+      title: `${selectedChild?.firstName}'s Postgraduation`,
       degree: "Choose a course",
       college: "Select Dream College",
       currentCost: 2500000,
@@ -258,24 +186,7 @@ export default function CreateGoalScreen() {
         null,
     };
 
-    // Add with animation
     setGoals((prev) => [...prev, newGoal]);
-
-    // Animate the add button
-    const buttonScale = new Animated.Value(1);
-    Animated.sequence([
-      Animated.timing(buttonScale, {
-        toValue: 0.95,
-        duration: 100,
-        useNativeDriver: true,
-      }),
-      Animated.spring(buttonScale, {
-        toValue: 1,
-        tension: 100,
-        friction: 8,
-        useNativeDriver: true,
-      }),
-    ]).start();
   };
 
   const toggleDropdown = (key: string) => {
@@ -287,24 +198,6 @@ export default function CreateGoalScreen() {
   };
 
   const handleSave = async () => {
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-
-    // Animate save button
-    const saveButtonScale = new Animated.Value(1);
-    Animated.sequence([
-      Animated.timing(saveButtonScale, {
-        toValue: 0.95,
-        duration: 100,
-        useNativeDriver: true,
-      }),
-      Animated.spring(saveButtonScale, {
-        toValue: 1,
-        tension: 100,
-        friction: 8,
-        useNativeDriver: true,
-      }),
-    ]).start();
-
     try {
       // Get all goals that have a childId assigned (not just visible ones)
       const allGoalsWithChild = goals.filter((goal) => goal.childId);
@@ -366,6 +259,13 @@ export default function CreateGoalScreen() {
     return <ActivityIndicator size="large" color="#2563EB" />;
   }
 
+  const toggleTitleEdit = (goalId: string) => {
+    setEditingTitle((prev) => ({
+      ...prev,
+      [goalId]: !prev[goalId],
+    }));
+  };
+
   return (
     <SafeAreaView style={styles.container}>
       <Animated.View
@@ -377,81 +277,14 @@ export default function CreateGoalScreen() {
           },
         ]}
       >
-        {/* Header */}
-        <LinearGradient
-          colors={["#F8F7FF", "#E8E3FF"]}
-          style={styles.headerSection}
-        >
-          <View style={styles.headerContent}>
-            <TouchableOpacity
-              style={styles.backButton}
-              onPress={() => router.back()}
-            >
-              <Ionicons name="arrow-back" size={24} color="#2563EB" />
-            </TouchableOpacity>
-            <ThemedText style={styles.headerTitle}>Create Goals</ThemedText>
-            <View style={styles.placeholder} />
-          </View>
-        </LinearGradient>
+        <CreateGoalHeader />
 
-        {/* Child selector pills */}
-        {children && children.length > 0 && (
-          <View style={styles.childSelectorHeader}>
-            <ThemedText style={styles.childGreeting}>
-              {`Hi ddd, let's set up education goals for ${
-                selectedChild?.firstName || "Child"
-              }`}
-            </ThemedText>
-            <ScrollView
-              horizontal
-              showsHorizontalScrollIndicator={false}
-              contentContainerStyle={styles.childPillsHeaderWrapper}
-            >
-              {children.map((child) => {
-                const isSelected = selectedChildId === child.id;
-                const displayName = child.firstName || "Child";
-                return (
-                  <TouchableOpacity
-                    key={child.id}
-                    style={[
-                      styles.childPill,
-                      isSelected && styles.childPillSelected,
-                    ]}
-                    onPress={() => setSelectedChildId(child.id)}
-                  >
-                    <ThemedText
-                      style={[
-                        styles.childPillText,
-                        isSelected && styles.childPillTextSelected,
-                      ]}
-                    >
-                      {displayName}
-                    </ThemedText>
-                  </TouchableOpacity>
-                );
-              })}
-
-              {/* Add Child pill */}
-              <TouchableOpacity
-                style={[styles.childPill, styles.addChildPill]}
-                onPress={() => router.push("/(tabs)/child/create")}
-              >
-                <ThemedText
-                  style={[styles.childPillText, { color: "#2563EB" }]}
-                >
-                  + Add Child
-                </ThemedText>
-              </TouchableOpacity>
-            </ScrollView>
-          </View>
-        )}
-
-        {(!children || children.length === 0) && (
-          <View style={styles.emptyChildrenContainer}>
-            <ThemedText style={styles.emptyChildrenText}>
-              Add a child profile to start creating goals.
-            </ThemedText>
-          </View>
+        {children && (
+          <ChildSelector
+            childList={children}
+            selectedChildId={selectedChildId}
+            onSelectChild={setSelectedChildId}
+          />
         )}
 
         <ScrollView
@@ -461,380 +294,31 @@ export default function CreateGoalScreen() {
         >
           {goals
             .filter((goal) => goal.childId === selectedChildId)
-            .map((goal, index) => (
-              <Animated.View
+            .map((goal) => (
+              <GoalFormCard
                 key={goal.id}
-                style={[
-                  styles.goalCard,
-                  {
-                    transform: [
-                      {
-                        translateY: new Animated.Value(0),
-                      },
-                    ],
-                  },
-                ]}
-              >
-                {/* Goal Header */}
-                <View style={styles.goalHeader}>
-                  <View style={styles.goalTitleContainer}>
-                    {editingTitle[goal.id] ? (
-                      <TextInput
-                        style={styles.goalTitleInput}
-                        value={goal.title}
-                        onChangeText={(text) =>
-                          updateGoal(goal.id, "title", text)
-                        }
-                        onBlur={() => {
-                          setEditingTitle((prev) => ({
-                            ...prev,
-                            [goal.id]: false,
-                          }));
-                        }}
-                        autoFocus
-                        placeholder="Enter goal title"
-                        placeholderTextColor="#9CA3AF"
-                      />
-                    ) : (
-                      <ThemedText style={styles.goalTitle}>
-                        {goal.title}
-                      </ThemedText>
-                    )}
-                    <TouchableOpacity
-                      style={styles.editButton}
-                      onPress={() => {
-                        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-                        setEditingTitle((prev) => ({
-                          ...prev,
-                          [goal.id]: !prev[goal.id],
-                        }));
-                      }}
-                    >
-                      <Edit3 size={16} color="#6B7280" />
-                    </TouchableOpacity>
-                  </View>
-                  <TouchableOpacity
-                    style={styles.deleteButton}
-                    onPress={() => removeGoal(goal.id)}
-                  >
-                    <Trash2 size={20} color="#EF4444" />
-                  </TouchableOpacity>
-                </View>
-
-                {/* Selection Mode Toggle */}
-                <Animated.View style={styles.selectionModeContainer}>
-                  <TouchableOpacity
-                    style={[
-                      styles.selectionModeButton,
-                      goal.selectionMode === "course" &&
-                        styles.selectionModeButtonActive,
-                    ]}
-                    onPress={() => updateSelectionMode(goal.id, "course")}
-                  >
-                    <ThemedText
-                      style={[
-                        styles.selectionModeText,
-                        goal.selectionMode === "course" &&
-                          styles.selectionModeTextActive,
-                      ]}
-                    >
-                      Course Type
-                    </ThemedText>
-                  </TouchableOpacity>
-                  <TouchableOpacity
-                    style={[
-                      styles.selectionModeButton,
-                      goal.selectionMode === "college" &&
-                        styles.selectionModeButtonActive,
-                    ]}
-                    onPress={() => updateSelectionMode(goal.id, "college")}
-                  >
-                    <ThemedText
-                      style={[
-                        styles.selectionModeText,
-                        goal.selectionMode === "college" &&
-                          styles.selectionModeTextActive,
-                      ]}
-                    >
-                      Dream College
-                    </ThemedText>
-                  </TouchableOpacity>
-                </Animated.View>
-
-                {/* Dynamic Input Section */}
-                <Animated.View
-                  style={[
-                    styles.inputSection,
-                    {
-                      opacity: inputSectionAnimations[goal.id] || 1,
-                      transform: [
-                        {
-                          scale: inputSectionAnimations[goal.id] || 1,
-                        },
-                      ],
-                    },
-                  ]}
-                >
-                  {goal.selectionMode === "course" ? (
-                    <>
-                      <ThemedText style={styles.inputLabel}>
-                        Select Course Type
-                      </ThemedText>
-                      <TouchableOpacity
-                        style={styles.dropdown}
-                        onPress={() => toggleDropdown(`${goal.id}-degree`)}
-                      >
-                        <ThemedText style={styles.dropdownText}>
-                          {goal.degree}
-                        </ThemedText>
-                        <ChevronDown size={20} color="#6B7280" />
-                      </TouchableOpacity>
-
-                      {expandedDropdowns[`${goal.id}-degree`] && (
-                        <Animated.View
-                          style={[
-                            styles.dropdownOptions,
-                            {
-                              opacity: expandedDropdowns[`${goal.id}-degree`]
-                                ? 1
-                                : 0,
-                              transform: [
-                                {
-                                  translateY: expandedDropdowns[
-                                    `${goal.id}-degree`
-                                  ]
-                                    ? 0
-                                    : -10,
-                                },
-                              ],
-                            },
-                          ]}
-                        >
-                          {isLoadingEducation ? (
-                            <View style={styles.dropdownOption}>
-                              <ActivityIndicator size="small" color="#2563EB" />
-                            </View>
-                          ) : (
-                            courses.map((course) => (
-                              <Animated.View
-                                key={course.id}
-                                style={{
-                                  opacity: expandedDropdowns[
-                                    `${goal.id}-degree`
-                                  ]
-                                    ? 1
-                                    : 0,
-                                  transform: [
-                                    {
-                                      translateX: expandedDropdowns[
-                                        `${goal.id}-degree`
-                                      ]
-                                        ? 0
-                                        : -20,
-                                    },
-                                  ],
-                                }}
-                              >
-                                <TouchableOpacity
-                                  style={styles.dropdownOption}
-                                  onPress={() => {
-                                    updateGoal(goal.id, "degree", course.name);
-                                    updateGoal(goal.id, "education", course);
-                                    toggleDropdown(`${goal.id}-degree`);
-                                  }}
-                                >
-                                  <ThemedText style={styles.dropdownOptionText}>
-                                    {course.name}
-                                  </ThemedText>
-                                </TouchableOpacity>
-                              </Animated.View>
-                            ))
-                          )}
-                        </Animated.View>
-                      )}
-                    </>
-                  ) : (
-                    <>
-                      <ThemedText style={styles.inputLabel}>
-                        Select Dream College
-                      </ThemedText>
-                      <TouchableOpacity
-                        style={styles.dropdown}
-                        onPress={() => toggleDropdown(`${goal.id}-college`)}
-                      >
-                        <ThemedText style={styles.dropdownText}>
-                          {goal.college}
-                        </ThemedText>
-                        <ChevronDown size={20} color="#6B7280" />
-                      </TouchableOpacity>
-
-                      {expandedDropdowns[`${goal.id}-college`] && (
-                        <Animated.View style={styles.dropdownOptions}>
-                          {isLoadingEducation ? (
-                            <View style={styles.dropdownOption}>
-                              <ActivityIndicator size="small" color="#2563EB" />
-                            </View>
-                          ) : (
-                            institutions.map((institution) => (
-                              <TouchableOpacity
-                                key={institution.id}
-                                style={styles.dropdownOption}
-                                onPress={() => {
-                                  updateGoal(
-                                    goal.id,
-                                    "college",
-                                    institution.name
-                                  );
-                                  updateGoal(goal.id, "education", institution);
-                                  toggleDropdown(`${goal.id}-college`);
-                                }}
-                              >
-                                <ThemedText style={styles.dropdownOptionText}>
-                                  {institution.name}
-                                </ThemedText>
-                              </TouchableOpacity>
-                            ))
-                          )}
-                        </Animated.View>
-                      )}
-                    </>
-                  )}
-                </Animated.View>
-
-                {/* Cost and Timeline */}
-                <View style={styles.costTimelineContainer}>
-                  <View style={styles.inputGroup}>
-                    <ThemedText style={styles.inputLabel}>
-                      Today&apos;s Approx Cost
-                    </ThemedText>
-                    <View style={styles.costInputContainer}>
-                      <ThemedText style={styles.currencySymbol}>₹</ThemedText>
-                      <TextInput
-                        style={styles.costInput}
-                        value={goal.currentCost.toLocaleString("en-IN")}
-                        onChangeText={(text) => {
-                          const value = parseInt(text.replace(/,/g, "")) || 0;
-                          updateGoal(goal.id, "currentCost", value);
-                        }}
-                        keyboardType="numeric"
-                        placeholder="0"
-                      />
-                    </View>
-                  </View>
-
-                  <View style={styles.inputGroup}>
-                    <ThemedText style={styles.inputLabel}>
-                      Target Year
-                    </ThemedText>
-                    <View style={styles.yearInputContainer}>
-                      <TextInput
-                        style={styles.yearInput}
-                        value={goal.targetYear.toString()}
-                        onChangeText={(text) => {
-                          const value =
-                            parseInt(text) || new Date().getFullYear();
-                          updateGoal(goal.id, "targetYear", value);
-                        }}
-                        keyboardType="numeric"
-                      />
-                      <View style={styles.yearControls}>
-                        <TouchableOpacity
-                          style={styles.yearButton}
-                          onPress={() =>
-                            updateGoal(
-                              goal.id,
-                              "targetYear",
-                              goal.targetYear + 1
-                            )
-                          }
-                        >
-                          <ChevronUp size={16} color="#6B7280" />
-                        </TouchableOpacity>
-                        <TouchableOpacity
-                          style={styles.yearButton}
-                          onPress={() =>
-                            updateGoal(
-                              goal.id,
-                              "targetYear",
-                              goal.targetYear - 1
-                            )
-                          }
-                        >
-                          <ChevronDown size={16} color="#6B7280" />
-                        </TouchableOpacity>
-                      </View>
-                    </View>
-                  </View>
-                </View>
-
-                {/* Future Cost Display */}
-                <Animated.View
-                  style={[
-                    styles.futureCostContainer,
-                    {
-                      transform: [
-                        {
-                          scale: pulseAnim,
-                        },
-                      ],
-                    },
-                  ]}
-                >
-                  <View style={styles.futureCostHeader}>
-                    <ThemedText style={styles.futureCostLabel}>
-                      Expected Future Cost
-                    </ThemedText>
-                    <TouchableOpacity style={styles.editButton}>
-                      <Edit3 size={16} color="#6B7280" />
-                    </TouchableOpacity>
-                  </View>
-                  <View style={styles.futureCostInputContainer}>
-                    <ThemedText style={styles.currencySymbol}>₹</ThemedText>
-                    <TextInput
-                      style={styles.futureCostInput}
-                      value={goal.futureCost.toLocaleString("en-IN")}
-                      onChangeText={(text) => {
-                        const value = parseInt(text.replace(/,/g, "")) || 0;
-                        updateGoal(goal.id, "futureCost", value);
-                      }}
-                      keyboardType="numeric"
-                    />
-                  </View>
-                  <ThemedText style={styles.futureCostDescription}>
-                    {goal.education
-                      ? `Calculated based on expected fee increases`
-                      : "Select a course or college to see future cost"}
-                  </ThemedText>
-                </Animated.View>
-              </Animated.View>
+                goal={goal}
+                courses={courses}
+                institutions={institutions}
+                isLoadingEducation={isLoadingEducation}
+                expandedDropdowns={expandedDropdowns}
+                editingTitle={editingTitle}
+                inputSectionAnimations={inputSectionAnimations}
+                pulseAnim={pulseAnim}
+                onToggleDropdown={toggleDropdown}
+                onUpdateGoal={updateGoal}
+                onUpdateSelectionMode={updateSelectionMode}
+                onToggleTitleEdit={toggleTitleEdit}
+                onRemoveGoal={removeGoal}
+              />
             ))}
 
-          {/* Add Goal Button */}
-          <TouchableOpacity style={styles.addGoalButton} onPress={addGoal}>
-            <Plus size={24} color="#2563EB" />
-            <ThemedText style={styles.addGoalText}>Add another goal</ThemedText>
-          </TouchableOpacity>
+          <AddGoalButton onPress={addGoal} />
 
-          {/* Save Button */}
-          <TouchableOpacity
-            style={[
-              styles.saveButton,
-              createGoalMutation.isPending && styles.saveButtonDisabled,
-            ]}
+          <SaveGoalButton
             onPress={handleSave}
-            disabled={createGoalMutation.isPending}
-          >
-            {createGoalMutation.isPending ? (
-              <View style={styles.saveButtonLoading}>
-                <ActivityIndicator size="small" color="#FFFFFF" />
-                <ThemedText style={[styles.saveButtonText, { marginLeft: 8 }]}>
-                  Saving...
-                </ThemedText>
-              </View>
-            ) : (
-              <ThemedText style={styles.saveButtonText}>Next</ThemedText>
-            )}
-          </TouchableOpacity>
+            isLoading={createGoalMutation.isPending}
+          />
         </ScrollView>
       </Animated.View>
     </SafeAreaView>
@@ -849,365 +333,11 @@ const styles = StyleSheet.create({
   animatedContainer: {
     flex: 1,
   },
-  headerSection: {
-    paddingTop: 20,
-    paddingBottom: 20,
-    paddingHorizontal: 20,
-  },
-  childSelectorHeader: {
-    paddingHorizontal: 16,
-    paddingTop: 8,
-  },
-  childGreeting: {
-    fontSize: 16,
-    fontWeight: "500",
-    color: "#374151",
-    lineHeight: 22,
-    letterSpacing: 0.2,
-    marginBottom: 8,
-  },
-  childPillsHeaderWrapper: {
-    paddingVertical: 8,
-  },
-  headerContent: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-  },
-  backButton: {
-    padding: 8,
-  },
-  headerTitle: {
-    fontSize: 24,
-    fontWeight: "bold",
-    color: "#1F2937",
-  },
-  placeholder: {
-    width: 40,
-  },
   scrollContainer: {
     flex: 1,
   },
   scrollContent: {
     padding: 20,
     paddingBottom: 40,
-  },
-  emptyChildrenContainer: {
-    paddingHorizontal: 20,
-    paddingTop: 16,
-  },
-  emptyChildrenText: {
-    fontSize: 16,
-    color: "#6B7280",
-  },
-  goalCard: {
-    backgroundColor: "#FFFFFF",
-    borderRadius: 16,
-    padding: 20,
-    marginBottom: 20,
-    shadowColor: "#000",
-    shadowOffset: {
-      width: 0,
-      height: 4,
-    },
-    shadowOpacity: 0.1,
-    shadowRadius: 12,
-    elevation: 8,
-  },
-  goalHeader: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    marginBottom: 20,
-  },
-  goalTitleContainer: {
-    flexDirection: "row",
-    alignItems: "center",
-    flex: 1,
-    marginRight: 8,
-  },
-  goalTitle: {
-    fontSize: 18,
-    fontWeight: "bold",
-    color: "#1F2937",
-    marginRight: 8,
-    flex: 1,
-  },
-  goalTitleInput: {
-    fontSize: 18,
-    fontWeight: "bold",
-    color: "#1F2937",
-    marginRight: 8,
-    flex: 1,
-    backgroundColor: "#F3F4F6",
-    borderRadius: 8,
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    borderWidth: 1,
-    borderColor: "#2563EB",
-  },
-  editButton: {
-    padding: 4,
-  },
-  deleteButton: {
-    padding: 8,
-  },
-  childSelectorContainer: {
-    marginBottom: 20,
-  },
-  childPillsWrapper: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    marginTop: 12,
-  },
-  addChildPill: {
-    backgroundColor: "#FFFFFF",
-    borderColor: "#BFDBFE",
-  },
-  childPill: {
-    paddingVertical: 10,
-    paddingHorizontal: 18,
-    borderRadius: 9999,
-    backgroundColor: "#EFF6FF",
-    borderWidth: 1,
-    borderColor: "transparent",
-    marginRight: 12,
-    marginBottom: 12,
-  },
-  childPillSelected: {
-    backgroundColor: "#DBEAFE",
-    borderColor: "#2563EB",
-    shadowColor: "#60A5FA",
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.35,
-    shadowRadius: 6,
-    elevation: 3,
-  },
-  childPillText: {
-    fontSize: 14,
-    fontWeight: "600",
-    color: "#1D4ED8",
-  },
-  childPillTextSelected: {
-    color: "#1E3A8A",
-  },
-  selectionModeContainer: {
-    flexDirection: "row",
-    backgroundColor: "#F3F4F6",
-    borderRadius: 12,
-    padding: 4,
-    marginBottom: 20,
-  },
-  selectionModeButton: {
-    flex: 1,
-    paddingVertical: 12,
-    paddingHorizontal: 16,
-    borderRadius: 8,
-    alignItems: "center",
-  },
-  selectionModeButtonActive: {
-    backgroundColor: "#FFFFFF",
-    shadowColor: "#000",
-    shadowOffset: {
-      width: 0,
-      height: 1,
-    },
-    shadowOpacity: 0.1,
-    shadowRadius: 2,
-    elevation: 2,
-  },
-  selectionModeText: {
-    fontSize: 14,
-    fontWeight: "500",
-    color: "#6B7280",
-  },
-  selectionModeTextActive: {
-    color: "#1F2937",
-    fontWeight: "600",
-  },
-  inputSection: {
-    marginBottom: 16,
-  },
-  dropdown: {
-    backgroundColor: "#F3F4F6",
-    borderRadius: 12,
-    padding: 16,
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-  },
-  dropdownText: {
-    fontSize: 16,
-    color: "#1F2937",
-  },
-  dropdownOptions: {
-    backgroundColor: "#FFFFFF",
-    borderRadius: 12,
-    marginTop: 8,
-    shadowColor: "#000",
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.1,
-    shadowRadius: 8,
-    elevation: 4,
-  },
-  dropdownOption: {
-    padding: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: "#F3F4F6",
-  },
-  dropdownOptionText: {
-    fontSize: 16,
-    color: "#1F2937",
-  },
-  divider: {
-    flexDirection: "row",
-    alignItems: "center",
-    marginVertical: 16,
-  },
-  dividerLine: {
-    flex: 1,
-    height: 1,
-    backgroundColor: "#E5E7EB",
-  },
-  dividerText: {
-    marginHorizontal: 16,
-    fontSize: 14,
-    color: "#6B7280",
-  },
-  costTimelineContainer: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    marginBottom: 16,
-  },
-  inputGroup: {
-    flex: 1,
-    marginHorizontal: 8,
-  },
-  inputLabel: {
-    fontSize: 14,
-    fontWeight: "500",
-    color: "#374151",
-    marginBottom: 8,
-  },
-  costInputContainer: {
-    flexDirection: "row",
-    alignItems: "center",
-    backgroundColor: "#F3F4F6",
-    borderRadius: 12,
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-  },
-  currencySymbol: {
-    fontSize: 16,
-    fontWeight: "500",
-    color: "#1F2937",
-    marginRight: 8,
-  },
-  costInput: {
-    flex: 1,
-    fontSize: 16,
-    color: "#1F2937",
-  },
-  yearInputContainer: {
-    flexDirection: "row",
-    alignItems: "center",
-    backgroundColor: "#F3F4F6",
-    borderRadius: 12,
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-  },
-  yearInput: {
-    flex: 1,
-    fontSize: 16,
-    color: "#1F2937",
-  },
-  yearControls: {
-    flexDirection: "column",
-    marginLeft: 8,
-  },
-  yearButton: {
-    padding: 4,
-  },
-  futureCostContainer: {
-    backgroundColor: "#FEF3C7",
-    borderRadius: 12,
-    padding: 16,
-    marginTop: 16,
-  },
-  futureCostHeader: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    marginBottom: 12,
-  },
-  futureCostLabel: {
-    fontSize: 14,
-    fontWeight: "500",
-    color: "#374151",
-  },
-  futureCostInputContainer: {
-    flexDirection: "row",
-    alignItems: "center",
-    backgroundColor: "#FFFFFF",
-    borderRadius: 8,
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    marginBottom: 8,
-  },
-  futureCostInput: {
-    flex: 1,
-    fontSize: 16,
-    fontWeight: "600",
-    color: "#1F2937",
-  },
-  futureCostDescription: {
-    fontSize: 12,
-    color: "#6B7280",
-  },
-  addGoalButton: {
-    borderWidth: 2,
-    borderColor: "#2563EB",
-    borderStyle: "dashed",
-    borderRadius: 16,
-    padding: 24,
-    alignItems: "center",
-    marginBottom: 20,
-  },
-  addGoalText: {
-    fontSize: 16,
-    fontWeight: "600",
-    color: "#2563EB",
-    marginTop: 8,
-  },
-  saveButton: {
-    backgroundColor: "#2563EB",
-    borderRadius: 16,
-    paddingVertical: 20,
-    paddingHorizontal: 24,
-    alignItems: "center",
-    shadowColor: "#000",
-    shadowOffset: {
-      width: 0,
-      height: 4,
-    },
-    shadowOpacity: 0.1,
-    shadowRadius: 12,
-    elevation: 8,
-  },
-  saveButtonText: {
-    color: "#FFFFFF",
-    fontSize: 18,
-    fontWeight: "600",
-  },
-  saveButtonDisabled: {
-    backgroundColor: "#9CA3AF",
-    opacity: 0.7,
-  },
-  saveButtonLoading: {
-    flexDirection: "row",
-    alignItems: "center",
   },
 });
