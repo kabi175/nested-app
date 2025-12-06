@@ -119,19 +119,19 @@ public class GoalServiceImpl implements GoalService {
   }
 
   /**
-   * Creates multiple goals
+   * Creates multiple goalDtos
    *
-   * @param goals List of goal data to create
-   * @return List of created goals
+   * @param goalDtos List of goal data to create
+   * @return List of created goalDtos
    */
   @Override
-  public List<GoalDTO> createGoals(List<GoalDTO> goals) {
-    log.info("Creating {} goals", goals.size());
+  public List<GoalDTO> createGoals(List<GoalDTO> goalDtos) {
+    log.info("Creating {} goal", goalDtos.size());
 
     try {
 
       List<Goal> goalEntities =
-          goals.stream().map(this::convertToEntity).collect(Collectors.toList());
+          goalDtos.stream().map(this::convertToEntity).collect(Collectors.toList());
 
       goalEntities.forEach(
           goal -> {
@@ -142,10 +142,12 @@ public class GoalServiceImpl implements GoalService {
                     .orElseGet(basketRepository::findFirstByOrderByReturnsDesc);
             goal.setBasket(basket);
 
-            var education = educationRepository.findById(goal.getEducation().getId());
-            education.ifPresent(goal::setEducation);
+            if (goal.getTargetAmount() == null) {
+              var education = educationRepository.findById(goal.getEducation().getId());
+              education.ifPresent(goal::setEducation);
 
-            goal.setTargetAmount(goal.getEducation().getExpectedFee());
+              goal.setTargetAmount(goal.getEducation().getExpectedFee());
+            }
             goal.setCurrentAmount(0.0);
           });
 
@@ -153,12 +155,12 @@ public class GoalServiceImpl implements GoalService {
       List<GoalDTO> savedGoalDTOs =
           savedGoals.stream().map(this::convertToDTO).collect(Collectors.toList());
 
-      log.info("Successfully created {} goals", savedGoalDTOs.size());
+      log.info("Successfully created {} goalDtos", savedGoalDTOs.size());
       return savedGoalDTOs;
 
     } catch (Exception e) {
-      log.error("Error creating goals: {}", e.getMessage(), e);
-      throw new RuntimeException("Failed to create goals", e);
+      log.error("Error creating goalDtos: {}", e.getMessage(), e);
+      throw new RuntimeException("Failed to create goalDtos", e);
     }
   }
 
@@ -268,6 +270,7 @@ public class GoalServiceImpl implements GoalService {
     goal.setTargetDate(goalDTO.getTargetDate());
 
     goal.setEducation(goalDTO.getEducation().toEntity());
+    goal.setTargetAmount(goalDTO.getTargetAmount());
 
     if (goalDTO.getChild() != null) {
       goal.setChild(goalDTO.getChild().toEntity());
