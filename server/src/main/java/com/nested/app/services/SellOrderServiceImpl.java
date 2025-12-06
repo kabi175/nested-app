@@ -137,7 +137,7 @@ public class SellOrderServiceImpl implements SellOrderService {
       // Auto-select folio for this fund
       var folio =
           folioRepository
-              .findByFundId(fundId)
+              .findFirstByFundId(fundId)
               .orElseThrow(
                   () -> new IllegalArgumentException("No folio found for fund ID: " + fundId));
 

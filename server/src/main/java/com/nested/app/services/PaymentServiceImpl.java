@@ -363,7 +363,7 @@ public class PaymentServiceImpl implements PaymentService {
             item -> {
               // Fetch folio for the fund
               String folioNumber = null;
-              var folioOptional = folioRepository.findByFundId(item.getFund().getId());
+              var folioOptional = folioRepository.findFirstByFundId(item.getFund().getId());
               if (folioOptional.isPresent()) {
                 folioNumber = folioOptional.get().getRef();
               }
