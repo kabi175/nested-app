@@ -46,7 +46,7 @@ public class OrderItemRefUpdatedListener {
       // Extract unique order IDs from the batch
       List<String> orderIds =
           event.getOrderItems().stream()
-              .map(OrderItemsRefUpdatedEvent.OrderItemRefInfo::orderId)
+              .map(OrderItemsRefUpdatedEvent.OrderItemRefInfo::ref)
               .distinct()
               .map(String::valueOf)
               .collect(Collectors.toList());

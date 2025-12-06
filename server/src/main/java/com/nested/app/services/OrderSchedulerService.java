@@ -56,7 +56,41 @@ public class OrderSchedulerService {
               .startNow()
               .build();
 
-      jobsAndTriggers.put(jobDetail, java.util.Collections.singleton(trigger));
+      jobsAndTriggers.put(jobDetail, java.util.Set.of(trigger));
+    }
+
+    // Schedule all jobs in batch
+    scheduler.scheduleJobs(jobsAndTriggers, true);
+    log.info("Successfully scheduled {} Quartz jobs in batch", orderIds.size());
+  }
+
+  public void scheduleInstantOrderStatusJobs(List<String> orderIds) throws SchedulerException {
+    if (orderIds == null || orderIds.isEmpty()) {
+      log.warn("No order IDs provided for batch scheduling");
+      return;
+    }
+
+    log.info("Batch scheduling status check jobs for {} orders", orderIds.size());
+
+    Map<JobDetail, java.util.Set<? extends Trigger>> jobsAndTriggers = new HashMap<>();
+
+    for (String orderId : orderIds) {
+      JobDetail jobDetail =
+          JobBuilder.newJob(BuyOrderFulfillmentJob.class)
+              .withIdentity("order-check-instant-" + orderId)
+              .usingJobData("orderId", orderId)
+              .storeDurably()
+              .build();
+
+      // Add a second trigger that runs after 5 seconds delay
+      Trigger immediateCheckTrigger =
+          TriggerBuilder.newTrigger()
+              .withIdentity("order-immediate-check-trigger-" + orderId)
+              .forJob(jobDetail)
+              .startAt(new java.util.Date(System.currentTimeMillis() + 5000)) // 5 seconds delay
+              .build();
+
+      jobsAndTriggers.put(jobDetail, java.util.Set.of(immediateCheckTrigger));
     }
 
     // Schedule all jobs in batch

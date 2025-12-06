@@ -5,11 +5,13 @@ import com.nested.app.client.mf.dto.PaymentsResponse;
 import com.nested.app.entity.BuyOrder;
 import com.nested.app.entity.Goal;
 import com.nested.app.entity.Order;
+import com.nested.app.entity.OrderItems;
 import com.nested.app.entity.Payment;
 import com.nested.app.events.BuyOrderProcessEvent;
 import com.nested.app.repository.GoalRepository;
 import com.nested.app.repository.OrderRepository;
 import com.nested.app.repository.PaymentRepository;
+import com.nested.app.services.OrderSchedulerService;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -36,6 +38,8 @@ public class BuyOrderProcessEventListener {
   private final OrderRepository orderRepository;
   private final GoalRepository goalRepository;
   private final PaymentsAPIClient paymentsAPIClient;
+
+  private final OrderSchedulerService orderSchedulerService;
 
   /**
    * Handles BuyOrderProcessEvent by verifying payment status with PaymentsAPIClient and updating
@@ -110,29 +114,36 @@ public class BuyOrderProcessEventListener {
         paymentRepository.save(payment);
 
         // Update all orders to COMPLETED status
-        List<Order> orders = payment.getOrders();
-        if (orders != null) {
-          for (Order order : orders) {
-            order.setStatus(Order.OrderStatus.COMPLETED);
-            orderRepository.save(order);
-          }
-          orders.forEach(
-              order -> {
-                var goal = goalRepository.findById(order.getGoal().getId()).orElseThrow();
-                if (goal.getStatus() == Goal.Status.PAYMENT_PENDING) {
-                  goal.setStatus(Goal.Status.ACTIVE);
-                }
-                if (order instanceof BuyOrder) {
-                  goal.setCurrentAmount(goal.getCurrentAmount() + order.getAmount());
-                }
-                goalRepository.save(goal);
-              });
+        List<Order> orders =
+            payment.getOrders().stream().filter(BuyOrder.class::isInstance).toList();
+
+        for (Order order : orders) {
+          order.setStatus(Order.OrderStatus.COMPLETED);
+          orderRepository.save(order);
         }
+        orders.forEach(
+            order -> {
+              var goal = goalRepository.findById(order.getGoal().getId()).orElseThrow();
+              if (goal.getStatus() == Goal.Status.PAYMENT_PENDING) {
+                goal.setStatus(Goal.Status.ACTIVE);
+              }
+              if (order instanceof BuyOrder) {
+                goal.setCurrentAmount(goal.getCurrentAmount() + order.getAmount());
+              }
+              goalRepository.save(goal);
+            });
+
+        orderSchedulerService.scheduleInstantOrderStatusJobs(
+            orders.stream()
+                .map(Order::getItems)
+                .flatMap(List::stream)
+                .map(OrderItems::getRef)
+                .toList());
 
         log.info(
             "Updated payment ID: {} buyStatus to COMPLETED and {} orders to COMPLETED status",
             payment.getId(),
-            orders != null ? orders.size() : 0);
+            orders.size());
       } else {
         log.warn(
             "Payment status not successful: {} for payment ref: {}, payment ID: {}",
