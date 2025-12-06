@@ -8,6 +8,7 @@ import com.nested.app.dto.OrderRequestDTO;
 import com.nested.app.entity.BuyOrder;
 import com.nested.app.entity.Goal;
 import com.nested.app.entity.Order;
+import com.nested.app.entity.OrderItems;
 import com.nested.app.entity.SIPOrder;
 import com.nested.app.repository.GoalRepository;
 import com.nested.app.repository.OrderRepository;
@@ -137,7 +138,11 @@ public class OrderServiceImpl implements OrderService {
                   return order;
                 });
 
-    var orders = orderRepository.saveAll(Streams.concat(buyOrders, sipOrders).toList());
+    var orderForCreate = Streams.concat(buyOrders, sipOrders).toList();
+
+    orderForCreate.stream().filter(Objects::nonNull).forEach(this::populateOrderItems);
+
+    var orders = orderRepository.saveAll(orderForCreate);
 
     goalRepository.saveAll(goals);
 
@@ -146,6 +151,35 @@ public class OrderServiceImpl implements OrderService {
         .filter(Objects::nonNull)
         .map(this::convertToDTO)
         .collect(Collectors.toList());
+  }
+
+  private void populateOrderItems(Order order) {
+    var basketFunds = order.getGoal().getBasket().getBasketFunds();
+    var totalAmount = order.getAmount();
+
+    var amountAllocation =
+        new java.util.ArrayList<>(
+            basketFunds.stream()
+                .map(f -> f.getAllocationPercentage() / 100.0 * totalAmount)
+                .map(amount -> amount / 100 * 100)
+                .toList());
+
+    var totalAllocation = amountAllocation.stream().reduce(Double::sum).orElse(0.0);
+    var correction = totalAmount - (totalAllocation - amountAllocation.getLast());
+    amountAllocation.set(amountAllocation.size() - 1, correction);
+
+    var orderItemsList = new java.util.ArrayList<OrderItems>();
+    for (int i = 0; i < basketFunds.size(); i++) {
+      var basketFund = basketFunds.get(i);
+      var orderItem = new OrderItems();
+      orderItem.setOrder(order);
+      orderItem.setFund(basketFund.getFund());
+      orderItem.setAmount(amountAllocation.get(i));
+      orderItem.setUser(order.getUser());
+      orderItemsList.add(orderItem);
+    }
+
+    order.setItems(orderItemsList);
   }
 
   /**

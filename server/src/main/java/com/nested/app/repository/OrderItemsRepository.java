@@ -27,7 +27,7 @@ public interface OrderItemsRepository extends JpaRepository<OrderItems, Long> {
   @Query(
       value =
           "SELECT f.name AS fundName, "
-              + "ROUND(SUM(oi.amount) * 100.0 / total.sum, 1) AS allocationPercent "
+              + "ROUND(CAST(SUM(oi.amount) * 100.0 / total.sum AS NUMERIC), 1) AS allocationPercent "
               + "FROM order_items oi "
               + "JOIN funds f ON f.id = oi.fund_id "
               + "CROSS JOIN (SELECT SUM(oi2.amount) AS sum FROM order_items oi2 "

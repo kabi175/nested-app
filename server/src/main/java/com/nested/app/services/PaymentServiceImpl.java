@@ -23,7 +23,6 @@ import com.nested.app.entity.Fund;
 import com.nested.app.entity.Goal;
 import com.nested.app.entity.Investor;
 import com.nested.app.entity.Order;
-import com.nested.app.entity.OrderItems;
 import com.nested.app.entity.Payment;
 import com.nested.app.entity.SIPOrder;
 import com.nested.app.entity.User;
@@ -164,9 +163,6 @@ public class PaymentServiceImpl implements PaymentService {
       }
 
       orders.forEach(order -> order.setPayment(payment));
-
-      // Populate order items for each order
-      orders.forEach(this::populateOrderItems);
 
       if (payment.getSipStatus() == Payment.PaymentStatus.PENDING) {
         // create mandate for SIP orders
@@ -318,34 +314,6 @@ public class PaymentServiceImpl implements PaymentService {
    *
    * @param order Order to populate items for
    */
-  private void populateOrderItems(Order order) {
-    var basketFunds = order.getGoal().getBasket().getBasketFunds();
-    var totalAmount = order.getAmount();
-
-    var amountAllocation =
-        new java.util.ArrayList<>(
-            basketFunds.stream()
-                .map(f -> f.getAllocationPercentage() / 100.0 * totalAmount)
-                .map(amount -> amount / 100 * 100)
-                .toList());
-
-    var totalAllocation = amountAllocation.stream().reduce(Double::sum).orElse(0.0);
-    var correction = totalAmount - (totalAllocation - amountAllocation.getLast());
-    amountAllocation.set(amountAllocation.size() - 1, correction);
-
-    var orderItemsList = new java.util.ArrayList<OrderItems>();
-    for (int i = 0; i < basketFunds.size(); i++) {
-      var basketFund = basketFunds.get(i);
-      var orderItem = new OrderItems();
-      orderItem.setOrder(order);
-      orderItem.setFund(basketFund.getFund());
-      orderItem.setAmount(amountAllocation.get(i));
-      orderItem.setUser(order.getUser());
-      orderItemsList.add(orderItem);
-    }
-
-    order.setItems(orderItemsList);
-  }
 
   Stream<OrderDetail> convertOrderToOrderDetail(Order order) {
     ServletRequestAttributes attributes =
