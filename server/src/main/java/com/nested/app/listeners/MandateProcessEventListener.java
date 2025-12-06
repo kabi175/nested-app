@@ -111,13 +111,15 @@ public class MandateProcessEventListener {
         payment.setSipStatus(Payment.PaymentStatus.ACTIVE);
 
         log.info("sip orders placed for payment ID: {} sipStatus to SUBMITTED", payment.getId());
-      } else {
+      } else if (mandate.getStatus() == MandateDto.State.CANCELLED) {
+        payment.setSipStatus(Payment.PaymentStatus.CANCELLED);
         log.warn(
-            "Mandate status not approved: {} for mandate ID: {}, payment ID: {}",
-            mandate.getStatus(),
-            mandateId,
-            payment.getId());
+            "Mandate cancelled for mandate ID: {}, payment ID: {}", mandateId, payment.getId());
+      } else if (mandate.getStatus() == MandateDto.State.REJECTED) {
+        payment.setSipStatus(Payment.PaymentStatus.FAILED);
+        log.warn("Mandate Rejected for mandate ID: {}, payment ID: {}", mandateId, payment.getId());
       }
+      paymentRepository.save(payment);
     } catch (Exception e) {
       log.error(
           "Error verifying mandate status for mandate ID: {}, payment ID: {}",

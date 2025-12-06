@@ -8,7 +8,6 @@ import java.time.LocalDateTime;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.ApplicationEventPublisher;
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
 /**
@@ -28,30 +27,35 @@ public class PaymentRedirectService {
    *
    * @param mandateId The mandate ID returned from the provider
    */
-  public ResponseEntity<?> handleMandateRedirect(Long mandateId) {
+  public String handleMandateRedirect(Long mandateId) {
     log.info("Received mandate redirect for mandate ID: {}", mandateId);
 
     try {
       // Find payment with this mandate ID
+
+      // Publish mandate process event for async processing and verification
+      publisher.publishEvent(new MandateProcessEvent(mandateId, LocalDateTime.now()));
       Payment payment = paymentRepository.findByMandateID(mandateId).orElse(null);
 
       if (payment == null) {
         log.warn("No payment found for mandate ID: {}", mandateId);
-        return ResponseEntity.ok().build();
+        throw new RuntimeException();
       }
-
-      // Publish mandate process event for async processing and verification
-      publisher.publishEvent(new MandateProcessEvent(mandateId, LocalDateTime.now()));
 
       log.info(
           "Published mandate process event for Payment ID: {}, Mandate ID: {}",
           payment.getId(),
           mandateId);
+
+      if (payment.getSipStatus().equals(Payment.PaymentStatus.ACTIVE)) {
+        return "redirect:exp+nested://payment/" + payment.getId() + "/success?type=sip";
+      }
+
+      return "redirect:exp+nested://payment/" + payment.getId() + "/failure?type=sip";
     } catch (Exception e) {
       log.error("Error processing mandate redirect for mandate ID: {}", mandateId, e);
-      return ResponseEntity.internalServerError().build();
+      throw new RuntimeException();
     }
-    return ResponseEntity.ok().build();
   }
 
   /**
@@ -60,7 +64,7 @@ public class PaymentRedirectService {
    *
    * @param paymentID The internal payment id
    */
-  public ResponseEntity<?> handlePaymentRedirect(Long paymentID) {
+  public void handlePaymentRedirect(Long paymentID) {
     log.info("Received payment redirect for payment id: {}", paymentID);
 
     try {
@@ -76,8 +80,7 @@ public class PaymentRedirectService {
           paymentRef);
     } catch (Exception e) {
       log.error("Error processing payment redirect for payment id: {}", paymentID, e);
-      return ResponseEntity.internalServerError().build();
+      throw new RuntimeException();
     }
-    return ResponseEntity.ok().build();
   }
 }

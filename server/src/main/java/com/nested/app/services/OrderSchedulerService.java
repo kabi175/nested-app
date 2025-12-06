@@ -10,6 +10,7 @@ import org.quartz.JobBuilder;
 import org.quartz.JobDetail;
 import org.quartz.Scheduler;
 import org.quartz.SchedulerException;
+import org.quartz.SimpleScheduleBuilder;
 import org.quartz.Trigger;
 import org.quartz.TriggerBuilder;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -88,6 +89,9 @@ public class OrderSchedulerService {
               .withIdentity("order-immediate-check-trigger-" + orderId)
               .forJob(jobDetail)
               .startAt(new java.util.Date(System.currentTimeMillis() + 5000)) // 5 seconds delay
+              .withSchedule(
+                  SimpleScheduleBuilder.simpleSchedule()
+                      .withRepeatCount(0)) // ensures it's persisted
               .build();
 
       jobsAndTriggers.put(jobDetail, java.util.Set.of(immediateCheckTrigger));
