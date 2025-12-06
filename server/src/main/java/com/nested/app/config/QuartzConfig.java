@@ -5,8 +5,6 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.autoconfigure.quartz.QuartzProperties;
 import org.springframework.context.ApplicationContext;
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
 import org.springframework.scheduling.quartz.SchedulerFactoryBean;
 
 /**
@@ -14,7 +12,6 @@ import org.springframework.scheduling.quartz.SchedulerFactoryBean;
  * and monitoring.
  */
 @Slf4j
-@Configuration
 @RequiredArgsConstructor
 public class QuartzConfig {
 
@@ -28,7 +25,6 @@ public class QuartzConfig {
    * @param quartzProperties the Quartz properties from application.properties
    * @return configured SchedulerFactoryBean
    */
-  @Bean
   public SchedulerFactoryBean schedulerFactoryBean(
       ApplicationContext applicationContext, QuartzProperties quartzProperties) {
     SchedulerFactoryBean schedulerFactoryBean = new SchedulerFactoryBean();
