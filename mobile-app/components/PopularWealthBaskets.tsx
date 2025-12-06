@@ -2,7 +2,6 @@ import { Ionicons } from "@expo/vector-icons";
 import React from "react";
 import { Pressable, StyleSheet, TouchableOpacity, View } from "react-native";
 import { ThemedText } from "./ThemedText";
-import { ThemedView } from "./ThemedView";
 
 interface WealthBasket {
   id: string;
@@ -12,6 +11,8 @@ interface WealthBasket {
   iconBgColor: string;
   iconColor: string;
   exploreColor: string;
+  cardBgColor: string;
+  borderColor: string;
 }
 
 interface PopularWealthBasketsProps {
@@ -28,6 +29,8 @@ const wealthBaskets: WealthBasket[] = [
     iconBgColor: "#FCE7F3",
     iconColor: "#DC2626",
     exploreColor: "#DC2626",
+    cardBgColor: "#FCE7F3",
+    borderColor: "#DC2626",
   },
   {
     id: "all-weather",
@@ -37,15 +40,19 @@ const wealthBaskets: WealthBasket[] = [
     iconBgColor: "#FEF3C7",
     iconColor: "#D97706",
     exploreColor: "#D97706",
+    cardBgColor: "#FEF3C7",
+    borderColor: "#D97706",
   },
   {
     id: "choti-sip",
     title: "Choti SIP",
     description: "Upto 8% historical return with low risk, no lock-in",
-    icon: "wallet-outline",
+    icon: "cash-outline",
     iconBgColor: "#D1FAE5",
     iconColor: "#059669",
     exploreColor: "#059669",
+    cardBgColor: "#D1FAE5",
+    borderColor: "#059669",
   },
 ];
 
@@ -78,7 +85,15 @@ export default function PopularWealthBaskets({
             onPress={() => handleExplore(basket.id)}
             activeOpacity={0.7}
           >
-            <ThemedView style={styles.card}>
+            <View
+              style={[
+                styles.card,
+                {
+                  backgroundColor: basket.cardBgColor,
+                  borderColor: basket.borderColor,
+                },
+              ]}
+            >
               <View style={styles.cardContent}>
                 {/* Icon */}
                 <View
@@ -116,7 +131,7 @@ export default function PopularWealthBaskets({
                   </ThemedText>
                 </Pressable>
               </View>
-            </ThemedView>
+            </View>
           </TouchableOpacity>
         ))}
       </View>
@@ -160,7 +175,7 @@ const styles = StyleSheet.create({
   },
   card: {
     borderRadius: 16,
-    backgroundColor: "#FFFFFF",
+    borderWidth: 1,
     shadowColor: "#000",
     shadowOffset: {
       width: 0,
