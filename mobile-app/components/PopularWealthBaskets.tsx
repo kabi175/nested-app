@@ -140,7 +140,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   headerTitle: {
-    fontSize: 28,
+    fontSize: 26,
     fontWeight: "bold",
     textAlign: "center",
     marginBottom: 12,
