@@ -1,3 +1,4 @@
+import HaveQuestions from "@/components/HaveQuestions";
 import HowNestedHelps from "@/components/HowNestedHelps";
 import KnowMore from "@/components/KnowMore";
 import NestedFooter from "@/components/NestedFooter";
@@ -41,6 +42,9 @@ export default function NestedIntro() {
             <Divider />
 
             <ShareApp />
+            <Divider />
+
+            <HaveQuestions />
             <Divider />
 
             <NestedFooter />
