@@ -2,6 +2,7 @@ package com.nested.app.listeners;
 
 import com.nested.app.events.OrderItemsRefUpdatedEvent;
 import com.nested.app.services.OrderSchedulerService;
+import com.nested.app.services.SchemeWiseReportService;
 import java.util.List;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
@@ -23,6 +24,8 @@ import org.springframework.stereotype.Component;
 public class OrderItemRefUpdatedListener {
 
   private final OrderSchedulerService orderSchedulerService;
+
+  private final SchemeWiseReportService schemeWiseReportService;
 
   /**
    * Handles the batched OrderItemsRefUpdatedEvent by scheduling multiple order status check jobs.
@@ -62,5 +65,7 @@ public class OrderItemRefUpdatedListener {
           event.getPaymentId(),
           e);
     }
+
+    schemeWiseReportService.fetchReportsForAllInvestors();
   }
 }

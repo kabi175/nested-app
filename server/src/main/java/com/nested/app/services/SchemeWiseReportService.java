@@ -146,7 +146,6 @@ public class SchemeWiseReportService {
         .doOnSuccess(
             resp -> {
               resp.data
-                  .getFirst()
                   .getRows()
                   .forEach(
                       report -> {

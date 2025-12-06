@@ -17,14 +17,12 @@ public class ReportApiClientImpl implements ReportApiClient {
   private final FinPrimitivesAPI api;
 
   @Override
-  public Mono<EntityListResponse<SchemeWiseReportResponse>> fetchSchemeWiseReport(
-      String accountRef) {
+  public Mono<EntityResponse<SchemeWiseReportResponse>> fetchSchemeWiseReport(String accountRef) {
     return api.withAuth()
         .post()
         .uri(REPORT_API_URL)
         .bodyValue(Map.of("mf_investment_account", accountRef))
         .retrieve()
-        .bodyToMono(
-            new ParameterizedTypeReference<EntityListResponse<SchemeWiseReportResponse>>() {});
+        .bodyToMono(new ParameterizedTypeReference<EntityResponse<SchemeWiseReportResponse>>() {});
   }
 }
