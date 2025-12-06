@@ -1,6 +1,6 @@
 module.exports = () => ({
   expo: {
-    name: "NextEd",
+    name: "NestEd",
     slug: "nested",
     owner: "kabi175",
     icon: "./assets/images/icon.png",
