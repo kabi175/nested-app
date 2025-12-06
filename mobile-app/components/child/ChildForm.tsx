@@ -58,7 +58,7 @@ export const ChildForm: React.FC<ChildFormProps> = ({
             label="Date of Birth"
             placeholder="Pick Date"
             date={values.dateOfBirth}
-            min={new Date("2011-01-01")}
+            min={new Date("2000-01-01")}
             max={new Date()}
             onSelect={(nextDate) => onFieldChange("dateOfBirth", nextDate)}
             accessoryRight={() => <CalendarDays size={20} />}
