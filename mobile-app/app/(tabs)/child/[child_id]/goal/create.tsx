@@ -47,7 +47,6 @@ export default function CreateGoalScreen() {
       selectedChild &&
       !goals.find((goal) => goal.childId === selectedChildId)
     ) {
-      console.log("goal added for child", selectedChild.firstName);
       setGoals((prev) => [
         ...prev,
         {
