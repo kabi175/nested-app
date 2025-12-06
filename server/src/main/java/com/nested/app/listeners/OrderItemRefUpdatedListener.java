@@ -6,10 +6,9 @@ import java.util.List;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.event.EventListener;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
-import org.springframework.transaction.event.TransactionPhase;
-import org.springframework.transaction.event.TransactionalEventListener;
 
 /**
  * Listener that handles OrderItemsRefUpdatedEvent events. When an order item's ref is updated, this
@@ -32,8 +31,8 @@ public class OrderItemRefUpdatedListener {
    *
    * @param event The batched event containing multiple order item details
    */
-  @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
   @Async
+  @EventListener
   public void handleOrderItemsRefUpdated(OrderItemsRefUpdatedEvent event) {
     log.info(
         "Received OrderItemsRefUpdatedEvent for Payment ID: {} with {} order items",
