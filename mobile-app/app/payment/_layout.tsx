@@ -57,6 +57,18 @@ export default function Layout() {
           headerShown: false,
         }}
       />
+      <Stack.Screen
+        name="[payment_id]/success"
+        options={{
+          headerShown: false,
+        }}
+      />
+      <Stack.Screen
+        name="[payment_id]/failure"
+        options={{
+          headerShown: false,
+        }}
+      />
     </Stack>
   );
 }

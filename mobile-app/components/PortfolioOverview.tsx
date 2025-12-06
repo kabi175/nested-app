@@ -15,8 +15,8 @@ interface PortfolioOverviewProps {
 export function PortfolioOverview({
   currentValue,
   invested,
-  returns,
-  returnsPercentage,
+  returns = 0,
+  returnsPercentage = 0,
 }: PortfolioOverviewProps) {
   // Calculate returns percentage if not provided
   const calculatedReturnsPercentage =

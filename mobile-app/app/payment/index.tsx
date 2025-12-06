@@ -153,7 +153,7 @@ export default function PaymentMethodScreen() {
       });
 
       // Redirect to verification screen
-      router.push({
+      router.replace({
         pathname: "/payment/verify",
         params: {
           paymentId: payment.id,

@@ -7,8 +7,9 @@ import { OneTimePurchaseCard } from "@/components/payment/OneTimePurchaseCard";
 import { SIPAutoDebitCard } from "@/components/payment/SIPAutoDebitCard";
 import { usePayment } from "@/hooks/usePayment";
 import { Ionicons } from "@expo/vector-icons";
+import * as Linking from "expo-linking";
 import { router, useLocalSearchParams } from "expo-router";
-import { openBrowserAsync } from "expo-web-browser";
+import { openAuthSessionAsync } from "expo-web-browser";
 import {
   Alert,
   ScrollView,
@@ -27,7 +28,10 @@ export default function PaymentProcessingScreen() {
   const handleLumpsumPayment = async () => {
     const redirectUrl = await fetchLumpsumPaymentUrl(paymentId as string);
     if (redirectUrl) {
-      await openBrowserAsync(redirectUrl);
+      const returnUrl = Linking.createURL(
+        `/payment/${paymentId}/success?type=buy`
+      );
+      await openAuthSessionAsync(redirectUrl, returnUrl);
     } else {
       Alert.alert("Error", "Failed to get payment redirect URL.");
     }
@@ -36,7 +40,10 @@ export default function PaymentProcessingScreen() {
   const handleMandatePayment = async () => {
     const redirectUrl = await fetchMandatePaymentUrl(paymentId as string);
     if (redirectUrl) {
-      await openBrowserAsync(redirectUrl);
+      const returnUrl = Linking.createURL(
+        `/payment/${paymentId}/success?type=sip`
+      );
+      await openAuthSessionAsync(redirectUrl, returnUrl);
     } else {
       Alert.alert("Error", "Failed to get payment redirect URL.");
     }

@@ -124,7 +124,7 @@ export default function PaymentVerificationScreen() {
       setIsProcessingPayment(true);
       await verifyPayment(paymentId);
 
-      router.push({
+      router.replace({
         pathname: "/payment/processing",
         params: {
           paymentId,
