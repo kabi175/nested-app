@@ -16,6 +16,7 @@ public class OrderItemsRefUpdatedEvent extends ApplicationEvent {
 
   private final List<OrderItemRefInfo> orderItems;
   private final Long paymentId;
+
   public OrderItemsRefUpdatedEvent(
       Object source, List<OrderItemRefInfo> orderItems, Long paymentId) {
     super(source);
@@ -24,16 +25,5 @@ public class OrderItemsRefUpdatedEvent extends ApplicationEvent {
   }
 
   /** Information about a single order item ref update */
-  @Getter
-  public static class OrderItemRefInfo {
-    private final Long orderId;
-    private final String ref;
-    private final Long orderItemId;
-
-    public OrderItemRefInfo(Long orderId, String ref, Long orderItemId) {
-      this.orderId = orderId;
-      this.ref = ref;
-      this.orderItemId = orderItemId;
-    }
-  }
+  public record OrderItemRefInfo(Long orderId, String ref, Long orderItemId) {}
 }
