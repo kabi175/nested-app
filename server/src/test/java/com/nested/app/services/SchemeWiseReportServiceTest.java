@@ -9,7 +9,7 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import com.nested.app.client.finprimitives.EntityListResponse;
+import com.nested.app.client.finprimitives.EntityResponse;
 import com.nested.app.client.mf.ReportApiClient;
 import com.nested.app.client.mf.dto.SchemeWiseReportResponse;
 import com.nested.app.entity.Investor;
@@ -55,8 +55,7 @@ class SchemeWiseReportServiceTest {
 
     Page<Investor> page = new PageImpl<>(investors);
 
-    EntityListResponse<SchemeWiseReportResponse> mockResponse =
-        new EntityListResponse<>(Collections.emptyList());
+    EntityResponse<SchemeWiseReportResponse> mockResponse = new EntityResponse<>();
 
     when(investorRepository.findAll(any(Pageable.class))).thenReturn(page);
     when(reportApiClient.fetchSchemeWiseReport(anyString())).thenReturn(Mono.just(mockResponse));
@@ -116,8 +115,7 @@ class SchemeWiseReportServiceTest {
         List.of(
             investorWithAccountRef, createInvestor(3L, "ACC-003"), createInvestor(4L, "ACC-004"));
 
-    EntityListResponse<SchemeWiseReportResponse> mockResponse =
-        new EntityListResponse<>(Collections.emptyList());
+    EntityResponse<SchemeWiseReportResponse> mockResponse = new EntityResponse<>();
 
     Page<Investor> page = new PageImpl<>(investors);
     when(investorRepository.findAll(any(Pageable.class))).thenReturn(page);
