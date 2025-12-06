@@ -21,28 +21,6 @@ public class OrderSchedulerService {
 
   @Autowired private Scheduler scheduler;
 
-  public void scheduleOrderStatusJob(String orderId) throws SchedulerException {
-    JobDetail jobDetail =
-        JobBuilder.newJob(BuyOrderFulfillmentJob.class)
-            .withIdentity("order-check-" + orderId)
-            .usingJobData("orderId", orderId)
-            .storeDurably()
-            .build();
-
-    Trigger trigger =
-        TriggerBuilder.newTrigger()
-            .withIdentity("order-check-trigger-" + orderId)
-            .forJob(jobDetail)
-            .withSchedule(
-                CronScheduleBuilder.cronSchedule("0 0 */6 * * ?") // every 6 hours
-                )
-            .startNow()
-            .build();
-
-    scheduler.scheduleJob(jobDetail, trigger);
-    log.info("Scheduled Quartz job for Order {}", orderId);
-  }
-
   /**
    * Schedules status check jobs for multiple orders in batch. This is more efficient than
    * scheduling jobs one by one.
