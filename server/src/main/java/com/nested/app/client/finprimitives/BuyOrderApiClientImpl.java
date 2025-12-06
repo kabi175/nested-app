@@ -40,19 +40,11 @@ public class BuyOrderApiClientImpl implements BuyOrderApiClient {
 
   @Override
   public Mono<OrderData> fetchOrderDetails(String orderRef) {
-    var resp =
-        api.withAuth()
-            .get()
-            .uri(uriBuilder -> uriBuilder.path(BUY_ORDER_API_URL + "/" + orderRef).build())
-            .retrieve()
-            .bodyToMono(new ParameterizedTypeReference<EntityListResponse<OrderData>>() {})
-            .block();
-
-    if (resp == null || resp.data == null || resp.data.isEmpty()) {
-      return Mono.empty();
-    }
-
-    return Mono.just(resp.data.getFirst());
+    return api.withAuth()
+        .get()
+        .uri(uriBuilder -> uriBuilder.path(BUY_ORDER_API_URL + "/" + orderRef).build())
+        .retrieve()
+        .bodyToMono(new ParameterizedTypeReference<OrderData>() {});
   }
 
   @Override
@@ -77,5 +69,4 @@ public class BuyOrderApiClientImpl implements BuyOrderApiClient {
         .retrieve()
         .bodyToMono(Void.class);
   }
-
 }
