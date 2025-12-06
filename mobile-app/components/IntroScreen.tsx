@@ -1,6 +1,5 @@
 import HowNestedHelps from "@/components/HowNestedHelps";
 import KnowMore from "@/components/KnowMore";
-import LaunchingSoon from "@/components/LaunchingSoon";
 import NestedFooter from "@/components/NestedFooter";
 import ShareApp from "@/components/ShareApp";
 import WhatParentsSay from "@/components/WhatParentsSay";
@@ -35,8 +34,8 @@ export default function NestedIntro() {
             <WhyParentTrustUs />
             <Divider />
 
-            <LaunchingSoon />
-            <Divider />
+            {/* <LaunchingSoon />
+            <Divider /> */}
 
             <WhatParentsSay />
             <Divider />

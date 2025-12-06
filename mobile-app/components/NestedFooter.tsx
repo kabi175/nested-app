@@ -4,7 +4,7 @@ import { Linking, Pressable, StyleSheet, View } from "react-native";
 
 export default function NestedFooter() {
   const handleEmailPress = () => {
-    Linking.openURL("mailto:support@nested.in");
+    Linking.openURL("mailto:support@nested.money");
   };
 
   const handlePhonePress = () => {
@@ -35,7 +35,7 @@ export default function NestedFooter() {
       <View style={styles.contactContainer}>
         <Text style={styles.contactLabel}>Email: </Text>
         <Pressable onPress={handleEmailPress}>
-          <Text style={styles.contactLink}>support@nested.in</Text>
+          <Text style={styles.contactLink}>support@nested.money</Text>
         </Pressable>
       </View>
 
@@ -52,7 +52,7 @@ export default function NestedFooter() {
       {/* Copyright and Legal Information */}
       <View style={styles.legalContainer}>
         <Text style={styles.copyrightText}>
-          © 2025 Nested. Alyssa Technologies Private Limited.
+          © 2025 Nested. GoPlug Enterprises P Ltd.
         </Text>
         <Text style={[styles.copyrightText, { width: "100%" }]}>
           All rights reserved.
@@ -60,11 +60,11 @@ export default function NestedFooter() {
         <View style={styles.legalLinksContainer}>
           <Text style={styles.copyrightText}>ARN - 212121. </Text>
           <Pressable onPress={handleTermsPress}>
-            <Text style={styles.legalLink}>Terms & Conditions</Text>
+            <Text style={styles.legalLink}> Terms & Conditions </Text>
           </Pressable>
           <Text style={styles.bullet}> • </Text>
           <Pressable onPress={handlePrivacyPress}>
-            <Text style={styles.legalLink}>Privacy Policy</Text>
+            <Text style={styles.legalLink}> Privacy Policy </Text>
           </Pressable>
         </View>
       </View>
