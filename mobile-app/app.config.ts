@@ -4,6 +4,7 @@ module.exports = () => ({
     slug: "nested",
     owner: "kabi175",
     icon: "./assets/images/icon.png",
+    scheme: "nested",
     android: {
       googleServicesFile:
         process.env.GOOGLE_SERVICES_JSON ?? "./google-services.json",
