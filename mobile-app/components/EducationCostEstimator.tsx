@@ -6,6 +6,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import React, { useRef, useState } from "react";
 import { PanResponder, ScrollView, StyleSheet, Text, View } from "react-native";
+import PopularWealthBaskets from "./PopularWealthBaskets";
 import { ThemedText } from "./ThemedText";
 import { ThemedView } from "./ThemedView";
 import { SearchableDropdown } from "./ui/SearchableDropdown";
@@ -96,103 +97,113 @@ export default function EducationCostEstimator({
       showsVerticalScrollIndicator={false}
       contentContainerStyle={styles.scrollContent}
     >
-      {/* Header Section */}
+      {/* Popular Wealth Baskets Section with Gradient */}
       <LinearGradient
-        colors={["#F8F7FF", "#E8E3FF"]}
-        style={[styles.headerSection, { paddingTop: 20 }]}
+        colors={["#FFE8D4", "#E8E3FF", "#FFFFFF"]}
+        style={styles.gradientWrapper}
       >
-        <View style={styles.headerContent}>
-          <ThemedText style={styles.headerTitle}>
-            Plan your child&apos;s future
-          </ThemedText>
-          <ThemedText style={styles.headerSubtitle}>
-            DIY investing is risky when your child&apos;s dreams are at stake.
-          </ThemedText>
-        </View>
-      </LinearGradient>
+        <PopularWealthBaskets />
 
-      {/* Main Content Card */}
-      <ThemedView style={styles.mainCard}>
-        <View style={styles.cardContent}>
-          {/* Title */}
-          <ThemedText style={styles.cardTitle}>Estimate Future Cost</ThemedText>
-          {/* Description */}
-          <ThemedText style={styles.cardDescription}>
-            With college fees on the rise, see how much you&apos;ll need to save
-            for your child&apos;s dream education.
-          </ThemedText>
-          {/* Input Fields */}
-          <View style={styles.inputContainer}>
-            <SearchableDropdown
-              data={courses}
-              labelKey="name"
-              valueKey="id"
-              placeholder="Select target course"
-              searchPlaceholder="Search courses..."
-              onSelect={handleCourseSelect}
-              selectedValue={selectedCourse}
-            />
-
-            <ThemedText style={styles.orText}>OR</ThemedText>
-
-            <SearchableDropdown
-              data={institutions}
-              labelKey="name"
-              valueKey="id"
-              placeholder="Select dream college"
-              searchPlaceholder="Search colleges..."
-              onSelect={handleCollegeSelect}
-              selectedValue={selectedCollege}
-            />
-          </View>
-          {/* Timeline Slider */}
-          <View style={styles.sliderContainer}>
-            <ThemedText style={styles.sliderLabel}>
-              Select timeline:{" "}
-              <Text style={styles.sliderValue}>{timeline} years</Text>
+        {/* Header Section */}
+        <View style={[styles.headerSection, { paddingTop: 20 }]}>
+          <View style={styles.headerContent}>
+            <ThemedText style={styles.headerTitle}>
+              Plan your child&apos;s future
             </ThemedText>
+            <ThemedText style={styles.headerSubtitle}>
+              DIY investing is risky when your child&apos;s dreams are at stake.
+            </ThemedText>
+          </View>
+        </View>
 
-            <View style={styles.sliderWrapper}>
-              <View
-                ref={sliderTrackRef}
-                style={styles.sliderTrack}
-                onLayout={(event) => {
-                  const { width } = event.nativeEvent.layout;
-                  sliderTrackRef.current?.measure(
-                    (x, y, w, h, pageX, pageY) => {
-                      sliderLayout.current = { width: width, pageX: pageX };
-                    }
-                  );
-                }}
-                {...panResponder.panHandlers}
-              >
-                <View
-                  style={[
-                    styles.sliderActiveTrack,
-                    { width: `${sliderPercentage}%` },
-                  ]}
-                />
-                <View
-                  style={[styles.sliderThumb, { left: `${sliderPercentage}%` }]}
-                  hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-                />
-              </View>
+        {/* Main Content Card */}
+        <ThemedView style={styles.mainCard}>
+          <View style={styles.cardContent}>
+            {/* Title */}
+            <ThemedText style={styles.cardTitle}>
+              Estimate Future Cost
+            </ThemedText>
+            {/* Description */}
+            <ThemedText style={styles.cardDescription}>
+              With college fees on the rise, see how much you&apos;ll need to
+              save for your child&apos;s dream education.
+            </ThemedText>
+            {/* Input Fields */}
+            <View style={styles.inputContainer}>
+              <SearchableDropdown
+                data={courses}
+                labelKey="name"
+                valueKey="id"
+                placeholder="Select target course"
+                searchPlaceholder="Search courses..."
+                onSelect={handleCourseSelect}
+                selectedValue={selectedCourse}
+              />
 
-              <View style={styles.sliderLabels}>
-                <Text style={styles.sliderLabelText}>+1 Yr</Text>
-                <Text style={styles.sliderLabelText}>+25 Yrs</Text>
+              <ThemedText style={styles.orText}>OR</ThemedText>
+
+              <SearchableDropdown
+                data={institutions}
+                labelKey="name"
+                valueKey="id"
+                placeholder="Select dream college"
+                searchPlaceholder="Search colleges..."
+                onSelect={handleCollegeSelect}
+                selectedValue={selectedCollege}
+              />
+            </View>
+            {/* Timeline Slider */}
+            <View style={styles.sliderContainer}>
+              <ThemedText style={styles.sliderLabel}>
+                Select timeline:{" "}
+                <Text style={styles.sliderValue}>{timeline} years</Text>
+              </ThemedText>
+
+              <View style={styles.sliderWrapper}>
+                <View
+                  ref={sliderTrackRef}
+                  style={styles.sliderTrack}
+                  onLayout={(event) => {
+                    const { width } = event.nativeEvent.layout;
+                    sliderTrackRef.current?.measure(
+                      (x, y, w, h, pageX, pageY) => {
+                        sliderLayout.current = { width: width, pageX: pageX };
+                      }
+                    );
+                  }}
+                  {...panResponder.panHandlers}
+                >
+                  <View
+                    style={[
+                      styles.sliderActiveTrack,
+                      { width: `${sliderPercentage}%` },
+                    ]}
+                  />
+                  <View
+                    style={[
+                      styles.sliderThumb,
+                      { left: `${sliderPercentage}%` },
+                    ]}
+                    hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+                  />
+                </View>
+
+                <View style={styles.sliderLabels}>
+                  <Text style={styles.sliderLabelText}>+1 Yr</Text>
+                  <Text style={styles.sliderLabelText}>+25 Yrs</Text>
+                </View>
               </View>
             </View>
+            {/* Cost Projection Display */}
+            {(selectedCourse || selectedCollege) && (
+              <EstimatedCostCard
+                education={selectedCourse || (selectedCollege as Education)}
+                timeline={timeline}
+              />
+            )}
           </View>
-          {/* Cost Projection Display */}
-          {(selectedCourse || selectedCollege) && (
-            <EstimatedCostCard
-              education={selectedCourse || (selectedCollege as Education)}
-              timeline={timeline}
-            />
-          )}
-        </View>
-      </ThemedView>
+        </ThemedView>
+      </LinearGradient>
     </ScrollView>
   );
 }
@@ -229,12 +240,15 @@ const EstimatedCostCard = ({
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#F8F7FF",
     marginTop: 20,
     paddingBottom: 24,
   },
   scrollContent: {
     flexGrow: 1,
+  },
+  gradientWrapper: {
+    width: "100%",
+    marginTop: 20,
   },
   headerSection: {
     paddingTop: 40,
