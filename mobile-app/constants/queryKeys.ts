@@ -10,4 +10,5 @@ export const QUERY_KEYS = {
   payment: "payment",
   sipOrders: "sipOrders",
   transactions: "transactions",
+  fundAllocations: "fundAllocations",
 };

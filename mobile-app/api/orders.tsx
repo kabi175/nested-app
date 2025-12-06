@@ -1,3 +1,4 @@
+import { FundAllocation } from "@/types/fund";
 import { api } from "./client";
 
 export type SipOrder = {
@@ -56,4 +57,30 @@ export const getTransactions = async (
     ...transaction,
     executed_at: new Date(transaction.executed_at),
   }));
+};
+
+export const getFundAllocationWithOrders = async (
+  orderIds: string[]
+): Promise<FundAllocation[]> => {
+  const { data } = await api.get(`/orders/allocation`, {
+    params: {
+      orders: orderIds.join(","),
+    },
+  });
+
+  return data.data.map((data: any) => {
+    // Format percentage - handle both number and string formats
+    const allocationPercent =
+      typeof data.allocationPercent === "number"
+        ? `${data.allocationPercent}%`
+        : data.allocationPercent || "0%";
+
+    return {
+      id: data.id || "",
+      fundName: data.fundName,
+      percentage: allocationPercent,
+      cagr: data.cagr || "0.00%",
+      expenseRatio: data.expenseRatio || "0.00%",
+    };
+  });
 };
