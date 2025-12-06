@@ -15,19 +15,16 @@ import reactor.core.publisher.Mono;
 public class PaymentApiImpl implements PaymentsAPIClient {
   private static final String PAYMENT_API_URL = "/api/pg/payments";
   private static final String NET_BANKING = "netbanking";
-  private static final String UPI = "upi";
 
   private final FinPrimitivesAPI api;
   private final ObjectMapper objectMapper;
 
   @Override
   public Mono<PaymentsResponse> createPayment(PaymentsRequest request) {
-    var paymentMethod =
-        request.getPaymentMethod() == PaymentsRequest.PaymentMethod.UPI ? UPI : NET_BANKING;
     try {
       log.info(
           "Initiating payment creation: method={}, request={}",
-          paymentMethod,
+          request.getPaymentMethod(),
           objectMapper.writeValueAsString(request));
     } catch (Exception e) {
       log.warn("Failed to serialize request for logging", e);
@@ -37,19 +34,21 @@ public class PaymentApiImpl implements PaymentsAPIClient {
 
     return api.withAuth()
         .post()
-        .uri(PAYMENT_API_URL + "/" + paymentMethod)
+        .uri(PAYMENT_API_URL + "/" + NET_BANKING)
         .bodyValue(request)
         .retrieve()
         .bodyToMono(PaymentsResponse.class)
         .doOnSuccess(
             resp ->
                 log.info(
-                    "Payment created successfully. method={}, response={}", paymentMethod, resp))
+                    "Payment created successfully. method={}, response={}",
+                    request.getPaymentMethod(),
+                    resp))
         .doOnError(
             ex ->
                 log.error(
                     "Failed to create payment. method={}, error={}",
-                    paymentMethod,
+                    request.getPaymentMethod(),
                     ex.getMessage(),
                     ex));
   }
