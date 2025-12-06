@@ -30,7 +30,6 @@ export const childSchema = Joi.object({
     .required()
     .label("Gender"),
   investUnderChild: Joi.boolean()
-    .required()
     .default(false)
     .label("Invest under child's name"),
 });

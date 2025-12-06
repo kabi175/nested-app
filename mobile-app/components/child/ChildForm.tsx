@@ -1,13 +1,11 @@
 import { Child } from "@/types/child";
 import {
   Card,
-  CheckBox,
   Datepicker,
   Input,
   Radio,
   RadioGroup,
   Text,
-  TextProps,
 } from "@ui-kitten/components";
 import { CalendarDays } from "lucide-react-native";
 import React from "react";
@@ -99,25 +97,6 @@ export const ChildForm: React.FC<ChildFormProps> = ({
               </Text>
             )}
           </View>
-
-          <Animated.View style={[styles.checkboxContainer]}>
-            <CheckBox
-              checked={values.investUnderChild}
-              onChange={onCheckboxChange}
-              status={errors.investUnderChild ? "danger" : "basic"}
-              style={styles.checkbox}
-            >
-              {(
-                evaProps: React.JSX.IntrinsicAttributes &
-                  React.JSX.IntrinsicClassAttributes<Text> &
-                  Readonly<TextProps>
-              ) => (
-                <Text {...evaProps} style={styles.checkboxText}>
-                  Invest under child&apos;s name?
-                </Text>
-              )}
-            </CheckBox>
-          </Animated.View>
         </View>
       </Card>
     </Animated.View>
