@@ -59,13 +59,15 @@ export default function NestedFooter() {
         </Text>
         <View style={styles.legalLinksContainer}>
           <Text style={styles.copyrightText}>ARN - 212121. </Text>
-          <Pressable onPress={handleTermsPress}>
-            <Text style={styles.legalLink}> Terms & Conditions </Text>
-          </Pressable>
-          <Text style={styles.bullet}> • </Text>
-          <Pressable onPress={handlePrivacyPress}>
-            <Text style={styles.legalLink}> Privacy Policy </Text>
-          </Pressable>
+          <View style={styles.legalLinksContainer}>
+            <Pressable onPress={handleTermsPress}>
+              <Text style={styles.legalLink}> Terms & Conditions </Text>
+            </Pressable>
+            <Text style={styles.bullet}> • </Text>
+            <Pressable onPress={handlePrivacyPress}>
+              <Text style={styles.legalLink}> Privacy Policy </Text>
+            </Pressable>
+          </View>
         </View>
       </View>
     </Layout>
@@ -129,6 +131,7 @@ const styles = StyleSheet.create({
   legalLinksContainer: {
     flexDirection: "row",
     alignItems: "center",
+    justifyContent: "center",
     flexWrap: "wrap",
     marginTop: 8,
   },
