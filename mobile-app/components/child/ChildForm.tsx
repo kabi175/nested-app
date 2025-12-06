@@ -34,7 +34,7 @@ export const ChildForm: React.FC<ChildFormProps> = ({
         <View style={styles.formContent}>
           <Input
             value={values.firstName}
-            label="First Name"
+            label="Name"
             placeholder="Enter your child's first name"
             onChangeText={(nextValue) => onFieldChange("firstName", nextValue)}
             status={errors.firstName ? "danger" : "basic"}
@@ -43,7 +43,7 @@ export const ChildForm: React.FC<ChildFormProps> = ({
             size="large"
           />
 
-          <Input
+          {/* <Input
             value={values.lastName}
             label="Last Name"
             placeholder="Enter your child's last name"
@@ -52,7 +52,7 @@ export const ChildForm: React.FC<ChildFormProps> = ({
             caption={errors.lastName}
             style={styles.input}
             size="large"
-          />
+          /> */}
 
           <Datepicker
             label="Date of Birth"
