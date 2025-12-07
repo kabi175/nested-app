@@ -9,6 +9,7 @@ import {
   usePortfolioTransactions,
 } from "@/hooks/usePortfolio";
 import { formatCurrency } from "@/utils/formatters";
+import { Button } from "@ui-kitten/components";
 import { router, useLocalSearchParams } from "expo-router";
 import { useSetAtom } from "jotai";
 import { ArrowLeft, TrendingDown, TrendingUp } from "lucide-react-native";
@@ -195,7 +196,7 @@ export default function GoalDetailScreen() {
         )}
 
         {/* Invest More Button */}
-        <TouchableOpacity
+        <Button
           style={styles.investButton}
           onPress={() => {
             if (goal == null) {
@@ -206,9 +207,11 @@ export default function GoalDetailScreen() {
             // Navigate to customize screen
             router.push(`/child/${goal.childId}/goal/customize`);
           }}
+          size="large"
+          status="primary"
         >
-          <ThemedText style={styles.investButtonText}>Invest More</ThemedText>
-        </TouchableOpacity>
+          Invest More
+        </Button>
       </ScrollView>
     </SafeAreaView>
   );
