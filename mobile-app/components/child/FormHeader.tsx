@@ -1,5 +1,4 @@
-import { Text } from "@ui-kitten/components";
-import { LinearGradient } from "expo-linear-gradient";
+import { Card, Text } from "@ui-kitten/components";
 import { Sparkles } from "lucide-react-native";
 import React from "react";
 import { Animated, StyleSheet, View } from "react-native";
@@ -17,12 +16,7 @@ export const FormHeader: React.FC<FormHeaderProps> = ({
 }) => {
   return (
     <Animated.View style={[styles.headerContainer, animationStyle]}>
-      <LinearGradient
-        colors={["#667eea", "#764ba2"]}
-        start={{ x: 0, y: 0 }}
-        end={{ x: 1, y: 1 }}
-        style={styles.gradientHeader}
-      >
+      <Card style={styles.cardHeader}>
         <View style={styles.iconContainer}>
           <Sparkles size={32} color="#fff" />
         </View>
@@ -30,7 +24,7 @@ export const FormHeader: React.FC<FormHeaderProps> = ({
           {title}
         </Text>
         <Text style={styles.headerSubtitle}>{subtitle}</Text>
-      </LinearGradient>
+      </Card>
     </Animated.View>
   );
 };
@@ -40,20 +34,11 @@ const styles = StyleSheet.create({
     marginTop: 8,
     marginHorizontal: 16,
     marginBottom: 24,
-    borderRadius: 20,
-    overflow: "hidden",
-    shadowColor: "#000",
-    shadowOffset: {
-      width: 0,
-      height: 8,
-    },
-    shadowOpacity: 0.2,
-    shadowRadius: 12,
-    elevation: 10,
   },
-  gradientHeader: {
-    padding: 24,
+  cardHeader: {
     borderRadius: 20,
+    padding: 24,
+    backgroundColor: "#3366FF",
   },
   iconContainer: {
     width: 60,
