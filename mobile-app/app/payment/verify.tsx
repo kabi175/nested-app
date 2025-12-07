@@ -4,10 +4,12 @@ import {
   getAuth,
   signInWithPhoneNumber,
 } from "@react-native-firebase/auth";
+import { LinearGradient } from "expo-linear-gradient";
 import { router, useLocalSearchParams } from "expo-router";
 import { useEffect, useState } from "react";
 import {
   Alert,
+  Animated,
   ScrollView,
   StyleSheet,
   TouchableOpacity,
@@ -35,6 +37,8 @@ export default function PaymentVerificationScreen() {
   const [isVerifying, setIsVerifying] = useState(false);
   const [isProcessingPayment, setIsProcessingPayment] = useState(false);
   const { data: payment } = usePayment(paymentId);
+  const [fadeAnim] = useState(new Animated.Value(0));
+  const [scaleAnim] = useState(new Animated.Value(0.9));
 
   const paymentMethod = payment?.payment_method;
 
@@ -60,6 +64,24 @@ export default function PaymentVerificationScreen() {
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [userPhoneNumber, auth.isLoaded]);
+
+  // Animation on mount
+  useEffect(() => {
+    Animated.parallel([
+      Animated.timing(fadeAnim, {
+        toValue: 1,
+        duration: 400,
+        useNativeDriver: true,
+      }),
+      Animated.spring(scaleAnim, {
+        toValue: 1,
+        tension: 50,
+        friction: 7,
+        useNativeDriver: true,
+      }),
+    ]).start();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const sendOTP = async () => {
     if (!userPhoneNumber) {
@@ -166,12 +188,27 @@ export default function PaymentVerificationScreen() {
           contentContainerStyle={styles.scrollContent}
           showsVerticalScrollIndicator={false}
         >
-          <View style={styles.contentContainer}>
-            {/* Shield Icon */}
+          <Animated.View
+            style={[
+              styles.contentContainer,
+              {
+                opacity: fadeAnim,
+                transform: [{ scale: scaleAnim }],
+              },
+            ]}
+          >
+            {/* Shield Icon with Gradient */}
             <View style={styles.shieldContainer}>
-              <View style={styles.shieldIcon}>
-                <Ionicons name="shield" size={48} color="#FFFFFF" />
-              </View>
+              <LinearGradient
+                colors={["#3B82F6", "#2563EB", "#1D4ED8"]}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 1 }}
+                style={styles.shieldIcon}
+              >
+                <View style={styles.shieldIconInner}>
+                  <Ionicons name="shield-checkmark" size={40} color="#FFFFFF" />
+                </View>
+              </LinearGradient>
             </View>
 
             {/* Enter OTP Heading */}
@@ -181,14 +218,15 @@ export default function PaymentVerificationScreen() {
 
             {/* Subtitle */}
             <Text category="s1" style={styles.subtitle}>
-              We&apos;ve sent a 6-digit code to your registered mobile number
-              and email.
+              We&apos;ve sent a 6-digit code to your registered mobile number .
             </Text>
 
             {/* Loading state while sending OTP */}
             {!confirm && isLoading && (
               <View style={styles.loadingContainer}>
-                <Spinner size="small" status="primary" />
+                <View style={styles.loadingSpinnerWrapper}>
+                  <Spinner size="small" status="primary" />
+                </View>
                 <Text category="s1" style={styles.loadingText}>
                   Sending verification code...
                 </Text>
@@ -223,60 +261,73 @@ export default function PaymentVerificationScreen() {
                     ]}
                     activeOpacity={0.8}
                   >
-                    {!isVerifying && !isProcessingPayment && (
-                      <View style={styles.checkmarkCircle}>
-                        <Ionicons name="checkmark" size={16} color="#FFFFFF" />
-                      </View>
-                    )}
-                    {(isVerifying || isProcessingPayment) && (
-                      <Spinner size="small" status="control" />
-                    )}
-                    <Text style={styles.verifyButtonText}>
-                      {isProcessingPayment
-                        ? "Processing Payment..."
-                        : isVerifying
-                        ? "Verifying..."
-                        : "Verify & Continue"}
-                    </Text>
+                    <LinearGradient
+                      colors={
+                        otpCode.length === 6 &&
+                        !isVerifying &&
+                        !isProcessingPayment
+                          ? ["#2563EB", "#1D4ED8"]
+                          : ["#D1D5DB", "#9CA3AF"]
+                      }
+                      start={{ x: 0, y: 0 }}
+                      end={{ x: 1, y: 0 }}
+                      style={styles.verifyButtonGradient}
+                    >
+                      {!isVerifying && !isProcessingPayment && (
+                        <View style={styles.checkmarkCircle}>
+                          <Ionicons
+                            name="checkmark"
+                            size={16}
+                            color="#FFFFFF"
+                          />
+                        </View>
+                      )}
+                      {(isVerifying || isProcessingPayment) && (
+                        <Spinner size="small" status="control" />
+                      )}
+                      <Text style={styles.verifyButtonText}>
+                        {isProcessingPayment
+                          ? "Processing Payment..."
+                          : isVerifying
+                          ? "Verifying..."
+                          : "Verify & Continue"}
+                      </Text>
+                    </LinearGradient>
                   </TouchableOpacity>
 
                   <TouchableOpacity
                     onPress={handleResendOtp}
                     disabled={resendTimer > 0 || isLoading}
-                    style={styles.resendButton}
+                    style={[
+                      styles.resendButton,
+                      (resendTimer > 0 || isLoading) &&
+                        styles.resendButtonDisabled,
+                    ]}
                     activeOpacity={0.7}
                   >
-                    <Text style={styles.resendButtonText}>
+                    <Ionicons
+                      name="refresh"
+                      size={16}
+                      color={
+                        resendTimer > 0 || isLoading ? "#9CA3AF" : "#2563EB"
+                      }
+                      style={styles.resendIcon}
+                    />
+                    <Text
+                      style={[
+                        styles.resendButtonText,
+                        (resendTimer > 0 || isLoading) &&
+                          styles.resendButtonTextDisabled,
+                      ]}
+                    >
                       Resend OTP{" "}
                       {resendTimer > 0 && (
                         <Text style={styles.resendTimerText}>
-                          in {resendTimer}s
+                          ({resendTimer}s)
                         </Text>
                       )}
                     </Text>
                   </TouchableOpacity>
-                </View>
-
-                {/* Payment Details Section */}
-                <View style={styles.paymentDetailsContainer}>
-                  <View style={styles.paymentDetailsRow}>
-                    <View style={styles.paymentDetailsLeft}>
-                      <Text category="s2" style={styles.paymentDetailsLabel}>
-                        Payment Method
-                      </Text>
-                      <Text category="s2" style={styles.paymentDetailsLabel}>
-                        Bank
-                      </Text>
-                    </View>
-                    <View style={styles.paymentDetailsRight}>
-                      <Text category="s1" style={styles.paymentDetailsValue}>
-                        {paymentMethod}
-                      </Text>
-                      <Text category="s1" style={styles.paymentDetailsValue}>
-                        {bankName}
-                      </Text>
-                    </View>
-                  </View>
                 </View>
               </>
             )}
@@ -284,7 +335,9 @@ export default function PaymentVerificationScreen() {
             {/* Security Message - Always at bottom */}
             <View style={styles.securityContainer}>
               <View style={styles.securityBox}>
-                <Ionicons name="lock-closed" size={16} color="#854D0E" />
+                <View style={styles.securityIconContainer}>
+                  <Ionicons name="shield-checkmark" size={18} color="#92400E" />
+                </View>
                 <View style={styles.securityTextContainer}>
                   <Text category="c2" style={styles.securityTitle}>
                     Secure Payment
@@ -295,7 +348,7 @@ export default function PaymentVerificationScreen() {
                 </View>
               </View>
             </View>
-          </View>
+          </Animated.View>
         </ScrollView>
       </View>
     </SafeAreaView>
@@ -305,11 +358,11 @@ export default function PaymentVerificationScreen() {
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: "#2D2D2D",
+    backgroundColor: "#F3F4F6",
   },
   container: {
     flex: 1,
-    backgroundColor: "#2D2D2D",
+    backgroundColor: "#F3F4F6",
   },
   scrollView: {
     flex: 1,
@@ -317,152 +370,182 @@ const styles = StyleSheet.create({
   scrollContent: {
     flexGrow: 1,
     justifyContent: "center",
-    paddingVertical: 20,
-    paddingBottom: 32,
+    paddingVertical: 24,
+    paddingBottom: 40,
   },
   contentContainer: {
     backgroundColor: "#FFFFFF",
-    marginHorizontal: 16,
-    borderRadius: 20,
-    padding: 24,
+    marginHorizontal: 20,
+    borderRadius: 24,
+    padding: 28,
+    shadowColor: "#000",
+    shadowOffset: {
+      width: 0,
+      height: 4,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 12,
+    elevation: 8,
   },
   shieldContainer: {
     alignItems: "center",
-    marginBottom: 24,
-    marginTop: 8,
+    marginBottom: 28,
+    marginTop: 4,
   },
   shieldIcon: {
-    width: 80,
-    height: 80,
-    borderRadius: 16,
-    backgroundColor: "#3B82F6",
+    width: 96,
+    height: 96,
+    borderRadius: 24,
+    justifyContent: "center",
+    alignItems: "center",
+    shadowColor: "#3B82F6",
+    shadowOffset: {
+      width: 0,
+      height: 8,
+    },
+    shadowOpacity: 0.3,
+    shadowRadius: 16,
+    elevation: 12,
+  },
+  shieldIconInner: {
+    width: "100%",
+    height: "100%",
     justifyContent: "center",
     alignItems: "center",
   },
   otpHeading: {
     textAlign: "center",
     marginBottom: 12,
-    fontWeight: "bold",
-    color: "#000000",
-    fontSize: 24,
+    fontWeight: "700",
+    color: "#111827",
+    fontSize: 28,
+    letterSpacing: -0.5,
   },
   subtitle: {
     textAlign: "center",
-    marginBottom: 32,
+    marginBottom: 36,
     color: "#6B7280",
-    paddingHorizontal: 8,
-    fontSize: 14,
-    lineHeight: 20,
+    paddingHorizontal: 12,
+    fontSize: 15,
+    lineHeight: 22,
   },
   otpContainer: {
-    marginBottom: 24,
+    marginBottom: 28,
+    paddingHorizontal: 4,
+    alignItems: "center",
+    justifyContent: "center",
   },
   loadingContainer: {
     alignItems: "center",
-    marginBottom: 32,
-    marginTop: 8,
-    gap: 12,
+    marginBottom: 36,
+    marginTop: 12,
+    gap: 16,
+  },
+  loadingSpinnerWrapper: {
+    padding: 8,
   },
   loadingText: {
     color: "#6B7280",
-    fontSize: 14,
+    fontSize: 15,
+    fontWeight: "500",
   },
   buttonContainer: {
-    gap: 16,
-    marginTop: 8,
-    marginBottom: 24,
+    gap: 20,
+    marginTop: 12,
+    marginBottom: 28,
   },
   verifyButton: {
-    borderRadius: 12,
-    backgroundColor: "#2563EB",
+    borderRadius: 16,
+    overflow: "hidden",
+    shadowColor: "#2563EB",
+    shadowOffset: {
+      width: 0,
+      height: 4,
+    },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 6,
+  },
+  verifyButtonDisabled: {
+    shadowOpacity: 0,
+    elevation: 0,
+  },
+  verifyButtonGradient: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
-    paddingVertical: 16,
+    paddingVertical: 18,
     paddingHorizontal: 24,
-    gap: 8,
-  },
-  verifyButtonDisabled: {
-    opacity: 0.6,
-    backgroundColor: "#D1D5DB",
+    gap: 10,
   },
   checkmarkCircle: {
-    width: 20,
-    height: 20,
-    borderRadius: 10,
-    backgroundColor: "rgba(255, 255, 255, 0.3)",
+    width: 22,
+    height: 22,
+    borderRadius: 11,
+    backgroundColor: "rgba(255, 255, 255, 0.25)",
     justifyContent: "center",
     alignItems: "center",
   },
   verifyButtonText: {
     color: "#FFFFFF",
-    fontSize: 16,
+    fontSize: 17,
     fontWeight: "600",
+    letterSpacing: 0.3,
   },
   resendButton: {
+    flexDirection: "row",
     alignItems: "center",
-    paddingVertical: 8,
+    justifyContent: "center",
+    paddingVertical: 12,
+    gap: 6,
+  },
+  resendButtonDisabled: {
+    opacity: 0.5,
+  },
+  resendIcon: {
+    marginRight: 2,
   },
   resendButtonText: {
-    color: "#000000",
-    fontSize: 14,
-    fontWeight: "500",
-  },
-  resendTimerText: {
-    color: "#3B82F6",
+    color: "#2563EB",
+    fontSize: 15,
     fontWeight: "600",
   },
-  paymentDetailsContainer: {
-    backgroundColor: "#F3F4F6",
-    borderRadius: 12,
-    padding: 16,
-    marginTop: 16,
-    marginBottom: 24,
+  resendButtonTextDisabled: {
+    color: "#9CA3AF",
   },
-  paymentDetailsRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "flex-start",
-  },
-  paymentDetailsLeft: {
-    flex: 1,
-  },
-  paymentDetailsRight: {
-    flex: 1,
-    alignItems: "flex-end",
-  },
-  paymentDetailsLabel: {
+  resendTimerText: {
     color: "#6B7280",
-    marginBottom: 4,
-    fontSize: 12,
-  },
-  paymentDetailsValue: {
-    color: "#000000",
     fontWeight: "500",
-    fontSize: 14,
   },
   securityContainer: {
-    marginTop: 32,
+    marginTop: 28,
   },
   securityBox: {
-    backgroundColor: "#FEF3C7",
-    borderRadius: 12,
-    padding: 12,
+    backgroundColor: "#FFFBEB",
+    borderRadius: 16,
+    padding: 16,
     flexDirection: "row",
     alignItems: "flex-start",
-    gap: 8,
+    gap: 12,
+    borderWidth: 1,
+    borderColor: "#FDE68A",
+  },
+  securityIconContainer: {
+    marginTop: 2,
   },
   securityTextContainer: {
     flex: 1,
   },
   securityTitle: {
-    color: "#854D0E",
-    fontWeight: "600",
-    marginBottom: 2,
-    fontSize: 12,
+    color: "#92400E",
+    fontWeight: "700",
+    marginBottom: 4,
+    fontSize: 13,
+    letterSpacing: 0.2,
   },
   securityMessage: {
-    color: "#92400E",
-    fontSize: 11,
+    color: "#B45309",
+    fontSize: 12,
+    lineHeight: 18,
   },
 });

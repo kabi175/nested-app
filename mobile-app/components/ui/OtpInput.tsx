@@ -77,7 +77,7 @@ export const OtpInput: React.FC<OtpInputProps> = ({
 const styles = StyleSheet.create({
   container: {
     flexDirection: "row",
-    justifyContent: "space-between",
+    justifyContent: "center",
     gap: 8,
     backgroundColor: "transparent",
   },
