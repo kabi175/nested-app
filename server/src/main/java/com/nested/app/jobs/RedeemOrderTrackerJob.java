@@ -99,9 +99,9 @@ public class RedeemOrderTrackerJob implements Job {
       transactions.forEach(
           transaction -> {
             TransactionStatus previousStatus = transaction.getStatus();
-            transaction.setUnits(orderData.getRedeemedUnits());
+            transaction.setUnits(-orderData.getRedeemedUnits());
             transaction.setUnitPrice(orderData.getRedeemedPrice());
-            transaction.setAmount(orderData.getRedeemedAmount());
+            transaction.setAmount(-orderData.getRedeemedAmount());
 
             switch (orderData.getState()) {
               case CREATED:
@@ -217,9 +217,9 @@ public class RedeemOrderTrackerJob implements Job {
                   transaction.setFund(oi.getFund());
                   transaction.setType(TransactionType.SELL);
                   transaction.setStatus(TransactionStatus.VERIFICATION_PENDING);
-                  transaction.setUnits(orderData.getRedeemedUnits());
+                  transaction.setUnits(-orderData.getRedeemedUnits());
                   transaction.setUnitPrice(orderData.getRedeemedPrice());
-                  transaction.setAmount(orderData.getRedeemedAmount());
+                  transaction.setAmount(-orderData.getRedeemedAmount());
                   transaction.setExecutedAt(orderData.getSubmittedAt());
                   transaction.setSourceOrderItemId(oi.getId());
 
