@@ -5,6 +5,7 @@ import { useBankAccounts } from "@/hooks/useBankAccount";
 import { BankAccount } from "@/types/bank";
 import { formatCurrency } from "@/utils/formatters";
 import { Ionicons } from "@expo/vector-icons";
+import { Button } from "@ui-kitten/components";
 import { router } from "expo-router";
 import { useAtomValue } from "jotai";
 import { useEffect, useMemo, useState } from "react";
@@ -307,8 +308,8 @@ export default function PaymentMethodScreen() {
             </ThemedText>
           </View>
           {isSelected && (
-            <View style={styles.selectedCheckmark}>
-              <Ionicons name="checkmark" size={20} color="#FFFFFF" />
+            <View style={styles.bankSelectedCheckmark}>
+              <Ionicons name="checkmark" size={18} color="#FFFFFF" />
             </View>
           )}
         </View>
@@ -317,12 +318,29 @@ export default function PaymentMethodScreen() {
   };
 
   return (
-    <SafeAreaView style={styles.safeArea} edges={["bottom"]}>
+    <SafeAreaView style={styles.safeArea} edges={["top"]}>
       <View style={styles.container}>
+        {/* Header */}
+        <View style={styles.header}>
+          <View style={styles.headerRow}>
+            <TouchableOpacity
+              style={styles.backButton}
+              onPress={() => router.back()}
+            >
+              <Ionicons name="arrow-back" size={22} color="#1F2937" />
+            </TouchableOpacity>
+            <View style={styles.headerContent}>
+              <ThemedText style={styles.headerTitle}>
+                Complete Your Payment
+              </ThemedText>
+            </View>
+          </View>
+        </View>
+
         <ScrollView
           style={styles.scrollView}
           contentContainerStyle={styles.scrollContent}
-          showsVerticalScrollIndicator={true}
+          showsVerticalScrollIndicator={false}
         >
           {/* Main White Card */}
           <View style={styles.mainCard}>
@@ -490,8 +508,14 @@ export default function PaymentMethodScreen() {
 
                 {/* Security Message */}
                 <View style={styles.securityBox}>
+                  <Ionicons
+                    name="shield-checkmark"
+                    size={20}
+                    color="#1E40AF"
+                    style={styles.securityIcon}
+                  />
                   <ThemedText style={styles.securityText}>
-                    You&apos;ll be redirected to complete each payment step
+                    You&apos;ll be redirected to complete payment each step
                     securely
                   </ThemedText>
                 </View>
@@ -502,26 +526,31 @@ export default function PaymentMethodScreen() {
 
         {/* Proceed to Pay Button */}
         <View style={styles.buttonContainer}>
-          <TouchableOpacity
+          <Button
             style={[
               styles.proceedButton,
               (!selectedMethod || !selectedBank) && styles.disabledButton,
             ]}
             onPress={handleConfirmOrder}
             disabled={!selectedMethod || !selectedBank || isProcessing}
-            activeOpacity={0.8}
-          >
-            {isProcessing ? (
-              <ActivityIndicator color="white" size="small" />
-            ) : (
-              <>
-                <ThemedText style={styles.proceedButtonText}>
-                  Proceed to Pay
-                </ThemedText>
+            size="large"
+            accessoryLeft={() =>
+              isProcessing ? (
+                <ActivityIndicator color="white" size="small" />
+              ) : (
+                <></>
+              )
+            }
+            accessoryRight={() =>
+              !isProcessing ? (
                 <Ionicons name="arrow-forward" size={20} color="#FFFFFF" />
-              </>
-            )}
-          </TouchableOpacity>
+              ) : (
+                <></>
+              )
+            }
+          >
+            {isProcessing ? "Processing..." : "Proceed to Pay"}
+          </Button>
         </View>
       </View>
     </SafeAreaView>
@@ -531,42 +560,71 @@ export default function PaymentMethodScreen() {
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: "#E5E7EB",
+    backgroundColor: "#F9FAFB",
   },
   container: {
     flex: 1,
-    backgroundColor: "#E5E7EB",
+    backgroundColor: "#F9FAFB",
+  },
+  header: {
+    backgroundColor: "#FFFFFF",
+    paddingHorizontal: 20,
+    paddingTop: 12,
+    paddingBottom: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: "#F3F4F6",
+  },
+  headerRow: {
+    flexDirection: "row",
+    alignItems: "center",
+  },
+  backButton: {
+    marginRight: 12,
+    padding: 4,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  headerContent: {
+    flex: 1,
+  },
+  headerTitle: {
+    fontSize: 20,
+    fontWeight: "700",
+    color: "#111827",
   },
   scrollView: {
     flex: 1,
   },
   scrollContent: {
-    paddingBottom: 100,
+    padding: 16,
+    paddingBottom: 120,
   },
   mainCard: {
     backgroundColor: "#FFFFFF",
     padding: 20,
+    borderRadius: 16,
     shadowColor: "#000",
     shadowOffset: {
       width: 0,
       height: 2,
     },
-    shadowOpacity: 0.1,
-    shadowRadius: 8,
-    elevation: 4,
+    shadowOpacity: 0.05,
+    shadowRadius: 12,
+    elevation: 3,
   },
   section: {
-    marginBottom: 24,
+    marginBottom: 28,
   },
   sectionTitle: {
-    fontSize: 16,
-    fontWeight: "600",
-    color: "#000000",
-    marginBottom: 12,
+    fontSize: 17,
+    fontWeight: "700",
+    color: "#111827",
+    marginBottom: 16,
+    letterSpacing: -0.2,
   },
   paymentMethodsRow: {
     flexDirection: "row",
-    gap: 14,
+    gap: 12,
     alignItems: "stretch",
   },
   paymentMethodWrapper: {
@@ -576,15 +634,23 @@ const styles = StyleSheet.create({
   },
   paymentMethodCard: {
     borderRadius: 16,
-    padding: 16,
+    padding: 18,
     backgroundColor: "#FFFFFF",
     borderWidth: 2,
     borderColor: "#E5E7EB",
-    height: 148,
+    height: 160,
     justifyContent: "center",
     alignItems: "center",
     width: "100%",
     position: "relative",
+    shadowColor: "#000",
+    shadowOffset: {
+      width: 0,
+      height: 1,
+    },
+    shadowOpacity: 0.05,
+    shadowRadius: 3,
+    elevation: 2,
   },
   paymentMethodContent: {
     alignItems: "center",
@@ -593,12 +659,12 @@ const styles = StyleSheet.create({
     position: "relative",
   },
   paymentMethodIconContainer: {
-    width: 64,
-    height: 64,
-    borderRadius: 12,
+    width: 68,
+    height: 68,
+    borderRadius: 16,
     justifyContent: "center",
     alignItems: "center",
-    marginBottom: 10,
+    marginBottom: 12,
   },
   paymentMethodText: {
     alignItems: "center",
@@ -607,40 +673,40 @@ const styles = StyleSheet.create({
     paddingTop: 0,
   },
   paymentMethodTitle: {
-    fontSize: 16,
+    fontSize: 17,
     fontWeight: "700",
-    color: "#000000",
-    marginBottom: 4,
+    color: "#111827",
+    marginBottom: 6,
     textAlign: "center",
-    height: 22,
-    lineHeight: 22,
+    height: 24,
+    lineHeight: 24,
   },
   paymentMethodTitleSelected: {
     color: "#FFFFFF",
   },
   paymentMethodDescription: {
-    fontSize: 12,
+    fontSize: 13,
     color: "#6B7280",
     textAlign: "center",
-    lineHeight: 16,
-    minHeight: 32,
+    lineHeight: 18,
+    minHeight: 36,
   },
   paymentMethodDescriptionSelected: {
     color: "#FFFFFF",
-    opacity: 0.95,
+    opacity: 0.9,
   },
   selectedCheckmark: {
     position: "absolute",
-    top: 8,
-    right: 8,
-    width: 24,
-    height: 24,
-    borderRadius: 12,
-    backgroundColor: "rgba(255, 255, 255, 0.25)",
+    top: 10,
+    right: 10,
+    width: 26,
+    height: 26,
+    borderRadius: 13,
+    backgroundColor: "rgba(255, 255, 255, 0.3)",
     justifyContent: "center",
     alignItems: "center",
-    borderWidth: 1,
-    borderColor: "rgba(255, 255, 255, 0.3)",
+    borderWidth: 1.5,
+    borderColor: "rgba(255, 255, 255, 0.4)",
     zIndex: 10,
   },
   selectedCheckmarkHidden: {
@@ -648,72 +714,93 @@ const styles = StyleSheet.create({
     pointerEvents: "none",
   },
   bankAccountsScroll: {
-    maxHeight: 200,
+    maxHeight: 220,
   },
   bankAccountCard: {
-    borderRadius: 12,
+    borderRadius: 14,
     marginBottom: 12,
-    padding: 16,
+    padding: 18,
     backgroundColor: "#FFFFFF",
     borderWidth: 2,
     borderColor: "#E5E7EB",
+    shadowColor: "#000",
+    shadowOffset: {
+      width: 0,
+      height: 1,
+    },
+    shadowOpacity: 0.04,
+    shadowRadius: 3,
+    elevation: 2,
   },
   bankAccountCardSelected: {
     borderColor: "#10B981",
-    borderWidth: 2,
+    borderWidth: 2.5,
+    backgroundColor: "#F0FDF4",
   },
   bankAccountContent: {
     flexDirection: "row",
     alignItems: "center",
   },
   bankIconContainer: {
-    width: 48,
-    height: 48,
-    borderRadius: 12,
+    width: 52,
+    height: 52,
+    borderRadius: 14,
     justifyContent: "center",
     alignItems: "center",
-    marginRight: 12,
+    marginRight: 14,
   },
   bankAccountInfo: {
     flex: 1,
   },
   bankName: {
-    fontSize: 16,
+    fontSize: 17,
     fontWeight: "600",
-    color: "#000000",
-    marginBottom: 4,
+    color: "#111827",
+    marginBottom: 5,
+    letterSpacing: -0.2,
   },
   bankAccountNumber: {
     fontSize: 14,
     color: "#6B7280",
+    letterSpacing: 0.2,
   },
   stepsDescription: {
     fontSize: 14,
     color: "#6B7280",
-    marginBottom: 16,
+    marginBottom: 18,
+    lineHeight: 20,
   },
   paymentSteps: {
-    marginBottom: 16,
+    marginBottom: 18,
   },
   paymentStep: {
     flexDirection: "row",
-    marginBottom: 16,
+    marginBottom: 18,
   },
   stepIconContainer: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
+    width: 44,
+    height: 44,
+    borderRadius: 22,
     backgroundColor: "#2563EB",
     justifyContent: "center",
     alignItems: "center",
-    marginRight: 12,
+    marginRight: 14,
+    shadowColor: "#2563EB",
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.2,
+    shadowRadius: 4,
+    elevation: 3,
   },
   stepConnector: {
-    width: 2,
-    height: 20,
+    width: 2.5,
+    height: 24,
     backgroundColor: "#10B981",
-    marginLeft: 20,
+    marginLeft: 22,
     marginBottom: 4,
+    borderRadius: 2,
   },
   stepContent: {
     flex: 1,
@@ -721,45 +808,75 @@ const styles = StyleSheet.create({
   stepHeader: {
     flexDirection: "row",
     alignItems: "center",
-    marginBottom: 4,
+    marginBottom: 6,
     flexWrap: "wrap",
   },
   stepTitle: {
     fontSize: 16,
     fontWeight: "600",
-    color: "#000000",
-    marginRight: 8,
+    color: "#111827",
+    marginRight: 10,
+    letterSpacing: -0.2,
   },
   pendingBadge: {
     backgroundColor: "#FEF3C7",
-    paddingHorizontal: 8,
-    paddingVertical: 2,
-    borderRadius: 8,
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: "#FDE68A",
   },
   pendingBadgeText: {
     fontSize: 12,
-    fontWeight: "600",
-    color: "#F59E0B",
+    fontWeight: "700",
+    color: "#D97706",
+    letterSpacing: 0.2,
   },
   stepDescription: {
     fontSize: 14,
     color: "#6B7280",
+    lineHeight: 20,
   },
   stepAmount: {
     fontSize: 14,
     fontWeight: "700",
-    color: "#000000",
+    color: "#111827",
   },
   securityBox: {
-    backgroundColor: "#DBEAFE",
-    borderRadius: 12,
-    padding: 12,
-    marginTop: 8,
+    backgroundColor: "#EFF6FF",
+    borderRadius: 14,
+    padding: 16,
+    marginTop: 12,
+    flexDirection: "row",
+    alignItems: "center",
+    borderWidth: 1,
+    borderColor: "#DBEAFE",
+  },
+  securityIcon: {
+    marginRight: 12,
   },
   securityText: {
     fontSize: 14,
     color: "#1E40AF",
     lineHeight: 20,
+    flex: 1,
+    fontWeight: "500",
+  },
+  bankSelectedCheckmark: {
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    backgroundColor: "#10B981",
+    justifyContent: "center",
+    alignItems: "center",
+    shadowColor: "#10B981",
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.3,
+    shadowRadius: 4,
+    elevation: 3,
   },
   loadingContainer: {
     flexDirection: "row",
@@ -801,29 +918,34 @@ const styles = StyleSheet.create({
     bottom: 0,
     left: 0,
     right: 0,
-    padding: 16,
+    padding: 20,
     backgroundColor: "#FFFFFF",
     borderTopWidth: 1,
-    borderTopColor: "#E5E7EB",
-    paddingBottom: 32,
+    borderTopColor: "#F3F4F6",
+    paddingBottom: 34,
+    shadowColor: "#000",
+    shadowOffset: {
+      width: 0,
+      height: -2,
+    },
+    shadowOpacity: 0.05,
+    shadowRadius: 8,
+    elevation: 5,
   },
   proceedButton: {
     backgroundColor: "#2563EB",
-    borderRadius: 12,
-    paddingVertical: 16,
-    paddingHorizontal: 24,
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    gap: 8,
+    borderRadius: 14,
+    shadowColor: "#2563EB",
+    shadowOffset: {
+      width: 0,
+      height: 4,
+    },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 6,
   },
   disabledButton: {
     opacity: 0.5,
-  },
-  proceedButtonText: {
-    color: "#FFFFFF",
-    fontSize: 16,
-    fontWeight: "600",
   },
   orderSummary: {
     borderRadius: 12,
