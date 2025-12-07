@@ -6,16 +6,11 @@ import {
 } from "@/components/goal";
 import { useChildren } from "@/hooks/useChildren";
 import { useGoals } from "@/hooks/useGoals";
+import { Button } from "@ui-kitten/components";
 import { router } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import React, { useCallback } from "react";
-import {
-  ActivityIndicator,
-  ScrollView,
-  StyleSheet,
-  TouchableOpacity,
-  View,
-} from "react-native";
+import { ActivityIndicator, ScrollView, StyleSheet, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function GoalScreen() {
@@ -82,19 +77,20 @@ export default function GoalScreen() {
               {currentValue > 0 && (
                 <PortfolioSummaryCard
                   currentValue={currentValue}
-                  invested={invested}
+                  investedAmount={invested}
+                  returnsAmount={currentValue - invested}
                 />
               )}
               <GoalsList goals={goals} />
             </View>
-            <TouchableOpacity
+            <Button
               style={styles.investMoreButton}
               onPress={handleInvestMore}
+              size="large"
+              status="primary"
             >
-              <ThemedText style={styles.investMoreButtonText}>
-                Invest More
-              </ThemedText>
-            </TouchableOpacity>
+              Invest More
+            </Button>
           </>
         ) : (
           <EmptyGoalState
@@ -149,27 +145,10 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
   },
   investMoreButton: {
-    backgroundColor: "#2563EB",
-    borderRadius: 12,
-    paddingVertical: 16,
-    paddingHorizontal: 32,
     marginHorizontal: 20,
     marginTop: 8,
     marginBottom: 20,
-    alignItems: "center",
-    shadowColor: "#000",
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 4,
-  },
-  investMoreButtonText: {
-    fontSize: 16,
-    fontWeight: "600",
-    color: "#FFFFFF",
+    borderRadius: 12,
   },
   loadingContainer: {
     flex: 1,
