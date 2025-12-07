@@ -1,6 +1,8 @@
 package com.nested.app.dto;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import com.nested.app.serializer.OneDecimalDoubleSerializer;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -20,6 +22,7 @@ public class GoalHoldingDTO {
   @JsonProperty("fund")
   private String fundLabel;
 
+  @JsonSerialize(using = OneDecimalDoubleSerializer.class)
   @JsonProperty("allocation_percentage")
   private Double allocationPercentage; // Fund current value / total goal current value * 100
 
