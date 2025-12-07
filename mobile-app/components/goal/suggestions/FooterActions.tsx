@@ -39,7 +39,7 @@ export function FooterActions({
         disabled={disabled}
         size="large"
       >
-        Invest SIP
+        Continue
       </Button>
       <TouchableOpacity
         style={styles.returnLaterButton}
