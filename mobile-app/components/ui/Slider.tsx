@@ -1,4 +1,5 @@
 import { ThemedText } from "@/components/ThemedText";
+import { useTheme } from "@ui-kitten/components";
 import React from "react";
 import { Dimensions, StyleSheet, TouchableOpacity, View } from "react-native";
 
@@ -25,6 +26,7 @@ export default function Slider({
   maxLabel,
   step = 500,
 }: SliderProps) {
+  const theme = useTheme();
   const percentage = ((value - min) / (max - min)) * 100;
 
   const handleSliderPress = (event: any) => {
@@ -54,7 +56,10 @@ export default function Slider({
   return (
     <View style={styles.sliderContainer}>
       <TouchableOpacity
-        style={styles.sliderTrack}
+        style={[
+          styles.sliderTrack,
+          { backgroundColor: theme["color-basic-300"] },
+        ]}
         onPress={handleSliderPress}
         activeOpacity={1}
       >
@@ -63,6 +68,7 @@ export default function Slider({
             styles.sliderFill,
             {
               width: `${percentage}%`,
+              backgroundColor: theme["color-primary-500"],
             },
           ]}
         />
@@ -71,6 +77,7 @@ export default function Slider({
             styles.sliderThumb,
             {
               left: `${percentage}%`,
+              backgroundColor: theme["color-primary-500"],
             },
           ]}
         />
@@ -93,13 +100,11 @@ const styles = StyleSheet.create({
   },
   sliderTrack: {
     height: 8,
-    backgroundColor: "#E5E7EB",
     borderRadius: 4,
     position: "relative",
   },
   sliderFill: {
     height: "100%",
-    backgroundColor: "#1F2937",
     borderRadius: 4,
   },
   sliderThumb: {
@@ -107,7 +112,6 @@ const styles = StyleSheet.create({
     top: -8,
     width: 24,
     height: 24,
-    backgroundColor: "#FFFFFF",
     borderRadius: 12,
     shadowColor: "#000",
     shadowOffset: {
@@ -118,6 +122,8 @@ const styles = StyleSheet.create({
     shadowRadius: 4,
     elevation: 4,
     transform: [{ translateX: -12 }],
+    borderWidth: 2,
+    borderColor: "#FFFFFF",
   },
   sliderLabels: {
     flexDirection: "row",
