@@ -1,4 +1,5 @@
 import { Ionicons } from "@expo/vector-icons";
+import { router } from "expo-router";
 import React from "react";
 import { Pressable, StyleSheet, TouchableOpacity, View } from "react-native";
 import { ThemedText } from "./ThemedText";
@@ -60,7 +61,7 @@ export default function PopularWealthBaskets({
   onExplore,
 }: PopularWealthBasketsProps) {
   const handleExplore = (basketId: string) => {
-    onExplore?.(basketId);
+    router.push(`/basket`);
   };
 
   return (

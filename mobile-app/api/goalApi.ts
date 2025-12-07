@@ -18,7 +18,7 @@ export const getGoal = async (id: string): Promise<Goal> => {
 };
 
 export type CreateGoalRequest = {
-  childId: string;
+  childId?: string;
   educationId: string;
   title: string;
   targetAmount: number;
@@ -29,7 +29,7 @@ export const createGoal = async (
 ): Promise<Goal[]> => {
   const payload = goals.map((goal) => {
     const payloadItem: any = {
-      child: { id: goal.childId },
+      child: goal.childId ? { id: goal.childId } : undefined,
       target_amount: goal.targetAmount,
       target_date: goal.targetDate.toLocaleDateString("en-CA"),
       title: goal.title,
