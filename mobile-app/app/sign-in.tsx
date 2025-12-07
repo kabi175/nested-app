@@ -6,6 +6,7 @@ import {
 } from "@react-native-firebase/auth";
 import { Link, router } from "expo-router";
 
+import LoginCarousel from "@/components/auth/LoginCarousel";
 import { OtpInput } from "@/components/ui/OtpInput";
 import {
   Button,
@@ -17,11 +18,9 @@ import {
   Spinner,
   Text,
 } from "@ui-kitten/components";
-import { LinearGradient } from "expo-linear-gradient";
 import { useEffect, useState } from "react";
 import {
   Alert,
-  Image,
   ImageProps,
   ScrollView,
   StyleSheet,
@@ -145,197 +144,161 @@ export default function SignIn() {
     return () => clearInterval(interval);
   }, [resendTimer]);
 
-  const title = confirm ? "Enter OTP" : "Enter Your Mobile Number";
-  const subtitle = confirm
-    ? `We've sent a 6-digit code to +91 ${phoneNumber}`
-    : "We'll send you an OTP to verify your number";
 
   return (
     <SafeAreaView style={styles.safeArea} edges={["top", "bottom"]}>
       <Layout style={styles.container}>
-        <LinearGradient
-          colors={[
-            "rgb(221, 236, 254)", // Light blue at top
-            "rgb(232, 242, 255)", // Slightly lighter blue
-            "rgb(240, 246, 255)", // Very light blue
-            "rgb(255, 255, 255)", // White
-            "rgb(255, 255, 255)", // White at bottom
-          ]}
-          locations={[0, 0.4, 0.7, 0.8, 1]}
-          start={{ x: 0.5, y: 0 }}
-          end={{ x: 0.5, y: 1 }}
-          style={styles.gradient}
-        />
-
         <ScrollView
           style={styles.scrollView}
           contentContainerStyle={styles.scrollContent}
           showsVerticalScrollIndicator={false}
         >
-          <Layout style={styles.contentContainer}>
-            {/* Title */}
-            <Layout style={styles.logoContainer}>
-              <Image
-                source={require("@/assets/images/splash-icon.png")} // 👈 put your logo image here
-                style={styles.logoImage}
-                resizeMode="contain"
-              />
-              <Text category="h6" style={styles.title}>
+          {/* Login Carousel */}
+          <LoginCarousel />
+
+          {/* Main Content Card */}
+          <Layout style={styles.contentCard}>
+            {/* Main Title */}
+            <Layout style={styles.headerContainer}>
+              <Text category="h4" style={styles.mainTitle}>
                 Secure your child&apos;s future
               </Text>
-            </Layout>
-
-            <Layout
-              style={[
-                styles.titleContainer,
-                { backgroundColor: "transparent" },
-              ]}
-            >
-              <Text category="h4" style={styles.formTitle}>
-                {title}
-              </Text>
-              <Text category="s1" appearance="hint" style={styles.subtitle}>
-                {subtitle}
+              <Text category="s1" appearance="hint" style={styles.mainSubtitle}>
+                Start your investment journey today
               </Text>
             </Layout>
 
-            {/* Phone Input Row */}
-            <Layout
-              style={[styles.inputRow, { backgroundColor: "transparent" }]}
-            >
-              {/* Country Code Select */}
-              <Select
-                style={styles.countrySelect}
-                placeholder="Country"
-                value={countryCode}
-                selectedIndex={
-                  new IndexPath(
-                    countryCodes.findIndex((item) => item.value === countryCode)
-                  )
-                }
-                onSelect={(index) => {
-                  const selectedIndex = Array.isArray(index) ? index[0] : index;
-                  const selectedCountry = countryCodes[selectedIndex.row];
-                  setCountryCode(selectedCountry.value);
-                }}
-              >
-                {countryCodes.map((country) => (
-                  <SelectItem key={country.value} title={country.title} />
-                ))}
-              </Select>
+            {/* Form Section */}
+            <Layout style={styles.formContainer}>
+              {/* Field Label */}
+              <Text category="s2" style={styles.fieldLabel}>
+                {confirm ? "Enter OTP" : "Enter Your Mobile Number"}
+              </Text>
+              <Text category="c1" appearance="hint" style={styles.fieldHint}>
+                {confirm
+                  ? `We've sent a 6-digit code to ${countryCode} ${phoneNumber}`
+                  : "We'll send you an OTP to verify your number"}
+              </Text>
 
-              {/* Phone Number Input */}
-              <Input
-                style={styles.phoneInput}
-                placeholder="Enter 10-digit mobile number"
-                value={phoneNumber}
-                onChangeText={setPhoneNumber}
-                keyboardType="phone-pad"
-                maxLength={10}
-              />
-            </Layout>
+              {/* Phone Input Row */}
+              {!confirm && (
+                <Layout style={styles.inputRow}>
+                  {/* Country Code Select */}
+                  <Select
+                    style={styles.countrySelect}
+                    placeholder="Country"
+                    value={countryCode}
+                    selectedIndex={
+                      new IndexPath(
+                        countryCodes.findIndex(
+                          (item) => item.value === countryCode
+                        )
+                      )
+                    }
+                    onSelect={(index) => {
+                      const selectedIndex = Array.isArray(index)
+                        ? index[0]
+                        : index;
+                      const selectedCountry = countryCodes[selectedIndex.row];
+                      setCountryCode(selectedCountry.value);
+                    }}
+                  >
+                    {countryCodes.map((country) => (
+                      <SelectItem key={country.value} title={country.title} />
+                    ))}
+                  </Select>
 
-            {/* OTP Input (shown after phone verification) */}
-            {confirm && (
-              <Layout
-                style={[
-                  styles.otpContainer,
-                  { backgroundColor: "transparent" },
-                ]}
-              >
-                <OtpInput
-                  length={6}
-                  onComplete={handleOtpComplete}
-                  onChange={handleOtpChange}
-                  disabled={isVerifying}
-                />
-              </Layout>
-            )}
+                  {/* Phone Number Input */}
+                  <Input
+                    style={styles.phoneInput}
+                    placeholder="Enter 10-digit mobile number"
+                    value={phoneNumber}
+                    onChangeText={setPhoneNumber}
+                    keyboardType="phone-pad"
+                    maxLength={10}
+                  />
+                </Layout>
+              )}
 
-            {/* Send OTP Button */}
-            {!confirm && (
-              <Button
-                onPress={handlePhoneNumberVerification}
-                disabled={phoneNumber.length !== 10 || isLoading}
-                style={styles.sendButton}
-                size="large"
-                accessoryLeft={() => (isLoading ? <LoadingIndicator /> : <></>)}
-              >
-                {isLoading ? "Sending OTP..." : "Send OTP"}
-              </Button>
-            )}
+              {/* OTP Input (shown after phone verification) */}
+              {confirm && (
+                <Layout style={styles.otpContainer}>
+                  <OtpInput
+                    length={6}
+                    onComplete={handleOtpComplete}
+                    onChange={handleOtpChange}
+                    disabled={isVerifying}
+                  />
+                </Layout>
+              )}
 
-            {/* Verify OTP Button */}
-            {confirm && (
-              <Layout
-                style={[
-                  styles.buttonContainer,
-                  { backgroundColor: "transparent" },
-                ]}
-              >
+              {/* Send OTP Button */}
+              {!confirm && (
                 <Button
                   onPress={handlePhoneNumberVerification}
-                  disabled={otpCode.length !== 6 || isVerifying}
+                  disabled={phoneNumber.length !== 10 || isLoading}
                   style={styles.sendButton}
                   size="large"
                   accessoryLeft={() =>
-                    isVerifying ? <LoadingIndicator /> : <></>
+                    isLoading ? <LoadingIndicator /> : <></>
                   }
                 >
-                  {isVerifying ? "Verifying..." : "Verify & Continue"}
+                  {isLoading ? "Sending OTP..." : "Send OTP"}
                 </Button>
+              )}
 
-                <Button
-                  onPress={handleResendOtp}
-                  disabled={resendTimer > 0 || isLoading}
-                  appearance="outline"
-                  style={styles.resendButton}
-                  size="large"
-                >
-                  {isLoading
-                    ? "Resending..."
-                    : resendTimer > 0
-                    ? `Resend OTP in ${resendTimer}s`
-                    : "Resend OTP"}
-                </Button>
-              </Layout>
-            )}
+              {/* Verify OTP Button */}
+              {confirm && (
+                <Layout style={styles.buttonContainer}>
+                  <Button
+                    onPress={handlePhoneNumberVerification}
+                    disabled={otpCode.length !== 6 || isVerifying}
+                    style={styles.sendButton}
+                    size="large"
+                    accessoryLeft={() =>
+                      isVerifying ? <LoadingIndicator /> : <></>
+                    }
+                  >
+                    {isVerifying ? "Verifying..." : "Verify & Continue"}
+                  </Button>
 
-            {/* Security Info */}
-            <Layout
-              style={[
-                styles.securityContainer,
-                { backgroundColor: "transparent" },
-              ]}
-            >
-              <Layout
-                style={[styles.securityRow, { backgroundColor: "transparent" }]}
-              >
-                <Ionicons name="shield-checkmark" size={16} color="#3B82F6" />
-                <Text
-                  category="c1"
-                  appearance="hint"
-                  style={styles.securityText}
-                >
-                  Your information is secure and encrypted
+                  <Button
+                    onPress={handleResendOtp}
+                    disabled={resendTimer > 0 || isLoading}
+                    appearance="outline"
+                    style={styles.resendButton}
+                    size="large"
+                  >
+                    {isLoading
+                      ? "Resending..."
+                      : resendTimer > 0
+                      ? `Resend OTP in ${resendTimer}s`
+                      : "Resend OTP"}
+                  </Button>
+                </Layout>
+              )}
+
+              {/* Security Info */}
+              <Layout style={styles.securityContainer}>
+                <Layout style={styles.securityRow}>
+                  <Ionicons
+                    name="shield-checkmark"
+                    size={16}
+                    color="#3B82F6"
+                  />
+                  <Text category="c1" appearance="hint" style={styles.securityText}>
+                    Your information is secure and encrypted
+                  </Text>
+                </Layout>
+
+                <Text category="c1" appearance="hint" style={styles.disclaimerText}>
+                  You agree to{" "}
+                  <Link href="https://expo.dev" style={styles.linkText}>
+                    TnC and Privacy Policy
+                  </Link>{" "}
+                  by proceeding.
                 </Text>
               </Layout>
-
-              <Text
-                category="c1"
-                appearance="hint"
-                style={styles.disclaimerText}
-              >
-                You agree to{" "}
-                <Link href="https://expo.dev" style={styles.linkText}>
-                  TnC
-                </Link>{" "}
-                and{" "}
-                <Link href="https://expo.dev" style={styles.linkText}>
-                  Privacy Policy
-                </Link>{" "}
-                by proceeding.
-              </Text>
             </Layout>
           </Layout>
         </ScrollView>
@@ -347,109 +310,113 @@ export default function SignIn() {
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
+    backgroundColor: '#F5F5F5',
   },
   container: {
     flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  gradient: {
-    flex: 1,
-    position: "absolute",
-    left: 0,
-    right: 0,
-    top: 0,
-    bottom: 0,
   },
   scrollView: {
-    width: "100%",
-    height: "100%",
-    maxWidth: 400,
-    marginHorizontal: 16,
+    flex: 1,
   },
   scrollContent: {
-    flexGrow: 1,
-    justifyContent: "center",
+    paddingBottom: 24,
   },
-  contentContainer: {
-    padding: 24,
-    backgroundColor: "transparent",
+  contentCard: {
+    backgroundColor: '#FFFFFF',
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
+    marginTop: -20,
+    paddingHorizontal: 24,
+    paddingTop: 32,
+    paddingBottom: 24,
+    minHeight: '60%',
   },
-  titleContainer: {
-    alignItems: "center",
+  headerContainer: {
+    alignItems: 'center',
     marginBottom: 32,
+    backgroundColor: 'transparent',
   },
-  title: {
-    textAlign: "center",
+  mainTitle: {
+    textAlign: 'center',
+    fontWeight: '700',
+    fontSize: 24,
     marginBottom: 8,
+    color: '#1A1A1A',
   },
-  subtitle: {
-    textAlign: "center",
+  mainSubtitle: {
+    textAlign: 'center',
+    fontSize: 16,
+    color: '#666666',
+  },
+  formContainer: {
+    backgroundColor: 'transparent',
+  },
+  fieldLabel: {
+    fontSize: 16,
+    fontWeight: '600',
+    marginBottom: 6,
+    color: '#1A1A1A',
+  },
+  fieldHint: {
+    fontSize: 14,
+    marginBottom: 16,
+    color: '#666666',
   },
   inputRow: {
-    flexDirection: "row",
+    flexDirection: 'row',
     gap: 12,
-    marginBottom: 24,
+    marginBottom: 20,
+    backgroundColor: 'transparent',
   },
   countrySelect: {
     minWidth: 100,
+    backgroundColor: '#F8F8F8',
   },
   phoneInput: {
     flex: 1,
+    backgroundColor: '#F8F8F8',
   },
   sendButton: {
     marginBottom: 16,
+    borderRadius: 12,
+    height: 52,
   },
   buttonContainer: {
     gap: 12,
+    backgroundColor: 'transparent',
   },
   resendButton: {
     marginBottom: 16,
+    borderRadius: 12,
+    height: 52,
   },
   securityContainer: {
-    alignItems: "center",
-    marginTop: 24,
+    alignItems: 'center',
+    marginTop: 16,
     gap: 12,
+    backgroundColor: 'transparent',
   },
   securityRow: {
-    flexDirection: "row",
-    alignItems: "center",
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'transparent',
   },
   securityText: {
     marginLeft: 8,
+    fontSize: 13,
   },
   disclaimerText: {
-    textAlign: "center",
+    textAlign: 'center',
+    fontSize: 13,
+    color: '#666666',
   },
   linkText: {
-    color: "#3B82F6",
-    textDecorationLine: "underline",
-    fontSize: 12,
+    color: '#3B82F6',
+    textDecorationLine: 'underline',
+    fontSize: 13,
   },
   otpContainer: {
     marginBottom: 24,
-  },
-  logoImage: {
-    width: 150,
-    height: 150,
-  },
-  logoContainer: {
-    alignItems: "center",
-    marginBottom: 24,
-    backgroundColor: "transparent",
-  },
-  formTitle: {
-    textAlign: "center",
-    marginBottom: 8,
-  },
-  howItWorksContainer: {
-    alignItems: "center",
-    marginBottom: 24,
-    backgroundColor: "transparent",
-  },
-  howItWorksText: {
-    color: "#3B82F6",
-    fontSize: 16,
-    textDecorationLine: "underline",
+    backgroundColor: 'transparent',
   },
 });
