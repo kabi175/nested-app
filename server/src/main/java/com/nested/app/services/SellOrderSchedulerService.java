@@ -1,9 +1,12 @@
 package com.nested.app.services;
 
+import com.nested.app.jobs.RedeemOrderTrackerJob;
 import com.nested.app.jobs.SellOrderFulfillmentJob;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import lombok.extern.slf4j.Slf4j;
 import org.quartz.CronScheduleBuilder;
 import org.quartz.JobBuilder;
@@ -97,5 +100,59 @@ public class SellOrderSchedulerService {
     // Schedule all jobs in batch
     scheduler.scheduleJobs(jobsAndTriggers, true);
     log.info("Successfully scheduled {} Sell Order Quartz jobs in batch", orderRefs.size());
+  }
+
+  /**
+   * Schedules redeem order tracker job with multiple trigger intervals: - First check after 5
+   * seconds - Second check after 10 minutes - Recurring checks every 6 hours thereafter
+   *
+   * @param orderRef External order reference
+   * @throws SchedulerException if scheduling fails
+   */
+  public void scheduleRedeemOrderTrackerJob(String orderRef) throws SchedulerException {
+    log.info("Scheduling RedeemOrderTrackerJob for order ref: {}", orderRef);
+
+    JobDetail jobDetail =
+        JobBuilder.newJob(RedeemOrderTrackerJob.class)
+            .withIdentity("redeem-order-tracker-" + orderRef)
+            .usingJobData("orderId", orderRef)
+            .storeDurably()
+            .build();
+
+    Set<Trigger> triggers = new HashSet<>();
+
+    // Trigger 1: After 5 seconds
+    Trigger trigger5s =
+        TriggerBuilder.newTrigger()
+            .withIdentity("redeem-order-tracker-5s-" + orderRef)
+            .forJob(jobDetail)
+            .startAt(new java.util.Date(System.currentTimeMillis() + 5000))
+            .build();
+    triggers.add(trigger5s);
+
+    // Trigger 2: After 10 minutes
+    Trigger trigger10m =
+        TriggerBuilder.newTrigger()
+            .withIdentity("redeem-order-tracker-10m-" + orderRef)
+            .forJob(jobDetail)
+            .startAt(new java.util.Date(System.currentTimeMillis() + 600000))
+            .build();
+    triggers.add(trigger10m);
+
+    // Trigger 3: Every 6 hours recurring
+    Trigger trigger6h =
+        TriggerBuilder.newTrigger()
+            .withIdentity("redeem-order-tracker-6h-" + orderRef)
+            .forJob(jobDetail)
+            .withSchedule(CronScheduleBuilder.cronSchedule("0 0 */6 * * ?"))
+            .startNow()
+            .build();
+    triggers.add(trigger6h);
+
+    // Schedule job with all triggers
+    scheduler.scheduleJob(jobDetail, triggers, true);
+    log.info(
+        "Successfully scheduled RedeemOrderTrackerJob for order ref: {} with 3 triggers (5s, 10m, 6h)",
+        orderRef);
   }
 }

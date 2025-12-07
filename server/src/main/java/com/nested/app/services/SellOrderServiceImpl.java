@@ -214,6 +214,17 @@ public class SellOrderServiceImpl implements SellOrderService {
               "Sell order placed successfully. Order ID: {}, Ref: {}",
               savedOrder.getId(),
               placedOrder.getRef());
+
+          // Schedule RedeemOrderTrackerJob with triggers: 5s, 10min, every 6hrs
+          try {
+            sellOrderSchedulerService.scheduleRedeemOrderTrackerJob(placedOrder.getRef());
+          } catch (Exception schedulerException) {
+            log.error(
+                "Failed to schedule RedeemOrderTrackerJob for order ref: {}",
+                placedOrder.getRef(),
+                schedulerException);
+            // Don't fail the order placement if scheduling fails
+          }
         } else {
           throw new RuntimeException("Failed to place sell order - no reference returned");
         }
@@ -291,7 +302,7 @@ public class SellOrderServiceImpl implements SellOrderService {
       log.info("Confirmed {} sell orders", orderRefs.size());
 
       // Schedule fulfillment jobs for order tracking
-      sellOrderSchedulerService.scheduleSellOrderStatusJobs(orderRefs);
+      //      sellOrderSchedulerService.scheduleSellOrderStatusJobs(orderRefs);
       log.info("Scheduled fulfillment jobs for {} sell orders", orderRefs.size());
 
     } catch (Exception e) {

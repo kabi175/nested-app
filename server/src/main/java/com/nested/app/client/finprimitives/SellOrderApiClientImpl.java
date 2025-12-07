@@ -9,7 +9,6 @@ import java.util.List;
 import java.util.Map;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;
 
@@ -61,18 +60,10 @@ public class SellOrderApiClientImpl implements SellOrderApiClient {
 
   @Override
   public Mono<OrderData> fetchOrderDetails(String orderRef) {
-    var resp =
-        api.withAuth()
-            .get()
-            .uri(uriBuilder -> uriBuilder.path(SELL_ORDER_API_URL + "/" + orderRef).build())
-            .retrieve()
-            .bodyToMono(new ParameterizedTypeReference<EntityListResponse<OrderData>>() {})
-            .block();
-
-    if (resp == null || resp.data == null || resp.data.isEmpty()) {
-      return Mono.empty();
-    }
-
-    return Mono.just(resp.data.getFirst());
+    return api.withAuth()
+        .get()
+        .uri(uriBuilder -> uriBuilder.path(SELL_ORDER_API_URL + "/" + orderRef).build())
+        .retrieve()
+        .bodyToMono(OrderData.class);
   }
 }

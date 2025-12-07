@@ -30,6 +30,8 @@ public interface TransactionRepository extends JpaRepository<Transaction, Long> 
 
   boolean existsByProviderTransactionId(String providerTransactionId);
 
+  List<Transaction> findByExternalRef(String externalRef);
+
   Page<Transaction> findByUserId(Long userId, Pageable pageable);
 
   Page<Transaction> findByUserIdAndCreatedAtBetween(

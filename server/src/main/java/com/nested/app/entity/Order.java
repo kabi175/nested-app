@@ -72,7 +72,8 @@ public class Order {
     PLACED("placed"),
     COMPLETED("completed"),
     FAILED("failed"),
-    CANCELLED("cancelled");
+    CANCELLED("cancelled"),
+    REVERSED("reversed");
 
     @JsonValue @Getter private final String value;
   }
