@@ -24,5 +24,9 @@ public class SellOrderDetail {
   @JsonProperty("user_ip")
   private String userIP;
 
-  private double amount;
+  @JsonInclude(JsonInclude.Include.NON_NULL)
+  private Double amount;
+
+  @JsonInclude(JsonInclude.Include.NON_NULL)
+  private Double units;
 }

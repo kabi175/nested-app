@@ -190,8 +190,8 @@ public class SellOrderServiceImpl implements SellOrderService {
       sellOrderDetail.setAccountID(investor.getAccountRef());
       sellOrderDetail.setFundID(fund.getIsinCode());
       sellOrderDetail.setFolio(folio.getRef());
-      sellOrderDetail.setAmount(
-          sellOrderItem.getAmount() != null ? sellOrderItem.getAmount() : 0.0);
+      sellOrderDetail.setAmount(sellOrderItem.getAmount());
+      sellOrderDetail.setUnits(sellOrderItem.getUnits());
 
       ServletRequestAttributes attributes =
           (ServletRequestAttributes) RequestContextHolder.getRequestAttributes();
