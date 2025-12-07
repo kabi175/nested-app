@@ -12,6 +12,7 @@ import {
   usePortfolioHoldings,
   usePortfolioTransactions,
 } from "@/hooks/usePortfolio";
+import { Button } from "@ui-kitten/components";
 import { router, useLocalSearchParams } from "expo-router";
 import { useSetAtom } from "jotai";
 import React, { useState } from "react";
@@ -20,7 +21,6 @@ import {
   Alert,
   ScrollView,
   StyleSheet,
-  TouchableOpacity,
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -197,14 +197,14 @@ export default function FundDetailScreen() {
           onMorePress={() => setShowMenu(true)}
         />
 
-        <TouchableOpacity
+        <Button
           style={styles.continueLaterContainer}
           onPress={() => router.back()}
+          appearance="ghost"
+          status="basic"
         >
-          <ThemedText style={styles.continueLaterText}>
-            Continue later
-          </ThemedText>
-        </TouchableOpacity>
+          Continue later
+        </Button>
       </ScrollView>
 
       <MoreOptionsMenu
