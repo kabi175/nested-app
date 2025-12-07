@@ -2,16 +2,10 @@ import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
 import { useAuth } from "@/hooks/auth";
 import { updateProfile } from "@react-native-firebase/auth";
+import { Button } from "@ui-kitten/components";
 import { router } from "expo-router";
 import React, { useState } from "react";
-import {
-  Alert,
-  StyleSheet,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  View,
-} from "react-native";
+import { Alert, StyleSheet, TextInput, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function NameInputScreen() {
@@ -80,24 +74,18 @@ export default function NameInputScreen() {
 
         {/* Action Buttons */}
         <View style={styles.buttonContainer}>
-          <TouchableOpacity
+          <Button
             style={[
               styles.submitButton,
               (!name.trim() || isLoading) && styles.submitButtonDisabled,
             ]}
             onPress={handleSubmit}
             disabled={!name.trim() || isLoading}
-            activeOpacity={0.8}
+            size="large"
+            status="primary"
           >
-            <Text
-              style={[
-                styles.submitButtonText,
-                (!name.trim() || isLoading) && styles.submitButtonTextDisabled,
-              ]}
-            >
-              {isLoading ? "Saving..." : "Continue"}
-            </Text>
-          </TouchableOpacity>
+            {isLoading ? "Saving..." : "Continue"}
+          </Button>
         </View>
       </ThemedView>
     </SafeAreaView>

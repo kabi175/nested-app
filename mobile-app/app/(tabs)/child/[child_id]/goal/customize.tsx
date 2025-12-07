@@ -8,9 +8,8 @@ import { useCreateOrders } from "@/hooks/useCreateOrders";
 import { useSIPCalculator } from "@/hooks/useSIPCalculator";
 import { formatCurrency } from "@/utils/formatters";
 import { Ionicons } from "@expo/vector-icons";
-import { Datepicker } from "@ui-kitten/components";
+import { Button, Datepicker } from "@ui-kitten/components";
 import * as Haptics from "expo-haptics";
-import { LinearGradient } from "expo-linear-gradient";
 import { router } from "expo-router";
 import { useAtomValue, useSetAtom } from "jotai";
 import { CalendarSync } from "lucide-react-native";
@@ -327,35 +326,18 @@ export default function CustomizeInvestmentScreen() {
           />
 
           {/* Continue Button */}
-          <TouchableOpacity
+          <Button
             style={[
               styles.continueButton,
               createOrdersMutation.isPending && styles.continueButtonDisabled,
             ]}
             onPress={handleContinue}
             disabled={createOrdersMutation.isPending}
+            size="large"
+            status="primary"
           >
-            <LinearGradient
-              colors={
-                createOrdersMutation.isPending
-                  ? ["#9CA3AF", "#6B7280"]
-                  : ["#8B5CF6", "#3B82F6"]
-              }
-              style={styles.continueButtonGradient}
-            >
-              {createOrdersMutation.isPending ? (
-                <View style={styles.loadingContainer}>
-                  <ThemedText style={styles.continueButtonText}>
-                    Creating Orders...
-                  </ThemedText>
-                </View>
-              ) : (
-                <ThemedText style={styles.continueButtonText}>
-                  Continue
-                </ThemedText>
-              )}
-            </LinearGradient>
-          </TouchableOpacity>
+            {createOrdersMutation.isPending ? "Creating Orders..." : "Continue"}
+          </Button>
         </ScrollView>
       </Animated.View>
     </SafeAreaView>
