@@ -235,7 +235,7 @@ function HoldingCard({
   return (
     <TouchableOpacity
       onPress={() => {
-        router.push(`/goal/${goalId}/${holding.fund}`);
+        router.push(`/goal/${goalId}/${holding.fund_id}`);
       }}
       activeOpacity={0.7}
     >

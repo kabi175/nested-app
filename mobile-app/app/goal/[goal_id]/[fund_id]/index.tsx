@@ -1,5 +1,12 @@
+import { redeemFund } from "@/api/redeemAPI";
 import { goalsForCustomizeAtom } from "@/atoms/goals";
+import { FundActionButtons } from "@/components/goal/fund/FundActionButtons";
+import { FundDetailCard } from "@/components/goal/fund/FundDetailCard";
+import { FundDetailHeader } from "@/components/goal/fund/FundDetailHeader";
+import { MoreOptionsMenu } from "@/components/goal/fund/MoreOptionsMenu";
+import { RedeemModal } from "@/components/goal/fund/RedeemModal";
 import { ThemedText } from "@/components/ThemedText";
+import { useFundData } from "@/hooks/useFundData";
 import { useGoal } from "@/hooks/useGoal";
 import {
   usePortfolioHoldings,
@@ -10,18 +17,13 @@ import { useSetAtom } from "jotai";
 import React, { useState } from "react";
 import {
   ActivityIndicator,
+  Alert,
   ScrollView,
   StyleSheet,
   TouchableOpacity,
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { FundActionButtons } from "@/components/goal/fund/FundActionButtons";
-import { FundDetailCard } from "@/components/goal/fund/FundDetailCard";
-import { FundDetailHeader } from "@/components/goal/fund/FundDetailHeader";
-import { MoreOptionsMenu } from "@/components/goal/fund/MoreOptionsMenu";
-import { RedeemModal } from "@/components/goal/fund/RedeemModal";
-import { useFundData } from "@/hooks/useFundData";
 
 export default function FundDetailScreen() {
   const { goal_id, fund_id } = useLocalSearchParams<{
@@ -44,6 +46,9 @@ export default function FundDetailScreen() {
   const [selectedRedemptionMode, setSelectedRedemptionMode] = useState<
     "units" | "amount" | "redeemAll" | null
   >(null);
+  const [unitsValue, setUnitsValue] = useState("");
+  const [amountValue, setAmountValue] = useState("");
+  const [isRedeeming, setIsRedeeming] = useState(false);
 
   const isLoading = holdingsLoading || transactionsLoading;
 
@@ -66,14 +71,77 @@ export default function FundDetailScreen() {
     setShowRedeemModal(false);
     setRedeemStep("initial");
     setSelectedRedemptionMode(null);
+    setUnitsValue("");
+    setAmountValue("");
   };
 
-  const handleRedeemProceed = () => {
+  const handleRedeemProceed = async () => {
     if (redeemStep === "initial") {
       setRedeemStep("mode");
-    } else if (selectedRedemptionMode) {
-      // Handle proceed with selected mode
-      handleRedeemClose();
+      return;
+    }
+
+    if (!selectedRedemptionMode || !goal_id || !fund_id || !fundData) {
+      return;
+    }
+
+    const { holding, units: maxUnits } = fundData;
+
+    try {
+      setIsRedeeming(true);
+
+      let amount: number | null = null;
+      let units: number | null = null;
+
+      if (selectedRedemptionMode === "units") {
+        const parsedUnits = parseFloat(unitsValue) || 0;
+        if (parsedUnits < 0.01 || parsedUnits > maxUnits) {
+          Alert.alert("Error", "Invalid units. Minimum 0.01 units required.");
+          setIsRedeeming(false);
+          return;
+        }
+        units = parsedUnits;
+      } else if (selectedRedemptionMode === "amount") {
+        const parsedAmount = parseFloat(amountValue.replace(/,/g, "")) || 0;
+        if (parsedAmount < 100 || parsedAmount > holding.current_value) {
+          Alert.alert("Error", "Invalid amount. Minimum ₹100 required.");
+          setIsRedeeming(false);
+          return;
+        }
+        amount = parsedAmount;
+      } else if (selectedRedemptionMode === "redeemAll") {
+        units = maxUnits;
+      }
+
+      const orders = await redeemFund(goal_id, fund_id, amount, units);
+
+      if (orders && orders.length > 0) {
+        const orderIds = orders.map((order) => order.id);
+        handleRedeemClose();
+        router.push({
+          pathname: `/goal/${goal_id}/redeem/verify`,
+          params: {
+            orderIds: JSON.stringify(orderIds),
+            fundName: holding.fund,
+            fundId: fund_id,
+            goalId: goal_id,
+          },
+        });
+      } else {
+        Alert.alert(
+          "Error",
+          "Failed to create redeem order. Please try again."
+        );
+      }
+    } catch (error: any) {
+      console.error("Redeem error:", error);
+      Alert.alert(
+        "Error",
+        error?.response?.data?.message ||
+          "Failed to process redemption. Please try again."
+      );
+    } finally {
+      setIsRedeeming(false);
     }
   };
 
@@ -156,10 +224,14 @@ export default function FundDetailScreen() {
         units={units}
         step={redeemStep}
         selectedMode={selectedRedemptionMode}
+        unitsValue={unitsValue}
+        amountValue={amountValue}
         onClose={handleRedeemClose}
         onSpeakToRM={handleSpeakToRM}
         onProceed={handleRedeemProceed}
         onModeSelect={setSelectedRedemptionMode}
+        onUnitsValueChange={setUnitsValue}
+        onAmountValueChange={setAmountValue}
       />
     </SafeAreaView>
   );

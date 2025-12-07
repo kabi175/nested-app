@@ -19,7 +19,7 @@ export function useFundData(
     if (!holdings || !fundId) return null;
 
     // Find the specific fund holding
-    const holding = holdings.find((h: Holding) => h.fund === fundId);
+    const holding = holdings.find((h: Holding) => h.fund_id === fundId);
     if (!holding) return null;
 
     // Calculate units from transactions

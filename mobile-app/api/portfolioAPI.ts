@@ -12,6 +12,7 @@ export type Transaction = {
 
 export type Holding = {
   fund: string;
+  fund_id: string;
   allocation_percentage: number;
   invested_amount: number;
   current_value: number;
@@ -55,5 +56,6 @@ export const getHoldingsForGoal = async (
     current_nav: Number(holding.current_nav),
     average_nav: Number(holding.average_nav),
     total_units: Number(holding.total_units),
+    fund_id: holding.fund_id,
   }));
 };
