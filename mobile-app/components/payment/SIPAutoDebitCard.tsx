@@ -1,6 +1,7 @@
 import { Payment, PaymentStatus } from "@/api/paymentAPI";
 import { ThemedText } from "@/components/ThemedText";
 import { Ionicons } from "@expo/vector-icons";
+import { useState } from "react";
 import {
   ActivityIndicator,
   StyleSheet,
@@ -9,12 +10,13 @@ import {
 } from "react-native";
 
 interface SIPAutoDebitCardProps {
-  onPress: () => void;
+  onPress: () => Promise<void>;
   payment: Payment | undefined;
 }
 
 export function SIPAutoDebitCard({ onPress, payment }: SIPAutoDebitCardProps) {
   const sipStatus: PaymentStatus | "loading" = payment?.sip_status ?? "loading";
+  const [isAuthorizing, setIsAuthorizing] = useState(false);
 
   const getStatusConfig = () => {
     switch (sipStatus) {
@@ -35,9 +37,9 @@ export function SIPAutoDebitCard({ onPress, payment }: SIPAutoDebitCardProps) {
           iconColor: "#FFFFFF",
           iconBgColor: "#10B981",
           borderColor: "#E5E7EB",
-          statusText: "Processing mandate...",
-          statusTextColor: "#10B981",
-          showSpinner: true,
+          statusText: "Click here to authorize the mandate",
+          statusTextColor: "#2563EB",
+          showSpinner: false,
           disabled: false,
         };
       case "submitted":
@@ -118,7 +120,11 @@ export function SIPAutoDebitCard({ onPress, payment }: SIPAutoDebitCardProps) {
         { borderColor: statusConfig.borderColor },
         statusConfig.disabled && styles.disabledCard,
       ]}
-      onPress={onPress}
+      onPress={async () => {
+        setIsAuthorizing(true);
+        await onPress();
+        setIsAuthorizing(false);
+      }}
       activeOpacity={statusConfig.disabled ? 1 : 0.9}
       disabled={statusConfig.disabled}
     >
@@ -142,7 +148,7 @@ export function SIPAutoDebitCard({ onPress, payment }: SIPAutoDebitCardProps) {
               Authorize recurring payment
             </ThemedText>
             <View style={styles.processingContainer}>
-              {statusConfig.showSpinner && (
+              {(statusConfig.showSpinner || isAuthorizing) && (
                 <ActivityIndicator
                   size="small"
                   color={statusConfig.statusTextColor}

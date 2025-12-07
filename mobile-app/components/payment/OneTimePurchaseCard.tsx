@@ -1,6 +1,7 @@
 import { Payment, PaymentStatus } from "@/api/paymentAPI";
 import { ThemedText } from "@/components/ThemedText";
 import { Ionicons } from "@expo/vector-icons";
+import { useState } from "react";
 import {
   ActivityIndicator,
   StyleSheet,
@@ -9,7 +10,7 @@ import {
 } from "react-native";
 
 interface OneTimePurchaseCardProps {
-  onPress: () => void;
+  onPress: () => Promise<void>;
   payment: Payment | undefined;
 }
 
@@ -18,6 +19,7 @@ export function OneTimePurchaseCard({
   payment,
 }: OneTimePurchaseCardProps) {
   const buyStatus: PaymentStatus | "loading" = payment?.buy_status ?? "loading";
+  const [isAuthorizing, setIsAuthorizing] = useState(false);
 
   const getStatusConfig = () => {
     switch (buyStatus) {
@@ -38,9 +40,9 @@ export function OneTimePurchaseCard({
           iconColor: "#FFFFFF",
           iconBgColor: "#2563EB",
           borderColor: "#2563EB",
-          statusText: "Processing payment...",
+          statusText: "Click here to authorize the payment",
           statusTextColor: "#2563EB",
-          showSpinner: true,
+          showSpinner: false,
           disabled: false,
         };
       case "submitted":
@@ -121,7 +123,11 @@ export function OneTimePurchaseCard({
         { borderColor: statusConfig.borderColor },
         statusConfig.disabled && styles.disabledCard,
       ]}
-      onPress={onPress}
+      onPress={async () => {
+        setIsAuthorizing(true);
+        await onPress();
+        setIsAuthorizing(false);
+      }}
       activeOpacity={statusConfig.disabled ? 1 : 0.9}
       disabled={statusConfig.disabled}
     >
@@ -145,7 +151,7 @@ export function OneTimePurchaseCard({
               Payment for mutual fund
             </ThemedText>
             <View style={styles.processingContainer}>
-              {statusConfig.showSpinner && (
+              {(statusConfig.showSpinner || isAuthorizing) && (
                 <ActivityIndicator
                   size="small"
                   color={statusConfig.statusTextColor}
