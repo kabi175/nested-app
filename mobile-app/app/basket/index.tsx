@@ -4,7 +4,7 @@ import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
 import { useCreateOrders } from "@/hooks/useCreateOrders";
 import { useGoalCreation } from "@/hooks/useGoalCreation";
-import { router } from "expo-router";
+import { router, useLocalSearchParams } from "expo-router";
 import { useSetAtom } from "jotai";
 import {
   ArrowLeft,
@@ -68,7 +68,34 @@ const recommendedFunds: RecommendedFund[] = [
   },
 ];
 
+const popularBaskets = {
+  "choti-sip": {
+    title: "Choti SIP",
+    description: "SIP in safe funds with low risk, no lock-in, no TDS",
+    description2: null,
+    targetYears: 1,
+  },
+  "all-weather": {
+    title: "All-weather funds",
+    description: "Start your first steps for equity investing.",
+    description2: "Ideal for 3+ years investment timeline.",
+    targetYears: 5,
+  },
+  "better-than-fd": {
+    title: "Better than FD",
+    description: "Monthly income of upto ₹775 per ₹ 1 lakh invested.",
+    description2: "TDS of 10% above Rs 5000 payout in a financial year",
+    targetYears: 3,
+  },
+};
+
 export default function BasketInvestingScreen() {
+  const { type } = useLocalSearchParams<{
+    type: keyof typeof popularBaskets;
+  }>();
+
+  const basket = popularBaskets[type];
+
   const [initialInvestment, setInitialInvestment] = useState<string>("");
   const [yearlyStepUp, setYearlyStepUp] = useState<string>("");
   const [monthlySip, setMonthlySip] = useState<string>("");
@@ -97,11 +124,11 @@ export default function BasketInvestingScreen() {
     try {
       // Create goal
       const targetDate = new Date();
-      targetDate.setFullYear(targetDate.getFullYear() + 1);
+      targetDate.setFullYear(targetDate.getFullYear() + basket.targetYears);
 
       const goalResponse = await createGoalMutation.mutateAsync([
         {
-          title: "Better than FD",
+          title: basket.title,
           childId: undefined,
           educationId: "",
           targetAmount:
@@ -202,7 +229,7 @@ export default function BasketInvestingScreen() {
         >
           <ArrowLeft size={24} color="#1F2937" />
         </TouchableOpacity>
-        <ThemedText style={styles.headerTitle}>Better than FD</ThemedText>
+        <ThemedText style={styles.headerTitle}>{basket.title}</ThemedText>
         <View style={styles.backButton} />
       </View>
 
@@ -214,10 +241,10 @@ export default function BasketInvestingScreen() {
         {/* Description */}
         <View style={styles.descriptionContainer}>
           <ThemedText style={styles.descriptionText}>
-            Monthly income of upto ₹775 per ₹1 lakh invested.
+            {basket.description}
           </ThemedText>
           <ThemedText style={styles.descriptionText}>
-            TDS of 10% above Rs 5000 payout in a financial year
+            {basket.description2 ?? ""}
           </ThemedText>
         </View>
 

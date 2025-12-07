@@ -61,7 +61,7 @@ export default function PopularWealthBaskets({
   onExplore,
 }: PopularWealthBasketsProps) {
   const handleExplore = (basketId: string) => {
-    router.push(`/basket`);
+    router.push(`/basket?type=${basketId}`);
   };
 
   return (
