@@ -6,6 +6,7 @@ import com.nested.app.dto.MinifiedBasketDto;
 import com.nested.app.dto.MinifiedChildDTO;
 import com.nested.app.dto.MinifiedEducationDto;
 import com.nested.app.dto.MinifiedUserDTO;
+import com.nested.app.entity.Basket;
 import com.nested.app.entity.Goal;
 import com.nested.app.repository.BasketRepository;
 import com.nested.app.repository.EducationRepository;
@@ -136,10 +137,16 @@ public class GoalServiceImpl implements GoalService {
       goalEntities.forEach(
           goal -> {
             goal.setUser(userContext.getUser());
-            var basket =
-                basketRepository
-                    .findClosestByReturns(goal.getTargetAmount())
-                    .orElseGet(basketRepository::findFirstByOrderByReturnsDesc);
+            Basket basket;
+            if (goal.getEducation() == null && goal.getBasket() != null) {
+              basket = basketRepository.findById(goal.getBasket().getId()).orElseThrow();
+            } else {
+              basket =
+                  basketRepository
+                      .findClosestByReturns(goal.getTargetAmount())
+                      .orElseGet(basketRepository::findFirstByOrderByReturnsDesc);
+            }
+
             goal.setBasket(basket);
 
             if (goal.getTargetAmount() == null) {
@@ -278,6 +285,12 @@ public class GoalServiceImpl implements GoalService {
 
     if (goalDTO.getChild() != null) {
       goal.setChild(goalDTO.getChild().toEntity());
+    }
+
+    if (goalDTO.getBasket() != null) {
+      var basket = new Basket();
+      basket.setId(goalDTO.getId());
+      goal.setBasket(basket);
     }
 
     return goal;

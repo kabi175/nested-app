@@ -30,6 +30,9 @@ public class GoalCreateDTO {
   @JsonProperty("target_date")
   private Date targetDate;
 
+  @JsonProperty("basket")
+  private MinifiedBasketDto basket;
+
   @NotEmpty private MinifiedChildDTO child;
 
   public static GoalDTO toGoalDTO(GoalCreateDTO createDTO) {
@@ -44,6 +47,7 @@ public class GoalCreateDTO {
       var educationDto = new MinifiedEducationDto(createDTO.getEducation().getId());
       dto.setEducation(educationDto);
     }
+    dto.setBasket(createDTO.getBasket());
     return dto;
   }
 }
