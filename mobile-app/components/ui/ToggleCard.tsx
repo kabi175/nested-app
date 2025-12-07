@@ -1,7 +1,8 @@
 import { ThemedText } from "@/components/ThemedText";
+import { Toggle } from "@ui-kitten/components";
 import * as Haptics from "expo-haptics";
 import { ChevronDown } from "lucide-react-native";
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   Animated,
   StyleSheet,
@@ -29,17 +30,7 @@ export default function ToggleCard({
 }: ToggleCardProps) {
   const [isEnabled, setIsEnabled] = useState(initialValue > 0);
   const [value, setValue] = useState(initialValue);
-  const toggleAnimation = useRef(new Animated.Value(isEnabled ? 1 : 0)).current;
   const [isExpanded, setIsExpanded] = useState(initialValue > 0);
-
-  useEffect(() => {
-    Animated.spring(toggleAnimation, {
-      toValue: isEnabled ? 1 : 0,
-      tension: 100,
-      friction: 8,
-      useNativeDriver: true,
-    }).start();
-  }, [isEnabled, toggleAnimation]);
 
   useEffect(() => {
     // When disabled, set value to 0 and notify parent
@@ -55,9 +46,9 @@ export default function ToggleCard({
     onValueChange(value);
   }, [value, isEnabled, onValueChange]);
 
-  const handleToggle = () => {
+  const handleToggle = (checked: boolean) => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    setIsEnabled(!isEnabled);
+    setIsEnabled(checked);
   };
 
   const handleToggleExpanded = () => {
@@ -74,29 +65,11 @@ export default function ToggleCard({
     <Animated.View style={styles.investmentCard}>
       <View style={styles.cardHeader}>
         <View style={styles.cardHeaderLeft}>
-          <TouchableOpacity
-            style={[
-              styles.toggleSwitch,
-              isEnabled && styles.toggleSwitchActive,
-            ]}
-            onPress={handleToggle}
-          >
-            <Animated.View
-              style={[
-                styles.toggleThumb,
-                {
-                  transform: [
-                    {
-                      translateX: toggleAnimation.interpolate({
-                        inputRange: [0, 1],
-                        outputRange: [0, 20],
-                      }),
-                    },
-                  ],
-                },
-              ]}
-            />
-          </TouchableOpacity>
+          <Toggle
+            checked={isEnabled}
+            onChange={handleToggle}
+            style={styles.toggle}
+          />
           <View style={styles.cardTitleContainer}>
             <ThemedText style={styles.cardTitle}>{title}</ThemedText>
             <ThemedText style={styles.cardSubtitle}>{subtitle}</ThemedText>
@@ -176,30 +149,8 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: "#6B7280",
   },
-  toggleSwitch: {
-    width: 48,
-    height: 28,
-    backgroundColor: "#E5E7EB",
-    borderRadius: 14,
-    justifyContent: "center",
-    paddingHorizontal: 2,
-  },
-  toggleSwitchActive: {
-    backgroundColor: "#1F2937",
-  },
-  toggleThumb: {
-    width: 24,
-    height: 24,
-    backgroundColor: "#FFFFFF",
-    borderRadius: 12,
-    shadowColor: "#000",
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.2,
-    shadowRadius: 4,
-    elevation: 4,
+  toggle: {
+    marginRight: 12,
   },
   expandButton: {
     padding: 8,
