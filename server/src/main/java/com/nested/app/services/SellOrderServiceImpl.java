@@ -4,6 +4,7 @@ import com.nested.app.client.mf.SellOrderApiClient;
 import com.nested.app.client.mf.dto.OrderConsentRequest;
 import com.nested.app.client.mf.dto.SellOrderDetail;
 import com.nested.app.contect.UserContext;
+import com.nested.app.dto.MinifiedGoalDTO;
 import com.nested.app.dto.OrderDTO;
 import com.nested.app.dto.SellOrderRequestDTO;
 import com.nested.app.dto.SellOrderVerifyDTO;
@@ -19,6 +20,8 @@ import com.nested.app.repository.GoalRepository;
 import com.nested.app.repository.OrderItemsRepository;
 import com.nested.app.repository.OrderRepository;
 import com.nested.app.repository.TransactionRepository;
+import com.nested.app.utils.IpUtils;
+import jakarta.servlet.http.HttpServletRequest;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -28,6 +31,8 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.context.request.RequestContextHolder;
+import org.springframework.web.context.request.ServletRequestAttributes;
 
 /**
  * Service implementation for managing Sell Order entities Provides business logic for sell
@@ -68,7 +73,7 @@ public class SellOrderServiceImpl implements SellOrderService {
     var goalIds =
         sellOrderRequest.getSellOrders().stream()
             .map(SellOrderRequestDTO.SellOrderItemDTO::getGoal)
-            .map(goal -> goal.getId())
+            .map(MinifiedGoalDTO::getId)
             .distinct()
             .collect(Collectors.toList());
 
@@ -160,8 +165,7 @@ public class SellOrderServiceImpl implements SellOrderService {
 
       // Create SellOrder entity
       var sellOrder = new SellOrder();
-      sellOrder.setAmount(sellOrderItem.getAmount() != null ? sellOrderItem.getAmount() : 0.0);
-      sellOrder.setUnits(sellOrderItem.getUnits() != null ? sellOrderItem.getUnits() : 0.0);
+      sellOrder.setAmount(sellOrderItem.getAmount());
       sellOrder.setReason(sellOrderItem.getReason());
       sellOrder.setUser(user);
       sellOrder.setGoal(goal);
@@ -189,8 +193,17 @@ public class SellOrderServiceImpl implements SellOrderService {
       sellOrderDetail.setAmount(
           sellOrderItem.getAmount() != null ? sellOrderItem.getAmount() : 0.0);
 
+      ServletRequestAttributes attributes =
+          (ServletRequestAttributes) RequestContextHolder.getRequestAttributes();
+      if (attributes == null) {
+        throw new RuntimeException("Error while getting request");
+      }
+      HttpServletRequest request = attributes.getRequest();
+      var ipAddress = IpUtils.getClientIpAddress(request);
+      sellOrderDetail.setUserIP(ipAddress);
+
       try {
-        var placedOrder = sellOrderApiClient.placeBuyOrder(sellOrderDetail).block();
+        var placedOrder = sellOrderApiClient.placeOrder(sellOrderDetail).block();
         if (placedOrder != null && placedOrder.getRef() != null) {
           orderItem.setRef(placedOrder.getRef());
           orderItemsRepository.save(orderItem);
@@ -264,14 +277,17 @@ public class SellOrderServiceImpl implements SellOrderService {
       // Update consent for each order
       for (String orderRef : orderRefs) {
         var consentRequest =
-            OrderConsentRequest.builder().orderRef(orderRef).email(email).mobile(mobile).build();
+            OrderConsentRequest.builder()
+                .orderRef(orderRef)
+                .email(email)
+                .mobile(mobile)
+                .state("confirmed")
+                .build();
 
         sellOrderApiClient.updateConsent(consentRequest).block();
         log.info("Updated consent for order ref: {} with user email: {}", orderRef, email);
       }
 
-      // Confirm orders
-      sellOrderApiClient.confirmOrder(orderRefs).block();
       log.info("Confirmed {} sell orders", orderRefs.size());
 
       // Schedule fulfillment jobs for order tracking

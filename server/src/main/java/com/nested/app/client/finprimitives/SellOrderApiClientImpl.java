@@ -45,9 +45,9 @@ public class SellOrderApiClientImpl implements SellOrderApiClient {
   }
 
   @Override
-  public Mono<SellOrderDetail> placeBuyOrder(SellOrderDetail order) {
+  public Mono<SellOrderDetail> placeOrder(SellOrderDetail order) {
     try {
-      log.info("placeBuyOrder with request: {}", objectMapper.writeValueAsString(order));
+      log.info("placeSellOrder with request: {}", objectMapper.writeValueAsString(order));
     } catch (Exception e) {
       log.warn("Failed to serialize request for logging", e);
     }

@@ -14,7 +14,7 @@ public interface SellOrderApiClient {
 
   Mono<Void> confirmOrder(List<String> orderIds);
 
-  Mono<SellOrderDetail> placeBuyOrder(SellOrderDetail order);
+  Mono<SellOrderDetail> placeOrder(SellOrderDetail order);
 
   Mono<OrderData> fetchOrderDetails(String orderRef);
 }

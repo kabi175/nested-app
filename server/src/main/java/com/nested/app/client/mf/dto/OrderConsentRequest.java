@@ -1,6 +1,7 @@
 package com.nested.app.client.mf.dto;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import java.util.HashMap;
 import java.util.Map;
@@ -16,6 +17,9 @@ public class OrderConsentRequest {
   @JsonIgnore private String email;
 
   @JsonIgnore private String mobile;
+
+  @JsonInclude(JsonInclude.Include.NON_NULL)
+  private String state;
 
   @JsonProperty("consent")
   private Map<String, String> getConsent() {

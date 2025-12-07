@@ -1,10 +1,7 @@
 package com.nested.app.entity;
 
-import com.nested.app.annotation.OneFieldOnly;
-import jakarta.persistence.Column;
 import jakarta.persistence.DiscriminatorValue;
 import jakarta.persistence.Entity;
-import jakarta.validation.constraints.Min;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
@@ -12,14 +9,6 @@ import lombok.EqualsAndHashCode;
 @Data
 @Entity
 @DiscriminatorValue("SELL")
-@OneFieldOnly(first = "amount", second = "units",
-        message = "Either amount or units must be set, but not both")
 public class SellOrder extends Order {
-    private Double amount;
-
-    @Min(1)
-    @Column(nullable = false)
-    private Double units;
-
     private String reason;
 }
