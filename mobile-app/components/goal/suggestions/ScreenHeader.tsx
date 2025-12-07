@@ -11,16 +11,18 @@ interface ScreenHeaderProps {
 export function ScreenHeader({ title, subtitle }: ScreenHeaderProps) {
   return (
     <View style={styles.header}>
-      <TouchableOpacity
-        style={styles.backButton}
-        onPress={() => router.back()}
-      >
-        <Ionicons name="arrow-back" size={24} color="#1F2937" />
-      </TouchableOpacity>
-      <View style={styles.headerContent}>
-        <ThemedText style={styles.title}>{title}</ThemedText>
-        <ThemedText style={styles.subtitle}>{subtitle}</ThemedText>
+      <View style={styles.headerRow}>
+        <TouchableOpacity
+          style={styles.backButton}
+          onPress={() => router.back()}
+        >
+          <Ionicons name="arrow-back" size={20} color="#1F2937" />
+        </TouchableOpacity>
+        <View style={styles.headerContent}>
+          <ThemedText style={styles.title}>{title}</ThemedText>
+        </View>
       </View>
+      <ThemedText style={styles.subtitle}>{subtitle}</ThemedText>
     </View>
   );
 }
@@ -28,25 +30,32 @@ export function ScreenHeader({ title, subtitle }: ScreenHeaderProps) {
 const styles = StyleSheet.create({
   header: {
     paddingHorizontal: 20,
-    paddingTop: 20,
-    paddingBottom: 24,
+    paddingTop: 12,
+    paddingBottom: 16,
+  },
+  headerRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: 6,
   },
   backButton: {
-    marginBottom: 16,
+    marginRight: 10,
+    justifyContent: "center",
+    alignItems: "center",
   },
   headerContent: {
-    paddingLeft: 0,
+    flex: 1,
   },
   title: {
-    fontSize: 28,
+    fontSize: 22,
     fontWeight: "700",
     color: "#1F2937",
-    marginBottom: 8,
   },
   subtitle: {
-    fontSize: 16,
+    fontSize: 14,
     color: "#6B7280",
-    lineHeight: 22,
+    lineHeight: 20,
+    paddingLeft: 30, // Align with title (20 icon + 10 margin)
   },
 });
 
