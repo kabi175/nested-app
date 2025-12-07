@@ -11,4 +11,5 @@ export const QUERY_KEYS = {
   sipOrders: "sipOrders",
   transactions: "transactions",
   fundAllocations: "fundAllocations",
+  basket: "basket",
 };

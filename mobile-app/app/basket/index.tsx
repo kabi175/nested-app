@@ -1,7 +1,9 @@
+import { BasketFund } from "@/api/basketAPI";
 import { CreateOrderRequest } from "@/api/paymentAPI";
 import { cartAtom } from "@/atoms/cart";
 import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
+import { useBasket } from "@/hooks/useBasket";
 import { useCreateOrders } from "@/hooks/useCreateOrders";
 import { useGoalCreation } from "@/hooks/useGoalCreation";
 import { router, useLocalSearchParams } from "expo-router";
@@ -16,7 +18,7 @@ import {
   Unlock,
   Zap,
 } from "lucide-react-native";
-import React, { useState } from "react";
+import React, { useMemo, useState } from "react";
 import {
   ActivityIndicator,
   Alert,
@@ -38,51 +40,63 @@ interface RecommendedFund {
   icon: "clock" | "file" | "shield";
 }
 
-const recommendedFunds: RecommendedFund[] = [
-  {
-    id: "1",
-    name: "Invesco India Growth Opportunities Fund",
-    cagr: "14.2%",
-    allocation: "85%",
-    expRatio: "0.35%",
-    accentColor: "#A78BFA",
-    icon: "clock",
-  },
-  {
-    id: "2",
-    name: "SBI Small Cap Fund",
-    cagr: "16.8%",
-    allocation: "90%",
-    expRatio: "0.45%",
-    accentColor: "#EF4444",
-    icon: "file",
-  },
-  {
-    id: "3",
-    name: "Axis Mid Cap Fund",
-    cagr: "15.1%",
-    allocation: "80%",
-    expRatio: "0.40%",
-    accentColor: "#3B82F6",
-    icon: "shield",
-  },
+// Predefined accent colors to cycle through
+const ACCENT_COLORS = [
+  "#A78BFA",
+  "#EF4444",
+  "#3B82F6",
+  "#10B981",
+  "#F59E0B",
+  "#EC4899",
 ];
+
+// Icon types to cycle through
+const ICON_TYPES: ("clock" | "file" | "shield")[] = ["clock", "file", "shield"];
+
+// Transform BasketFund to RecommendedFund
+const transformBasketFundToRecommendedFund = (
+  fund: BasketFund,
+  index: number
+): RecommendedFund => {
+  return {
+    id: fund.id,
+    name: fund.name,
+    cagr:
+      typeof fund.cagr === "number" && !isNaN(fund.cagr)
+        ? `${fund.cagr.toFixed(1)}%`
+        : "N/A",
+    allocation:
+      typeof fund.allocationPercentage === "number" &&
+      !isNaN(fund.allocationPercentage)
+        ? `${fund.allocationPercentage}%`
+        : "N/A",
+    expRatio:
+      typeof fund.expRatio === "number" && !isNaN(fund.expRatio)
+        ? `${fund.expRatio.toFixed(2)}%`
+        : "N/A",
+    accentColor: ACCENT_COLORS[index % ACCENT_COLORS.length],
+    icon: ICON_TYPES[index % ICON_TYPES.length],
+  };
+};
 
 const popularBaskets = {
   "choti-sip": {
     title: "Choti SIP",
+    basketName: "choti-sip",
     description: "SIP in safe funds with low risk, no lock-in, no TDS",
     description2: null,
     targetYears: 1,
   },
   "all-weather": {
     title: "All-weather funds",
+    basketName: "all-weather",
     description: "Start your first steps for equity investing.",
     description2: "Ideal for 3+ years investment timeline.",
     targetYears: 5,
   },
   "better-than-fd": {
     title: "Better than FD",
+    basketName: "better-than-fd",
     description: "Monthly income of upto ₹775 per ₹ 1 lakh invested.",
     description2: "TDS of 10% above Rs 5000 payout in a financial year",
     targetYears: 3,
@@ -104,6 +118,19 @@ export default function BasketInvestingScreen() {
   const createGoalMutation = useGoalCreation();
   const createOrdersMutation = useCreateOrders();
   const setCart = useSetAtom(cartAtom);
+
+  // Fetch basket data using the hook
+  const basketQuery = useBasket(basket?.basketName || "");
+
+  // Transform basket funds to recommended funds format
+  const recommendedFunds = useMemo(() => {
+    if (!basketQuery.data?.funds || !Array.isArray(basketQuery.data.funds)) {
+      return [];
+    }
+    return basketQuery.data.funds
+      .filter((fund) => fund && fund.id && fund.name)
+      .map((fund, index) => transformBasketFundToRecommendedFund(fund, index));
+  }, [basketQuery.data?.funds]);
 
   const handleInvest = async () => {
     // Validate inputs
@@ -345,17 +372,38 @@ export default function BasketInvestingScreen() {
         {/* Recommended Funds Section */}
         <View style={styles.fundsSection}>
           <ThemedText style={styles.sectionTitle}>Recommended Funds</ThemedText>
-          {recommendedFunds.map((fund, index) => {
-            const IconComponent = getIconComponent(fund.icon);
-            return (
-              <FundCard
-                key={fund.id}
-                fund={fund}
-                index={index}
-                IconComponent={IconComponent}
-              />
-            );
-          })}
+          {basketQuery.isLoading ? (
+            <View style={styles.loadingContainer}>
+              <ActivityIndicator size="large" color="#3B82F6" />
+              <ThemedText style={styles.loadingText}>
+                Loading funds...
+              </ThemedText>
+            </View>
+          ) : basketQuery.isError ? (
+            <View style={styles.errorContainer}>
+              <ThemedText style={styles.errorText}>
+                Failed to load funds. Please try again.
+              </ThemedText>
+            </View>
+          ) : recommendedFunds.length === 0 ? (
+            <View style={styles.errorContainer}>
+              <ThemedText style={styles.errorText}>
+                No funds available for this basket.
+              </ThemedText>
+            </View>
+          ) : (
+            recommendedFunds.map((fund, index) => {
+              const IconComponent = getIconComponent(fund.icon);
+              return (
+                <FundCard
+                  key={fund.id}
+                  fund={fund}
+                  index={index}
+                  IconComponent={IconComponent}
+                />
+              );
+            })
+          )}
         </View>
 
         {/* Invest Button */}
@@ -668,5 +716,26 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: "700",
     color: "#FFFFFF",
+  },
+  loadingContainer: {
+    paddingVertical: 40,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  loadingText: {
+    marginTop: 12,
+    fontSize: 14,
+    color: "#6B7280",
+  },
+  errorContainer: {
+    paddingVertical: 40,
+    paddingHorizontal: 16,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  errorText: {
+    fontSize: 14,
+    color: "#EF4444",
+    textAlign: "center",
   },
 });
