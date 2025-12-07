@@ -1,12 +1,5 @@
 package com.nested.app.services;
 
-import java.util.List;
-import java.util.Optional;
-import java.util.stream.Collectors;
-
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-
 import com.nested.app.dto.BasketDTO;
 import com.nested.app.dto.FundDTO;
 import com.nested.app.entity.Basket;
@@ -15,9 +8,13 @@ import com.nested.app.entity.Fund;
 import com.nested.app.repository.BasketFundRepository;
 import com.nested.app.repository.BasketRepository;
 import com.nested.app.repository.FundRepository;
-
+import java.util.List;
+import java.util.Optional;
+import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 /**
  * Service implementation for managing Basket entities Provides business logic for basket-related
@@ -69,6 +66,39 @@ public class BasketServiceImpl implements BasketService {
   }
 
   /**
+   * Retrieves a basket by its name (title)
+   *
+   * @param name Basket name (title)
+   * @return Basket data or null if not found
+   */
+  @Override
+  @Transactional(readOnly = true)
+  public BasketDTO getBasketByName(String name) {
+    log.info("Retrieving basket with name: {}", name);
+
+    try {
+      List<Basket> baskets = basketRepository.findByTitle(name);
+
+      if (baskets.isEmpty()) {
+        log.warn("Basket not found with name: {}", name);
+        return null;
+      }
+
+      if (baskets.size() > 1) {
+        log.warn("Multiple baskets found with name '{}', returning the first one", name);
+      }
+
+      BasketDTO basketDTO = convertToDTO(baskets.get(0));
+      log.info("Successfully retrieved basket with name: {}", name);
+      return basketDTO;
+
+    } catch (Exception e) {
+      log.error("Error retrieving basket with name {}: {}", name, e.getMessage(), e);
+      throw new RuntimeException("Failed to retrieve basket", e);
+    }
+  }
+
+  /**
    * Retrieves all baskets
    *
    * @return List of all baskets
@@ -107,7 +137,8 @@ public class BasketServiceImpl implements BasketService {
       // Check if basket with same title already exists
       List<Basket> existingBaskets = basketRepository.findByTitle(basketDTO.getTitle());
       if (!existingBaskets.isEmpty()) {
-        throw new IllegalArgumentException("A basket with the title '" + basketDTO.getTitle() + "' already exists");
+        throw new IllegalArgumentException(
+            "A basket with the title '" + basketDTO.getTitle() + "' already exists");
       }
 
       // Validate allocation percentages
@@ -158,7 +189,8 @@ public class BasketServiceImpl implements BasketService {
       if (!existingBasket.getTitle().equals(basketDTO.getTitle())) {
         List<Basket> basketsWithSameTitle = basketRepository.findByTitle(basketDTO.getTitle());
         if (!basketsWithSameTitle.isEmpty()) {
-          throw new IllegalArgumentException("A basket with the title '" + basketDTO.getTitle() + "' already exists");
+          throw new IllegalArgumentException(
+              "A basket with the title '" + basketDTO.getTitle() + "' already exists");
         }
       }
 
@@ -212,6 +244,7 @@ public class BasketServiceImpl implements BasketService {
                     BasketDTO.BasketFundDTO fundDTO = new BasketDTO.BasketFundDTO();
                     if (basketFund.getFund() != null) {
                       fundDTO.setFundId(basketFund.getFund().getId());
+                      fundDTO.setName(basketFund.getFund().getLabel());
                     }
                     fundDTO.setAllocationPercentage(basketFund.getAllocationPercentage());
                     return fundDTO;
@@ -397,7 +430,7 @@ public class BasketServiceImpl implements BasketService {
     // Note: Basket doesn't have user_id filter, so this is typically admin-only operation
     List<BasketFund> existingBasketFunds = basketFundRepository.findByBasketId(basket.getId());
     if (!existingBasketFunds.isEmpty()) {
-        basketFundRepository.deleteAll(existingBasketFunds);
+      basketFundRepository.deleteAll(existingBasketFunds);
     }
 
     // Save new basket funds

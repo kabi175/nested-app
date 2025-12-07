@@ -1,6 +1,7 @@
 package com.nested.app.dto;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import java.sql.Timestamp;
 import java.util.List;
 import lombok.Data;
@@ -25,7 +26,10 @@ public class BasketDTO {
 
   @Data
   public static class BasketFundDTO {
+    @JsonProperty("id")
     private Long fundId;
+
+    private String name;
     private Double allocationPercentage;
   }
 }

@@ -19,7 +19,15 @@ public interface BasketService {
      * @return Basket data or null if not found
      */
     BasketDTO getBasketById(String id);
-    
+
+  /**
+   * Retrieves a basket by its name (title)
+   *
+   * @param name Basket name (title)
+   * @return Basket data or null if not found
+   */
+  BasketDTO getBasketByName(String name);
+
     /**
      * Retrieves all baskets
      * 

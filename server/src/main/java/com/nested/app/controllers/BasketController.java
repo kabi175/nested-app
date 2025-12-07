@@ -1,8 +1,21 @@
 package com.nested.app.controllers;
 
+import com.nested.app.annotation.AdminOnly;
+import com.nested.app.dto.BasketDTO;
+import com.nested.app.dto.Entity;
+import com.nested.app.services.BasketService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import java.util.List;
 import java.util.Map;
-
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -13,22 +26,6 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
-
-import com.nested.app.annotation.AdminOnly;
-import com.nested.app.dto.BasketDTO;
-import com.nested.app.dto.Entity;
-import com.nested.app.services.BasketService;
-
-import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.Parameter;
-import io.swagger.v3.oas.annotations.media.Content;
-import io.swagger.v3.oas.annotations.media.Schema;
-import io.swagger.v3.oas.annotations.responses.ApiResponse;
-import io.swagger.v3.oas.annotations.responses.ApiResponses;
-import io.swagger.v3.oas.annotations.tags.Tag;
-import jakarta.validation.Valid;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 
 /**
  * REST Controller for managing Basket entities Provides endpoints for CRUD operations on baskets
@@ -43,7 +40,7 @@ import lombok.extern.slf4j.Slf4j;
 @Tag(name = "Baskets", description = "API endpoints for managing investment baskets")
 public class BasketController {
 
-    private final BasketService basketService;
+  private final BasketService basketService;
 
   /**
    * Retrieves all baskets
@@ -52,7 +49,9 @@ public class BasketController {
    */
   @GetMapping
   @AdminOnly
-  @Operation(summary = "Get all baskets (Admin only)", description = "Retrieves all investment baskets")
+  @Operation(
+      summary = "Get all baskets (Admin only)",
+      description = "Retrieves all investment baskets")
   @ApiResponses(
       value = {
         @ApiResponse(
@@ -78,66 +77,108 @@ public class BasketController {
     }
   }
 
-    /**
-     * Retrieves basket details by ID
-     * 
-     * @param id The ID of the basket
-     * @return ResponseEntity containing basket details
-     */
-    @GetMapping("/{id}")
-    @AdminOnly
-    @Operation(
-        summary = "Get basket details by ID (Admin only)",
-        description = "Retrieves detailed information about a specific investment basket"
-    )
-    @ApiResponses(value = {
+  /**
+   * Retrieves basket details by ID
+   *
+   * @param id The ID of the basket
+   * @return ResponseEntity containing basket details
+   */
+  @GetMapping("/{id}")
+  @AdminOnly
+  @Operation(
+      summary = "Get basket details by ID (Admin only)",
+      description = "Retrieves detailed information about a specific investment basket")
+  @ApiResponses(
+      value = {
         @ApiResponse(
             responseCode = "200",
             description = "Successfully retrieved basket details",
-            content = @Content(
-                mediaType = "application/json",
-                schema = @Schema(implementation = Map.class)
-            )
-        ),
-        @ApiResponse(
-            responseCode = "403",
-            description = "Access denied - Admin role required"
-        ),
+            content =
+                @Content(
+                    mediaType = "application/json",
+                    schema = @Schema(implementation = Map.class))),
+        @ApiResponse(responseCode = "403", description = "Access denied - Admin role required"),
         @ApiResponse(
             responseCode = "404",
             description = "Basket not found",
-            content = @Content(
-                mediaType = "application/json",
-                schema = @Schema(implementation = Map.class)
-            )
-        ),
-        @ApiResponse(
-            responseCode = "500",
-            description = "Internal server error"
-        )
-    })
-    public ResponseEntity<?> getBasketById(
-            @Parameter(description = "Basket ID", required = true)
-            @PathVariable String id) {
-        
-        log.info("GET /api/v1/bucket/{} - Retrieving basket details", id);
-        
-        try {
-            BasketDTO basket = basketService.getBasketById(id);
-            if (basket == null) {
-                log.warn("Basket not found with ID: {}", id);
-                return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                        .body(Map.<String, Object>of("error", "Basket not found"));
-            }
-            
-            log.info("Successfully retrieved basket details for ID: {}", id);
+            content =
+                @Content(
+                    mediaType = "application/json",
+                    schema = @Schema(implementation = Map.class))),
+        @ApiResponse(responseCode = "500", description = "Internal server error")
+      })
+  public ResponseEntity<?> getBasketById(
+      @Parameter(description = "Basket ID", required = true) @PathVariable String id) {
+
+    log.info("GET /api/v1/bucket/{} - Retrieving basket details", id);
+
+    try {
+      BasketDTO basket = basketService.getBasketById(id);
+      if (basket == null) {
+        log.warn("Basket not found with ID: {}", id);
+        return ResponseEntity.status(HttpStatus.NOT_FOUND)
+            .body(Map.<String, Object>of("error", "Basket not found"));
+      }
+
+      log.info("Successfully retrieved basket details for ID: {}", id);
       return ResponseEntity.ok(Entity.of(List.of(basket)));
 
-        } catch (Exception e) {
-            log.error("Error retrieving basket with ID {}: {}", id, e.getMessage(), e);
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
-        }
+    } catch (Exception e) {
+      log.error("Error retrieving basket with ID {}: {}", id, e.getMessage(), e);
+      return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
     }
+  }
+
+  /**
+   * Retrieves basket details by name
+   *
+   * @param name The name (title) of the basket
+   * @return ResponseEntity containing basket details
+   */
+  @GetMapping("/name/{name}")
+  @Operation(
+      summary = "Get basket details by name (Admin only)",
+      description = "Retrieves detailed information about a specific investment basket by its name")
+  @ApiResponses(
+      value = {
+        @ApiResponse(
+            responseCode = "200",
+            description = "Successfully retrieved basket details",
+            content =
+                @Content(
+                    mediaType = "application/json",
+                    schema = @Schema(implementation = Map.class))),
+        @ApiResponse(responseCode = "403", description = "Access denied - Admin role required"),
+        @ApiResponse(
+            responseCode = "404",
+            description = "Basket not found",
+            content =
+                @Content(
+                    mediaType = "application/json",
+                    schema = @Schema(implementation = Map.class))),
+        @ApiResponse(responseCode = "500", description = "Internal server error")
+      })
+  public ResponseEntity<?> getBasketByName(
+      @Parameter(description = "Basket name (title)", required = true) @PathVariable String name) {
+
+    log.info("GET /api/v1/bucket/name/{} - Retrieving basket details by name", name);
+
+    try {
+      BasketDTO basket = basketService.getBasketByName(name);
+      if (basket == null) {
+        log.warn("Basket not found with name: {}", name);
+        return ResponseEntity.status(HttpStatus.NOT_FOUND)
+            .body(Map.<String, Object>of("error", "Basket not found"));
+      }
+
+      log.info("Successfully retrieved basket details for name: {}", name);
+      return ResponseEntity.ok(basket);
+
+    } catch (Exception e) {
+      log.error("Error retrieving basket with name {}: {}", name, e.getMessage(), e);
+      return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+    }
+  }
 
   /**
    * Creates a new basket (Admin only)
