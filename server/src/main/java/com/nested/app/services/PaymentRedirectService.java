@@ -48,10 +48,10 @@ public class PaymentRedirectService {
           mandateId);
 
       if (payment.getSipStatus().equals(Payment.PaymentStatus.ACTIVE)) {
-        return "redirect:exp+nested://payment/" + payment.getId() + "/success?type=sip";
+        return "redirect:nested://payment/" + payment.getId() + "/success?type=sip";
       }
 
-      return "redirect:exp+nested://payment/" + payment.getId() + "/failure?type=sip";
+      return "redirect:nested://payment/" + payment.getId() + "/failure?type=sip";
     } catch (Exception e) {
       log.error("Error processing mandate redirect for mandate ID: {}", mandateId, e);
       throw new RuntimeException();
