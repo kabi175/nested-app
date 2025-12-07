@@ -24,16 +24,7 @@ export default function Layout() {
       <Stack.Screen
         name="index"
         options={{
-          headerShown: true,
-          title: "Complete Your Payment",
-          headerStyle: {
-            backgroundColor: "#FFFFFF",
-          },
-          headerTintColor: "#000000",
-          headerTitleStyle: {
-            fontWeight: "600",
-            fontSize: 20,
-          },
+          headerShown: false,
         }}
       />
       <Stack.Screen
