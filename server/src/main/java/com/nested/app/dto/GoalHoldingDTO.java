@@ -1,5 +1,6 @@
 package com.nested.app.dto;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.nested.app.serializer.OneDecimalDoubleSerializer;
@@ -21,6 +22,10 @@ public class GoalHoldingDTO {
 
   @JsonProperty("fund")
   private String fundLabel;
+
+  @JsonFormat(shape = JsonFormat.Shape.STRING)
+  @JsonProperty("fund_id")
+  private long fundID;
 
   @JsonProperty("current_nav")
   private Double currentNav;
