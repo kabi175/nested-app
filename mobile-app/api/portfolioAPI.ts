@@ -16,6 +16,9 @@ export type Holding = {
   invested_amount: number;
   current_value: number;
   returns_amount: number;
+  current_nav: number;
+  average_nav: number;
+  total_units: number;
 };
 
 export const getTranscationsForGoal = async (
@@ -46,8 +49,11 @@ export const getHoldingsForGoal = async (
   return data.data.map((holding: any) => ({
     fund: holding.fund,
     allocation_percentage: holding.allocation_percentage,
-    invested_amount: holding.invested_amount,
-    current_value: holding.current_value,
-    returns_amount: holding.returns_amount,
+    invested_amount: Number(holding.invested_amount),
+    current_value: Number(holding.current_value),
+    returns_amount: Number(holding.returns_amount),
+    current_nav: Number(holding.current_nav),
+    average_nav: Number(holding.average_nav),
+    total_units: Number(holding.total_units),
   }));
 };
