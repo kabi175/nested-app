@@ -50,6 +50,7 @@ public interface TransactionRepository extends JpaRepository<Transaction, Long> 
       SELECT
         f.id AS fundId,
         f.label AS fundLabel,
+        AVG(t.unitPrice) as averageNav,
         SUM(t.units) AS totalUnits,
         SUM(CASE WHEN t.units > 0 THEN t.amount ELSE 0 END) AS investedAmount,
         f.nav AS currentNav

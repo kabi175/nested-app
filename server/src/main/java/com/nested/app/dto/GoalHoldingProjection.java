@@ -17,4 +17,6 @@ public interface GoalHoldingProjection {
   Double getInvestedAmount();
 
   Double getCurrentNav();
+
+  Double getAverageNav();
 }

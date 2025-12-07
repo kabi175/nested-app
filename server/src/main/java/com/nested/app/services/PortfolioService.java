@@ -228,6 +228,9 @@ public class PortfolioService {
 
               return new GoalHoldingDTO(
                   h.getFundLabel(),
+                  h.getCurrentNav(),
+                  h.getAverageNav(),
+                  h.getTotalUnits(),
                   allocationPercentage,
                   h.getInvestedAmount(),
                   currentValue,

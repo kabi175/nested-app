@@ -22,13 +22,24 @@ public class GoalHoldingDTO {
   @JsonProperty("fund")
   private String fundLabel;
 
+  @JsonProperty("current_nav")
+  private Double currentNav;
+
+  @JsonProperty("average_nav")
+  private Double averageNav;
+
+  @JsonProperty("total_units")
+  private Double totalUnits;
+
   @JsonSerialize(using = OneDecimalDoubleSerializer.class)
   @JsonProperty("allocation_percentage")
   private Double allocationPercentage; // Fund current value / total goal current value * 100
 
+  @JsonSerialize(using = OneDecimalDoubleSerializer.class)
   @JsonProperty("invested_amount")
   private Double investedAmount; // Sum of positive transaction amounts for this fund
 
+  @JsonSerialize(using = OneDecimalDoubleSerializer.class)
   @JsonProperty("current_value")
   private Double currentValue; // Units * current NAV
 
