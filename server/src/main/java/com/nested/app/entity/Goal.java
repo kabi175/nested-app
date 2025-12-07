@@ -51,11 +51,11 @@ public class Goal {
   @JoinColumn(name = "user_id")
   private User user;
 
-  @ManyToOne(optional = false, fetch = jakarta.persistence.FetchType.EAGER)
+  @ManyToOne(fetch = jakarta.persistence.FetchType.EAGER)
   @JoinColumn(name = "child_id")
   private Child child;
 
-  @ManyToOne(optional = false)
+  @ManyToOne
   @JoinColumn(name = "education_id")
   private Education education;
 

@@ -248,7 +248,9 @@ public class GoalServiceImpl implements GoalService {
       dto.setBasket(MinifiedBasketDto.fromEntity(goal.getBasket()));
     }
 
-    dto.setEducation(new MinifiedEducationDto(goal.getEducation().getId()));
+    if (goal.getEducation() != null) {
+      dto.setEducation(new MinifiedEducationDto(goal.getEducation().getId()));
+    }
 
     return dto;
   }
@@ -269,7 +271,9 @@ public class GoalServiceImpl implements GoalService {
     goal.setCurrentAmount(goalDTO.getCurrentAmount());
     goal.setTargetDate(goalDTO.getTargetDate());
 
-    goal.setEducation(goalDTO.getEducation().toEntity());
+    if (goalDTO.getEducation() != null) {
+      goal.setEducation(goalDTO.getEducation().toEntity());
+    }
     goal.setTargetAmount(goalDTO.getTargetAmount());
 
     if (goalDTO.getChild() != null) {
