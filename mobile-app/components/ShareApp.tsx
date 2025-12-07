@@ -1,4 +1,4 @@
-import { Layout, Text } from "@ui-kitten/components";
+import { Button, Layout, Text } from "@ui-kitten/components";
 import { LinearGradient } from "expo-linear-gradient";
 import { router } from "expo-router";
 import { Share2 } from "lucide-react-native";
@@ -75,22 +75,14 @@ export default function ShareApp() {
       </View>
 
       {/* Bottom Journey Button */}
-      <Pressable
+      <Button
         onPress={handleStartJourney}
-        style={({ pressed }) => [
-          styles.journeyButton,
-          pressed && styles.journeyButtonPressed,
-        ]}
+        size="large"
+        status="primary"
+        style={styles.journeyButton}
       >
-        <LinearGradient
-          colors={["#4A90E2", "#6A5ACD"]}
-          start={{ x: 0, y: 0 }}
-          end={{ x: 1, y: 0 }}
-          style={styles.journeyButtonGradient}
-        >
-          <Text style={styles.journeyButtonText}>Start Your Journey Today</Text>
-        </LinearGradient>
-      </Pressable>
+        Start Your Journey Today
+      </Button>
     </Layout>
   );
 }
@@ -180,28 +172,5 @@ const styles = StyleSheet.create({
   journeyButton: {
     width: "100%",
     borderRadius: 12,
-    overflow: "hidden",
-    shadowColor: "#4A90E2",
-    shadowOffset: {
-      width: 0,
-      height: 4,
-    },
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
-    elevation: 6,
-  },
-  journeyButtonPressed: {
-    opacity: 0.9,
-  },
-  journeyButtonGradient: {
-    paddingVertical: 18,
-    paddingHorizontal: 32,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  journeyButtonText: {
-    color: "#FFFFFF",
-    fontSize: 18,
-    fontWeight: "bold",
   },
 });

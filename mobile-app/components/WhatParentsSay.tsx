@@ -1,9 +1,8 @@
-import { Layout, Text } from "@ui-kitten/components";
-import { LinearGradient } from "expo-linear-gradient";
+import { Button, Layout, Text } from "@ui-kitten/components";
 import { router } from "expo-router";
 import { Star } from "lucide-react-native";
 import React, { useEffect, useRef, useState } from "react";
-import { Dimensions, Pressable, StyleSheet, View } from "react-native";
+import { Dimensions, StyleSheet, View } from "react-native";
 import Animated, {
   useAnimatedStyle,
   useSharedValue,
@@ -306,22 +305,14 @@ export default function WhatParentsSay() {
 
       {/* Let's Begin Button */}
       <Animated.View style={buttonAnimatedStyle}>
-        <Pressable
+        <Button
           onPress={handleButtonPress}
-          style={({ pressed }) => [
-            styles.button,
-            pressed && styles.buttonPressed,
-          ]}
+          size="large"
+          status="primary"
+          style={styles.button}
         >
-          <LinearGradient
-            colors={["#4A90E2", "#6A9EEB"]}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 0 }}
-            style={styles.buttonGradient}
-          >
-            <Text style={styles.buttonText}>Let&apos;s Begin</Text>
-          </LinearGradient>
-        </Pressable>
+          Let&apos;s Begin
+        </Button>
       </Animated.View>
     </Layout>
   );
@@ -393,28 +384,5 @@ const styles = StyleSheet.create({
     width: "100%",
     maxWidth: 300,
     borderRadius: 9999,
-    overflow: "hidden",
-    shadowColor: "#4A90E2",
-    shadowOffset: {
-      width: 0,
-      height: 4,
-    },
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
-    elevation: 6,
-  },
-  buttonPressed: {
-    opacity: 0.9,
-  },
-  buttonGradient: {
-    paddingVertical: 18,
-    paddingHorizontal: 48,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  buttonText: {
-    color: "#FFFFFF",
-    fontSize: 20,
-    fontWeight: "bold",
   },
 });
