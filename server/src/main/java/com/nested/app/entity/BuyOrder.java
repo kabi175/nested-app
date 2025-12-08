@@ -9,6 +9,4 @@ import lombok.EqualsAndHashCode;
 @Entity
 @DiscriminatorValue("BUY")
 @EqualsAndHashCode(callSuper = true)
-public class BuyOrder extends Order {
-  private double units;
-}
+public class BuyOrder extends Order {}
