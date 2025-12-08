@@ -13,6 +13,12 @@
 ALTER TABLE orders
 ALTER COLUMN amount DROP NOT NULL;
 
+-- 2. Drop units column from orders table if it exists
+-- The units field has been removed from SellOrder entity
+-- WARNING: This will delete all existing units data for sell orders
+ALTER TABLE orders
+DROP COLUMN IF EXISTS units;
+
 -- 3. Add reason column if it doesn't exist (for SellOrder)
 -- This column stores the reason for selling
 ALTER TABLE orders
