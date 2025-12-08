@@ -31,21 +31,16 @@ public class SecurityConfig {
     http.csrf(AbstractHttpConfigurer::disable) // disable CSRF for APIs
         .cors(cors -> cors.configurationSource(corsConfigurationSource)); // enable CORS
 
-    // If in development mode (localhost), disable all security
-    if (appEnvironment.isDevelopment()) {
-      http.authorizeHttpRequests(auth -> auth.anyRequest().permitAll());
-    } else {
-      // Production mode - require authentication
-      http.authorizeHttpRequests(
-              auth ->
-                  auth.requestMatchers("/public/**", "/api/v1/education", "/redirects/**")
-                      .permitAll()
-                      .anyRequest()
-                      .authenticated() // everything else requires auth
-              )
-          // add Firebase filter before Spring's own UsernamePasswordAuthenticationFilter
-          .addFilterBefore(firebaseAuthFilter, UsernamePasswordAuthenticationFilter.class);
-    }
+    // Production mode - require authentication
+    http.authorizeHttpRequests(
+            auth ->
+                auth.requestMatchers("/public/**", "/api/v1/education", "/redirects/**")
+                    .permitAll()
+                    .anyRequest()
+                    .authenticated() // everything else requires auth
+            )
+        // add Firebase filter before Spring's own UsernamePasswordAuthenticationFilter
+        .addFilterBefore(firebaseAuthFilter, UsernamePasswordAuthenticationFilter.class);
 
     return http.build();
   }
