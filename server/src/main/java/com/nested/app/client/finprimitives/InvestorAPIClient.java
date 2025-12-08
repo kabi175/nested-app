@@ -94,7 +94,7 @@ public class InvestorAPIClient implements com.nested.app.client.mf.InvestorAPICl
   @Override
   public Mono<Void> addPrimaryBankAccount(String accountID, String bankAccountID) {
     return api.withAuth()
-        .post()
+        .patch()
         .uri(ACCOUNT_API_URL)
         .bodyValue(
             Map.of("id", accountID, "folio_defaults", Map.of("payout_bank_account", bankAccountID)))
