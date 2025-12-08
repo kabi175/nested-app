@@ -166,7 +166,7 @@ public class KycAPIClient implements com.nested.app.client.mf.KycAPIClient {
         .bodyToMono(new ParameterizedTypeReference<EntityListResponse<IdentityDocument>>() {})
         .flatMap(
             resp -> {
-              if (resp == null) {
+              if (resp == null || resp.data.isEmpty()) {
                 return Mono.empty();
               }
               var data = resp.data.getFirst();
