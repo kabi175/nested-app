@@ -306,6 +306,7 @@ export default function BasketInvestingScreen() {
             subtitle="Regular income to your account"
             backgroundColor="#F3E8FF"
             icon={<Target size={20} color="#7C3AED" />}
+            isFullWidth
           />
         </View>
 
@@ -440,6 +441,7 @@ interface FeatureCardProps {
   subtitle: string;
   backgroundColor: string;
   icon: React.ReactNode;
+  isFullWidth?: boolean;
 }
 
 function FeatureCard({
@@ -447,19 +449,55 @@ function FeatureCard({
   subtitle,
   backgroundColor,
   icon,
+  isFullWidth = false,
 }: FeatureCardProps) {
   return (
-    <View style={[styles.featureCard, { backgroundColor }]}>
-      <View style={styles.featureCardContent}>
-        <View style={styles.featureCardText}>
-          <ThemedText style={styles.featureCardTitle}>{title}</ThemedText>
+    <View
+      style={[
+        styles.featureCard,
+        isFullWidth && styles.featureCardFullWidth,
+        { backgroundColor },
+      ]}
+    >
+      <View
+        style={[
+          styles.featureCardContent,
+          isFullWidth && styles.featureCardContentCentered,
+        ]}
+      >
+        <View
+          style={[
+            styles.featureCardText,
+            isFullWidth && styles.featureCardTextCentered,
+          ]}
+        >
+          <ThemedText
+            style={[
+              styles.featureCardTitle,
+              isFullWidth && styles.featureCardTitleCentered,
+            ]}
+          >
+            {title}
+          </ThemedText>
           {subtitle ? (
-            <ThemedText style={styles.featureCardSubtitle}>
+            <ThemedText
+              style={[
+                styles.featureCardSubtitle,
+                isFullWidth && styles.featureCardSubtitleCentered,
+              ]}
+            >
               {subtitle}
             </ThemedText>
           ) : null}
         </View>
-        <View style={styles.featureCardIcon}>{icon}</View>
+        <View
+          style={[
+            styles.featureCardIcon,
+            isFullWidth && styles.featureCardIconCentered,
+          ]}
+        >
+          {icon}
+        </View>
       </View>
     </View>
   );
@@ -570,6 +608,9 @@ const styles = StyleSheet.create({
     width: "47%",
     minHeight: 80,
   },
+  featureCardFullWidth: {
+    width: "100%",
+  },
   featureCardContent: {
     flexDirection: "row",
     justifyContent: "space-between",
@@ -591,6 +632,22 @@ const styles = StyleSheet.create({
   },
   featureCardIcon: {
     marginTop: 2,
+  },
+  featureCardContentCentered: {
+    justifyContent: "center",
+  },
+  featureCardTextCentered: {
+    alignItems: "center",
+    marginRight: 12,
+  },
+  featureCardTitleCentered: {
+    textAlign: "center",
+  },
+  featureCardSubtitleCentered: {
+    textAlign: "center",
+  },
+  featureCardIconCentered: {
+    marginTop: 0,
   },
   investmentSection: {
     borderRadius: 12,
