@@ -125,7 +125,7 @@ public class User {
 
   @With private String birthPlace;
 
-  @With @Builder.Default private String birthCountry = "India";
+  @With @Builder.Default private String birthCountry = "IN";
 
   // admin only has write access
   @With

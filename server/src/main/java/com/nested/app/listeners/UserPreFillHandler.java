@@ -163,7 +163,7 @@ public record UserPreFillHandler(
         address.setAddressLine(addressInfo.getAddress());
         address.setState(addressInfo.getState());
         address.setCity(""); // TODO: find a way to get city
-        address.setCountry("India"); // TODO: Make configurable if needed
+        address.setCountry("IN");
         address.setPinCode(addressInfo.getPostal());
 
         savedUser.setAddress(address);
