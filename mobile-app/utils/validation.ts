@@ -23,7 +23,7 @@ export const validateForm = <T extends Record<string, any>>(
 export const childSchema = Joi.object({
   id: Joi.string().optional().allow("").label("ID"),
   firstName: Joi.string().required().label("Name"),
-  lastName: Joi.string().label("Last Name"),
+  lastName: Joi.string().label("Last Name").optional().allow(""),
   dateOfBirth: Joi.date().required().label("Date of Birth"),
   gender: Joi.string()
     .valid("male", "female", "other")

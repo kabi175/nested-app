@@ -60,6 +60,7 @@ export default function CreateChild() {
     );
 
     if (!isValid) {
+      console.log("validationErrors", validationErrors);
       setErrors({
         ...defaultChildFormErrors,
         ...validationErrors,
