@@ -28,10 +28,10 @@ export default function NameInputScreen() {
 
     try {
       if (!auth.user) return;
-      updateProfile(auth.user, { displayName: name.trim() });
+      await updateProfile(auth.user, { displayName: name.trim() });
 
       // Navigate back or to next screen
-      router.replace("/(tabs)");
+      router.replace("/");
     } catch (error) {
       console.log("Error saving name", error);
     } finally {

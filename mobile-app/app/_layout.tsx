@@ -52,7 +52,7 @@ export const unstable_settings = {
 
 function RootNavigator() {
   const auth = useAuth();
-  const hasEnteredName = auth.isSignedIn && auth.user?.displayName !== null;
+  const hasEnteredName = auth.isSignedIn && auth.user?.displayName !== "";
 
   return (
     <Stack
