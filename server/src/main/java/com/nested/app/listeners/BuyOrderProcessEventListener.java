@@ -8,9 +8,9 @@ import com.nested.app.entity.Order;
 import com.nested.app.entity.OrderItems;
 import com.nested.app.entity.Payment;
 import com.nested.app.events.BuyOrderProcessEvent;
-import com.nested.app.repository.GoalRepository;
 import com.nested.app.repository.OrderRepository;
 import com.nested.app.repository.PaymentRepository;
+import com.nested.app.repository.TenantAwareGoalRepository;
 import com.nested.app.services.OrderSchedulerService;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
@@ -36,7 +36,7 @@ public class BuyOrderProcessEventListener {
 
   private final PaymentRepository paymentRepository;
   private final OrderRepository orderRepository;
-  private final GoalRepository goalRepository;
+  private final TenantAwareGoalRepository goalRepository;
   private final PaymentsAPIClient paymentsAPIClient;
 
   private final OrderSchedulerService orderSchedulerService;

@@ -9,7 +9,7 @@ import com.nested.app.entity.Goal;
 import com.nested.app.entity.User;
 import com.nested.app.enums.ActivityPriority;
 import com.nested.app.enums.ActivityType;
-import com.nested.app.repository.GoalRepository;
+import com.nested.app.repository.TenantAwareGoalRepository;
 import com.nested.app.repository.UserRepository;
 import java.sql.Timestamp;
 import java.time.Instant;
@@ -30,7 +30,7 @@ import org.springframework.stereotype.Service;
 @RequiredArgsConstructor
 public class PendingActivityServiceImpl implements PendingActivityService {
 
-  private final GoalRepository goalRepository;
+  private final TenantAwareGoalRepository goalRepository;
   private final UserRepository userRepository;
 
   @Override

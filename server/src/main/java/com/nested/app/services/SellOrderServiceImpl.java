@@ -16,9 +16,9 @@ import com.nested.app.entity.OrderItems;
 import com.nested.app.entity.SellOrder;
 import com.nested.app.repository.FolioRepository;
 import com.nested.app.repository.FundRepository;
-import com.nested.app.repository.GoalRepository;
 import com.nested.app.repository.OrderItemsRepository;
 import com.nested.app.repository.OrderRepository;
+import com.nested.app.repository.TenantAwareGoalRepository;
 import com.nested.app.repository.TransactionRepository;
 import com.nested.app.utils.IpUtils;
 import jakarta.servlet.http.HttpServletRequest;
@@ -49,7 +49,7 @@ public class SellOrderServiceImpl implements SellOrderService {
 
   private final OrderRepository orderRepository;
   private final OrderItemsRepository orderItemsRepository;
-  private final GoalRepository goalRepository;
+  private final TenantAwareGoalRepository goalRepository;
   private final FundRepository fundRepository;
   private final FolioRepository folioRepository;
   private final TransactionRepository transactionRepository;

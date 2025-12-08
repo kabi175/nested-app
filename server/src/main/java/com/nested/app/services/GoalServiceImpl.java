@@ -10,7 +10,7 @@ import com.nested.app.entity.Basket;
 import com.nested.app.entity.Goal;
 import com.nested.app.repository.BasketRepository;
 import com.nested.app.repository.EducationRepository;
-import com.nested.app.repository.GoalRepository;
+import com.nested.app.repository.TenantAwareGoalRepository;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -32,7 +32,7 @@ import org.springframework.transaction.annotation.Transactional;
 @Transactional
 public class GoalServiceImpl implements GoalService {
 
-  private final GoalRepository goalRepository;
+  private final TenantAwareGoalRepository goalRepository;
   private final BasketRepository basketRepository;
   private final EducationRepository educationRepository;
   private final UserContext userContext;

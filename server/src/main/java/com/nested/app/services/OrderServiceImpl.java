@@ -10,8 +10,8 @@ import com.nested.app.entity.Goal;
 import com.nested.app.entity.Order;
 import com.nested.app.entity.OrderItems;
 import com.nested.app.entity.SIPOrder;
-import com.nested.app.repository.GoalRepository;
 import com.nested.app.repository.OrderRepository;
+import com.nested.app.repository.TenantAwareGoalRepository;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Objects;
@@ -35,7 +35,7 @@ import org.springframework.transaction.annotation.Transactional;
 public class OrderServiceImpl implements OrderService {
 
   private final OrderRepository orderRepository;
-  private final GoalRepository goalRepository;
+  private final TenantAwareGoalRepository goalRepository;
   private final UserContext userContext;
 
   @Override

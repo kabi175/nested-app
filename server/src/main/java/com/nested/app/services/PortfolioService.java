@@ -10,7 +10,7 @@ import com.nested.app.entity.Fund;
 import com.nested.app.entity.Goal;
 import com.nested.app.entity.Transaction;
 import com.nested.app.repository.FundRepository;
-import com.nested.app.repository.GoalRepository;
+import com.nested.app.repository.TenantAwareGoalRepository;
 import com.nested.app.repository.TransactionRepository;
 import java.util.ArrayList;
 import java.util.List;
@@ -35,7 +35,7 @@ import org.springframework.transaction.annotation.Transactional;
 public class PortfolioService {
 
   private final TransactionRepository transactionRepository;
-  private final GoalRepository goalRepository;
+  private final TenantAwareGoalRepository goalRepository;
   private final FundRepository fundRepository;
   private final UserContext userContext;
 
