@@ -158,6 +158,7 @@ export default function BasketInvestingScreen() {
           title: basket.title,
           childId: undefined,
           educationId: "",
+          basketId: basketQuery.data?.id ?? "",
           targetAmount:
             initialAmount > 0 ? initialAmount * 12 : sipAmount * 12 * 10, // Estimate based on investment
           targetDate: targetDate,
