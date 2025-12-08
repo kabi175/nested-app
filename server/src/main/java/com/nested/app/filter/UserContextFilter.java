@@ -4,7 +4,9 @@ import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseAuthException;
 import com.google.firebase.auth.UserRecord;
 import com.nested.app.contect.UserContext;
+import com.nested.app.entity.Investor;
 import com.nested.app.entity.User;
+import com.nested.app.repository.InvestorRepository;
 import com.nested.app.repository.UserRepository;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
@@ -28,6 +30,7 @@ public class UserContextFilter extends OncePerRequestFilter {
   private final UserContext userContext;
 
   private final UserRepository userRepository;
+  private final InvestorRepository investorRepository;
 
   @Override
   protected void doFilterInternal(
@@ -67,7 +70,10 @@ public class UserContextFilter extends OncePerRequestFilter {
             .phoneNumber(userRecord.getPhoneNumber())
             .phoneNumber(userRecord.getPhoneNumber())
             .firstName(userRecord.getDisplayName())
+            .investor(Investor.builder().build())
             .build();
+
+    investorRepository.saveAndFlush(user.getInvestor());
     userRepository.save(user);
     return user;
   }
