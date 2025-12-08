@@ -17,8 +17,8 @@ import com.nested.app.entity.Investor;
 import com.nested.app.entity.User;
 import com.nested.app.enums.Occupation;
 import com.nested.app.repository.BankDetailRepository;
-import com.nested.app.repository.ChildRepository;
 import com.nested.app.repository.InvestorRepository;
+import com.nested.app.repository.TenantAwareChildRepository;
 import com.nested.app.repository.UserRepository;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
@@ -43,7 +43,7 @@ public class InvestorServiceTImpl {
   private final TarrakkiInvestorAPIClient investorAPIClient;
   private final InvestorRepository investorRepository;
   private final UserRepository userRepository;
-  private final ChildRepository childRepository;
+  private final TenantAwareChildRepository childRepository;
   private final OtpApiClient otpApiClient;
 
   /**

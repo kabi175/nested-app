@@ -4,7 +4,7 @@ import com.nested.app.contect.UserContext;
 import com.nested.app.dto.ChildDTO;
 import com.nested.app.entity.Child;
 import com.nested.app.entity.User;
-import com.nested.app.repository.ChildRepository;
+import com.nested.app.repository.TenantAwareChildRepository;
 import com.nested.app.repository.UserRepository;
 import java.time.LocalDate;
 import java.util.Date;
@@ -28,7 +28,7 @@ import org.springframework.transaction.annotation.Transactional;
 @Transactional
 public class ChildServiceImpl implements ChildService {
 
-  private final ChildRepository childRepository;
+  private final TenantAwareChildRepository childRepository;
   private static final int MAX_CHILDREN_PER_USER = 3;
   private final UserRepository userRepository;
   private final UserContext userContext;
