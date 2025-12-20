@@ -25,6 +25,11 @@ public class SipOrderApiClientImpl implements SipOrderApiClient {
 
   @Override
   public Mono<EntityListResponse<OrderData>> placeSipOrder(List<SipOrderDetail> orders) {
+    try {
+      log.info("placeSipOrder with orders: {}", objectMapper.writeValueAsString(orders));
+    } catch (Exception e) {
+      log.warn("Failed to serialize request for logging", e);
+    }
     if (orders.isEmpty()) {
       return Mono.empty();
     }
@@ -84,5 +89,4 @@ public class SipOrderApiClientImpl implements SipOrderApiClient {
               return Mono.empty();
             });
   }
-
 }
