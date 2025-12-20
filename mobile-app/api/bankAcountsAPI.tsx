@@ -9,7 +9,7 @@ export const getBankAccounts = async (
     // Handle different possible response structures
     // Try data.data first (standard structure), then data, then check if data itself is an array
     let banksArray: any[] = [];
-    
+
     if (Array.isArray(data)) {
       // Response is directly an array
       banksArray = data;
@@ -20,7 +20,7 @@ export const getBankAccounts = async (
       console.warn("Unexpected API response structure for banks:", data);
       return [];
     }
-    
+
     return banksArray.map((bank: any) => ({
       id: bank.id,
       accountNumber: bank.account_number,
@@ -64,4 +64,26 @@ export const deleteBankAccount = async (
   bank_id: string
 ): Promise<void> => {
   await api.delete(`/users/${user_id}/banks/${bank_id}`);
+};
+
+export type LinkBankAccountAction = {
+  redirect_url: string;
+  id: string;
+};
+
+export const linkBankAccount = async (
+  userID: string
+): Promise<LinkBankAccountAction> => {
+  const { data } = await api.post(`users/${userID}/actions/reverse-penny-drop`);
+  return data;
+};
+
+export const getLinkBankAccountStatus = async (
+  userID: string,
+  actionID: string
+): Promise<"pending" | "completed" | "failed" | "cancelled"> => {
+  const { data } = await api.get(
+    `users/${userID}/actions/reverse-penny-drop/status/${actionID}`
+  );
+  return data;
 };

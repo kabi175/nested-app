@@ -1,14 +1,45 @@
+import {
+  getLinkBankAccountStatus,
+  linkBankAccount,
+} from "@/api/bankAcountsAPI";
+import { userAtom } from "@/atoms/user";
 import UPIButton from "@/components/buttons/UPIButton";
 import { formatCurrency } from "@/utils/formatters";
 import { Button, Layout, Text } from "@ui-kitten/components";
 import { LinearGradient } from "expo-linear-gradient";
-import { Link } from "expo-router";
+import { Link, router } from "expo-router";
 import { StatusBar } from "expo-status-bar";
+import { useAtomValue } from "jotai";
 import { ArrowRight, CreditCard, Lock, Sparkles } from "lucide-react-native";
-import { ScrollView, StyleSheet, TouchableOpacity, View } from "react-native";
+import {
+  Alert,
+  Linking,
+  ScrollView,
+  StyleSheet,
+  TouchableOpacity,
+  View,
+} from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function BankAccountsScreen() {
+  const currentUser = useAtomValue(userAtom);
+  const handleContinue = async () => {
+    if (!currentUser?.id) return;
+    const { redirect_url, id } = await linkBankAccount(currentUser?.id);
+    if (redirect_url) {
+      await Linking.openURL(redirect_url);
+    }
+    const status = await getLinkBankAccountStatus(currentUser?.id, id);
+    if (status === "completed") {
+      router.push("/bank-accounts/success");
+    } else if (status === "failed") {
+      router.push("/bank-accounts/failure");
+    } else if (status === "cancelled") {
+      router.push("/bank-accounts/cancelled");
+    } else {
+      Alert.alert("Error", "Failed to link bank account. Please try again.");
+    }
+  };
   return (
     <SafeAreaView style={styles.safeArea} edges={["top"]}>
       <StatusBar style="auto" backgroundColor="#fff" />
@@ -110,7 +141,11 @@ export default function BankAccountsScreen() {
 
         {/* Continue Button - Fixed at Bottom */}
         <SafeAreaView style={styles.buttonContainer} edges={["bottom"]}>
-          <Button style={styles.continueButton} size="large">
+          <Button
+            style={styles.continueButton}
+            size="large"
+            onPress={handleContinue}
+          >
             Continue
           </Button>
         </SafeAreaView>
