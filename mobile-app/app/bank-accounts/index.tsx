@@ -26,9 +26,15 @@ export default function BankAccountsScreen() {
   const handleContinue = async () => {
     if (!currentUser?.id) return;
     const { redirect_url, id } = await linkBankAccount(currentUser?.id);
-    if (redirect_url) {
-      await Linking.openURL(redirect_url);
+    const supported = await Linking.canOpenURL(redirect_url);
+    if (!supported) {
+      Alert.alert(
+        "Error",
+        "UPI app not installed. Please install a UPI app like Google Pay or PhonePe."
+      );
+      return;
     }
+    await Linking.openURL(redirect_url);
     const status = await getLinkBankAccountStatus(currentUser?.id, id);
     if (status === "completed") {
       router.push("/bank-accounts/success");

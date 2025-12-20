@@ -9,6 +9,15 @@ module.exports = () => ({
       googleServicesFile:
         process.env.GOOGLE_SERVICES_JSON ?? "./google-services.json",
       package: "com.nexted.app",
+      intentFilters: {
+        action: "VIEW",
+        category: ["BROWSABLE", "DEFAULT"],
+        data: [
+          {
+            scheme: "upi",
+          },
+        ],
+      },
     },
     ios: {
       googleServicesFile: "./GoogleService-Info.plist",
