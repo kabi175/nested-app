@@ -67,7 +67,7 @@ public class Payment {
 
   @Column private String mandateRef;
 
-  @ManyToOne(optional = false, fetch = FetchType.EAGER)
+  @ManyToOne(fetch = FetchType.EAGER)
   @JoinColumn(name = "bank_id")
   private BankDetail bank;
 
