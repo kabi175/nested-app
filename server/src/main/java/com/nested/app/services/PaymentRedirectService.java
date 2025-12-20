@@ -4,6 +4,7 @@ import com.nested.app.entity.Payment;
 import com.nested.app.events.BuyOrderProcessEvent;
 import com.nested.app.events.MandateProcessEvent;
 import com.nested.app.repository.PaymentRepository;
+import com.nested.app.utils.MobileRedirectHandler;
 import java.time.LocalDateTime;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -20,6 +21,7 @@ import org.springframework.stereotype.Service;
 public class PaymentRedirectService {
   private final ApplicationEventPublisher publisher;
   private final PaymentRepository paymentRepository;
+  private final MobileRedirectHandler mobileRedirectHandler;
 
   /**
    * Handle mandate redirect from external provider. Publishes a MandateProcessEvent for the mandate
@@ -48,10 +50,11 @@ public class PaymentRedirectService {
           mandateId);
 
       if (payment.getSipStatus().equals(Payment.PaymentStatus.ACTIVE)) {
-        return "redirect:nested://payment/" + payment.getId() + "/success?type=sip";
+        return mobileRedirectHandler.redirectUrl(
+            "payment/" + payment.getId() + "/success?type=sip");
       }
 
-      return "redirect:nested://payment/" + payment.getId() + "/failure?type=sip";
+      return mobileRedirectHandler.redirectUrl("payment/" + payment.getId() + "/failure?type=sip");
     } catch (Exception e) {
       log.error("Error processing mandate redirect for mandate ID: {}", mandateId, e);
       throw new RuntimeException();
@@ -64,7 +67,7 @@ public class PaymentRedirectService {
    *
    * @param paymentID The internal payment id
    */
-  public void handlePaymentRedirect(Long paymentID) {
+  public String handlePaymentRedirect(Long paymentID) {
     log.info("Received payment redirect for payment id: {}", paymentID);
 
     try {
@@ -78,9 +81,10 @@ public class PaymentRedirectService {
           "Published buy order process event for Payment ID: {}, Ref: {}",
           payment.getId(),
           paymentRef);
+      return mobileRedirectHandler.redirectUrl("payment/" + paymentID + "/success?type=buy");
     } catch (Exception e) {
       log.error("Error processing payment redirect for payment id: {}", paymentID, e);
-      throw new RuntimeException();
+      return mobileRedirectHandler.redirectUrl("payment/" + paymentID + "/failure?type=buy");
     }
   }
 }

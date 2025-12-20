@@ -24,7 +24,6 @@ public class PaymentRedirectController {
 
   @PostMapping("/payment/{payment_id}")
   public String paymentRedirectHandler(@PathVariable("payment_id") Long paymentID) {
-    paymentRedirectService.handlePaymentRedirect(paymentID);
-    return "redirect:nested://payment/" + paymentID + "/success?type=buy";
+    return paymentRedirectService.handlePaymentRedirect(paymentID);
   }
 }
