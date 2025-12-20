@@ -15,6 +15,7 @@ import java.sql.Timestamp;
 import java.time.Instant;
 import java.util.List;
 import lombok.extern.slf4j.Slf4j;
+import org.quartz.DisallowConcurrentExecution;
 import org.quartz.Job;
 import org.quartz.JobDataMap;
 import org.quartz.JobExecutionContext;
@@ -33,6 +34,7 @@ import org.springframework.stereotype.Component;
  */
 @Slf4j
 @Component
+@DisallowConcurrentExecution
 public class BuyOrderFulfillmentJob implements Job {
 
   private static final int DECIMAL_SCALE = 4;
