@@ -18,6 +18,7 @@ interface ToggleCardProps {
   onValueChange: (value: number) => void;
   inputLabel: string;
   placeholder?: string;
+  max?: number;
 }
 
 export default function ToggleCard({
@@ -27,6 +28,7 @@ export default function ToggleCard({
   onValueChange,
   inputLabel,
   placeholder = "0",
+  max,
 }: ToggleCardProps) {
   const [isEnabled, setIsEnabled] = useState(initialValue > 0);
   const [value, setValue] = useState(initialValue);
@@ -58,7 +60,7 @@ export default function ToggleCard({
 
   const handleValueChange = (text: string) => {
     const numericValue = parseInt(text.replace(/,/g, "")) || 0;
-    setValue(numericValue);
+    setValue(Math.min(numericValue, max || Number.MAX_VALUE));
   };
 
   return (

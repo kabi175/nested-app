@@ -23,8 +23,15 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
+const MAX_SIP_AMOUNT = 1_00_000; // 1 lakh
+const MAX_LUMPSUM_AMOUNT = 5_00_000; // 5 lakh
+const MAX_STEPUP_AMOUNT = 10_000; // 10 thousand
+
 export default function CustomizeInvestmentScreen() {
   const goalsForCustomize = useAtomValue(goalsForCustomizeAtom);
+  const minInvestment = goalsForCustomize
+    .map((goal) => goal.basket.min_investment)
+    .reduce((a, b) => a + b, 0);
 
   const targetDate = goalsForCustomize
     .map((goal) => goal.targetDate)
@@ -35,7 +42,6 @@ export default function CustomizeInvestmentScreen() {
     .reduce((a, b) => a + b, 0);
 
   const {
-    sipRange,
     lumpSumAmount,
     stepUpAmount,
     sipAmount,
@@ -68,27 +74,6 @@ export default function CustomizeInvestmentScreen() {
     const normalized = Math.round(value / 100) * 100;
     setStepUpAmount(normalized);
   };
-
-  // Normalize SIP range to be multiples of step
-  const normalizedSipRange: [number, number] = [
-    Math.ceil(sipRange[0] / sipStep) * sipStep,
-    Math.floor(sipRange[1] / sipStep) * sipStep,
-  ];
-
-  // Normalize initial SIP amount to be a multiple of step
-  useEffect(() => {
-    if (goalsForCustomize.length > 0 && sipStep > 0) {
-      const normalized = Math.round(sipAmount / sipStep) * sipStep;
-      if (
-        normalized !== sipAmount &&
-        normalized >= normalizedSipRange[0] &&
-        normalized <= normalizedSipRange[1]
-      ) {
-        setSipAmount(normalized);
-      }
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [goalsForCustomize.length, sipStep]);
 
   const [fadeAnim] = useState(new Animated.Value(0));
   const [slideAnim] = useState(new Animated.Value(50));
@@ -270,8 +255,8 @@ export default function CustomizeInvestmentScreen() {
             </View>
 
             <Slider
-              min={normalizedSipRange[0]}
-              max={normalizedSipRange[1]}
+              min={minInvestment}
+              max={MAX_SIP_AMOUNT}
               value={normalizedSipAmount}
               onValueChange={handleSipAmountChange}
               step={sipStep}
@@ -314,6 +299,7 @@ export default function CustomizeInvestmentScreen() {
             initialValue={lumpSumAmount}
             onValueChange={handleLumpSumAmountChange}
             inputLabel="Lump Sum Amount"
+            max={MAX_LUMPSUM_AMOUNT}
           />
 
           {/* Add Step-Up Plan Card */}
@@ -323,6 +309,7 @@ export default function CustomizeInvestmentScreen() {
             initialValue={stepUpAmount}
             onValueChange={handleStepUpAmountChange}
             inputLabel="Annual Step-Up Amount"
+            max={MAX_STEPUP_AMOUNT}
           />
 
           {/* Continue Button */}

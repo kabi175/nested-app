@@ -16,10 +16,8 @@ export function useSIPCalculator(targetDate: Date, targetAmount: number) {
   const [stepUpAmount, setStepUpAmount] = useState(initialSIPAmount * 0.1);
   const [sipAmount, setSipAmount] = useState(initialSIPAmount);
 
-  const [minimumSIPAmount, setMinimumSIPAmount] = useState(initialSIPAmount);
-
   useEffect(() => {
-    setMinimumSIPAmount(
+    setSipAmount(
       computeMinimumSIPAmount(
         remainingYears,
         stepUpAmount,
@@ -31,7 +29,6 @@ export function useSIPCalculator(targetDate: Date, targetAmount: number) {
   }, [lumpSumAmount, remainingYears, stepUpAmount, targetAmount]);
 
   return {
-    sipRange: [minimumSIPAmount, minimumSIPAmount * 10],
     lumpSumAmount,
     stepUpAmount,
     sipAmount,
