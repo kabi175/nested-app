@@ -390,6 +390,7 @@ public class PaymentServiceImpl implements PaymentService {
     dto.setVerificationStatus(payment.getVerificationStatus());
     dto.setPaymentUrl(payment.getPaymentUrl());
     dto.setMandateType(PaymentDTO.MandateType.valueOf(payment.getPaymentType().name()));
+    dto.setMandateID(payment.getMandateID());
     dto.setUpiId(payment.getUpiId());
     dto.setConfirmationUrl(payment.getMandateConfirmationUrl());
     dto.setUserId(payment.getUser().getId());

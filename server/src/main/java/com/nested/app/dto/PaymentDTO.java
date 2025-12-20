@@ -1,5 +1,6 @@
 package com.nested.app.dto;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonValue;
@@ -35,6 +36,10 @@ public class PaymentDTO {
 
   @JsonProperty("mandate_type")
   private MandateType mandateType;
+
+  @JsonProperty("mandate_id")
+  @JsonFormat(shape = JsonFormat.Shape.STRING)
+  private Long mandateID;
 
   @JsonProperty("upi_id")
   private String upiId;
