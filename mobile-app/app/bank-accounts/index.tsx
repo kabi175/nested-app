@@ -61,8 +61,7 @@ export default function BankAccountsScreen() {
               <View style={styles.verificationInfo}>
                 <Lock size={14} color="rgba(255,255,255,0.8)" />
                 <Text category="s1" style={styles.verificationText}>
-                  {formatCurrency(1)} will be temporarily charged and refunded
-                  within 24 hours
+                  {formatCurrency(1)} will be deducted from your account
                 </Text>
               </View>
             </LinearGradient>
