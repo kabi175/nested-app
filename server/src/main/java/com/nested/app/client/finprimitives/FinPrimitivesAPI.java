@@ -2,7 +2,10 @@ package com.nested.app.client.finprimitives;
 
 import io.github.resilience4j.circuitbreaker.CircuitBreaker;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry;
+import io.github.resilience4j.ratelimiter.RateLimiter;
+import io.github.resilience4j.ratelimiter.RateLimiterRegistry;
 import io.github.resilience4j.reactor.circuitbreaker.operator.CircuitBreakerOperator;
+import io.github.resilience4j.reactor.ratelimiter.operator.RateLimiterOperator;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpHeaders;
@@ -19,23 +22,30 @@ public class FinPrimitivesAPI {
   private final FinPrimitivesTokenProvider tokenProvider;
   private final String baseUrl;
   private final CircuitBreaker circuitBreaker;
+  private final RateLimiterRegistry rateLimiterRegistry;
 
   public FinPrimitivesAPI(
       @Value("${finprimitives.api.base-url}") String baseUrl,
       FinPrimitivesTokenProvider tokenProvider,
-      CircuitBreakerRegistry registry) {
+      CircuitBreakerRegistry registry,
+      RateLimiterRegistry rateLimiterRegistry) {
     this.baseUrl = baseUrl;
     this.tokenProvider = tokenProvider;
     this.circuitBreaker = registry.circuitBreaker(SERVICE_NAME);
+    this.rateLimiterRegistry = rateLimiterRegistry;
   }
 
   public WebClient withAuth() {
     String token = tokenProvider.getToken();
     String authToken = "Bearer " + token;
+    RateLimiter rateLimiter = rateLimiterRegistry.rateLimiter(SERVICE_NAME);
     return WebClient.builder()
         .baseUrl(baseUrl)
         .defaultHeader(HttpHeaders.AUTHORIZATION, authToken)
         .filter(logRequestBodyFilter())
+        .filter(
+            (request, next) ->
+                next.exchange(request).transformDeferred(RateLimiterOperator.of(rateLimiter)))
         .filter(circuitBreakerFilter(circuitBreaker))
         .filter(
             ExchangeFilterFunction.ofResponseProcessor(
