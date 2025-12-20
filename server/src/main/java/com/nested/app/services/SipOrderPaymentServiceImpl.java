@@ -120,11 +120,10 @@ public class SipOrderPaymentServiceImpl implements SipOrderPaymentService {
   }
 
   @Override
-  public void placeSipOrders(Long paymentID) {
+  public void placeSipOrders(Payment payment) {
+    var paymentID = payment.getId();
     log.info("Fetching SIP order payment URL for payment ID: {}", paymentID);
     try {
-      var payment = paymentRepository.findById(paymentID).orElseThrow();
-
       if (payment.getSipStatus() == Payment.PaymentStatus.NOT_AVAILABLE) {
         throw new IllegalArgumentException("No SIP orders found for this payment");
       }

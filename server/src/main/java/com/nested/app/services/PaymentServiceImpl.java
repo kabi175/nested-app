@@ -314,7 +314,6 @@ public class PaymentServiceImpl implements PaymentService {
    *
    * @param order Order to populate items for
    */
-
   Stream<OrderDetail> convertOrderToOrderDetail(Order order) {
     ServletRequestAttributes attributes =
         (ServletRequestAttributes) RequestContextHolder.getRequestAttributes();
@@ -358,6 +357,8 @@ public class PaymentServiceImpl implements PaymentService {
                         .folio(folioNumber)
                         .userIP(ipAddress)
                         .installmentDay(String.valueOf(sipOrder.getStartDate().getDayOfMonth()))
+                        .email(userContext.getUser().getEmail())
+                        .mobile(userContext.getUser().getPhoneNumber())
                         .build();
               } else {
                 orderDetail =

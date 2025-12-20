@@ -1,5 +1,6 @@
 package com.nested.app.services;
 
+import com.nested.app.contect.UserContext;
 import com.nested.app.entity.Payment;
 import com.nested.app.events.BuyOrderProcessEvent;
 import com.nested.app.events.MandateProcessEvent;
@@ -22,6 +23,7 @@ public class PaymentRedirectService {
   private final ApplicationEventPublisher publisher;
   private final PaymentRepository paymentRepository;
   private final MobileRedirectHandler mobileRedirectHandler;
+  private final UserContext userContext;
 
   /**
    * Handle mandate redirect from external provider. Publishes a MandateProcessEvent for the mandate
@@ -34,15 +36,13 @@ public class PaymentRedirectService {
 
     try {
       // Find payment with this mandate ID
+      Payment payment = paymentRepository.findByMandateID(mandateId).orElseThrow();
+
+      // Set user content as this is unauthenticated call
+      userContext.setUser(payment.getUser());
 
       // Publish mandate process event for async processing and verification
-      publisher.publishEvent(new MandateProcessEvent(mandateId, LocalDateTime.now()));
-      Payment payment = paymentRepository.findByMandateID(mandateId).orElse(null);
-
-      if (payment == null) {
-        log.warn("No payment found for mandate ID: {}", mandateId);
-        throw new RuntimeException();
-      }
+      publisher.publishEvent(new MandateProcessEvent(mandateId, payment, LocalDateTime.now()));
 
       log.info(
           "Published mandate process event for Payment ID: {}, Mandate ID: {}",
@@ -72,6 +72,9 @@ public class PaymentRedirectService {
 
     try {
       Payment payment = paymentRepository.findById(paymentID).orElseThrow();
+
+      // Set user content as this is unauthenticated call
+      userContext.setUser(payment.getUser());
 
       var paymentRef = payment.getRef();
       // Publish buy order process event for async processing and verification

@@ -1,5 +1,7 @@
 package com.nested.app.events;
 
+import com.nested.app.entity.Payment;
+import jakarta.validation.constraints.NotNull;
 import java.time.LocalDateTime;
 
 /**
@@ -7,4 +9,5 @@ import java.time.LocalDateTime;
  * listener will verify the actual mandate status via the MandateApiClient and update the payment's
  * sipStatus accordingly.
  */
-public record MandateProcessEvent(Long mandateId, LocalDateTime eventTime) {}
+public record MandateProcessEvent(
+    Long mandateId, @NotNull Payment payment, LocalDateTime eventTime) {}

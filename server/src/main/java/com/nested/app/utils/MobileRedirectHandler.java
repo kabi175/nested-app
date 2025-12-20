@@ -8,7 +8,7 @@ import org.springframework.stereotype.Component;
 @RequiredArgsConstructor
 public class MobileRedirectHandler {
   @Value("${app.mobile.scheme:nested}")
-  private final String mobileScheme;
+  private String mobileScheme;
 
   public String redirectUrl(String uri) {
     return String.format("redirect:%s://%s", mobileScheme, uri);

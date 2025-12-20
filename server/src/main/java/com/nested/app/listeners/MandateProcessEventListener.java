@@ -43,7 +43,7 @@ public class MandateProcessEventListener {
     log.info("Processing MandateProcessEvent for mandate ID: {}", event.mandateId());
 
     try {
-      Payment payment = paymentRepository.findByMandateID(event.mandateId()).orElse(null);
+      Payment payment = event.payment();
 
       if (payment == null) {
         log.warn("Payment not found for mandate ID: {}", event.mandateId());
@@ -107,7 +107,7 @@ public class MandateProcessEventListener {
             mandateId,
             payment.getId());
 
-        sipOrderPaymentService.placeSipOrders(payment.getId());
+        sipOrderPaymentService.placeSipOrders(payment);
         payment.setSipStatus(Payment.PaymentStatus.ACTIVE);
 
         log.info("sip orders placed for payment ID: {} sipStatus to SUBMITTED", payment.getId());

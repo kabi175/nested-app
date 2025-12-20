@@ -1,6 +1,7 @@
 package com.nested.app.services;
 
 import com.nested.app.dto.UserActionRequest;
+import com.nested.app.entity.Payment;
 
 /**
  * Service interface for managing SIP Order Payment operations. Handles verification and payment URL
@@ -27,5 +28,5 @@ public interface SipOrderPaymentService {
    */
   UserActionRequest fetchSipOrderPaymentUrl(Long paymentID);
 
-  void placeSipOrders(Long paymentID);
+  void placeSipOrders(Payment payment);
 }
