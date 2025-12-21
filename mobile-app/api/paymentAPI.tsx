@@ -1,5 +1,5 @@
 import { Order } from "@/types";
-import { api } from "./client";
+import { api, redirectClient } from "./client";
 
 export type CreateOrderRequest = {
   type: "buy" | "sip";
@@ -69,6 +69,7 @@ export type Payment = {
   id: string;
   buy_status: PaymentStatus;
   sip_status: PaymentStatus;
+  mandate_id: string;
   verification_status: "pending" | "verified" | "failed";
   payment_method: "net_banking" | "upi";
 };
@@ -127,4 +128,12 @@ export const fetchPayment = async (paymentId: string): Promise<Payment> => {
     throw new Error(`Payment with id ${paymentId} not found`);
   }
   return payment;
+};
+
+export const lumsumPostPayment = async (paymentId: string): Promise<void> => {
+  await redirectClient.post(`/payment/${paymentId}`);
+};
+
+export const mandatePostPayment = async (mandateId: string): Promise<void> => {
+  await redirectClient.post(`/mandate/${mandateId}`);
 };

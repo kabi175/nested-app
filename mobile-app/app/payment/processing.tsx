@@ -1,6 +1,8 @@
 import {
   fetchLumpsumPaymentUrl,
   fetchMandatePaymentUrl,
+  lumsumPostPayment,
+  mandatePostPayment,
 } from "@/api/paymentAPI";
 import { ThemedText } from "@/components/ThemedText";
 import { OneTimePurchaseCard } from "@/components/payment/OneTimePurchaseCard";
@@ -23,7 +25,7 @@ export default function PaymentProcessingScreen() {
   const { paymentId } = useLocalSearchParams<{
     paymentId: string;
   }>();
-  const { data: payment } = usePayment(paymentId);
+  const { data: payment, refetch } = usePayment(paymentId);
 
   const handleLumpsumPayment = async () => {
     const redirectUrl = await fetchLumpsumPaymentUrl(paymentId as string);
@@ -32,6 +34,8 @@ export default function PaymentProcessingScreen() {
         `/payment/${paymentId}/success?type=buy`
       );
       await openAuthSessionAsync(redirectUrl, returnUrl);
+      await lumsumPostPayment(paymentId as string);
+      await refetch();
     } else {
       Alert.alert("Error", "Failed to get payment redirect URL.");
     }
@@ -44,6 +48,9 @@ export default function PaymentProcessingScreen() {
         `/payment/${paymentId}/success?type=sip`
       );
       await openAuthSessionAsync(redirectUrl, returnUrl);
+      console.log("mandate completed");
+      await mandatePostPayment(payment?.mandate_id as string);
+      await refetch();
     } else {
       Alert.alert("Error", "Failed to get payment redirect URL.");
     }

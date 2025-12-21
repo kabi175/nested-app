@@ -9,6 +9,11 @@ export const api = axios.create({
   },
 });
 
+export const redirectClient = axios.create({
+  baseURL: process.env.EXPO_PUBLIC_REDIRECT_URL,
+  timeout: 10000,
+});
+
 api.interceptors.request.use(
   async (config) => {
     const auth = getAuth();
