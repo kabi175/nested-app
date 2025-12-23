@@ -1,6 +1,5 @@
 package com.nested.app.services;
 
-import com.nested.app.contect.UserContext;
 import com.nested.app.dto.GoalHoldingDTO;
 import com.nested.app.dto.MinifiedGoalDTO;
 import com.nested.app.dto.PortfolioGoalDTO;
@@ -9,6 +8,7 @@ import com.nested.app.dto.TransactionDTO;
 import com.nested.app.entity.Fund;
 import com.nested.app.entity.Goal;
 import com.nested.app.entity.Transaction;
+import com.nested.app.entity.User;
 import com.nested.app.repository.FundRepository;
 import com.nested.app.repository.TenantAwareGoalRepository;
 import com.nested.app.repository.TransactionRepository;
@@ -37,12 +37,10 @@ public class PortfolioService {
   private final TransactionRepository transactionRepository;
   private final TenantAwareGoalRepository goalRepository;
   private final FundRepository fundRepository;
-  private final UserContext userContext;
 
   @Transactional(readOnly = true)
-  public PortfolioOverallDTO getOverallPortfolio() {
+  public PortfolioOverallDTO getOverallPortfolio(User user) {
     // Fetch all transactions for current request-scoped user; return zeroed DTO if none.
-    var user = userContext.getUser();
     if (user == null) {
       return new PortfolioOverallDTO(0.0, 0.0, 0.0, 0.0, 0.0, 0.0, List.of());
     }
@@ -105,8 +103,7 @@ public class PortfolioService {
   }
 
   @Transactional(readOnly = true)
-  public PortfolioGoalDTO getGoalPortfolio(Long goalId) {
-    var user = userContext.getUser();
+  public PortfolioGoalDTO getGoalPortfolio(Long goalId, User user) {
     if (user == null) return null;
     List<Transaction> txns = transactionRepository.findByUserIdAndGoalId(user.getId(), goalId);
     if (txns.isEmpty()) return null;
@@ -174,8 +171,7 @@ public class PortfolioService {
   }
 
   @Transactional(readOnly = true)
-  public List<TransactionDTO> getGoalTransactions(Long goalId, Pageable pageable) {
-    var user = userContext.getUser();
+  public List<TransactionDTO> getGoalTransactions(Long goalId, Pageable pageable, User user) {
     if (user == null) {
       return List.of();
     }
@@ -200,8 +196,7 @@ public class PortfolioService {
   }
 
   @Transactional(readOnly = true)
-  public List<GoalHoldingDTO> getGoalHoldings(Long goalId) {
-    var user = userContext.getUser();
+  public List<GoalHoldingDTO> getGoalHoldings(Long goalId, User user) {
     if (user == null) {
       return List.of();
     }

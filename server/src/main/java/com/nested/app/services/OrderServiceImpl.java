@@ -1,7 +1,6 @@
 package com.nested.app.services;
 
 import com.google.common.collect.Streams;
-import com.nested.app.contect.UserContext;
 import com.nested.app.dto.MinifiedGoalDTO;
 import com.nested.app.dto.OrderDTO;
 import com.nested.app.dto.OrderRequestDTO;
@@ -10,6 +9,7 @@ import com.nested.app.entity.Goal;
 import com.nested.app.entity.Order;
 import com.nested.app.entity.OrderItems;
 import com.nested.app.entity.SIPOrder;
+import com.nested.app.entity.User;
 import com.nested.app.repository.OrderRepository;
 import com.nested.app.repository.TenantAwareGoalRepository;
 import java.time.LocalDate;
@@ -36,10 +36,9 @@ public class OrderServiceImpl implements OrderService {
 
   private final OrderRepository orderRepository;
   private final TenantAwareGoalRepository goalRepository;
-  private final UserContext userContext;
 
   @Override
-  public List<OrderDTO> getPendingOrders(Long goalId) {
+  public List<OrderDTO> getPendingOrders(Long goalId, User user) {
     List<Order> orders =
         orderRepository.findByGoalIdAndStatus(goalId, (Order.OrderStatus.NOT_PLACED));
 
@@ -50,12 +49,13 @@ public class OrderServiceImpl implements OrderService {
    * Retrieves orders by goal ID
    *
    * @param goalId Goal ID to filter orders
+   * @param user Current user context
    * @return List of orders for the specified goal
    */
   @Override
   @Transactional(readOnly = true)
-  public List<OrderDTO> getOrdersByGoalId(String goalId) {
-    log.info("Retrieving orders for goal ID: {}", goalId);
+  public List<OrderDTO> getOrdersByGoalId(String goalId, User user) {
+    log.info("Retrieving orders for goal ID: {} for user ID: {}", goalId, user.getId());
 
     try {
       List<Order> orders = orderRepository.findByGoalId(Long.parseLong(goalId));
@@ -75,7 +75,7 @@ public class OrderServiceImpl implements OrderService {
   }
 
   @Override
-  public List<OrderDTO> placeOrder(OrderRequestDTO orderRequest) {
+  public List<OrderDTO> placeOrder(OrderRequestDTO orderRequest, User user) {
 
     var goalIds =
         Streams.concat(
@@ -87,13 +87,13 @@ public class OrderServiceImpl implements OrderService {
             .toList();
 
     var goals = goalRepository.findAllById(goalIds);
-    var investor = userContext.getUser().getInvestor();
+    var investor = user.getInvestor();
 
     goals.forEach(
         goal -> {
 
           // Validate goal ownership
-          if (!goal.getUser().equals(userContext.getUser())) {
+          if (!goal.getUser().equals(user)) {
             throw new IllegalArgumentException("Goal does not belong to current user");
           }
           // Validate goal investable status
@@ -113,7 +113,7 @@ public class OrderServiceImpl implements OrderService {
                 buyOrder -> {
                   var order = new BuyOrder();
                   order.setAmount(buyOrder.getAmount());
-                  order.setUser(userContext.getUser());
+                  order.setUser(user);
                   order.setGoal(goalIdVsGoal.get(buyOrder.getGoal().getId()));
                   order.setInvestor(investor);
                   return order;
@@ -132,7 +132,7 @@ public class OrderServiceImpl implements OrderService {
                   var goal = goalIdVsGoal.get(sipOrder.getGoal().getId());
                   order.setStartDate(LocalDate.now());
                   order.setEndDate(goal.getTargetDate().toLocalDate());
-                  order.setUser(userContext.getUser());
+                  order.setUser(user);
                   order.setGoal(goal);
                   order.setInvestor(investor);
                   return order;

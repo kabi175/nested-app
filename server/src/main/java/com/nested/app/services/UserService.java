@@ -11,11 +11,11 @@ import org.springframework.web.multipart.MultipartFile;
 @Service
 public interface UserService {
 
-  List<UserDTO> findAllUsers(Type type, Pageable pageable);
+  List<UserDTO> findAllUsers(Type type, Pageable pageable, com.nested.app.entity.User user);
 
   UserDTO createUser(UserDTO userDTO);
 
-  UserDTO updateUser(UserDTO userDTO);
+  UserDTO updateUser(UserDTO userDTO, com.nested.app.entity.User user);
 
   BankAccountDto addBankAccount(Long userID, BankAccountDto bankAccountDto);
 

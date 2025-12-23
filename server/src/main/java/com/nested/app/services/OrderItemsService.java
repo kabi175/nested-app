@@ -1,8 +1,8 @@
 package com.nested.app.services;
 
-import com.nested.app.contect.UserContext;
 import com.nested.app.dto.OrderAllocationProjection;
 import com.nested.app.dto.OrderItemsDTO;
+import com.nested.app.entity.User;
 import com.nested.app.repository.OrderItemsRepository;
 import java.util.Arrays;
 import java.util.Collections;
@@ -27,7 +27,6 @@ import org.springframework.stereotype.Service;
 public class OrderItemsService {
 
   private final OrderItemsRepository orderItemsRepository;
-  private final UserContext userContext;
 
   /**
    * Retrieves paginated SIP Order Items
@@ -58,14 +57,14 @@ public class OrderItemsService {
    * Retrieves fund allocation percentages for given orders
    *
    * @param ordersParam Comma-separated list of order IDs
+   * @param user Current user context
    * @return List of OrderAllocationProjection containing fund names and allocation percentages
    */
-  public List<OrderAllocationProjection> getAllocationByOrders(String ordersParam) {
-    log.info("Fetching allocation for orders: {}", ordersParam);
+  public List<OrderAllocationProjection> getAllocationByOrders(String ordersParam, User user) {
+    log.info("Fetching allocation for orders: {} for user ID: {}", ordersParam, user.getId());
 
     try {
-      // Get current user from context
-      var user = userContext.getUser();
+      // Validate user
       if (user == null) {
         log.warn("No user found in context");
         return Collections.emptyList();

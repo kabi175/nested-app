@@ -67,13 +67,14 @@ public class UserController {
       @RequestParam(defaultValue = "CURRENT_USER") UserService.Type type,
       @PageableDefault(sort = "id") Pageable pageable) {
 
+    User currentUser = userContext.getUser();
+
     // Check if user is trying to access ALL users without admin role
     // Skip check in development mode
     if (!appEnvironment.isDevelopment()
         && (type == UserService.Type.ALL
             || type == UserService.Type.ACTIVE
             || type == UserService.Type.INACTIVE)) {
-      User currentUser = userContext.getUser();
       if (currentUser == null || !User.Role.ADMIN.equals(currentUser.getRole())) {
         log.warn("Non-admin user attempted to access all users");
         return ResponseEntity.status(HttpStatus.FORBIDDEN)
@@ -81,7 +82,7 @@ public class UserController {
       }
     }
 
-    var users = userService.findAllUsers(type, pageable);
+    var users = userService.findAllUsers(type, pageable, currentUser);
     if (users.isEmpty()) {
       return ResponseEntity.noContent().build();
     }
@@ -96,7 +97,8 @@ public class UserController {
   public ResponseEntity<UserDTO> updateUser(
       @PathVariable Long id, @org.springframework.web.bind.annotation.RequestBody UserDTO userDTO) {
     userDTO.setId(id);
-    UserDTO updatedUser = userService.updateUser(userDTO);
+    User currentUser = userContext.getUser();
+    UserDTO updatedUser = userService.updateUser(userDTO, currentUser);
     return ResponseEntity.ok(updatedUser);
   }
 

@@ -1,6 +1,5 @@
 package com.nested.app.repository;
 
-import com.nested.app.contect.UserContext;
 import com.nested.app.entity.Child;
 import com.nested.app.entity.User;
 import jakarta.persistence.EntityManager;
@@ -26,24 +25,33 @@ import org.springframework.stereotype.Repository;
 @Repository
 public class TenantAwareChildRepository extends SimpleJpaRepository<Child, Long> {
 
-  private final UserContext userContext;
   @PersistenceContext private EntityManager entityManager;
 
-  public TenantAwareChildRepository(EntityManager entityManager, UserContext userContext) {
+  public TenantAwareChildRepository(EntityManager entityManager) {
     super(Child.class, entityManager);
     this.entityManager = entityManager;
-    this.userContext = userContext;
   }
 
-  @Override
-  public List<Child> findAll() {
-    enableUserFilter();
+  /**
+   * Find all children with tenant filtering
+   *
+   * @param user Current user context
+   * @return List of children visible to user
+   */
+  public List<Child> findAll(User user) {
+    enableUserFilter(user);
     return super.findAll();
   }
 
-  @Override
-  public Optional<Child> findById(Long id) {
-    enableUserFilter();
+  /**
+   * Find child by ID with tenant filtering
+   *
+   * @param id Child ID
+   * @param user Current user context
+   * @return Optional containing child if found and user has access
+   */
+  public Optional<Child> findById(Long id, User user) {
+    enableUserFilter(user);
     return super.findById(id);
   }
 
@@ -51,10 +59,11 @@ public class TenantAwareChildRepository extends SimpleJpaRepository<Child, Long>
    * Find children by user ID Note: User filter is still applied for non-admin users
    *
    * @param userId User ID
+   * @param user Current user context
    * @return List of children for the specified user
    */
-  public List<Child> findByUserId(Long userId) {
-    enableUserFilter();
+  public List<Child> findByUserId(Long userId, User user) {
+    enableUserFilter(user);
     return entityManager
         .createQuery("SELECT c FROM Child c WHERE c.user.id = :userId", Child.class)
         .setParameter("userId", userId)
@@ -64,23 +73,23 @@ public class TenantAwareChildRepository extends SimpleJpaRepository<Child, Long>
   /**
    * Enables the user filter for tenant isolation Admin users bypass the filter and can see all
    * children
+   *
+   * @param user Current user context
    */
-  private void enableUserFilter() {
-    User currentUser = userContext.getUser();
-
-    if (currentUser == null) {
+  private void enableUserFilter(User user) {
+    if (user == null) {
       log.warn("No user context found - filter not applied");
       return;
     }
 
     // Admin users bypass filtering
-    if (Objects.equals(currentUser.getRole(), User.Role.ADMIN)) {
+    if (Objects.equals(user.getRole(), User.Role.ADMIN)) {
       log.debug("Admin user detected - bypassing user filter");
       return;
     }
 
     // Apply user filter for regular users
-    Long userId = currentUser.getId();
+    Long userId = user.getId();
     Session session = entityManager.unwrap(Session.class);
     Filter filter = session.enableFilter("userFilterByUserId");
     filter.setParameter("userId", userId);

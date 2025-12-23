@@ -1,6 +1,7 @@
 package com.nested.app.services;
 
 import com.nested.app.dto.GoalDTO;
+import com.nested.app.entity.User;
 import java.util.List;
 
 /**
@@ -11,38 +12,42 @@ import java.util.List;
  * @version 1.0
  */
 public interface GoalService {
-    
-    /**
-     * Retrieves all goals from the system
-     * 
-     * @return List of all goals
-     */
-    List<GoalDTO> getAllGoals();
 
-  GoalDTO getGoalById(Long goalId);
+  /**
+   * Retrieves all goals from the system
+   *
+   * @param user Current user context
+   * @return List of all goals
+   */
+  List<GoalDTO> getAllGoals(User user);
 
-    /**
-     * Updates an existing goal
-     * 
-     * @param goalDTO Goal data to update
-     * @return Updated goal data
-     * @throws Exception if update fails
-     */
-    GoalDTO updateGoal(GoalDTO goalDTO) throws Exception;
-    
-    /**
-     * Creates multiple goals
-     * 
-     * @param goals List of goal data to create
-     * @return List of created goals
-     */
-    List<GoalDTO> createGoals(List<GoalDTO> goals);
-    
-    /**
-     * Updates multiple goals
-     * 
-     * @param goals List of goal data to update
-     * @return List of updated goals
-     */
-    List<GoalDTO> updateGoals(List<GoalDTO> goals);
+  GoalDTO getGoalById(Long goalId, User user);
+
+  /**
+   * Updates an existing goal
+   *
+   * @param goalDTO Goal data to update
+   * @param user Current user context
+   * @return Updated goal data
+   * @throws Exception if update fails
+   */
+  GoalDTO updateGoal(GoalDTO goalDTO, User user) throws Exception;
+
+  /**
+   * Creates multiple goals
+   *
+   * @param goals List of goal data to create
+   * @param user Current user context
+   * @return List of created goals
+   */
+  List<GoalDTO> createGoals(List<GoalDTO> goals, User user);
+
+  /**
+   * Updates multiple goals
+   *
+   * @param goals List of goal data to update
+   * @param user Current user context
+   * @return List of updated goals
+   */
+  List<GoalDTO> updateGoals(List<GoalDTO> goals, User user);
 }

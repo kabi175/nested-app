@@ -1,5 +1,6 @@
 package com.nested.app.controllers;
 
+import com.nested.app.contect.UserContext;
 import com.nested.app.dto.GoalHoldingDTO;
 import com.nested.app.dto.PortfolioGoalDTO;
 import com.nested.app.dto.PortfolioOverallDTO;
@@ -31,17 +32,18 @@ import org.springframework.web.bind.annotation.RestController;
 @RequiredArgsConstructor
 @Tag(name = "Portfolio", description = "API endpoints for portfolio aggregation and analytics")
 public class PortfolioController {
+  private final UserContext userContext;
 
   private final PortfolioService portfolioService;
 
   @GetMapping("/overall")
   public ResponseEntity<PortfolioOverallDTO> overall() {
-    return ResponseEntity.ok(portfolioService.getOverallPortfolio());
+    return ResponseEntity.ok(portfolioService.getOverallPortfolio(userContext.getUser()));
   }
 
   @GetMapping("/goals/{goalId}")
   public ResponseEntity<PortfolioGoalDTO> goal(@PathVariable Long goalId) {
-    var dto = portfolioService.getGoalPortfolio(goalId);
+    var dto = portfolioService.getGoalPortfolio(goalId, userContext.getUser());
     if (dto == null) return ResponseEntity.notFound().build();
     return ResponseEntity.ok(dto);
   }
@@ -78,7 +80,8 @@ public class PortfolioController {
         "GET /api/v1/portfolio/goals/{}/transactions - Retrieving transactions for goal", goalId);
 
     try {
-      List<TransactionDTO> transactions = portfolioService.getGoalTransactions(goalId, pageable);
+      List<TransactionDTO> transactions =
+          portfolioService.getGoalTransactions(goalId, pageable, userContext.getUser());
       log.info("Successfully retrieved {} transactions for goal {}", transactions.size(), goalId);
 
       return ResponseEntity.ok(Map.of("data", transactions));
@@ -117,7 +120,8 @@ public class PortfolioController {
     log.info("GET /api/v1/portfolio/goals/{}/holdings - Retrieving holdings for goal", goalId);
 
     try {
-      List<GoalHoldingDTO> holdings = portfolioService.getGoalHoldings(goalId);
+      List<GoalHoldingDTO> holdings =
+          portfolioService.getGoalHoldings(goalId, userContext.getUser());
       log.info("Successfully retrieved {} holdings for goal {}", holdings.size(), goalId);
 
       return ResponseEntity.ok(Map.of("data", holdings));

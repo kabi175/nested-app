@@ -9,7 +9,6 @@ import com.nested.app.client.mf.dto.MandateDto;
 import com.nested.app.client.mf.dto.OrderDetail;
 import com.nested.app.client.mf.dto.OtpRequest;
 import com.nested.app.client.mf.dto.SipOrderDetail;
-import com.nested.app.contect.UserContext;
 import com.nested.app.dto.MinifiedOrderDTO;
 import com.nested.app.dto.OrderDTO;
 import com.nested.app.dto.PaymentDTO;
@@ -65,7 +64,6 @@ public class PaymentServiceImpl implements PaymentService {
   private final OrderRepository orderRepository;
   private final BankDetailRepository bankDetailRepository;
   private final FolioRepository folioRepository;
-  private final UserContext userContext;
   private final BuyOrderApiClient buyOrderApiClient;
   private final MandateApiClient mandateApiClient;
   private final ApplicationEventPublisher eventPublisher;
@@ -90,10 +88,12 @@ public class PaymentServiceImpl implements PaymentService {
    * Creates a payment with multiple orders for a child
    *
    * @param placeOrderRequest Order placement request data
+   * @param user Current user context
    * @return Created payment with orders
    */
   @Override
-  public PlaceOrderDTO createPaymentWithOrders(PlaceOrderPostDTO placeOrderRequest) {
+  public PlaceOrderDTO createPaymentWithOrders(
+      PlaceOrderPostDTO placeOrderRequest, com.nested.app.entity.User user) {
 
     try {
       var orderIds = placeOrderRequest.getOrders().stream().map(MinifiedOrderDTO::getId).toList();
@@ -114,7 +114,6 @@ public class PaymentServiceImpl implements PaymentService {
 
       var investor = orders.getFirst().getInvestor();
 
-      User user = userContext.getUser();
 
       // Create payment entity
       Payment payment = new Payment();
@@ -233,7 +232,7 @@ public class PaymentServiceImpl implements PaymentService {
     var buyOrdersDetails =
         orders.stream()
             .filter(BuyOrder.class::isInstance)
-            .flatMap(this::convertOrderToOrderDetail)
+            .flatMap((o) -> this.convertOrderToOrderDetail(o, payment.getUser()))
             .toList();
 
     if (buyOrdersDetails.isEmpty()) {
@@ -314,7 +313,7 @@ public class PaymentServiceImpl implements PaymentService {
    *
    * @param order Order to populate items for
    */
-  Stream<OrderDetail> convertOrderToOrderDetail(Order order) {
+  Stream<OrderDetail> convertOrderToOrderDetail(Order order, User user) {
     ServletRequestAttributes attributes =
         (ServletRequestAttributes) RequestContextHolder.getRequestAttributes();
     if (attributes == null) {
@@ -331,8 +330,7 @@ public class PaymentServiceImpl implements PaymentService {
               // Fetch folio for the fund
               String folioNumber = null;
               var folioOptional =
-                  folioRepository.findFirstByFundIdAndUser(
-                      item.getFund().getId(), userContext.getUser());
+                  folioRepository.findFirstByFundIdAndUser(item.getFund().getId(), user);
               if (folioOptional.isPresent()) {
                 folioNumber = folioOptional.get().getRef();
               }
@@ -357,8 +355,8 @@ public class PaymentServiceImpl implements PaymentService {
                         .folio(folioNumber)
                         .userIP(ipAddress)
                         .installmentDay(String.valueOf(sipOrder.getStartDate().getDayOfMonth()))
-                        .email(userContext.getUser().getEmail())
-                        .mobile(userContext.getUser().getPhoneNumber())
+                        .email(user.getEmail())
+                        .mobile(user.getPhoneNumber())
                         .build();
               } else {
                 orderDetail =

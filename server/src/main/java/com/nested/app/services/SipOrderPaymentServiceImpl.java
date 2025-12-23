@@ -225,6 +225,6 @@ public class SipOrderPaymentServiceImpl implements SipOrderPaymentService {
   }
 
   private Stream<OrderDetail> convertOrderToOrderDetail(Order order) {
-    return paymentServiceHelper.convertOrderToOrderDetail(order);
+    return paymentServiceHelper.convertOrderToOrderDetail(order, order.getUser());
   }
 }

@@ -1,5 +1,6 @@
 package com.nested.app.controllers;
 
+import com.nested.app.contect.UserContext;
 import com.nested.app.dto.Entity;
 import com.nested.app.dto.TransactionDTO;
 import com.nested.app.services.TransactionService;
@@ -37,6 +38,7 @@ import org.springframework.web.bind.annotation.RestController;
 public class TransactionController {
 
   private final TransactionService transactionService;
+  private final UserContext userContext;
 
   /**
    * Retrieves all transactions for the authenticated user with optional date range filtering
@@ -91,7 +93,8 @@ public class TransactionController {
 
     try {
       List<TransactionDTO> transactions =
-          transactionService.getAllTransactions(startDate, endDate, pageable);
+          transactionService.getAllTransactions(
+              startDate, endDate, pageable, userContext.getUser());
       log.info("Successfully retrieved {} transactions", transactions.size());
 
       return ResponseEntity.ok(Entity.of(transactions));

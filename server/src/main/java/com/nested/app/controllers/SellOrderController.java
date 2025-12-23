@@ -1,5 +1,6 @@
 package com.nested.app.controllers;
 
+import com.nested.app.contect.UserContext;
 import com.nested.app.dto.Entity;
 import com.nested.app.dto.OrderDTO;
 import com.nested.app.dto.SellOrderRequestDTO;
@@ -30,6 +31,7 @@ import org.springframework.web.bind.annotation.RestController;
 @Tag(name = "Sell Order", description = "API endpoints for managing sell orders")
 public class SellOrderController {
   private final SellOrderService sellOrderService;
+  private final UserContext userContext;
 
   /**
    * Place new sell orders Validates available holdings, auto-selects folios, and places orders via
@@ -43,7 +45,8 @@ public class SellOrderController {
     log.info(
         "Received request to create sell orders with {} items", requestBody.getSellOrders().size());
 
-    List<OrderDTO> createdOrders = sellOrderService.placeSellOrder(requestBody);
+    List<OrderDTO> createdOrders =
+        sellOrderService.placeSellOrder(requestBody, userContext.getUser());
 
     log.info("Successfully created {} sell orders", createdOrders.size());
     return ResponseEntity.status(HttpStatus.CREATED).body(Entity.of(createdOrders));
@@ -61,7 +64,7 @@ public class SellOrderController {
   public ResponseEntity<?> verifySellOrders(@Valid @RequestBody SellOrderVerifyDTO verifyRequest) {
     log.info("Received request to verify {} sell orders", verifyRequest.getOrderIds().size());
 
-    sellOrderService.verifySellOrder(verifyRequest);
+    sellOrderService.verifySellOrder(verifyRequest, userContext.getUser());
 
     log.info("Successfully verified {} sell orders", verifyRequest.getOrderIds().size());
     return ResponseEntity.ok()

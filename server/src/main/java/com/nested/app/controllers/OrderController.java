@@ -1,5 +1,6 @@
 package com.nested.app.controllers;
 
+import com.nested.app.contect.UserContext;
 import com.nested.app.dto.Entity;
 import com.nested.app.dto.OrderAllocationProjection;
 import com.nested.app.dto.OrderDTO;
@@ -27,11 +28,12 @@ import org.springframework.web.bind.annotation.RestController;
 public class OrderController {
   private final OrderService orderService;
   private final OrderItemsService orderItemsService;
+  private final UserContext userContext;
 
   @PostMapping
   public ResponseEntity<?> createOrders(@RequestBody OrderRequestDTO requestBody) {
 
-    List<OrderDTO> createdOrders = orderService.placeOrder(requestBody);
+    List<OrderDTO> createdOrders = orderService.placeOrder(requestBody, userContext.getUser());
 
     return ResponseEntity.status(HttpStatus.CREATED).body(Entity.of(createdOrders));
   }
@@ -40,7 +42,8 @@ public class OrderController {
   public ResponseEntity<?> getAllocation(@RequestParam("orders") String orders) {
     log.info("GET /api/v1/orders/allocation - orders: {}", orders);
 
-    List<OrderAllocationProjection> allocations = orderItemsService.getAllocationByOrders(orders);
+    List<OrderAllocationProjection> allocations =
+        orderItemsService.getAllocationByOrders(orders, userContext.getUser());
 
     return ResponseEntity.ok(Entity.of(allocations));
   }

@@ -1,5 +1,6 @@
 package com.nested.app.controllers;
 
+import com.nested.app.contect.UserContext;
 import com.nested.app.dto.PaymentDTO;
 import com.nested.app.dto.PlaceOrderDTO;
 import com.nested.app.dto.PlaceOrderPostDTO;
@@ -29,10 +30,12 @@ public class PaymentController {
   private final PaymentService paymentService;
   private final BuyOrderPaymentService buyOrderPaymentService;
   private final SipOrderPaymentService sipOrderPaymentService;
+  private final UserContext userContext;
 
   @PostMapping
   public ResponseEntity<?> placeOrders(@Valid @RequestBody PlaceOrderPostDTO placeOrderRequest) {
-    PlaceOrderDTO paymentWithOrder = paymentService.createPaymentWithOrders(placeOrderRequest);
+    PlaceOrderDTO paymentWithOrder =
+        paymentService.createPaymentWithOrders(placeOrderRequest, userContext.getUser());
     return ResponseEntity.status(HttpStatus.CREATED).body(paymentWithOrder);
   }
 

@@ -59,7 +59,7 @@ public class PendingActivityServiceImpl implements PendingActivityService {
 
     // Check for goals with pending payments
     if (type == null || type == ActivityType.GOAL_PAYMENT_PENDING) {
-      List<PendingActivityDTO<?>> goalActivities = checkPendingGoalPayments(userId);
+      List<PendingActivityDTO<?>> goalActivities = checkPendingGoalPayments(user);
       activities.addAll(goalActivities);
     }
 
@@ -150,9 +150,10 @@ public class PendingActivityServiceImpl implements PendingActivityService {
     return null;
   }
 
-  private List<PendingActivityDTO<?>> checkPendingGoalPayments(Long userId) {
+  private List<PendingActivityDTO<?>> checkPendingGoalPayments(User user) {
+    var userId = user.getId();
     List<Goal> pendingGoals =
-        goalRepository.findByUserIdAndStatus(userId, Goal.Status.PAYMENT_PENDING);
+        goalRepository.findByUserIdAndStatus(userId, Goal.Status.PAYMENT_PENDING, user);
 
     return pendingGoals.stream()
         .map(

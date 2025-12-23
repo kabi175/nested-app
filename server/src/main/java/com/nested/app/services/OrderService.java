@@ -2,6 +2,7 @@ package com.nested.app.services;
 
 import com.nested.app.dto.OrderDTO;
 import com.nested.app.dto.OrderRequestDTO;
+import com.nested.app.entity.User;
 import java.util.List;
 
 /**
@@ -17,17 +18,19 @@ public interface OrderService {
    * Retrieves orders by goal ID (alias method for API compatibility)
    *
    * @param goalId Goal ID to filter orders
+   * @param user Current user context
    * @return List of orders for the specified goal
    */
-  List<OrderDTO> getOrdersByGoalId(String goalId);
+  List<OrderDTO> getOrdersByGoalId(String goalId, User user);
 
-  List<OrderDTO> getPendingOrders(Long goalId);
+  List<OrderDTO> getPendingOrders(Long goalId, User user);
 
   /**
    * Places new orders
    *
    * @param orderRequest
+   * @param user Current user context
    * @return
    */
-  List<OrderDTO> placeOrder(OrderRequestDTO orderRequest);
+  List<OrderDTO> placeOrder(OrderRequestDTO orderRequest, User user);
 }

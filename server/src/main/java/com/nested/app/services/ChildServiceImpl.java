@@ -1,6 +1,5 @@
 package com.nested.app.services;
 
-import com.nested.app.contect.UserContext;
 import com.nested.app.dto.ChildDTO;
 import com.nested.app.entity.Child;
 import com.nested.app.entity.User;
@@ -31,20 +30,20 @@ public class ChildServiceImpl implements ChildService {
   private final TenantAwareChildRepository childRepository;
   private static final int MAX_CHILDREN_PER_USER = 3;
   private final UserRepository userRepository;
-  private final UserContext userContext;
 
   /**
    * Retrieves all children from the system
    *
+   * @param user Current user context
    * @return List of all children
    */
   @Override
   @Transactional(readOnly = true)
-  public List<ChildDTO> getAllChildren() {
-    log.info("Retrieving all children from database");
+  public List<ChildDTO> getAllChildren(User user) {
+    log.info("Retrieving all children from database for user ID: {}", user.getId());
 
     try {
-      List<Child> children = childRepository.findAll();
+      List<Child> children = childRepository.findAll(user);
       List<ChildDTO> childDTOs =
           children.stream().map(this::convertToDTO).collect(Collectors.toList());
 
@@ -61,24 +60,22 @@ public class ChildServiceImpl implements ChildService {
    * Creates a new child
    *
    * @param childDTO Child data to create
+   * @param user Current user context
    * @return Created child data
    */
   @Override
-  public ChildDTO createChild(ChildDTO childDTO) {
-    log.info("Creating new child with name: {}", childDTO.getFirstName());
+  public ChildDTO createChild(ChildDTO childDTO, User user) {
+    log.info(
+        "Creating new child with name: {} for user ID: {}", childDTO.getFirstName(), user.getId());
 
     try {
       // Validate child data
       validateChildData(childDTO);
 
-      // Get current user
-      User currentUser = getCurrentUser();
-
       // Check 3-child limit
-      validateChildLimit(currentUser.getId());
+      validateChildLimit(user.getId(), user);
 
-      Child child = convertToEntity(childDTO);
-      child.setUser(currentUser);
+      Child child = convertToEntity(childDTO, user);
 
       Child savedChild = childRepository.save(child);
       ChildDTO savedChildDTO = convertToDTO(savedChild);
@@ -96,11 +93,12 @@ public class ChildServiceImpl implements ChildService {
    * Updates an existing child
    *
    * @param childDTO Child data to update
+   * @param user Current user context
    * @return Updated child data
    */
   @Override
-  public ChildDTO updateChild(ChildDTO childDTO) {
-    log.info("Updating child with ID: {}", childDTO.getId());
+  public ChildDTO updateChild(ChildDTO childDTO, User user) {
+    log.info("Updating child with ID: {} for user ID: {}", childDTO.getId(), user.getId());
 
     try {
       if (childDTO.getId() == null) {
@@ -109,7 +107,7 @@ public class ChildServiceImpl implements ChildService {
 
       Child existingChild =
           childRepository
-              .findById(childDTO.getId())
+              .findById(childDTO.getId(), user)
               .orElseThrow(
                   () -> new RuntimeException("Child not found with ID: " + childDTO.getId()));
 
@@ -136,18 +134,16 @@ public class ChildServiceImpl implements ChildService {
    * Creates multiple children
    *
    * @param children List of child data to create
+   * @param user Current user context
    * @return List of created children
    */
   @Override
-  public List<ChildDTO> createChildren(List<ChildDTO> children) {
-    log.info("Creating {} children", children.size());
+  public List<ChildDTO> createChildren(List<ChildDTO> children, User user) {
+    log.info("Creating {} children for user ID: {}", children.size(), user.getId());
 
     try {
-      // Get current user
-      User currentUser = getCurrentUser();
-
       // Check 3-child limit for all children
-      validateChildLimitForMultiple(currentUser.getId(), children.size());
+      validateChildLimitForMultiple(user.getId(), children.size(), user);
 
       // Validate all children data
       for (ChildDTO childDTO : children) {
@@ -156,12 +152,7 @@ public class ChildServiceImpl implements ChildService {
 
       List<Child> childEntities =
           children.stream()
-              .map(
-                  childDTO -> {
-                    Child child = convertToEntity(childDTO);
-                    child.setUser(currentUser);
-                    return child;
-                  })
+              .map(childDTO -> convertToEntity(childDTO, user))
               .collect(Collectors.toList());
 
       List<Child> savedChildren = childRepository.saveAll(childEntities);
@@ -181,15 +172,18 @@ public class ChildServiceImpl implements ChildService {
    * Updates multiple children
    *
    * @param children List of child data to update
+   * @param user Current user context
    * @return List of updated children
    */
   @Override
-  public List<ChildDTO> updateChildren(List<ChildDTO> children) {
-    log.info("Updating {} children", children.size());
+  public List<ChildDTO> updateChildren(List<ChildDTO> children, User user) {
+    log.info("Updating {} children for user ID: {}", children.size(), user.getId());
 
     try {
       List<ChildDTO> updatedChildren =
-          children.stream().map(this::updateChild).collect(Collectors.toList());
+          children.stream()
+              .map(childDTO -> updateChild(childDTO, user))
+              .collect(Collectors.toList());
 
       log.info("Successfully updated {} children", updatedChildren.size());
       return updatedChildren;
@@ -224,9 +218,10 @@ public class ChildServiceImpl implements ChildService {
    * Converts ChildDTO to Child entity
    *
    * @param childDTO ChildDTO
+   * @param user Current user context
    * @return Child entity
    */
-  private Child convertToEntity(ChildDTO childDTO) {
+  private Child convertToEntity(ChildDTO childDTO, User user) {
     log.debug("Converting ChildDTO to entity for name: {}", childDTO.getFirstName());
 
     Child child = new Child();
@@ -236,7 +231,7 @@ public class ChildServiceImpl implements ChildService {
     child.setDateOfBirth(childDTO.getDateOfBirth());
     child.setGender(childDTO.getGender());
     child.setInvestUnderChild(childDTO.isInvestUnderChild());
-    child.setUser(userContext.getUser());
+    child.setUser(user);
 
     return child;
   }
@@ -252,11 +247,6 @@ public class ChildServiceImpl implements ChildService {
       throw new IllegalArgumentException("First name is required");
     }
 
-    // last name is optional
-    //    if (childDTO.getLastName() == null || childDTO.getLastName().trim().isEmpty()) {
-    //      throw new IllegalArgumentException("Last name is required");
-    //    }
-
     if (childDTO.getDateOfBirth() == null) {
       throw new IllegalArgumentException("Date of birth is required");
     }
@@ -264,11 +254,6 @@ public class ChildServiceImpl implements ChildService {
     if (childDTO.getGender() == null) {
       throw new IllegalArgumentException("Gender is required");
     }
-
-    // Validate gender enum values
-    //    if (!isValidGender(childDTO.getGender())) {
-    //      throw new IllegalArgumentException("Gender must be one of: male, female, other");
-    //    }
 
     // Validate date of birth is not in the future
     if (childDTO.getDateOfBirth().after(new Date())) {
@@ -305,10 +290,11 @@ public class ChildServiceImpl implements ChildService {
    * Validates that user hasn't exceeded the 3-child limit
    *
    * @param userId User ID to check
+   * @param user Current user context
    * @throws IllegalArgumentException if limit exceeded
    */
-  private void validateChildLimit(Long userId) {
-    long currentChildCount = childRepository.findByUserId(userId).size();
+  private void validateChildLimit(Long userId, User user) {
+    long currentChildCount = childRepository.findByUserId(userId, user).size();
 
     if (currentChildCount >= MAX_CHILDREN_PER_USER) {
       throw new IllegalArgumentException(
@@ -323,10 +309,11 @@ public class ChildServiceImpl implements ChildService {
    *
    * @param userId User ID to check
    * @param newChildrenCount Number of new children to add
+   * @param user Current user context
    * @throws IllegalArgumentException if limit would be exceeded
    */
-  private void validateChildLimitForMultiple(Long userId, int newChildrenCount) {
-    long currentChildCount = childRepository.findByUserId(userId).size();
+  private void validateChildLimitForMultiple(Long userId, int newChildrenCount, User user) {
+    long currentChildCount = childRepository.findByUserId(userId, user).size();
     long totalAfterAddition = currentChildCount + newChildrenCount;
 
     if (totalAfterAddition > MAX_CHILDREN_PER_USER) {
@@ -336,19 +323,5 @@ public class ChildServiceImpl implements ChildService {
                   + "Current count: %d, would become: %d",
               newChildrenCount, MAX_CHILDREN_PER_USER, currentChildCount, totalAfterAddition));
     }
-  }
-
-  /**
-   * Gets the current user from UserContext
-   *
-   * @return Current user
-   * @throws IllegalArgumentException if user not found
-   */
-  private User getCurrentUser() {
-    User currentUser = userContext.getUser();
-    if (currentUser == null) {
-      throw new IllegalArgumentException("User not found in context");
-    }
-    return currentUser;
   }
 }

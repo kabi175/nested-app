@@ -4,7 +4,6 @@ import com.google.common.base.Strings;
 import com.nested.app.client.mf.InvestorAPIClient;
 import com.nested.app.client.mf.KycAPIClient;
 import com.nested.app.client.mf.dto.BankAccountRequest;
-import com.nested.app.contect.UserContext;
 import com.nested.app.dto.AddressDto;
 import com.nested.app.dto.BankAccountDto;
 import com.nested.app.dto.UserActionRequest;
@@ -39,15 +38,14 @@ public class UserServiceImpl implements UserService {
   private final AddressRepository addressRepository;
   private final InvestorAPIClient investorAPIClient;
   private final KycAPIClient kycAPIClient;
-  private final UserContext userContext;
   private final ApplicationEventPublisher publisher;
   private final KycRedirectService kycRedirectService;
 
   @Override
-  public List<UserDTO> findAllUsers(Type type, Pageable pageable) {
+  public List<UserDTO> findAllUsers(Type type, Pageable pageable, User user) {
     Stream<User> users =
         switch (type) {
-          case CURRENT_USER -> userRepository.findById(userContext.getUser().getId()).stream();
+          case CURRENT_USER -> userRepository.findById(user.getId()).stream();
           case ACTIVE -> userRepository.findByIsActive(true, pageable).stream();
           case INACTIVE -> userRepository.findByIsActive(false, pageable).stream();
           default -> userRepository.findAll(pageable).stream();
@@ -58,15 +56,15 @@ public class UserServiceImpl implements UserService {
   @Override
   public UserDTO createUser(UserDTO userDTO) {
     // 1. Save user in DB
-    User user = UserDTO.fromDto(userDTO);
-    User savedUser = userRepository.save(user);
+    User userEntity = UserDTO.fromDto(userDTO);
+    User savedUser = userRepository.save(userEntity);
 
     return UserDTO.fromEntity(savedUser);
   }
 
   // TODO: sync the username & email to firebase auth as well
   @Override
-  public UserDTO updateUser(UserDTO userDTO) {
+  public UserDTO updateUser(UserDTO userDTO, User user) {
     Long userId = userDTO.getId();
 
     if (userId == null) {

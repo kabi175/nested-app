@@ -1,13 +1,10 @@
 package com.nested.app.controllers;
 
+import com.nested.app.contect.UserContext;
 import com.nested.app.dto.ChildDTO;
 import com.nested.app.dto.Entity;
-import com.nested.app.entity.Investor;
 import com.nested.app.services.ChildService;
-import com.nested.app.services.InvestorServiceTImpl;
-import com.nested.app.services.PaymentService;
 import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -22,7 +19,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -43,8 +39,7 @@ import org.springframework.web.bind.annotation.RestController;
 public class ChildController {
 
   private final ChildService childService;
-  private final PaymentService paymentService;
-  private final InvestorServiceTImpl investorService;
+  private final UserContext userContext;
 
   /**
    * Retrieves all children
@@ -70,7 +65,8 @@ public class ChildController {
     log.info("GET /api/v1/children - Retrieving all children");
 
     try {
-      List<ChildDTO> children = childService.getAllChildren();
+      var user = userContext.getUser();
+      List<ChildDTO> children = childService.getAllChildren(user);
       log.info("Successfully retrieved {} children", children.size());
 
       return ResponseEntity.ok(Entity.of(children));
@@ -106,7 +102,8 @@ public class ChildController {
   public ResponseEntity<?> createChild(@Valid @RequestBody Entity<ChildDTO> request) {
     log.info("POST /api/v1/children - Creating new child");
     try {
-      List<ChildDTO> createdChildren = childService.createChildren(request.getData());
+      var user = userContext.getUser();
+      List<ChildDTO> createdChildren = childService.createChildren(request.getData(), user);
 
       log.info("Successfully created {} children", createdChildren.size());
 
@@ -150,7 +147,8 @@ public class ChildController {
     log.info("PUT /api/v1/children - Updating child");
 
     try {
-      List<ChildDTO> updatedChildren = childService.updateChildren(request.getData());
+      var user = userContext.getUser();
+      List<ChildDTO> updatedChildren = childService.updateChildren(request.getData(), user);
       log.info("Successfully updated {} children", updatedChildren.size());
 
       return ResponseEntity.ok(Entity.of(updatedChildren));
@@ -162,56 +160,6 @@ public class ChildController {
     } catch (Exception e) {
       log.error("Error updating child: {}", e.getMessage(), e);
       return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
-    }
-  }
-
-  @PostMapping("/{child_id}/actions/create_investor")
-  @Operation(
-      summary = "Create investor for child",
-      description = "Creates an investor profile in Tarrakki for the specified child (minor type)")
-  @ApiResponses(
-      value = {
-        @ApiResponse(
-            responseCode = "201",
-            description = "Investor created successfully",
-            content =
-                @Content(
-                    mediaType = "application/json",
-                    schema = @Schema(implementation = Map.class))),
-        @ApiResponse(
-            responseCode = "400",
-            description = "Invalid input data or missing required fields"),
-        @ApiResponse(responseCode = "404", description = "Child not found"),
-        @ApiResponse(responseCode = "409", description = "Investor already exists for this child"),
-        @ApiResponse(responseCode = "500", description = "Internal server error")
-      })
-  public ResponseEntity<?> createInvestorForChild(
-      @Parameter(description = "Child ID", required = true) @PathVariable("child_id")
-          Long childId) {
-
-    log.info(
-        "POST /api/v1/children/{}/actions/create_investor - Creating investor for child", childId);
-
-    try {
-      Investor investor = investorService.createInvestorForChild(childId);
-
-      log.info(
-          "Successfully created investor for child ID: {} with Tarrakki ref: {}",
-          childId,
-          investor.getRef());
-
-      return ResponseEntity.status(HttpStatus.CREATED).build();
-
-    } catch (IllegalArgumentException e) {
-      log.warn("Validation error creating investor for child {}: {}", childId, e.getMessage());
-      return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of("error", e.getMessage()));
-    } catch (IllegalStateException e) {
-      log.warn("State error creating investor for child {}: {}", childId, e.getMessage());
-      return ResponseEntity.status(HttpStatus.CONFLICT).body(Map.of("error", e.getMessage()));
-    } catch (Exception e) {
-      log.error("Error creating investor for child {}: {}", childId, e.getMessage(), e);
-      return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-          .body(Map.of("error", "Failed to create investor: " + e.getMessage()));
     }
   }
 }

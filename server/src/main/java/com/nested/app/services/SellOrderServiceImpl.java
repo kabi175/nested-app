@@ -3,7 +3,6 @@ package com.nested.app.services;
 import com.nested.app.client.mf.SellOrderApiClient;
 import com.nested.app.client.mf.dto.OrderConsentRequest;
 import com.nested.app.client.mf.dto.SellOrderDetail;
-import com.nested.app.contect.UserContext;
 import com.nested.app.dto.MinifiedGoalDTO;
 import com.nested.app.dto.OrderDTO;
 import com.nested.app.dto.SellOrderRequestDTO;
@@ -14,6 +13,7 @@ import com.nested.app.entity.Goal;
 import com.nested.app.entity.Order;
 import com.nested.app.entity.OrderItems;
 import com.nested.app.entity.SellOrder;
+import com.nested.app.entity.User;
 import com.nested.app.repository.FolioRepository;
 import com.nested.app.repository.FundRepository;
 import com.nested.app.repository.OrderItemsRepository;
@@ -54,12 +54,10 @@ public class SellOrderServiceImpl implements SellOrderService {
   private final FolioRepository folioRepository;
   private final TransactionRepository transactionRepository;
   private final SellOrderApiClient sellOrderApiClient;
-  private final UserContext userContext;
   private final SellOrderSchedulerService sellOrderSchedulerService;
 
   @Override
-  public List<OrderDTO> placeSellOrder(SellOrderRequestDTO sellOrderRequest) {
-    var user = userContext.getUser();
+  public List<OrderDTO> placeSellOrder(SellOrderRequestDTO sellOrderRequest, User user) {
     if (user == null) {
       throw new IllegalStateException("User not found in context");
     }
@@ -243,8 +241,7 @@ public class SellOrderServiceImpl implements SellOrderService {
   }
 
   @Override
-  public void verifySellOrder(SellOrderVerifyDTO verifyRequest) {
-    var user = userContext.getUser();
+  public void verifySellOrder(SellOrderVerifyDTO verifyRequest, User user) {
     if (user == null) {
       throw new IllegalStateException("User not found in context");
     }

@@ -1,5 +1,6 @@
 package com.nested.app.controllers;
 
+import com.nested.app.contect.UserContext;
 import com.nested.app.dto.Entity;
 import com.nested.app.dto.GoalCreateDTO;
 import com.nested.app.dto.GoalDTO;
@@ -47,6 +48,7 @@ public class GoalController {
   private final GoalService goalService;
   private final HoldingService holdingService;
   private final OrderService orderService;
+  private final UserContext userContext;
 
   /**
    * Retrieves all goals
@@ -72,7 +74,7 @@ public class GoalController {
     log.info("GET /api/v1/goals - Retrieving all goals");
 
     try {
-      List<GoalDTO> goals = goalService.getAllGoals();
+      List<GoalDTO> goals = goalService.getAllGoals(userContext.getUser());
       log.info("Successfully retrieved {} goals", goals.size());
 
       return ResponseEntity.ok(Map.of("data", goals));
@@ -85,7 +87,7 @@ public class GoalController {
 
   @GetMapping("/{goalId}")
   public ResponseEntity<Entity<GoalDTO>> getGoalById(@PathVariable Long goalId) {
-    GoalDTO goal = goalService.getGoalById(goalId);
+    GoalDTO goal = goalService.getGoalById(goalId, userContext.getUser());
     log.info("Successfully retrieved goal with ID {}", goalId);
 
     if (goal == null) {
@@ -130,7 +132,7 @@ public class GoalController {
       List<GoalDTO> goalData =
           requestBody.getData().stream().map(GoalCreateDTO::toGoalDTO).toList();
 
-      List<GoalDTO> createdGoals = goalService.createGoals(goalData);
+      List<GoalDTO> createdGoals = goalService.createGoals(goalData, userContext.getUser());
       log.info("Successfully created {} goals", createdGoals.size());
 
       return ResponseEntity.status(HttpStatus.CREATED).body(Map.of("data", createdGoals));
@@ -183,7 +185,7 @@ public class GoalController {
       List<GoalDTO> goalData =
           requestBody.getData().stream().map(GoalUpdateDTO::toGoalDTO).toList();
 
-      List<GoalDTO> updatedGoals = goalService.updateGoals(goalData);
+      List<GoalDTO> updatedGoals = goalService.updateGoals(goalData, userContext.getUser());
       log.info("Successfully updated {} goals", updatedGoals.size());
 
       return ResponseEntity.ok(Map.of("data", updatedGoals));
@@ -266,7 +268,7 @@ public class GoalController {
     log.info("GET /api/v1/goals/{}/orders - Retrieving orders for goal", goalId);
 
     try {
-      List<OrderDTO> orders = orderService.getOrdersByGoalId(goalId);
+      List<OrderDTO> orders = orderService.getOrdersByGoalId(goalId, userContext.getUser());
       log.info("Successfully retrieved {} orders for goal {}", orders.size(), goalId);
 
       return ResponseEntity.ok(Map.of("data", orders));
@@ -279,7 +281,7 @@ public class GoalController {
 
   @GetMapping("/{goal_id}/orders/pending")
   public ResponseEntity<?> fetchPending(@PathVariable("goal_id") Long goalId) {
-    List<OrderDTO> fetchedOrders = orderService.getPendingOrders(goalId);
+    List<OrderDTO> fetchedOrders = orderService.getPendingOrders(goalId, userContext.getUser());
     return ResponseEntity.status(HttpStatus.CREATED).body(Map.of("data", fetchedOrders));
   }
 

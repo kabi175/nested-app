@@ -1,6 +1,7 @@
 package com.nested.app.services;
 
 import com.nested.app.dto.TransactionDTO;
+import com.nested.app.entity.User;
 import java.util.List;
 import org.springframework.data.domain.Pageable;
 
@@ -19,7 +20,9 @@ public interface TransactionService {
    * @param startDate Optional start date in yyyy-MM-dd format
    * @param endDate Optional end date in yyyy-MM-dd format
    * @param pageable Pagination parameters
+   * @param user Current user context
    * @return List of transactions matching the criteria
    */
-  List<TransactionDTO> getAllTransactions(String startDate, String endDate, Pageable pageable);
+  List<TransactionDTO> getAllTransactions(
+      String startDate, String endDate, Pageable pageable, User user);
 }

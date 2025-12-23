@@ -1,6 +1,5 @@
 package com.nested.app.services;
 
-import com.nested.app.contect.UserContext;
 import com.nested.app.dto.GoalDTO;
 import com.nested.app.dto.MinifiedBasketDto;
 import com.nested.app.dto.MinifiedChildDTO;
@@ -8,6 +7,7 @@ import com.nested.app.dto.MinifiedEducationDto;
 import com.nested.app.dto.MinifiedUserDTO;
 import com.nested.app.entity.Basket;
 import com.nested.app.entity.Goal;
+import com.nested.app.entity.User;
 import com.nested.app.repository.BasketRepository;
 import com.nested.app.repository.EducationRepository;
 import com.nested.app.repository.TenantAwareGoalRepository;
@@ -35,20 +35,20 @@ public class GoalServiceImpl implements GoalService {
   private final TenantAwareGoalRepository goalRepository;
   private final BasketRepository basketRepository;
   private final EducationRepository educationRepository;
-  private final UserContext userContext;
 
   /**
    * Retrieves all goals from the system
    *
+   * @param user Current user context
    * @return List of all goals
    */
   @Override
   @Transactional(readOnly = true)
-  public List<GoalDTO> getAllGoals() {
-    log.info("Retrieving all goals from database");
+  public List<GoalDTO> getAllGoals(User user) {
+    log.info("Retrieving all goals from database for user ID: {}", user.getId());
 
     try {
-      List<Goal> goals = goalRepository.findAll();
+      List<Goal> goals = goalRepository.findAll(user);
       List<GoalDTO> goalDTOs = goals.stream().map(this::convertToDTO).collect(Collectors.toList());
 
       log.info("Successfully retrieved {} goals", goalDTOs.size());
@@ -61,9 +61,9 @@ public class GoalServiceImpl implements GoalService {
   }
 
   @Override
-  public GoalDTO getGoalById(Long goalId) {
+  public GoalDTO getGoalById(Long goalId, User user) {
     try {
-      Optional<Goal> goals = goalRepository.findById(goalId);
+      Optional<Goal> goals = goalRepository.findById(goalId, user);
       return goals.map(this::convertToDTO).orElse(null);
     } catch (Exception e) {
       log.error("Error retrieving goals: {}", e.getMessage(), e);
@@ -75,12 +75,13 @@ public class GoalServiceImpl implements GoalService {
    * Updates an existing goal
    *
    * @param goalDTO Goal data to update
+   * @param user Current user context
    * @return Updated goal data
    * @throws Exception if update fails
    */
   @Override
-  public GoalDTO updateGoal(GoalDTO goalDTO) throws Exception {
-    log.info("Updating goal with ID: {}", goalDTO.getId());
+  public GoalDTO updateGoal(GoalDTO goalDTO, User user) throws Exception {
+    log.info("Updating goal with ID: {} for user ID: {}", goalDTO.getId(), user.getId());
 
     try {
       if (goalDTO.getId() == null) {
@@ -89,7 +90,7 @@ public class GoalServiceImpl implements GoalService {
 
       Goal existingGoal =
           goalRepository
-              .findById(goalDTO.getId())
+              .findById(goalDTO.getId(), user)
               .orElseThrow(
                   () -> new RuntimeException("Goal not found with ID: " + goalDTO.getId()));
 
@@ -123,11 +124,12 @@ public class GoalServiceImpl implements GoalService {
    * Creates multiple goalDtos
    *
    * @param goalDtos List of goal data to create
+   * @param user Current user context
    * @return List of created goalDtos
    */
   @Override
-  public List<GoalDTO> createGoals(List<GoalDTO> goalDtos) {
-    log.info("Creating {} goal", goalDtos.size());
+  public List<GoalDTO> createGoals(List<GoalDTO> goalDtos, User user) {
+    log.info("Creating {} goals for user ID: {}", goalDtos.size(), user.getId());
 
     try {
 
@@ -136,7 +138,7 @@ public class GoalServiceImpl implements GoalService {
 
       goalEntities.forEach(
           goal -> {
-            goal.setUser(userContext.getUser());
+            goal.setUser(user);
             Basket basket;
             if (goal.getEducation() == null && goal.getBasket() != null) {
               basket = basketRepository.findById(goal.getBasket().getId()).orElseThrow();
@@ -175,11 +177,12 @@ public class GoalServiceImpl implements GoalService {
    * Updates multiple goals
    *
    * @param goals List of goal data to update
+   * @param user Current user context
    * @return List of updated goals
    */
   @Override
-  public List<GoalDTO> updateGoals(List<GoalDTO> goals) {
-    log.info("Updating {} goals", goals.size());
+  public List<GoalDTO> updateGoals(List<GoalDTO> goals, User user) {
+    log.info("Updating {} goals for user ID: {}", goals.size(), user.getId());
 
     try {
       List<GoalDTO> updatedGoals =
@@ -187,7 +190,7 @@ public class GoalServiceImpl implements GoalService {
               .map(
                   goal -> {
                     try {
-                      return updateGoal(goal);
+                      return updateGoal(goal, user);
                     } catch (Exception e) {
                       log.error("Error updating goal with ID {}: {}", goal.getId(), e.getMessage());
                       throw new RuntimeException(

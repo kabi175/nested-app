@@ -1,8 +1,8 @@
 package com.nested.app.services;
 
-import com.nested.app.contect.UserContext;
 import com.nested.app.dto.TransactionDTO;
 import com.nested.app.entity.Transaction;
+import com.nested.app.entity.User;
 import com.nested.app.repository.TransactionRepository;
 import java.sql.Timestamp;
 import java.time.LocalDate;
@@ -32,7 +32,6 @@ public class TransactionServiceImpl implements TransactionService {
 
   private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd");
   private final TransactionRepository transactionRepository;
-  private final UserContext userContext;
 
   /**
    * Retrieves all transactions for the current user with optional date range filtering
@@ -40,13 +39,13 @@ public class TransactionServiceImpl implements TransactionService {
    * @param startDate Optional start date in yyyy-MM-dd format
    * @param endDate Optional end date in yyyy-MM-dd format
    * @param pageable Pagination parameters
+   * @param user Current user context
    * @return List of transactions matching the criteria
    */
   @Override
   @Transactional(readOnly = true)
   public List<TransactionDTO> getAllTransactions(
-      String startDate, String endDate, Pageable pageable) {
-    var user = userContext.getUser();
+      String startDate, String endDate, Pageable pageable, User user) {
     if (user == null) {
       log.warn("No user found in context");
       return List.of();
