@@ -26,20 +26,20 @@ public class OrderSchedulerService {
    * Schedules status check jobs for multiple orders in batch. This is more efficient than
    * scheduling jobs one by one.
    *
-   * @param orderIds List of order IDs to schedule jobs for
+   * @param externalOrderRefs List of order IDs to schedule jobs for
    * @throws SchedulerException if scheduling fails
    */
-  public void scheduleOrderStatusJobs(List<String> orderIds) throws SchedulerException {
-    if (orderIds == null || orderIds.isEmpty()) {
+  public void scheduleOrderStatusJobs(List<String> externalOrderRefs) throws SchedulerException {
+    if (externalOrderRefs == null || externalOrderRefs.isEmpty()) {
       log.warn("No order IDs provided for batch scheduling");
       return;
     }
 
-    log.info("Batch scheduling status check jobs for {} orders", orderIds.size());
+    log.info("Batch scheduling status check jobs for {} orders", externalOrderRefs.size());
 
     Map<JobDetail, java.util.Set<? extends Trigger>> jobsAndTriggers = new HashMap<>();
 
-    for (String orderId : orderIds) {
+    for (String orderId : externalOrderRefs) {
       JobDetail jobDetail =
           JobBuilder.newJob(BuyOrderFulfillmentJob.class)
               .withIdentity("order-check-" + orderId)
@@ -62,7 +62,7 @@ public class OrderSchedulerService {
 
     // Schedule all jobs in batch
     scheduler.scheduleJobs(jobsAndTriggers, true);
-    log.info("Successfully scheduled {} Quartz jobs in batch", orderIds.size());
+    log.info("Successfully scheduled {} Quartz jobs in batch", externalOrderRefs.size());
   }
 
   public void scheduleInstantOrderStatusJobs(List<String> orderIds) throws SchedulerException {
@@ -88,7 +88,7 @@ public class OrderSchedulerService {
           TriggerBuilder.newTrigger()
               .withIdentity("order-immediate-check-trigger-" + orderId)
               .forJob(jobDetail)
-              .startAt(new java.util.Date(System.currentTimeMillis() + 5000)) // 5 seconds delay
+              .startAt(new java.util.Date(System.currentTimeMillis() + 10000)) // 10 seconds delay
               .withSchedule(
                   SimpleScheduleBuilder.simpleSchedule()
                       .withRepeatCount(0)) // ensures it's persisted
