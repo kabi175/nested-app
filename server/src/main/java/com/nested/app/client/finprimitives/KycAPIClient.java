@@ -166,7 +166,7 @@ public class KycAPIClient implements com.nested.app.client.mf.KycAPIClient {
         .bodyToMono(new ParameterizedTypeReference<EntityListResponse<IdentityDocument>>() {})
         .flatMap(
             resp -> {
-              if (resp == null || resp.data.isEmpty()) {
+              if (resp == null || resp.data == null || resp.data.isEmpty()) {
                 return Mono.empty();
               }
               var data = resp.data.getFirst();
@@ -236,7 +236,7 @@ public class KycAPIClient implements com.nested.app.client.mf.KycAPIClient {
   @Override
   public Mono<Void> completeKycRequest(String kycRequestID) {
     return api.withAuth()
-        .patch()
+        .post()
         .uri(KYC_REQUEST_API_URL + "/" + kycRequestID + "/simulate")
         .bodyValue(Map.of("status", "successful"))
         .retrieve()
