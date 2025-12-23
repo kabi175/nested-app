@@ -127,7 +127,7 @@ export default function AddressScreen() {
           city: addressValues.city,
           state: addressValues.state,
           pin_code: addressValues.pin_code,
-          country: user.address?.country ?? "India",
+          country: user.address?.country ?? "IN",
         },
       });
     },

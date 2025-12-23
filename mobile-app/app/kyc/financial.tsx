@@ -1,5 +1,4 @@
-import { getUser, updateUser } from "@/api/userApi";
-import { userAtom } from "@/atoms/user";
+import { updateUser } from "@/api/userApi";
 import { GenericSelect } from "@/components/ui/GenericSelect";
 import { InfoTooltip } from "@/components/ui/InfoTooltip";
 import { StepProgress } from "@/components/ui/StepProgress";
@@ -10,11 +9,12 @@ import {
 } from "@/constants/kycFinancialOptions";
 import { QUERY_KEYS } from "@/constants/queryKeys";
 import { useInitKyc } from "@/hooks/useInitKyc";
+import { useUser } from "@/hooks/useUser";
 import { useKyc } from "@/providers/KycProvider";
-import { useQueryClient } from "@tanstack/react-query";
+import type { User } from "@/types/auth";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Button, Text, Toggle } from "@ui-kitten/components";
 import { useRouter } from "expo-router";
-import { useAtomValue, useSetAtom } from "jotai";
 import React, { useEffect, useRef, useState } from "react";
 import { KeyboardAvoidingView, Platform, ScrollView, View } from "react-native";
 
@@ -22,110 +22,134 @@ export default function FinancialScreen() {
   const { data, update, validateFinancial } = useKyc();
   const router = useRouter();
   const queryClient = useQueryClient();
+  const { data: user, isLoading: isLoadingUser } = useUser();
   const [errors, setErrors] = useState<Record<string, string>>({});
-  const [loading, setLoading] = useState(false);
-  const userIdRef = useRef<string | null>(null);
   const hasPrefilledRef = useRef(false);
   const totalSteps = 6;
   const currentStep = 5;
 
-  const user = useAtomValue(userAtom);
-  const setUser = useSetAtom(userAtom);
-
   useEffect(() => {
-    let mounted = true;
-    (async () => {
-      setLoading(true);
-      try {
-        const user = await getUser();
-        if (mounted && user) {
-          userIdRef.current = user.id;
-          setUser(user);
-          queryClient.setQueryData([QUERY_KEYS.user], user);
-          if (!hasPrefilledRef.current) {
-            update("financial", {
-              occupation: (user.occupation as any) || "",
-              incomeSource: (user.income_source as any) || "",
-              incomeSlab: (user.income_slab as any) || "",
-              pep: !!user.pep,
-            });
-            hasPrefilledRef.current = true;
-          }
-        }
-      } finally {
-        if (mounted) setLoading(false);
-      }
-    })();
-    return () => {
-      mounted = false;
-    };
-  }, [queryClient, setUser, update]);
+    if (!user || hasPrefilledRef.current) {
+      return;
+    }
+
+    const hasExistingValues = Object.values(data.financial).some(
+      (value) => value !== "" && value !== false
+    );
+
+    if (hasExistingValues) {
+      hasPrefilledRef.current = true;
+      return;
+    }
+
+    update("financial", {
+      occupation: (user.occupation as any) || "",
+      incomeSource: (user.income_source as any) || "",
+      incomeSlab: (user.income_slab as any) || "",
+      pep: !!user.pep,
+    });
+    hasPrefilledRef.current = true;
+  }, [user, data.financial, update]);
 
   const { mutateAsync: initKyc } = useInitKyc();
-  const onContinue = () => {
-    const v = validateFinancial();
-    setErrors(v.errors);
-    if (v.isValid) {
-      void (async () => {
-        try {
-          setLoading(true);
-          const id = userIdRef.current;
-          if (id) {
-            await updateUser(id, {
-              occupation: data.financial.occupation || null,
-              income_source: data.financial.incomeSource || null,
-              income_slab: data.financial.incomeSlab || null,
-              pep: data.financial.pep,
-            });
-          }
 
-          await queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.user] });
-          let latestUser = await getUser();
+  const { mutateAsync: updateFinancialData, isPending: isUpdatingFinancial } =
+    useMutation({
+      mutationFn: async ({
+        userId,
+        financialData,
+      }: {
+        userId: string;
+        financialData: Partial<
+          Pick<User, "occupation" | "income_source" | "income_slab" | "pep">
+        >;
+      }) => {
+        return updateUser(userId, financialData);
+      },
+      onSuccess: () => {
+        queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.user] });
+      },
+    });
 
-          if (latestUser) {
-            setUser(latestUser);
-            queryClient.setQueryData([QUERY_KEYS.user], latestUser);
-          }
+  const routeToNextStep = (status: string | undefined) => {
+    switch (status) {
+      case "aadhaar_pending":
+        router.push("/kyc/aadhaar-upload");
+        break;
+      case "esign_pending":
+        router.push("/kyc/esign-upload");
+        break;
+      case "approved":
+        router.push("/bank-accounts");
+        break;
+      case "rejected":
+        router.push("/kyc/failure");
+        break;
+      case "cancelled":
+        router.push("/kyc/cancelled");
+        break;
+      case "submitted":
+        router.push("/kyc/waiting-for-approval");
+        break;
+      default:
+        throw new Error(`Invalid KYC status: ${status}`);
+    }
+  };
 
-          let status = latestUser?.kycStatus ?? user?.kycStatus;
-          if (
-            status === "unknown" ||
-            status === "pending" ||
-            status === undefined
-          ) {
-            const userForInit = latestUser ?? user;
-            if (userForInit) {
-              await initKyc(userForInit);
-              await queryClient.invalidateQueries({
-                queryKey: [QUERY_KEYS.user],
-              });
-              latestUser = await getUser();
-              if (latestUser) {
-                setUser(latestUser);
-                queryClient.setQueryData([QUERY_KEYS.user], latestUser);
-              }
-              status = latestUser?.kycStatus ?? status;
-            }
-          }
+  const onContinue = async () => {
+    const validation = validateFinancial();
+    setErrors(validation.errors);
 
-          if (status === "aadhaar_pending") {
-            router.push("/kyc/aadhaar-upload");
-            return;
-          }
+    if (!validation.isValid) {
+      return;
+    }
 
-          if (status === "esign_pending") {
-            router.push("/kyc/esign-upload");
-            return;
-          }
+    if (!user?.id) {
+      console.error("User ID not available");
+      return;
+    }
 
-          router.push("/kyc/review");
-        } catch (error) {
-          // TODO: surface error to user (toast/snackbar) if needed
-          console.log("error", error);
-        } finally {
-          setLoading(false);
-        }
-      })();
+    try {
+      // Update user financial information
+      await updateFinancialData({
+        userId: user.id,
+        financialData: {
+          occupation: (data.financial.occupation || null) as User["occupation"],
+          income_source: (data.financial.incomeSource ||
+            null) as User["income_source"],
+          income_slab: (data.financial.incomeSlab ||
+            null) as User["income_slab"],
+          pep: data.financial.pep,
+        },
+      });
+
+      // Wait for query to refetch after invalidation
+      await queryClient.refetchQueries({ queryKey: [QUERY_KEYS.user] });
+      const latestUser = queryClient.getQueryData<typeof user>([
+        QUERY_KEYS.user,
+      ]);
+      let kycStatus = latestUser?.kycStatus ?? user?.kycStatus;
+
+      // Initialize KYC if status is unknown, pending, or undefined
+      const needsKycInit =
+        kycStatus === "unknown" ||
+        kycStatus === "pending" ||
+        kycStatus === undefined;
+
+      if (needsKycInit && latestUser) {
+        await initKyc(latestUser);
+        await queryClient.refetchQueries({ queryKey: [QUERY_KEYS.user] });
+        const updatedUser = queryClient.getQueryData<typeof user>([
+          QUERY_KEYS.user,
+        ]);
+        kycStatus = updatedUser?.kycStatus ?? kycStatus;
+      }
+
+      // Route to next step based on KYC status
+      routeToNextStep(kycStatus);
+    } catch (error) {
+      // TODO: surface error to user (toast/snackbar) if needed
+      console.error("Error saving financial information:", error);
     }
   };
 
@@ -154,7 +178,7 @@ export default function FinancialScreen() {
             status={errors.occupation ? "danger" : "basic"}
             caption={errors.occupation}
             placeholder="Select"
-            disabled={loading}
+            disabled={isUpdatingFinancial || isLoadingUser}
           />
         </View>
 
@@ -178,7 +202,7 @@ export default function FinancialScreen() {
             status={errors.incomeSource ? "danger" : "basic"}
             caption={errors.incomeSource}
             placeholder="Select"
-            disabled={loading}
+            disabled={isUpdatingFinancial || isLoadingUser}
           />
         </View>
 
@@ -200,7 +224,7 @@ export default function FinancialScreen() {
             status={errors.incomeSlab ? "danger" : "basic"}
             caption={errors.incomeSlab}
             placeholder="Select"
-            disabled={loading}
+            disabled={isUpdatingFinancial || isLoadingUser}
           />
         </View>
 
@@ -245,7 +269,11 @@ export default function FinancialScreen() {
           >
             Back
           </Button>
-          <Button style={{ flex: 1 }} onPress={onContinue} disabled={loading}>
+          <Button
+            style={{ flex: 1 }}
+            onPress={onContinue}
+            disabled={isUpdatingFinancial || isLoadingUser}
+          >
             Continue
           </Button>
         </View>
