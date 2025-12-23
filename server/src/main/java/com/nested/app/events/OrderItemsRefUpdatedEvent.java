@@ -1,5 +1,6 @@
 package com.nested.app.events;
 
+import com.nested.app.dto.OrderDTO;
 import java.util.List;
 import lombok.Getter;
 import org.springframework.context.ApplicationEvent;
@@ -25,5 +26,6 @@ public class OrderItemsRefUpdatedEvent extends ApplicationEvent {
   }
 
   /** Information about a single order item ref update */
-  public record OrderItemRefInfo(Long orderId, String ref, Long orderItemId) {}
+  public record OrderItemRefInfo(
+      Long orderId, String ref, Long orderItemId, OrderDTO.OrderType orderType) {}
 }

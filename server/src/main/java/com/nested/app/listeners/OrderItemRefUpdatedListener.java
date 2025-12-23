@@ -1,5 +1,6 @@
 package com.nested.app.listeners;
 
+import com.nested.app.dto.OrderDTO;
 import com.nested.app.events.OrderItemsRefUpdatedEvent;
 import com.nested.app.services.OrderSchedulerService;
 import com.nested.app.services.SchemeWiseReportService;
@@ -46,6 +47,7 @@ public class OrderItemRefUpdatedListener {
       // Extract unique order IDs from the batch
       List<String> orderIds =
           event.getOrderItems().stream()
+              .filter(orderItemRefInfo -> orderItemRefInfo.orderType() == OrderDTO.OrderType.BUY)
               .map(OrderItemsRefUpdatedEvent.OrderItemRefInfo::ref)
               .distinct()
               .map(String::valueOf)

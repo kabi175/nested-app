@@ -4,6 +4,7 @@ import com.nested.app.client.mf.MandateApiClient;
 import com.nested.app.client.mf.SipOrderApiClient;
 import com.nested.app.client.mf.dto.OrderDetail;
 import com.nested.app.client.mf.dto.SipOrderDetail;
+import com.nested.app.dto.OrderDTO;
 import com.nested.app.dto.UserActionRequest;
 import com.nested.app.entity.Order;
 import com.nested.app.entity.OrderItems;
@@ -184,7 +185,10 @@ public class SipOrderPaymentServiceImpl implements SipOrderPaymentService {
         if (orderItem.getRef() != null && orderItem.getOrder() != null) {
           orderItemRefInfos.add(
               new OrderItemsRefUpdatedEvent.OrderItemRefInfo(
-                  orderItem.getOrder().getId(), orderItem.getRef(), orderItem.getId()));
+                  orderItem.getOrder().getId(),
+                  orderItem.getRef(),
+                  orderItem.getId(),
+                  OrderDTO.OrderType.SIP));
         }
       }
 

@@ -53,12 +53,7 @@ public class BuyOrderProcessEventListener {
     log.info("Processing BuyOrderProcessEvent for payment ref: {}", event.paymentRef());
 
     try {
-      Payment payment = paymentRepository.findByRef(event.paymentRef()).orElse(null);
-
-      if (payment == null) {
-        log.warn("Payment not found for reference: {}", event.paymentRef());
-        return;
-      }
+      Payment payment = paymentRepository.findByRef(event.paymentRef()).orElseThrow();
 
       // Handle idempotency: check if already processed based on buyStatus
       if (isBuyOrderEventAlreadyProcessed(payment)) {
@@ -110,7 +105,6 @@ public class BuyOrderProcessEventListener {
 
         // Update buyStatus to COMPLETED and mark as verified
         payment.setBuyStatus(Payment.PaymentStatus.COMPLETED);
-        payment.setVerificationStatus(Payment.VerificationStatus.VERIFIED);
         paymentRepository.save(payment);
 
         // Update all orders to COMPLETED status

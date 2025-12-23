@@ -4,7 +4,6 @@ import com.nested.app.client.mf.BuyOrderApiClient;
 import com.nested.app.client.mf.MandateApiClient;
 import com.nested.app.client.mf.OtpApiClient;
 import com.nested.app.client.mf.dto.BulkOrderOtpRequest;
-import com.nested.app.client.mf.dto.CreateMandateRequest;
 import com.nested.app.client.mf.dto.MandateDto;
 import com.nested.app.client.mf.dto.OrderDetail;
 import com.nested.app.client.mf.dto.OtpRequest;
@@ -69,20 +68,6 @@ public class PaymentServiceImpl implements PaymentService {
   private final ApplicationEventPublisher eventPublisher;
 
   private final OtpApiClient otpApiClient;
-
-  private static CreateMandateRequest getCreateMandateRequest(Payment payment) {
-    var mandateRequest = new CreateMandateRequest();
-    mandateRequest.setInvestor_id(payment.getInvestor().getRef());
-    mandateRequest.setBank_id(payment.getBank().getRefId());
-    if (payment.getPaymentType() == PlaceOrderPostDTO.PaymentMethod.UPI) {
-      mandateRequest.setMandate_type(CreateMandateRequest.MandateType.UPI);
-      mandateRequest.setUpi_id(payment.getUpiId());
-    } else {
-      mandateRequest.setMandate_type(CreateMandateRequest.MandateType.ENACH);
-      mandateRequest.setCallback_url("https://nested.com/api/payments/mandate-callback");
-    }
-    return mandateRequest;
-  }
 
   /**
    * Creates a payment with multiple orders for a child
@@ -294,7 +279,10 @@ public class PaymentServiceImpl implements PaymentService {
       if (orderItem.getRef() != null && orderItem.getOrder() != null) {
         orderItemRefInfos.add(
             new OrderItemsRefUpdatedEvent.OrderItemRefInfo(
-                orderItem.getOrder().getId(), orderItem.getRef(), orderItem.getId()));
+                orderItem.getOrder().getId(),
+                orderItem.getRef(),
+                orderItem.getId(),
+                OrderDTO.OrderType.BUY));
       }
     }
 
