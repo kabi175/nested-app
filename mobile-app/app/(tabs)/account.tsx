@@ -2,6 +2,7 @@ import { ThemedText } from "@/components/ThemedText";
 import { useAuth, useSignOut } from "@/hooks/auth";
 import { openWhatsApp } from "@/utils/whtsapp";
 import { Ionicons } from "@expo/vector-icons";
+import { useQueryClient } from "@tanstack/react-query";
 import Constants from "expo-constants";
 import { router } from "expo-router";
 import { SquarePen } from "lucide-react-native";
@@ -15,7 +16,6 @@ import {
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-
 interface MenuItem {
   id: string;
   title: string;
@@ -29,6 +29,7 @@ interface MenuItem {
 export default function AccountScreen() {
   const auth = useAuth();
   const { signOut } = useSignOut();
+  const queryClient = useQueryClient();
 
   const getInitials = (name: string) => {
     return name
@@ -53,6 +54,7 @@ export default function AccountScreen() {
           style: "destructive",
           onPress: async () => {
             await signOut();
+            queryClient.clear();
             router.replace("/sign-in");
           },
         },
