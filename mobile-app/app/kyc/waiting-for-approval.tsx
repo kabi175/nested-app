@@ -2,12 +2,18 @@ import { getUser } from "@/api/userApi";
 import { userAtom } from "@/atoms/user";
 import { StepProgress } from "@/components/ui/StepProgress";
 import { QUERY_KEYS } from "@/constants/queryKeys";
-import { Button, Layout, Text } from "@ui-kitten/components";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { Button, Layout, Text } from "@ui-kitten/components";
 import { useRouter } from "expo-router";
 import { useAtom } from "jotai";
 import React, { useEffect, useState } from "react";
-import { ActivityIndicator, KeyboardAvoidingView, Platform, ScrollView, View } from "react-native";
+import {
+  ActivityIndicator,
+  KeyboardAvoidingView,
+  Platform,
+  ScrollView,
+  View,
+} from "react-native";
 
 export default function WaitingForApprovalScreen() {
   const router = useRouter();
@@ -27,7 +33,7 @@ export default function WaitingForApprovalScreen() {
   useEffect(() => {
     if (currentUser) {
       setUser(currentUser);
-      
+
       // Stop polling if we reach a final status
       const status = currentUser.kycStatus;
       if (status === "completed" || status === "failed") {
@@ -64,7 +70,7 @@ export default function WaitingForApprovalScreen() {
   };
 
   const handleGoBack = () => {
-    router.back();
+    router.replace("/child");
   };
 
   return (
@@ -74,7 +80,15 @@ export default function WaitingForApprovalScreen() {
     >
       <StepProgress current={6} total={6} />
       <ScrollView contentContainerStyle={{ padding: 16, gap: 16 }}>
-        <Layout level="1" style={{ padding: 16, borderRadius: 12, gap: 12, alignItems: "center" }}>
+        <Layout
+          level="1"
+          style={{
+            padding: 16,
+            borderRadius: 12,
+            gap: 12,
+            alignItems: "center",
+          }}
+        >
           {isLoading && !currentUser ? (
             <>
               <ActivityIndicator size="large" color="#0A84FF" />
@@ -99,12 +113,20 @@ export default function WaitingForApprovalScreen() {
                   ✕
                 </Text>
               </View>
-              <Text category="h6" status="danger" style={{ textAlign: "center" }}>
+              <Text
+                category="h6"
+                status="danger"
+                style={{ textAlign: "center" }}
+              >
                 KYC Verification Failed
               </Text>
-              <Text category="c1" appearance="hint" style={{ textAlign: "center", marginTop: 8 }}>
-                Your KYC verification was not successful. Please review your submitted
-                documents and try again.
+              <Text
+                category="c1"
+                appearance="hint"
+                style={{ textAlign: "center", marginTop: 8 }}
+              >
+                Your KYC verification was not successful. Please review your
+                submitted documents and try again.
               </Text>
               <View style={{ marginTop: 16, gap: 8, width: "100%" }}>
                 <Button onPress={handleRetry}>Retry Verification</Button>
@@ -131,9 +153,14 @@ export default function WaitingForApprovalScreen() {
               <Text category="h6" style={{ textAlign: "center" }}>
                 Waiting for Approval
               </Text>
-              <Text category="c1" appearance="hint" style={{ textAlign: "center", marginTop: 8 }}>
-                Your KYC documents have been submitted successfully. We're reviewing your
-                information and will notify you once the verification is complete.
+              <Text
+                category="c1"
+                appearance="hint"
+                style={{ textAlign: "center", marginTop: 8 }}
+              >
+                Your KYC documents have been submitted successfully. We're
+                reviewing your information and will notify you once the
+                verification is complete.
               </Text>
               <View
                 style={{
@@ -144,12 +171,20 @@ export default function WaitingForApprovalScreen() {
                   width: "100%",
                 }}
               >
-                <Text category="c2" appearance="hint" style={{ textAlign: "center" }}>
-                  This usually takes a few minutes. We'll automatically update you when your
-                  status changes.
+                <Text
+                  category="c2"
+                  appearance="hint"
+                  style={{ textAlign: "center" }}
+                >
+                  This usually takes a few minutes. We'll automatically update
+                  you when your status changes.
                 </Text>
               </View>
-              <Button appearance="ghost" onPress={handleGoBack} style={{ marginTop: 8 }}>
+              <Button
+                appearance="ghost"
+                onPress={handleGoBack}
+                style={{ marginTop: 8 }}
+              >
                 Go Back
               </Button>
             </>
@@ -159,4 +194,3 @@ export default function WaitingForApprovalScreen() {
     </KeyboardAvoidingView>
   );
 }
-

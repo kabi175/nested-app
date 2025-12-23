@@ -88,7 +88,6 @@ export default function FinancialScreen() {
           }
 
           let status = latestUser?.kycStatus ?? user?.kycStatus;
-
           if (
             status === "unknown" ||
             status === "pending" ||
@@ -120,8 +119,9 @@ export default function FinancialScreen() {
           }
 
           router.push("/kyc/review");
-        } catch {
+        } catch (error) {
           // TODO: surface error to user (toast/snackbar) if needed
+          console.log("error", error);
         } finally {
           setLoading(false);
         }
