@@ -3,12 +3,9 @@ import { Education } from "@/types/education";
 import { expectedFee } from "@/utils/education";
 import { formatCurrency } from "@/utils/formatters";
 import { Ionicons } from "@expo/vector-icons";
-import { LinearGradient } from "expo-linear-gradient";
 import React, { useRef, useState } from "react";
 import { PanResponder, ScrollView, StyleSheet, Text, View } from "react-native";
-import PopularWealthBaskets from "./PopularWealthBaskets";
-import { ThemedText } from "./ThemedText";
-import { ThemedView } from "./ThemedView";
+import SuperFDCard from "./SuperFDCard";
 import { SearchableDropdown } from "./ui/SearchableDropdown";
 
 interface EducationCostEstimatorProps {
@@ -97,113 +94,128 @@ export default function EducationCostEstimator({
       showsVerticalScrollIndicator={false}
       contentContainerStyle={styles.scrollContent}
     >
-      {/* Popular Wealth Baskets Section with Gradient */}
-      <LinearGradient
-        colors={["#FFE8D4", "#E8E3FF", "#FFFFFF"]}
-        style={styles.gradientWrapper}
-      >
-        <PopularWealthBaskets />
+      {/* Invest In Super FD Promotion Card */}
+      <SuperFDCard
+        onPress={() => {
+          // Handle card press if needed
+        }}
+        onInvestNowPress={() => {
+          // Handle invest now press if needed
+        }}
+      />
 
-        {/* Header Section */}
-        <View style={[styles.headerSection, { paddingTop: 20 }]}>
-          <View style={styles.headerContent}>
-            <ThemedText style={styles.headerTitle}>
-              Plan your child&apos;s future
-            </ThemedText>
-            <ThemedText style={styles.headerSubtitle}>
-              DIY investing is risky when your child&apos;s dreams are at stake.
-            </ThemedText>
-          </View>
-        </View>
+      {/* Plan Your Child's Future Section */}
+      <View style={styles.planSection}>
+        <Text style={styles.planTitle}>Plan your child&apos;s future</Text>
+        <Text style={styles.planSubtext}>
+          Start today. Secure tomorrow. Get a portfolio designed just for your
+          child&apos;s dreams.
+        </Text>
+      </View>
 
-        {/* Main Content Card */}
-        <ThemedView style={styles.mainCard}>
-          <View style={styles.cardContent}>
-            {/* Title */}
-            <ThemedText style={styles.cardTitle}>
-              Estimate Future Cost
-            </ThemedText>
-            {/* Description */}
-            <ThemedText style={styles.cardDescription}>
-              With college fees on the rise, see how much you&apos;ll need to
-              save for your child&apos;s dream education.
-            </ThemedText>
-            {/* Input Fields */}
-            <View style={styles.inputContainer}>
-              <SearchableDropdown
-                data={courses}
-                labelKey="name"
-                valueKey="id"
-                placeholder="Select target course"
-                searchPlaceholder="Search courses..."
-                onSelect={handleCourseSelect}
-                selectedValue={selectedCourse}
-              />
+      {/* Estimate Future Cost Card */}
+      <View style={styles.mainCard}>
+        <View style={styles.cardContent}>
+          {/* Title */}
+          <Text style={styles.cardTitle}>Estimate Future Cost</Text>
 
-              <ThemedText style={styles.orText}>OR</ThemedText>
+          {/* Description */}
+          <Text style={styles.cardDescription}>
+            With college fees on the rise, see how much you&apos;ll need to save
+            for your child&apos;s dream education.
+          </Text>
 
-              <SearchableDropdown
-                data={institutions}
-                labelKey="name"
-                valueKey="id"
-                placeholder="Select dream college"
-                searchPlaceholder="Search colleges..."
-                onSelect={handleCollegeSelect}
-                selectedValue={selectedCollege}
-              />
-            </View>
-            {/* Timeline Slider */}
-            <View style={styles.sliderContainer}>
-              <ThemedText style={styles.sliderLabel}>
-                Select timeline:{" "}
-                <Text style={styles.sliderValue}>{timeline} years</Text>
-              </ThemedText>
+          {/* Input Fields */}
+          <View style={styles.inputContainer}>
+            <SearchableDropdown
+              data={courses}
+              labelKey="name"
+              valueKey="id"
+              placeholder="Select target course"
+              searchPlaceholder="Search courses..."
+              onSelect={handleCourseSelect}
+              selectedValue={selectedCourse}
+            />
 
-              <View style={styles.sliderWrapper}>
-                <View
-                  ref={sliderTrackRef}
-                  style={styles.sliderTrack}
-                  onLayout={(event) => {
-                    const { width } = event.nativeEvent.layout;
-                    sliderTrackRef.current?.measure(
-                      (x, y, w, h, pageX, pageY) => {
-                        sliderLayout.current = { width: width, pageX: pageX };
-                      }
-                    );
-                  }}
-                  {...panResponder.panHandlers}
-                >
-                  <View
-                    style={[
-                      styles.sliderActiveTrack,
-                      { width: `${sliderPercentage}%` },
-                    ]}
-                  />
-                  <View
-                    style={[
-                      styles.sliderThumb,
-                      { left: `${sliderPercentage}%` },
-                    ]}
-                    hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-                  />
-                </View>
-
-                <View style={styles.sliderLabels}>
-                  <Text style={styles.sliderLabelText}>+1 Yr</Text>
-                  <Text style={styles.sliderLabelText}>+25 Yrs</Text>
-                </View>
+            <View style={styles.orPillContainer}>
+              <View style={styles.orPill}>
+                <Text style={styles.orPillText}>OR</Text>
               </View>
             </View>
-            {/* Cost Projection Display */}
-            {(selectedCourse || selectedCollege) && (
-              <EstimatedCostCard
-                education={selectedCourse || (selectedCollege as Education)}
-                timeline={timeline}
-              />
-            )}
+
+            <SearchableDropdown
+              data={institutions}
+              labelKey="name"
+              valueKey="id"
+              placeholder="Select dream college"
+              searchPlaceholder="Search colleges..."
+              onSelect={handleCollegeSelect}
+              selectedValue={selectedCollege}
+            />
           </View>
-        </ThemedView>
-      </LinearGradient>
+
+          {/* Timeline Slider */}
+          <View style={styles.sliderContainer}>
+            <Text style={styles.sliderLabel}>
+              Select timeline:{" "}
+              <Text style={styles.sliderValue}>{timeline} years</Text>
+            </Text>
+
+            <View style={styles.sliderWrapper}>
+              <View
+                ref={sliderTrackRef}
+                style={styles.sliderTrack}
+                onLayout={(event) => {
+                  const { width } = event.nativeEvent.layout;
+                  sliderTrackRef.current?.measure(
+                    (x, y, w, h, pageX, pageY) => {
+                      sliderLayout.current = { width: width, pageX: pageX };
+                    }
+                  );
+                }}
+                {...panResponder.panHandlers}
+              >
+                <View
+                  style={[
+                    styles.sliderActiveTrack,
+                    { width: `${sliderPercentage}%` },
+                  ]}
+                />
+                <View
+                  style={[styles.sliderThumb, { left: `${sliderPercentage}%` }]}
+                  hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+                />
+              </View>
+
+              <View style={styles.sliderLabels}>
+                <Text style={styles.sliderLabelText}>+1 Yr</Text>
+                <Text style={styles.sliderLabelText}>+25 Yrs</Text>
+              </View>
+            </View>
+          </View>
+
+          {/* Bottom Icon */}
+          <View style={styles.bottomIconContainer}>
+            <View style={styles.bottomIcon}>
+              <Ionicons name="arrow-up" size={16} color="#60A5FA" />
+              <Ionicons
+                name="arrow-forward"
+                size={16}
+                color="#60A5FA"
+                style={styles.bottomIconArrow}
+              />
+            </View>
+          </View>
+
+          {/* Cost Projection Display */}
+          {(selectedCourse || selectedCollege) && (
+            <EstimatedCostCard
+              education={selectedCourse || (selectedCollege as Education)}
+              timeline={timeline}
+            />
+          )}
+        </View>
+      </View>
     </ScrollView>
   );
 }
@@ -225,9 +237,9 @@ const EstimatedCostCard = ({
       <View style={styles.chartIconContainer}>
         <Ionicons name="trending-up" size={24} color="#2563EB" />
       </View>
-      <ThemedText style={styles.chartDescription}>
+      <Text style={styles.chartDescription}>
         Interactive cost projection chart
-      </ThemedText>
+      </Text>
       <View style={styles.estimatedCostContainer}>
         <Text style={styles.estimatedCostText}>
           {formatCurrency(estimatedCost)} in {timeline} years
@@ -240,119 +252,115 @@ const EstimatedCostCard = ({
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    marginTop: 20,
-    paddingBottom: 24,
+    backgroundColor: "#FFFFFF",
   },
   scrollContent: {
     flexGrow: 1,
+    paddingBottom: 24,
   },
-  gradientWrapper: {
-    width: "100%",
-    marginTop: 20,
-  },
-  headerSection: {
-    paddingTop: 40,
-    paddingBottom: 40,
+  // Plan Section Styles
+  planSection: {
     paddingHorizontal: 20,
-    minHeight: 200,
+    marginBottom: 24,
   },
-  headerContent: {
-    alignItems: "center",
-  },
-  headerTitle: {
+  planTitle: {
     fontSize: 28,
     fontWeight: "bold",
-    textAlign: "center",
-    marginBottom: 12,
     color: "#1F2937",
+    marginBottom: 8,
   },
-  headerSubtitle: {
-    fontSize: 16,
-    textAlign: "center",
+  planSubtext: {
+    fontSize: 14,
     color: "#6B7280",
-    lineHeight: 24,
-    paddingHorizontal: 20,
+    lineHeight: 20,
   },
+  // Main Card Styles
   mainCard: {
     marginHorizontal: 20,
-    marginTop: -20,
     borderRadius: 16,
+    backgroundColor: "#FFFFFF",
     shadowColor: "#000",
     shadowOffset: {
       width: 0,
-      height: 4,
+      height: 2,
     },
     shadowOpacity: 0.1,
-    shadowRadius: 12,
-    elevation: 8,
-    backgroundColor: "#FFFFFF",
+    shadowRadius: 8,
+    elevation: 4,
   },
   cardContent: {
     padding: 24,
   },
   cardTitle: {
-    fontSize: 24,
+    fontSize: 22,
     fontWeight: "bold",
-    textAlign: "center",
-    marginBottom: 12,
     color: "#1F2937",
+    marginBottom: 8,
   },
   cardDescription: {
-    fontSize: 16,
-    textAlign: "center",
-    color: "#6B7280",
-    lineHeight: 24,
-    marginBottom: 32,
+    fontSize: 14,
+    color: "#1F2937",
+    lineHeight: 20,
+    marginBottom: 24,
   },
   inputContainer: {
-    marginBottom: 32,
+    marginBottom: 24,
   },
-  orText: {
-    textAlign: "center",
+  orPillContainer: {
+    alignItems: "center",
+    marginVertical: 12,
+  },
+  orPill: {
+    backgroundColor: "#F3F4F6",
+    borderRadius: 16,
+    paddingHorizontal: 16,
+    paddingVertical: 6,
+  },
+  orPillText: {
+    fontSize: 12,
     color: "#6B7280",
-    fontSize: 14,
-    marginBottom: 16,
+    fontWeight: "500",
   },
   sliderContainer: {
-    marginBottom: 32,
+    marginBottom: 24,
   },
   sliderLabel: {
-    fontSize: 16,
-    color: "#6B7280",
+    fontSize: 14,
+    color: "#1F2937",
     marginBottom: 16,
-    textAlign: "center",
   },
   sliderValue: {
-    color: "#2563EB",
+    color: "#1F2937",
     fontWeight: "600",
   },
   sliderWrapper: {
-    marginBottom: 16,
+    marginBottom: 8,
   },
   sliderTrack: {
-    height: 8,
-    backgroundColor: "#E5E7EB",
-    borderRadius: 4,
+    height: 6,
+    backgroundColor: "#E0E7FF",
+    borderRadius: 3,
     position: "relative",
     marginBottom: 8,
   },
   sliderActiveTrack: {
-    height: 8,
-    backgroundColor: "#2563EB",
-    borderRadius: 4,
+    height: 6,
+    backgroundColor: "#3B82F6",
+    borderRadius: 3,
+    position: "absolute",
+    left: 0,
+    top: 0,
   },
   sliderThumb: {
-    width: 24,
-    height: 24,
-    backgroundColor: "#FFFFFF",
-    borderRadius: 12,
-    borderWidth: 2,
-    borderColor: "#2563EB",
+    width: 20,
+    height: 20,
+    backgroundColor: "#3B82F6",
+    borderRadius: 10,
     position: "absolute",
-    top: -8,
-    marginLeft: -12,
+    top: -7,
+    marginLeft: -10,
     zIndex: 10,
-    shadowColor: "#2563EB",
+    shadowColor: "#3B82F6",
     shadowOffset: {
       width: 0,
       height: 2,
@@ -369,32 +377,24 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: "#6B7280",
   },
-  timelineButtons: {
+  bottomIconContainer: {
+    alignItems: "center",
+    marginTop: 16,
+    marginBottom: 8,
+  },
+  bottomIcon: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: "#DBEAFE",
+    justifyContent: "center",
+    alignItems: "center",
     flexDirection: "row",
-    justifyContent: "space-between",
-    flexWrap: "wrap",
-    gap: 8,
   },
-  timelineButton: {
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    borderRadius: 20,
-    backgroundColor: "#F3F4F6",
-    borderWidth: 1,
-    borderColor: "#E5E7EB",
+  bottomIconArrow: {
+    marginLeft: -6,
   },
-  timelineButtonActive: {
-    backgroundColor: "#2563EB",
-    borderColor: "#2563EB",
-  },
-  timelineButtonText: {
-    fontSize: 14,
-    color: "#6B7280",
-    fontWeight: "500",
-  },
-  timelineButtonTextActive: {
-    color: "#FFFFFF",
-  },
+  // Cost Projection Card (kept for functionality)
   costProjectionCard: {
     backgroundColor: "#F8FAFC",
     borderRadius: 12,
@@ -402,6 +402,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     borderWidth: 1,
     borderColor: "#E2E8F0",
+    marginTop: 16,
   },
   chartIconContainer: {
     width: 48,
