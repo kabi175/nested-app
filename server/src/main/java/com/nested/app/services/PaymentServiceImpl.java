@@ -31,7 +31,8 @@ import com.nested.app.repository.OrderRepository;
 import com.nested.app.repository.PaymentRepository;
 import com.nested.app.utils.IpUtils;
 import jakarta.servlet.http.HttpServletRequest;
-import java.time.LocalDate;
+import java.time.Instant;
+import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -191,14 +192,15 @@ public class PaymentServiceImpl implements PaymentService {
     var totalAmount = sipOrders.stream().map(SIPOrder::getAmount).reduce(0d, Double::sum);
 
     var bank = bankDetailRepository.findById(payment.getBank().getId()).orElseThrow();
+    var today = Instant.now().atZone(ZoneId.of("Asia/Kolkata")).toLocalDate();
     var mandate =
         mandateApiClient
             .createMandate(
                 MandateDto.builder()
                     .amount(totalAmount)
                     .bankAccount(bank.getPaymentRef().toString())
-                    .startDate(LocalDate.now())
-                    .endDate(LocalDate.now().plusYears(29))
+                    .startDate(today)
+                    .endDate(today.plusYears(29))
                     .build())
             .block();
     if (mandate == null) {
