@@ -30,9 +30,9 @@ public class InvestorServiceImpl implements InvestorService {
   public void createInvestor(MinifiedUserDTO userDto) {
     var user = userRepository.findById(userDto.getId()).orElseThrow();
 
-    if (Objects.equals(User.KYCStatus.COMPLETED, user.getKycStatus())) {
-      log.error("KYC check returned null for user ID: {}", user.getId());
-      throw new RuntimeException("Failed to fetch KYC status for user ID: " + user.getId());
+    if (!Objects.equals(User.KYCStatus.COMPLETED, user.getKycStatus())) {
+      log.error("KYC check is not COMPLETED for user ID: {}", user.getId());
+      throw new RuntimeException("KYC check is not COMPLETED for user ID: " + user.getId());
     }
 
     if (user.isReadyToInvest()) {
