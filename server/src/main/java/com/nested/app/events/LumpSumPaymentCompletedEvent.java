@@ -7,4 +7,4 @@ import java.time.LocalDateTime;
  * listener will verify the actual payment status via the PaymentsAPIClient and update the payment's
  * buyStatus accordingly.
  */
-public record BuyOrderProcessEvent(String paymentRef, LocalDateTime eventTime) {}
+public record LumpSumPaymentCompletedEvent(String paymentRef, LocalDateTime eventTime) {}

@@ -1,7 +1,7 @@
 package com.nested.app.services;
 
 import com.nested.app.entity.Payment;
-import com.nested.app.events.BuyOrderProcessEvent;
+import com.nested.app.events.LumpSumPaymentCompletedEvent;
 import com.nested.app.events.MandateProcessEvent;
 import com.nested.app.repository.PaymentRepository;
 import com.nested.app.utils.MobileRedirectHandler;
@@ -57,8 +57,8 @@ public class PaymentRedirectService {
   }
 
   /**
-   * Handle payment redirect from external payment provider. Publishes a BuyOrderProcessEvent for
-   * the payment redirect to verify and process async.
+   * Handle payment redirect from external payment provider. Publishes a
+   * LumpSumPaymentCompletedEvent for the payment redirect to verify and process async.
    *
    * @param paymentID The internal payment id
    */
@@ -71,7 +71,7 @@ public class PaymentRedirectService {
 
       var paymentRef = payment.getRef();
       // Publish buy order process event for async processing and verification
-      publisher.publishEvent(new BuyOrderProcessEvent(paymentRef, LocalDateTime.now()));
+      publisher.publishEvent(new LumpSumPaymentCompletedEvent(paymentRef, LocalDateTime.now()));
 
       log.info(
           "Published buy order process event for Payment ID: {}, Ref: {}",

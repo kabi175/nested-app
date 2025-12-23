@@ -7,7 +7,7 @@ import com.nested.app.entity.Goal;
 import com.nested.app.entity.Order;
 import com.nested.app.entity.OrderItems;
 import com.nested.app.entity.Payment;
-import com.nested.app.events.BuyOrderProcessEvent;
+import com.nested.app.events.LumpSumPaymentCompletedEvent;
 import com.nested.app.repository.OrderRepository;
 import com.nested.app.repository.PaymentRepository;
 import com.nested.app.repository.TenantAwareGoalRepository;
@@ -22,7 +22,7 @@ import org.springframework.stereotype.Component;
  * Event listener for buy order process events. Verifies payment status with external API client,
  * handles duplicate events idempotently, and updates payment/order statuses accordingly.
  *
- * <p>Workflow: 1. Receive BuyOrderProcessEvent 2. Verify actual payment status via
+ * <p>Workflow: 1. Receive LumpSumPaymentCompletedEvent 2. Verify actual payment status via
  * PaymentsAPIClient 3. Check current Payment buyStatus to detect duplicates (idempotency) 4. Update
  * Payment buyStatus, Order status, and Goal status only if verified
  *
@@ -32,7 +32,7 @@ import org.springframework.stereotype.Component;
 @Slf4j
 @Component
 @RequiredArgsConstructor
-public class BuyOrderProcessEventListener {
+public class LumpSumPaymentCompletedListener {
 
   private final PaymentRepository paymentRepository;
   private final OrderRepository orderRepository;
@@ -42,15 +42,15 @@ public class BuyOrderProcessEventListener {
   private final OrderSchedulerService orderSchedulerService;
 
   /**
-   * Handles BuyOrderProcessEvent by verifying payment status with PaymentsAPIClient and updating
-   * payment's buyStatus. Processes asynchronously after transaction commit to ensure data
+   * Handles LumpSumPaymentCompletedEvent by verifying payment status with PaymentsAPIClient and
+   * updating payment's buyStatus. Processes asynchronously after transaction commit to ensure data
    * consistency.
    *
-   * @param event The BuyOrderProcessEvent containing payment reference
+   * @param event The LumpSumPaymentCompletedEvent containing payment reference
    */
   @EventListener
-  public void handleBuyOrderProcessEvent(BuyOrderProcessEvent event) {
-    log.info("Processing BuyOrderProcessEvent for payment ref: {}", event.paymentRef());
+  public void on(LumpSumPaymentCompletedEvent event) {
+    log.info("Processing LumpSumPaymentCompletedEvent for payment ref: {}", event.paymentRef());
 
     try {
       Payment payment = paymentRepository.findByRef(event.paymentRef()).orElseThrow();
@@ -58,7 +58,7 @@ public class BuyOrderProcessEventListener {
       // Handle idempotency: check if already processed based on buyStatus
       if (isBuyOrderEventAlreadyProcessed(payment)) {
         log.debug(
-            "BuyOrderProcessEvent already processed for payment ref: {}, current buyStatus: {}",
+            "LumpSumPaymentCompletedEvent already processed for payment ref: {}, current buyStatus: {}",
             event.paymentRef(),
             payment.getBuyStatus());
         return;
@@ -77,11 +77,14 @@ public class BuyOrderProcessEventListener {
       handleSuccessPayment(payment, paymentResponse);
 
       log.info(
-          "Successfully processed BuyOrderProcessEvent for payment ref: {}, new buyStatus: {}",
+          "Successfully processed LumpSumPaymentCompletedEvent for payment ref: {}, new buyStatus: {}",
           event.paymentRef(),
           payment.getBuyStatus());
     } catch (Exception e) {
-      log.error("Error processing BuyOrderProcessEvent for payment ref: {}", event.paymentRef(), e);
+      log.error(
+          "Error processing LumpSumPaymentCompletedEvent for payment ref: {}",
+          event.paymentRef(),
+          e);
     }
   }
 
