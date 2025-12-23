@@ -3,6 +3,7 @@ import HowNestedHelps from "@/components/HowNestedHelps";
 import KnowMore from "@/components/KnowMore";
 import NestedFooter from "@/components/NestedFooter";
 import ShareApp from "@/components/ShareApp";
+import SuperFDList from "@/components/SuperFDList";
 import WhatParentsSay from "@/components/WhatParentsSay";
 import WhyParentTrustUs from "@/components/WhyParentTrustUs";
 import { useAuth } from "@/hooks/auth";
@@ -29,6 +30,8 @@ export default function NestedIntro() {
           <Layout style={styles.content}>
             <HowNestedHelps />
             <Divider />
+
+            <SuperFDList />
 
             <KnowMore />
             <Divider />
