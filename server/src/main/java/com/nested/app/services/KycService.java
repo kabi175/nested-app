@@ -64,6 +64,7 @@ public class KycService {
       }
 
       if (!List.of(User.KYCStatus.PENDING, User.KYCStatus.FAILED).contains(user.getKycStatus())) {
+        userRepository.save(user);
         return;
       }
 
