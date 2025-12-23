@@ -52,7 +52,6 @@ export const unstable_settings = {
 
 function RootNavigator() {
   const auth = useAuth();
-  const hasEnteredName = auth.isSignedIn && auth.user?.displayName !== "";
 
   return (
     <Stack
@@ -60,16 +59,11 @@ function RootNavigator() {
         headerShown: false,
       }}
     >
-      <Stack.Protected guard={hasEnteredName === true}>
+      <Stack.Protected guard={auth.isSignedIn === true}>
         <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
         <Stack.Screen name="payment" />
         <Stack.Screen name="bank-accounts" />
         <Stack.Screen name="+not-found" />
-      </Stack.Protected>
-
-      <Stack.Protected
-        guard={auth.isSignedIn === true && hasEnteredName !== true}
-      >
         <Stack.Screen name="name-input" options={{ headerShown: false }} />
       </Stack.Protected>
 

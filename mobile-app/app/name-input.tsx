@@ -3,7 +3,7 @@ import { ThemedView } from "@/components/ThemedView";
 import { useAuth } from "@/hooks/auth";
 import { updateProfile } from "@react-native-firebase/auth";
 import { Button } from "@ui-kitten/components";
-import { router } from "expo-router";
+import { Redirect, router } from "expo-router";
 import React, { useState } from "react";
 import { Alert, StyleSheet, TextInput, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -12,6 +12,10 @@ export default function NameInputScreen() {
   const auth = useAuth();
   const [name, setName] = useState(auth.user?.displayName || "");
   const [isLoading, setIsLoading] = useState(false);
+
+  if (auth.isLoaded && auth.user?.displayName) {
+    return <Redirect href="/" />;
+  }
 
   const handleSubmit = async () => {
     if (!name.trim()) {
@@ -31,7 +35,7 @@ export default function NameInputScreen() {
       await updateProfile(auth.user, { displayName: name.trim() });
 
       // Navigate back or to next screen
-      router.replace("/");
+      router.replace("/child");
     } catch (error) {
       console.log("Error saving name", error);
     } finally {

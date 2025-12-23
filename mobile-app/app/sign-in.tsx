@@ -19,13 +19,7 @@ import {
   Text,
 } from "@ui-kitten/components";
 import { useEffect, useState } from "react";
-import {
-  Alert,
-  ImageProps,
-  ScrollView,
-  StyleSheet,
-  View,
-} from "react-native";
+import { Alert, ImageProps, ScrollView, StyleSheet, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 const LoadingIndicator = (props: ImageProps) => (
@@ -83,7 +77,8 @@ export default function SignIn() {
   async function confirmCode() {
     try {
       await confirm?.confirm(otpCode);
-      router.replace("/");
+      console.log("confirm....");
+      router.replace("/name-input");
     } catch (error: any) {
       if (error.code === "auth/invalid-verification-code") {
         Alert.alert("Error", "Invalid verification code. Please try again.");
@@ -143,7 +138,6 @@ export default function SignIn() {
     }
     return () => clearInterval(interval);
   }, [resendTimer]);
-
 
   return (
     <SafeAreaView style={styles.safeArea} edges={["top", "bottom"]}>
@@ -281,17 +275,21 @@ export default function SignIn() {
               {/* Security Info */}
               <Layout style={styles.securityContainer}>
                 <Layout style={styles.securityRow}>
-                  <Ionicons
-                    name="shield-checkmark"
-                    size={16}
-                    color="#3B82F6"
-                  />
-                  <Text category="c1" appearance="hint" style={styles.securityText}>
+                  <Ionicons name="shield-checkmark" size={16} color="#3B82F6" />
+                  <Text
+                    category="c1"
+                    appearance="hint"
+                    style={styles.securityText}
+                  >
                     Your information is secure and encrypted
                   </Text>
                 </Layout>
 
-                <Text category="c1" appearance="hint" style={styles.disclaimerText}>
+                <Text
+                  category="c1"
+                  appearance="hint"
+                  style={styles.disclaimerText}
+                >
                   You agree to{" "}
                   <Link href="https://expo.dev" style={styles.linkText}>
                     TnC and Privacy Policy
@@ -310,7 +308,7 @@ export default function SignIn() {
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: '#F5F5F5',
+    backgroundColor: "#F5F5F5",
   },
   container: {
     flex: 1,
@@ -322,59 +320,59 @@ const styles = StyleSheet.create({
     paddingBottom: 24,
   },
   contentCard: {
-    backgroundColor: '#FFFFFF',
+    backgroundColor: "#FFFFFF",
     borderTopLeftRadius: 24,
     borderTopRightRadius: 24,
     marginTop: -20,
     paddingHorizontal: 24,
     paddingTop: 32,
     paddingBottom: 24,
-    minHeight: '60%',
+    minHeight: "60%",
   },
   headerContainer: {
-    alignItems: 'center',
+    alignItems: "center",
     marginBottom: 32,
-    backgroundColor: 'transparent',
+    backgroundColor: "transparent",
   },
   mainTitle: {
-    textAlign: 'center',
-    fontWeight: '700',
+    textAlign: "center",
+    fontWeight: "700",
     fontSize: 24,
     marginBottom: 8,
-    color: '#1A1A1A',
+    color: "#1A1A1A",
   },
   mainSubtitle: {
-    textAlign: 'center',
+    textAlign: "center",
     fontSize: 16,
-    color: '#666666',
+    color: "#666666",
   },
   formContainer: {
-    backgroundColor: 'transparent',
+    backgroundColor: "transparent",
   },
   fieldLabel: {
     fontSize: 16,
-    fontWeight: '600',
+    fontWeight: "600",
     marginBottom: 6,
-    color: '#1A1A1A',
+    color: "#1A1A1A",
   },
   fieldHint: {
     fontSize: 14,
     marginBottom: 16,
-    color: '#666666',
+    color: "#666666",
   },
   inputRow: {
-    flexDirection: 'row',
+    flexDirection: "row",
     gap: 12,
     marginBottom: 20,
-    backgroundColor: 'transparent',
+    backgroundColor: "transparent",
   },
   countrySelect: {
     minWidth: 100,
-    backgroundColor: '#F8F8F8',
+    backgroundColor: "#F8F8F8",
   },
   phoneInput: {
     flex: 1,
-    backgroundColor: '#F8F8F8',
+    backgroundColor: "#F8F8F8",
   },
   sendButton: {
     marginBottom: 16,
@@ -383,7 +381,7 @@ const styles = StyleSheet.create({
   },
   buttonContainer: {
     gap: 12,
-    backgroundColor: 'transparent',
+    backgroundColor: "transparent",
   },
   resendButton: {
     marginBottom: 16,
@@ -391,32 +389,32 @@ const styles = StyleSheet.create({
     height: 52,
   },
   securityContainer: {
-    alignItems: 'center',
+    alignItems: "center",
     marginTop: 16,
     gap: 12,
-    backgroundColor: 'transparent',
+    backgroundColor: "transparent",
   },
   securityRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: 'transparent',
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "transparent",
   },
   securityText: {
     marginLeft: 8,
     fontSize: 13,
   },
   disclaimerText: {
-    textAlign: 'center',
+    textAlign: "center",
     fontSize: 13,
-    color: '#666666',
+    color: "#666666",
   },
   linkText: {
-    color: '#3B82F6',
-    textDecorationLine: 'underline',
+    color: "#3B82F6",
+    textDecorationLine: "underline",
     fontSize: 13,
   },
   otpContainer: {
     marginBottom: 24,
-    backgroundColor: 'transparent',
+    backgroundColor: "transparent",
   },
 });
