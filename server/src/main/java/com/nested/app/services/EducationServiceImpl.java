@@ -1,17 +1,14 @@
 package com.nested.app.services;
 
-import java.util.List;
-import java.util.stream.Collectors;
-
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-
 import com.nested.app.dto.EducationDTO;
 import com.nested.app.entity.Education;
 import com.nested.app.repository.EducationRepository;
-
+import java.util.List;
+import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 /**
  * Implementation of EducationService Handles business logic for education management
@@ -154,7 +151,7 @@ public class EducationServiceImpl implements EducationService {
       education.setId(dto.getId());
     }
     education.setName(dto.getName());
-    education.setCountry(dto.getCountry() != null ? dto.getCountry() : "India");
+    education.setCountry(dto.getCountry() != null ? dto.getCountry() : "IN");
     education.setLastYearFee(dto.getLastYearFee());
     // Set expectedFee to lastYearFee if not provided
     education.setExpectedFee(

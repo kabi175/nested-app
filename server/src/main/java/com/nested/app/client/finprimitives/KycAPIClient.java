@@ -253,6 +253,7 @@ public class KycAPIClient implements com.nested.app.client.mf.KycAPIClient {
     private Map<String, String> fetch;
   }
 
+  @Data
   public static class ESign {
     private String id;
 
@@ -266,6 +267,7 @@ public class KycAPIClient implements com.nested.app.client.mf.KycAPIClient {
     }
   }
 
+  @Data
   public static class KYCRequest {
     private String id;
     private String status;
