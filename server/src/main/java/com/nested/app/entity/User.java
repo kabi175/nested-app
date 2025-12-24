@@ -164,6 +164,12 @@ public class User {
   private PrefillStatus prefillStatus = PrefillStatus.INCOMPLETE;
 
   @With
+  @Builder.Default
+  @Enumerated(EnumType.STRING)
+  @Column(nullable = false)
+  private NomineeStatus nomineeStatus = NomineeStatus.UNKNOWN;
+
+  @With
   @Column(name = "aadhaar_last4", length = 4)
   private String aadhaarLast4;
 
@@ -230,6 +236,15 @@ public class User {
     MARRIED("married"),
     UNMARRIED("unmarried"),
     OTHERS("others");
+    @Getter @JsonValue private final String value;
+  }
+
+  @RequiredArgsConstructor
+  public enum NomineeStatus {
+    UNKNOWN("unknown"),
+    OPT_OUT("opt_out"),
+    COMPLETED("completed");
+
     @Getter @JsonValue private final String value;
   }
 }
