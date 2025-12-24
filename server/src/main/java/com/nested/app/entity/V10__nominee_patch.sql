@@ -1,0 +1,11 @@
+ALTER TABLE nominee
+    ADD created_at TIMESTAMP WITHOUT TIME ZONE;
+
+ALTER TABLE nominee
+    ADD updated_at TIMESTAMP WITHOUT TIME ZONE;
+
+ALTER TABLE nominee
+    ALTER COLUMN created_at SET NOT NULL;
+
+ALTER TABLE nominee
+    ALTER COLUMN updated_at SET NOT NULL;
