@@ -10,6 +10,7 @@ import com.nested.app.client.mf.dto.CreateInvestorResponse;
 import com.nested.app.client.mf.dto.EntityResponse;
 import com.nested.app.client.mf.dto.FileDto;
 import com.nested.app.client.mf.dto.Nominee;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import lombok.RequiredArgsConstructor;
@@ -196,7 +197,7 @@ public class InvestorAPIClient implements com.nested.app.client.mf.InvestorAPICl
   }
 
   @Override
-  public Mono<EntityResponse> addNominees(String investorRef, Nominee request) {
+  public Mono<EntityResponse> createNominees(String investorRef, Nominee request) {
     return api.withAuth()
         .post()
         .uri(RELATED_PARTY_API_URL)
@@ -223,5 +224,32 @@ public class InvestorAPIClient implements com.nested.app.client.mf.InvestorAPICl
         .retrieve()
         .bodyToMono(new ParameterizedTypeReference<EntityListResponse<EntityResponse>>() {})
         .map(EntityListResponse::getData);
+  }
+
+  public Mono<Void> associateNominees(String accountRef, List<Nominee> nominees) {
+    var folioDetails = new HashMap<String, Object>();
+
+    for (int i = 0; i < nominees.size(); i++) {
+      var nominee = nominees.get(i);
+      folioDetails.put("nominee" + i, nominee.getId());
+      folioDetails.put(
+          String.format("nominee%d_allocation_percentage", i), nominee.getAllocation());
+
+      if (nominee.getPan() != null && !nominee.getPan().isEmpty()) {
+        folioDetails.put(String.format("nominee%d_identity_proof_type", i), "pan");
+      }
+      if (nominee.getGuardianPan() != null && !nominee.getGuardianPan().isEmpty()) {
+        folioDetails.put(String.format("nominee%d_guardian_identity_proof_type", i), "pan");
+      }
+    }
+    folioDetails.put("nominations_info_visibility", "show_all_nominee_names");
+
+    var request = Map.of("id", accountRef, "folio_defaults", folioDetails);
+    return api.withAuth()
+        .patch()
+        .uri(ACCOUNT_API_URL)
+        .bodyValue(request)
+        .retrieve()
+        .bodyToMono(Void.class);
   }
 }

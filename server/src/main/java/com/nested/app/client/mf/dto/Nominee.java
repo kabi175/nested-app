@@ -1,9 +1,13 @@
 package com.nested.app.client.mf.dto;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.nested.app.enums.RelationshipType;
+import java.time.LocalDate;
+import java.time.Period;
+import java.time.ZoneId;
 import java.util.Date;
 import lombok.Data;
 
@@ -21,7 +25,7 @@ public class Nominee {
 
   @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd")
   @JsonProperty("date_of_birth")
-  private Date date;
+  private Date dob;
 
   private String pan;
 
@@ -41,4 +45,23 @@ public class Nominee {
 
   @JsonProperty("guardian_address")
   private String guardianAddress;
+
+  @JsonIgnore private int allocation;
+
+  public static int calculateAge(Date dateOfBirth) {
+    // Convert java.util.Date to java.time.LocalDate
+    // Assumes the system default time zone for the conversion
+    LocalDate birthDate = dateOfBirth.toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
+
+    LocalDate currentDate = LocalDate.now();
+
+    // Calculate the period between the dates
+    Period period = Period.between(birthDate, currentDate);
+
+    return period.getYears();
+  }
+
+  private boolean isMinor() {
+    return calculateAge(dob) < 18;
+  }
 }

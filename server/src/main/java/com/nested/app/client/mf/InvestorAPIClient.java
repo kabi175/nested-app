@@ -35,7 +35,7 @@ public interface InvestorAPIClient {
 
   Mono<FileDto> fetchDocument(String fileId);
 
-  Mono<EntityResponse> addNominees(String investorRef, Nominee request);
+  Mono<EntityResponse> createNominees(String investorRef, Nominee request);
 
   Mono<EntityResponse> updateNominees(String investorRef, Nominee request);
 
