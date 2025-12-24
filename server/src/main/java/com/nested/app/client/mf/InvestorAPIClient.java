@@ -8,9 +8,9 @@ import com.nested.app.client.mf.dto.CreateInvestorRequest;
 import com.nested.app.client.mf.dto.CreateInvestorResponse;
 import com.nested.app.client.mf.dto.EntityResponse;
 import com.nested.app.client.mf.dto.FileDto;
-import com.nested.app.client.mf.dto.NomineeRequest;
-import com.nested.app.client.mf.dto.NomineeResponse;
+import com.nested.app.client.mf.dto.Nominee;
 import jakarta.validation.constraints.Email;
+import java.util.List;
 import org.springframework.web.multipart.MultipartFile;
 import reactor.core.publisher.Mono;
 
@@ -35,5 +35,9 @@ public interface InvestorAPIClient {
 
   Mono<FileDto> fetchDocument(String fileId);
 
-  Mono<NomineeResponse> addNominees(String investorRef, NomineeRequest request);
+  Mono<EntityResponse> addNominees(String investorRef, Nominee request);
+
+  Mono<EntityResponse> updateNominees(String investorRef, Nominee request);
+
+  Mono<List<EntityResponse>> fetchAllNominees(String investorRef);
 }

@@ -9,12 +9,13 @@ import com.nested.app.client.mf.dto.CreateInvestorRequest;
 import com.nested.app.client.mf.dto.CreateInvestorResponse;
 import com.nested.app.client.mf.dto.EntityResponse;
 import com.nested.app.client.mf.dto.FileDto;
-import com.nested.app.client.mf.dto.NomineeRequest;
-import com.nested.app.client.mf.dto.NomineeResponse;
+import com.nested.app.client.mf.dto.Nominee;
+import java.util.List;
 import java.util.Map;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Primary;
+import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.MediaType;
 import org.springframework.http.client.MultipartBodyBuilder;
 import org.springframework.stereotype.Service;
@@ -32,6 +33,7 @@ public class InvestorAPIClient implements com.nested.app.client.mf.InvestorAPICl
   private static final String ADDRESS_API_URL = "/v2/addresses";
   private static final String EMAIL_API_URL = "/v2/email_addresses";
   private static final String MOBILE_API_URL = "/v2/phone_numbers";
+  private static final String RELATED_PARTY_API_URL = "/v2/related_parties";
 
   private final FinPrimitivesAPI api;
   private final ObjectMapper objectMapper;
@@ -194,7 +196,32 @@ public class InvestorAPIClient implements com.nested.app.client.mf.InvestorAPICl
   }
 
   @Override
-  public Mono<NomineeResponse> addNominees(String investorRef, NomineeRequest request) {
-    return null;
+  public Mono<EntityResponse> addNominees(String investorRef, Nominee request) {
+    return api.withAuth()
+        .post()
+        .uri(RELATED_PARTY_API_URL)
+        .bodyValue(request)
+        .retrieve()
+        .bodyToMono(EntityResponse.class);
+  }
+
+  @Override
+  public Mono<EntityResponse> updateNominees(String investorRef, Nominee request) {
+    return api.withAuth()
+        .patch()
+        .uri(RELATED_PARTY_API_URL)
+        .bodyValue(request)
+        .retrieve()
+        .bodyToMono(EntityResponse.class);
+  }
+
+  @Override
+  public Mono<List<EntityResponse>> fetchAllNominees(String investorRef) {
+    return api.withAuth()
+        .patch()
+        .uri(RELATED_PARTY_API_URL)
+        .retrieve()
+        .bodyToMono(new ParameterizedTypeReference<EntityListResponse<EntityResponse>>() {})
+        .map(EntityListResponse::getData);
   }
 }
