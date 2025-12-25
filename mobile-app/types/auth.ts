@@ -16,6 +16,7 @@ export type User = {
   father_name: string | null;
   marital_status: "married" | "unmarried" | "others" | null;
   is_ready_to_invest: boolean;
+  nominee_status: "unknown" | "opt_out" | "completed";
   kycStatus:
     | "unknown"
     | "pending"

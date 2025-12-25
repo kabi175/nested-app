@@ -37,6 +37,7 @@ export const getUser = async (): Promise<User | null> => {
       income_slab: user.income_slab,
       occupation: user.occupation,
       kycStatus: user.kyc_status,
+      nominee_status: user.nominee_status,
       is_ready_to_invest: user.is_ready_to_invest,
       pep:
         typeof user.pep === "boolean"
@@ -56,6 +57,7 @@ export const updateUser = async (
   id: string,
   payload: Partial<User>
 ): Promise<User> => {
+  console.log("payload", payload);
   const userDTO = {
     first_name: payload.firstName,
     last_name: payload.lastName,

@@ -19,6 +19,15 @@ export default function Layout() {
     return <Redirect href="/kyc" />;
   }
 
+  if (
+    user &&
+    user.kycStatus === "completed" &&
+    user.is_ready_to_invest &&
+    user.nominee_status !== "completed"
+  ) {
+    return <Redirect href="/nominees" />;
+  }
+
   return (
     <Stack>
       <Stack.Screen
