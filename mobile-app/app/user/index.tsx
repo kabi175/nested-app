@@ -207,17 +207,30 @@ export default function UserScreen() {
                 <Text style={styles.sectionTitle}>Contact Information</Text>
               </View>
               <View style={styles.formSection}>
-                <Input
-                  value={formData.email}
-                  label="Email"
-                  placeholder="Enter your email"
-                  onChangeText={(value) => handleFieldChange("email", value)}
-                  disabled={!isEditing}
-                  keyboardType="email-address"
-                  autoCapitalize="none"
-                  style={styles.input}
-                  size="large"
-                />
+                <View style={styles.emailContainer}>
+                  <Input
+                    value={formData.email}
+                    label="Email"
+                    placeholder="Enter your email"
+                    onChangeText={(value) => handleFieldChange("email", value)}
+                    disabled={!isEditing}
+                    keyboardType="email-address"
+                    autoCapitalize="none"
+                    style={[styles.input, styles.emailInput]}
+                    size="large"
+                  />
+                  <TouchableOpacity
+                    style={styles.updateEmailButton}
+                    onPress={() => {
+                      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                      router.push("/user/email-update");
+                    }}
+                    activeOpacity={0.7}
+                  >
+                    <Ionicons name="create-outline" size={18} color="#2563EB" />
+                    <Text style={styles.updateEmailText}>Update Email</Text>
+                  </TouchableOpacity>
+                </View>
 
                 <Input
                   value={formData.phone_number}
@@ -475,5 +488,29 @@ const styles = StyleSheet.create({
   },
   bottomSpacing: {
     height: 20,
+  },
+  emailContainer: {
+    position: "relative",
+  },
+  emailInput: {
+    flex: 1,
+  },
+  updateEmailButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 6,
+    marginTop: 8,
+    paddingVertical: 10,
+    paddingHorizontal: 16,
+    backgroundColor: "#EFF6FF",
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: "#DBEAFE",
+  },
+  updateEmailText: {
+    fontSize: 14,
+    fontWeight: "600",
+    color: "#2563EB",
   },
 });
