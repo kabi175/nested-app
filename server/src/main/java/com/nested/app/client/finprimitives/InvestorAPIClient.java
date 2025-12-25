@@ -208,6 +208,12 @@ public class InvestorAPIClient implements com.nested.app.client.mf.InvestorAPICl
 
   @Override
   public Mono<EntityResponse> updateNominees(String investorRef, Nominee request) {
+    try {
+      log.info("updateNominees with request: {}", objectMapper.writeValueAsString(request));
+    } catch (Exception e) {
+      log.warn("Failed to serialize request for logging", e);
+    }
+
     return api.withAuth()
         .patch()
         .uri(RELATED_PARTY_API_URL)
@@ -217,34 +223,45 @@ public class InvestorAPIClient implements com.nested.app.client.mf.InvestorAPICl
   }
 
   @Override
-  public Mono<List<EntityResponse>> fetchAllNominees(String investorRef) {
+  public Mono<List<Nominee>> fetchAllNominees(String investorRef) {
     return api.withAuth()
-        .patch()
-        .uri(RELATED_PARTY_API_URL)
+        .get()
+        .uri(
+            uriBuilder ->
+                uriBuilder.queryParam("profile", investorRef).path(RELATED_PARTY_API_URL).build())
         .retrieve()
-        .bodyToMono(new ParameterizedTypeReference<EntityListResponse<EntityResponse>>() {})
+        .bodyToMono(new ParameterizedTypeReference<EntityListResponse<Nominee>>() {})
         .map(EntityListResponse::getData);
   }
 
+  @Override
   public Mono<Void> associateNominees(String accountRef, List<Nominee> nominees) {
     var folioDetails = new HashMap<String, Object>();
 
     for (int i = 0; i < nominees.size(); i++) {
       var nominee = nominees.get(i);
-      folioDetails.put("nominee" + i, nominee.getId());
+      var position = i + 1;
+      folioDetails.put("nominee" + position, nominee.getId());
       folioDetails.put(
-          String.format("nominee%d_allocation_percentage", i), nominee.getAllocation());
+          String.format("nominee%d_allocation_percentage", position), nominee.getAllocation());
 
       if (nominee.getPan() != null && !nominee.getPan().isEmpty()) {
-        folioDetails.put(String.format("nominee%d_identity_proof_type", i), "pan");
+        folioDetails.put(String.format("nominee%d_identity_proof_type", position), "pan");
       }
       if (nominee.getGuardianPan() != null && !nominee.getGuardianPan().isEmpty()) {
-        folioDetails.put(String.format("nominee%d_guardian_identity_proof_type", i), "pan");
+        folioDetails.put(String.format("nominee%d_guardian_identity_proof_type", position), "pan");
       }
     }
     folioDetails.put("nominations_info_visibility", "show_all_nominee_names");
 
     var request = Map.of("id", accountRef, "folio_defaults", folioDetails);
+
+    try {
+      log.info("associateNominees with request: {}", objectMapper.writeValueAsString(request));
+    } catch (Exception e) {
+      log.warn("Failed to serialize request for logging", e);
+    }
+
     return api.withAuth()
         .patch()
         .uri(ACCOUNT_API_URL)

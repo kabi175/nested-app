@@ -1,11 +1,13 @@
 package com.nested.app.services;
 
+import com.nested.app.client.mf.InvestorAPIClient;
 import com.nested.app.dto.NomineeRequestDTO;
 import com.nested.app.dto.NomineeResponseDTO;
 import com.nested.app.entity.Nominee;
 import com.nested.app.entity.User;
 import com.nested.app.repository.NomineeRepository;
 import com.nested.app.repository.UserRepository;
+import com.nested.app.services.mapper.NomineeMapper;
 import java.util.List;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
@@ -29,6 +31,7 @@ public class NomineeServiceImpl implements NomineeService {
   private static final int REQUIRED_TOTAL_ALLOCATION = 100;
   private final NomineeRepository nomineeRepository;
   private final UserRepository userRepository;
+  private final InvestorAPIClient investorAPIClient;
 
   @Override
   @Transactional
@@ -135,9 +138,169 @@ public class NomineeServiceImpl implements NomineeService {
     List<Nominee> saved = nomineeRepository.saveAll(nominees);
     user.setNomineeStatus(User.NomineeStatus.COMPLETED);
     userRepository.save(user);
+    syncNomineeToExternalService(saved, user);
     log.info("Nominees upserted successfully: {} total for user: {}", saved.size(), user.getId());
 
     return saved.stream().map(this::convertToResponseDTO).collect(Collectors.toList());
+  }
+
+  /**
+   * Syncs nominees to external service using InvestorAPIClient
+   *
+   * @param nominees List of nominees to sync
+   * @param user User entity with investor reference
+   * @throws RuntimeException if sync fails, triggering transaction rollback
+   */
+  private void syncNomineeToExternalService(List<Nominee> nominees, User user) {
+    try {
+      // Validate investor reference
+      if (user.getInvestor() == null || user.getInvestor().getRef() == null) {
+        throw new RuntimeException(
+            "Cannot sync nominees: investor reference not found for user ID: " + user.getId());
+      }
+
+      String investorRef = user.getInvestor().getRef();
+      log.info(
+          "Syncing {} nominees to external service for investor: {}", nominees.size(), investorRef);
+
+      // Fetch existing nominees from external service to determine create vs update
+      List<com.nested.app.client.mf.dto.Nominee> externalNominees =
+          investorAPIClient.fetchAllNominees(investorRef).block();
+      if (externalNominees == null) {
+        externalNominees = List.of();
+      }
+
+      log.debug("Found {} existing nominees in external service", externalNominees.size());
+
+      // Process each nominee
+      for (Nominee nominee : nominees) {
+        externalNominees.stream()
+            .filter(e -> e.getName().equals(nominee.getName()))
+            .findFirst()
+            .ifPresent(e -> nominee.setRef(e.getId()));
+
+        if (nominee.getRef() == null) {
+          // CREATE new nominee in external service
+          createNomineeInExternalService(nominee, investorRef);
+        } else {
+          // UPDATE existing nominee in external service
+          updateNomineeInExternalService(nominee, investorRef);
+        }
+      }
+
+      investorAPIClient
+          .associateNominees(
+              user.getInvestor().getAccountRef(),
+              nominees.stream().map(n -> NomineeMapper.mapToClientNominee(n, investorRef)).toList())
+          .block();
+
+      log.info(
+          "Successfully synced {} nominees to external service for investor: {}",
+          nominees.size(),
+          investorRef);
+
+    } catch (Exception e) {
+      log.error("Failed to sync nominees to external service for user ID: {}", user.getId(), e);
+      throw new RuntimeException(
+          "Failed to sync nominees to external service: " + e.getMessage(), e);
+    }
+  }
+
+  /**
+   * Creates a new nominee in the external service
+   *
+   * @param nominee Nominee to create
+   * @param investorRef Investor reference ID
+   * @throws RuntimeException if creation fails
+   */
+  private void createNomineeInExternalService(Nominee nominee, String investorRef) {
+    try {
+      log.info(
+          "Creating nominee '{}' in external service for investor: {}",
+          nominee.getName(),
+          investorRef);
+
+      com.nested.app.client.mf.dto.Nominee clientNominee =
+          NomineeMapper.mapToClientNominee(nominee, investorRef);
+
+      var response = investorAPIClient.createNominees(investorRef, clientNominee).block();
+
+      if (response == null) {
+        throw new RuntimeException("External service returned null response for nominee creation");
+      }
+
+      // Store external ID for future updates
+      nominee.setRef(response.getId());
+      nomineeRepository.save(nominee);
+
+      log.info(
+          "Successfully created nominee '{}' in external service with ID: {}",
+          nominee.getName(),
+          response.getId());
+
+    } catch (Exception e) {
+      log.error(
+          "Failed to create nominee '{}' in external service for investor {}: {}",
+          nominee.getName(),
+          investorRef,
+          e.getMessage(),
+          e);
+      throw new RuntimeException(
+          "Failed to create nominee '"
+              + nominee.getName()
+              + "' in external service: "
+              + e.getMessage(),
+          e);
+    }
+  }
+
+  /**
+   * Updates an existing nominee in the external service
+   *
+   * @param nominee Nominee to update
+   * @param investorRef Investor reference ID
+   * @throws RuntimeException if update fails
+   */
+  private void updateNomineeInExternalService(Nominee nominee, String investorRef) {
+    try {
+      log.info(
+          "Updating nominee '{}' (ref: {}) in external service for investor: {}",
+          nominee.getName(),
+          nominee.getRef(),
+          investorRef);
+
+      com.nested.app.client.mf.dto.Nominee clientNominee =
+          NomineeMapper.mapToClientNominee(nominee, investorRef);
+      nominee.setPan(null);
+      nominee.setRef(null);
+      nominee.setRelationship(null);
+
+      var response = investorAPIClient.updateNominees(investorRef, clientNominee).block();
+
+      if (response == null) {
+        throw new RuntimeException("External service returned null response for nominee update");
+      }
+
+      log.info(
+          "Successfully updated nominee '{}' (ref: {}) in external service",
+          nominee.getName(),
+          nominee.getRef());
+
+    } catch (Exception e) {
+      log.error(
+          "Failed to update nominee '{}' (ref: {}) in external service for investor {}: {}",
+          nominee.getName(),
+          nominee.getRef(),
+          investorRef,
+          e.getMessage(),
+          e);
+      throw new RuntimeException(
+          "Failed to update nominee '"
+              + nominee.getName()
+              + "' in external service: "
+              + e.getMessage(),
+          e);
+    }
   }
 
   @Override

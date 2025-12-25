@@ -55,6 +55,7 @@ public class Nominee {
 
   private String guardianAddress;
 
+  // External ref
   private String ref;
 
   @Column(nullable = false)

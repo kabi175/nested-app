@@ -39,5 +39,7 @@ public interface InvestorAPIClient {
 
   Mono<EntityResponse> updateNominees(String investorRef, Nominee request);
 
-  Mono<List<EntityResponse>> fetchAllNominees(String investorRef);
+  Mono<List<Nominee>> fetchAllNominees(String investorRef);
+
+  Mono<Void> associateNominees(String accountRef, List<Nominee> nominees);
 }
