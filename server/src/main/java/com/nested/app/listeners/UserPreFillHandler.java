@@ -144,16 +144,24 @@ public record UserPreFillHandler(
   private void mapToUser(PrefillResponse response, User savedUser) {
     var data = response.getData();
 
-    savedUser.setFirstName(data.getName()); // you may want to split name
-    savedUser.setEmail(data.getEmailInfo().getFirst().getEmailAddress().toLowerCase());
+    if(savedUser.getFirstName() == null || savedUser.getFirstName().isEmpty()) {
+        savedUser.setFirstName(data.getName()); // you may want to split name
+    }
+    if(savedUser.getEmail() == null) {
+        savedUser.setEmail(data.getEmailInfo().getFirst().getEmailAddress().toLowerCase());
+    }
     savedUser.setClientCode(data.getReference());
-    savedUser.setPanNumber(
-            data.getIdentityInfo() != null
-                    && data.getIdentityInfo().getPanNumber() != null
-                    && !data.getIdentityInfo().getPanNumber().isEmpty()
-                    ? data.getIdentityInfo().getPanNumber().getFirst().getIdNumber()
-                    : null);
-    savedUser.setDateOfBirth(parseDate(data.getPersonalInfo().getDob()));
+    if (savedUser.getPanNumber() == null) {
+      savedUser.setPanNumber(
+          data.getIdentityInfo() != null
+                  && data.getIdentityInfo().getPanNumber() != null
+                  && !data.getIdentityInfo().getPanNumber().isEmpty()
+              ? data.getIdentityInfo().getPanNumber().getFirst().getIdNumber()
+              : null);
+    }
+    if(savedUser.getDateOfBirth() == null) {
+        savedUser.setDateOfBirth(parseDate(data.getPersonalInfo().getDob()));
+    }
 
     if (data.getAddressInfo() != null && !data.getAddressInfo().isEmpty()) {
       var addressInfo = data.getAddressInfo().getFirst();
