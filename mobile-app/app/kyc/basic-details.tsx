@@ -2,6 +2,7 @@ import { getUser, updateUser } from "@/api/userApi";
 import { GenericSelect } from "@/components/ui/GenericSelect";
 import { InfoTooltip } from "@/components/ui/InfoTooltip";
 import { StepProgress } from "@/components/ui/StepProgress";
+import { useAuth } from "@/hooks/auth";
 import { useKyc } from "@/providers/KycProvider";
 import { Button, Datepicker, Input, Text } from "@ui-kitten/components";
 import { useRouter } from "expo-router";
@@ -21,6 +22,7 @@ const maritalStatusOptions = [
 ];
 
 export default function BasicDetailsScreen() {
+  const { user } = useAuth();
   const { data, update, validateBasic } = useKyc();
   const router = useRouter();
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -28,27 +30,29 @@ export default function BasicDetailsScreen() {
   const userIdRef = useRef<string | null>(null);
   const totalSteps = 6;
   const currentStep = 1;
+  const maxDate = new Date();
+  maxDate.setFullYear(maxDate.getFullYear() - 18);
 
   useEffect(() => {
     let mounted = true;
     (async () => {
       setLoading(true);
-      const user = await getUser();
-      if (mounted && user) {
-        userIdRef.current = user.id;
+      const apiUser = await getUser();
+      if (mounted && apiUser) {
+        userIdRef.current = apiUser.id;
         // Map API user to form values
-        const fullName = [user.firstName, user.lastName]
+        const fullName = [apiUser.firstName, apiUser.lastName]
           .filter(Boolean)
           .join(" ")
           .trim();
         update("basic", {
           fullName: fullName,
-          dateOfBirth: user.dob || null,
-          gender: user.gender || "",
-          email: user.email || "",
-          mobile: user.phone_number || "",
-          father_name: user.father_name || "",
-          marital_status: user.marital_status || "",
+          dateOfBirth: apiUser.dob || null,
+          gender: apiUser.gender || "",
+          email: user?.email || "",
+          mobile: apiUser.phone_number || "",
+          father_name: apiUser.father_name || "",
+          marital_status: apiUser.marital_status || "",
         });
       }
       if (mounted) setLoading(false);
@@ -56,7 +60,7 @@ export default function BasicDetailsScreen() {
     return () => {
       mounted = false;
     };
-  }, [update]);
+  }, [update, user]);
 
   const onContinue = () => {
     const v = validateBasic();
@@ -76,7 +80,7 @@ export default function BasicDetailsScreen() {
           await updateUser(id, {
             firstName,
             lastName,
-            email: data.basic.email,
+            email: user?.email || data.basic.email,
             phone_number: data.basic.mobile,
             dob: data.basic.dateOfBirth || null,
             gender: (genderLower as any) || undefined,
@@ -140,13 +144,13 @@ export default function BasicDetailsScreen() {
             <InfoTooltip content="Used to confirm age eligibility and identity verification." />
           </View>
           <Datepicker
+            placeholder="Pick Date"
             date={data.basic.dateOfBirth || undefined}
-            onSelect={(nextDate) =>
-              update("basic", { dateOfBirth: nextDate as Date })
-            }
+            min={new Date("1920-01-01")}
+            max={maxDate}
+            onSelect={(nextDate) => update("basic", { dateOfBirth: nextDate })}
             status={errors.dateOfBirth ? "danger" : "basic"}
             caption={errors.dateOfBirth}
-            max={new Date()}
           />
         </View>
 
@@ -215,11 +219,10 @@ export default function BasicDetailsScreen() {
         <View style={{ gap: 8 }}>
           <View style={{ flexDirection: "row", alignItems: "center" }}>
             <Text category="label">Email</Text>
-            <InfoTooltip content="We’ll send verification and KYC status updates to this email." />
+            <InfoTooltip content="We'll send verification and KYC status updates to this email." />
           </View>
           <Input
-            placeholder="name@example.com"
-            value={data.basic.email}
+            value={user?.email || ""}
             onChangeText={(v) =>
               update("basic", { email: v, emailOtpVerified: false })
             }
@@ -227,6 +230,7 @@ export default function BasicDetailsScreen() {
             keyboardType="email-address"
             status={errors.email ? "danger" : "basic"}
             caption={errors.email}
+            disabled={true}
           />
         </View>
 
@@ -244,6 +248,7 @@ export default function BasicDetailsScreen() {
             keyboardType="phone-pad"
             status={errors.mobile ? "danger" : "basic"}
             caption={errors.mobile}
+            disabled={true}
           />
         </View>
 
