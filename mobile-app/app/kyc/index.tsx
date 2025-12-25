@@ -1,3 +1,4 @@
+import { useAuth } from "@/hooks/auth";
 import { useUser } from "@/hooks/useUser";
 import { Button, Layout, Text } from "@ui-kitten/components";
 import { useRouter } from "expo-router";
@@ -6,12 +7,29 @@ import { Alert, StyleSheet, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function KycIntroScreen() {
+  const { user: authUser } = useAuth();
   const router = useRouter();
   const { data: user, isLoading: isUserLoading } = useUser();
 
   const isButtonDisabled = isUserLoading;
 
   const handleContinue = async () => {
+    if (!authUser?.email) {
+      Alert.alert(
+        "Email required",
+        "Please verify your email address before continuing with KYC."
+      );
+      return;
+    }
+
+    if (!authUser.emailVerified) {
+      Alert.alert(
+        "Email verification required",
+        "Please verify your email address before continuing with KYC."
+      );
+      return;
+    }
+
     if (!user) {
       Alert.alert(
         "Profile unavailable",
