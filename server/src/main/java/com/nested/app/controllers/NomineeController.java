@@ -86,8 +86,10 @@ public class NomineeController {
         @ApiResponse(responseCode = "401", description = "Unauthorized"),
         @ApiResponse(responseCode = "500", description = "Internal server error")
       })
-  public ResponseEntity<?> upsertNominees(@Valid @RequestBody List<NomineeRequestDTO> nomineeDTOs) {
+  public ResponseEntity<?> upsertNominees(@Valid @RequestBody Entity<NomineeRequestDTO> request) {
+    var nomineeDTOs = request.getData();
     log.info("POST /api/v1/users/nominees - Upserting nominees (count: {})", nomineeDTOs.size());
+
 
     try {
       User user = userContext.getUser();

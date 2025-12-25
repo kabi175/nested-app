@@ -87,6 +87,9 @@ public class UserDTO {
   @JsonProperty("is_ready_to_invest")
   private boolean isReadyToInvest = false;
 
+  @JsonProperty("nominee_status")
+  private User.NomineeStatus nomineeStatus;
+
   public static UserDTO fromEntity(User entity) {
     UserDTO dto = new UserDTO();
     dto.setId(entity.getId());
@@ -110,6 +113,7 @@ public class UserDTO {
     dto.setKycStatus(entity.getKycStatus());
     dto.setMaritalStatus(entity.getMaritalStatus());
     dto.setReadyToInvest(entity.isReadyToInvest());
+    dto.setNomineeStatus(entity.getNomineeStatus());
     return dto;
   }
 

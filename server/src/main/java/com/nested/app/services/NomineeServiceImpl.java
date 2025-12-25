@@ -133,6 +133,8 @@ public class NomineeServiceImpl implements NomineeService {
 
     // Save all nominees in one transaction
     List<Nominee> saved = nomineeRepository.saveAll(nominees);
+    user.setNomineeStatus(User.NomineeStatus.COMPLETED);
+    userRepository.save(user);
     log.info("Nominees upserted successfully: {} total for user: {}", saved.size(), user.getId());
 
     return saved.stream().map(this::convertToResponseDTO).collect(Collectors.toList());
