@@ -9,6 +9,7 @@ import java.time.LocalDate;
 import java.time.Period;
 import java.time.ZoneId;
 import java.util.Date;
+import java.util.Map;
 import lombok.Data;
 
 @Data
@@ -32,7 +33,7 @@ public class Nominee {
   @JsonProperty("email_address")
   private String email;
 
-  private String address;
+  @JsonIgnore private String address;
 
   @JsonProperty("guardian_name")
   private String guardianName;
@@ -47,6 +48,26 @@ public class Nominee {
   private String guardianAddress;
 
   @JsonIgnore private int allocation;
+
+  @JsonProperty("phone_number")
+  public Map<String, Object> phone_number() {
+    return Map.of("isd", "+91", "number", "9092390923");
+  }
+
+  @JsonProperty("address")
+  public Map<String, Object> address() {
+    return Map.of(
+        "line1",
+        "213, 1st cross, JP Nagar",
+        "city",
+        "Bengaluru",
+        "state",
+        "Karnataka",
+        "postal_code",
+        "560102",
+        "country",
+        "in");
+  }
 
   public static int calculateAge(Date dateOfBirth) {
     // Convert java.util.Date to java.time.LocalDate
