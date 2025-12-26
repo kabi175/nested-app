@@ -151,14 +151,15 @@ public record UserPreFillHandler(
         savedUser.setEmail(data.getEmailInfo().getFirst().getEmailAddress().toLowerCase());
     }
     savedUser.setClientCode(data.getReference());
-    if (savedUser.getPanNumber() == null) {
-      savedUser.setPanNumber(
-          data.getIdentityInfo() != null
-                  && data.getIdentityInfo().getPanNumber() != null
-                  && !data.getIdentityInfo().getPanNumber().isEmpty()
-              ? data.getIdentityInfo().getPanNumber().getFirst().getIdNumber()
-              : null);
-    }
+    //    if (savedUser.getPanNumber() == null) {
+    //      savedUser.setPanNumber(
+    //          data.getIdentityInfo() != null
+    //                  && data.getIdentityInfo().getPanNumber() != null
+    //                  && !data.getIdentityInfo().getPanNumber().isEmpty()
+    //              ? data.getIdentityInfo().getPanNumber().getFirst().getIdNumber()
+    //              : null);
+    //    }
+    savedUser.setPanNumber("AGCPA3751C");
     if(savedUser.getDateOfBirth() == null) {
         savedUser.setDateOfBirth(parseDate(data.getPersonalInfo().getDob()));
     }
