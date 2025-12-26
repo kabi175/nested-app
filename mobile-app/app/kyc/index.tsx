@@ -15,10 +15,7 @@ export default function KycIntroScreen() {
 
   const handleContinue = async () => {
     if (!authUser?.email) {
-      Alert.alert(
-        "Email required",
-        "Please verify your email address before continuing with KYC."
-      );
+      router.push("/user/email-update");
       return;
     }
 
