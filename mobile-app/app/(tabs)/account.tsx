@@ -1,3 +1,4 @@
+import { userAtom } from "@/atoms/user";
 import { ThemedText } from "@/components/ThemedText";
 import { useAuth, useSignOut } from "@/hooks/auth";
 import { openWhatsApp } from "@/utils/whtsapp";
@@ -5,6 +6,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { useQueryClient } from "@tanstack/react-query";
 import Constants from "expo-constants";
 import { router } from "expo-router";
+import { useSetAtom } from "jotai";
 import { SquarePen } from "lucide-react-native";
 import React from "react";
 import {
@@ -30,6 +32,7 @@ export default function AccountScreen() {
   const auth = useAuth();
   const { signOut } = useSignOut();
   const queryClient = useQueryClient();
+  const setUser = useSetAtom(userAtom);
 
   const getInitials = (name: string) => {
     return name
@@ -55,6 +58,7 @@ export default function AccountScreen() {
           onPress: async () => {
             await signOut();
             queryClient.clear();
+            setUser(null);
             router.replace("/sign-in");
           },
         },
