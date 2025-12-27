@@ -21,5 +21,3 @@ ALTER TABLE nominee
 ALTER TABLE nominee
     DROP
         COLUMN guardian_pan;
-
-DROP TABLE users_bank_details CASCADE;
