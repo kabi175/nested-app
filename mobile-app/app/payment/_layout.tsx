@@ -1,19 +1,21 @@
-import { createInvestor } from "@/api/userApi";
-import { userAtom } from "@/atoms/user";
+import { useCreateInvestor } from "@/hooks/useCreateInvestor";
+import { useUser } from "@/hooks/useUser";
 import { Redirect, Stack } from "expo-router";
-import { useAtomValue } from "jotai";
 import { useEffect } from "react";
 
 export default function Layout() {
-  const user = useAtomValue(userAtom);
+  const { data: user } = useUser();
+  const createInvestorMutation = useCreateInvestor();
 
   useEffect(() => {
     if (user && !user.is_ready_to_invest) {
-      createInvestor(user).catch((error) => {
-        console.error("Failed to create investor:", error);
+      createInvestorMutation.mutate(user, {
+        onError: (error) => {
+          console.error("Failed to create investor:", error);
+        },
       });
     }
-  }, [user]);
+  }, [user, createInvestorMutation]);
 
   if (user && user.kycStatus !== "completed") {
     return <Redirect href="/kyc" />;
