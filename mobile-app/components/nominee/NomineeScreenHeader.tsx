@@ -1,5 +1,7 @@
+import { Ionicons } from "@expo/vector-icons";
 import { Text } from "@ui-kitten/components";
-import { Plus } from "lucide-react-native";
+import { router } from "expo-router";
+import { ChevronLeft } from "lucide-react-native";
 import React from "react";
 import { StyleSheet, TouchableOpacity, View } from "react-native";
 
@@ -14,23 +16,19 @@ export function NomineeScreenHeader({
 }: NomineeScreenHeaderProps) {
   return (
     <View style={styles.header}>
-      <View>
-        <Text category="h4" style={styles.title}>
-          Nominee Details
-        </Text>
-        <Text category="s2" style={styles.subtitle}>
-          Manage your investment nominees
-        </Text>
-      </View>
-      {showAddMoreButton && (
-        <TouchableOpacity
-          style={styles.addButton}
-          onPress={onAddPress}
-          activeOpacity={0.7}
-        >
-          <Plus size={24} color="#FFFFFF" />
-        </TouchableOpacity>
-      )}
+      <TouchableOpacity
+        style={styles.backButton}
+        onPress={() => router.back()}
+        activeOpacity={0.7}
+      >
+        <ChevronLeft size={24} color="#000000" />
+      </TouchableOpacity>
+      <Text category="h4" style={styles.title}>
+        Nominee Management
+      </Text>
+      <TouchableOpacity style={styles.infoButton} activeOpacity={0.7}>
+        <Ionicons name="information-circle-outline" size={24} color="#000000" />
+      </TouchableOpacity>
     </View>
   );
 }
@@ -39,36 +37,28 @@ const styles = StyleSheet.create({
   header: {
     flexDirection: "row",
     justifyContent: "space-between",
-    alignItems: "flex-start",
-    padding: 20,
+    alignItems: "center",
+    paddingHorizontal: 20,
+    paddingVertical: 16,
     backgroundColor: "#FFFFFF",
-    borderBottomWidth: 1,
-    borderBottomColor: "#E5E7EB",
+  },
+  backButton: {
+    width: 40,
+    height: 40,
+    justifyContent: "center",
+    alignItems: "flex-start",
   },
   title: {
-    fontSize: 24,
-    fontWeight: "bold",
-    color: "#1F2937",
-    marginBottom: 4,
+    fontSize: 20,
+    fontWeight: "600",
+    color: "#000000",
+    flex: 1,
+    textAlign: "center",
   },
-  subtitle: {
-    fontSize: 14,
-    color: "#6B7280",
-  },
-  addButton: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
-    backgroundColor: "#7C3AED",
+  infoButton: {
+    width: 40,
+    height: 40,
     justifyContent: "center",
-    alignItems: "center",
-    shadowColor: "#7C3AED",
-    shadowOffset: {
-      width: 0,
-      height: 4,
-    },
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
-    elevation: 6,
+    alignItems: "flex-end",
   },
 });
