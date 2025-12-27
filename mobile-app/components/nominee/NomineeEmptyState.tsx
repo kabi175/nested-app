@@ -44,7 +44,7 @@ export function NomineeEmptyState({
           status="basic"
           onPress={onOptOut}
         >
-          Opt out for nominee nomination
+          Opt out
         </Button>
       )}
     </ScrollView>
