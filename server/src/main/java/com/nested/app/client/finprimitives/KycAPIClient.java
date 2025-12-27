@@ -163,17 +163,16 @@ public class KycAPIClient implements com.nested.app.client.mf.KycAPIClient {
         .uri(AADHAAR_UPLOAD_API_URL)
         .bodyValue(request)
         .retrieve()
-        .bodyToMono(new ParameterizedTypeReference<EntityListResponse<IdentityDocument>>() {})
+        .bodyToMono(IdentityDocument.class)
         .flatMap(
             resp -> {
-              if (resp == null || resp.data == null || resp.data.isEmpty()) {
+              if (resp == null) {
                 return Mono.empty();
               }
-              var data = resp.data.getFirst();
               return Mono.just(
                   ActionRequired.builder()
-                      .id(data.id)
-                      .redirectUrl(data.getFetch().get("redirect_url"))
+                      .id(resp.id)
+                      .redirectUrl(resp.getFetch().get("redirect_url"))
                       .build());
             });
   }
