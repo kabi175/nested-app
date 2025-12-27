@@ -100,6 +100,14 @@ export default function AccountScreen() {
       borderColor: "#F59E0B",
       onPress: () => router.push("/bank-accounts/list"),
     },
+    {
+      id: "manage-nominee",
+      title: "Manage Nominee",
+      icon: "person-outline",
+      iconColor: "#8B5CF6",
+      borderColor: "#8B5CF6",
+      onPress: () => router.push("/nominees"),
+    },
     // {
     //   id: "refer-friend",
     //   title: "Refer a Friend",
