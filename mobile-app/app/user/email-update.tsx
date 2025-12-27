@@ -2,6 +2,7 @@ import { Ionicons } from "@expo/vector-icons";
 import {
   FirebaseAuthTypes,
   getAuth,
+  onAuthStateChanged,
   signInWithPhoneNumber,
   verifyBeforeUpdateEmail,
 } from "@react-native-firebase/auth";
@@ -78,7 +79,7 @@ export default function EmailUpdateScreen() {
   useEffect(() => {
     if (step !== "success") return;
 
-    const unsubscribe = getAuth().onAuthStateChanged((user) => {
+    const unsubscribe = onAuthStateChanged(getAuth(), (user) => {
       if (!user) {
         // Session expired after email verification, redirect to login
         Alert.alert(
@@ -93,6 +94,8 @@ export default function EmailUpdateScreen() {
             },
           ]
         );
+      } else {
+        router.replace("/sign-in");
       }
     });
 

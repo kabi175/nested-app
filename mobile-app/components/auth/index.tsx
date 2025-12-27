@@ -4,6 +4,7 @@ import {
   getAuth,
   onAuthStateChanged,
 } from "@react-native-firebase/auth";
+import { router } from "expo-router";
 import { useEffect, useState } from "react";
 
 export function AuthLoaded({
@@ -65,6 +66,11 @@ export default function AuthProvider({
     const subscriber = onAuthStateChanged(
       getAuth(),
       (user: FirebaseAuthTypes.User | null) => {
+        if (!user) {
+          router.replace("/sign-in");
+          return;
+        }
+
         setAuthState({
           isLoaded: true,
           isSignedIn: !!user,

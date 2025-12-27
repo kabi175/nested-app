@@ -1,6 +1,7 @@
 import {
   FirebaseAuthTypes,
   getAuth,
+  reload,
   signOut,
 } from "@react-native-firebase/auth";
 import { createContext, useContext } from "react";
@@ -26,4 +27,15 @@ export function useAuth(): AuthState {
 
 export function useSignOut() {
   return { signOut: async () => await signOut(getAuth()) };
+}
+
+export function useReloadAuth() {
+  return {
+    reloadAuth: async () => {
+      const user = getAuth().currentUser;
+      if (user) {
+        await reload(user);
+      }
+    },
+  };
 }
