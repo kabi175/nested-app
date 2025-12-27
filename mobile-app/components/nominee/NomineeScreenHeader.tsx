@@ -1,16 +1,16 @@
-import { Button, Text } from "@ui-kitten/components";
+import { Text } from "@ui-kitten/components";
 import { Plus } from "lucide-react-native";
 import React from "react";
 import { StyleSheet, TouchableOpacity, View } from "react-native";
 
 interface NomineeScreenHeaderProps {
   onAddPress: () => void;
-  disabled?: boolean;
+  showAddMoreButton?: boolean;
 }
 
 export function NomineeScreenHeader({
   onAddPress,
-  disabled = false,
+  showAddMoreButton = true,
 }: NomineeScreenHeaderProps) {
   return (
     <View style={styles.header}>
@@ -22,14 +22,15 @@ export function NomineeScreenHeader({
           Manage your investment nominees
         </Text>
       </View>
-      <TouchableOpacity
-        style={[styles.addButton, disabled && styles.addButtonDisabled]}
-        onPress={onAddPress}
-        activeOpacity={0.7}
-        disabled={disabled}
-      >
-        <Plus size={24} color="#FFFFFF" />
-      </TouchableOpacity>
+      {showAddMoreButton && (
+        <TouchableOpacity
+          style={styles.addButton}
+          onPress={onAddPress}
+          activeOpacity={0.7}
+        >
+          <Plus size={24} color="#FFFFFF" />
+        </TouchableOpacity>
+      )}
     </View>
   );
 }
@@ -70,9 +71,4 @@ const styles = StyleSheet.create({
     shadowRadius: 8,
     elevation: 6,
   },
-  addButtonDisabled: {
-    backgroundColor: "#D1D5DB",
-    shadowOpacity: 0,
-  },
 });
-

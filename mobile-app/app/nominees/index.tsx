@@ -75,7 +75,7 @@ export default function NomineesScreen() {
       <Layout style={styles.layout} level="1">
         <NomineeScreenHeader
           onAddPress={handleAddNominee}
-          disabled={!canAddMore}
+          showAddMoreButton={hasNominees && !canAddMore}
         />
 
         {!hasNominees ? (
