@@ -54,6 +54,16 @@ export function useNomineeManagement() {
       name: "",
       relationship: "spouse",
       dob: formatDateToYYYYMMDD(new Date()),
+      pan: "",
+      email: "",
+      mobileNumber: "",
+      address: {
+        address_line: "",
+        city: "",
+        state: "",
+        pin_code: "",
+        country: "",
+      },
       allocation: 0,
       isMinor: false,
     });

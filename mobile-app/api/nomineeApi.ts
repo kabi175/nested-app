@@ -1,3 +1,4 @@
+import type { Address } from "@/types/auth";
 import type { Nominee, NomineePayload } from "@/types/nominee";
 import { api } from "./client";
 
@@ -50,12 +51,10 @@ type NomineeDTO = {
   dob: string;
   pan?: string;
   email?: string;
-  address?: string;
+  mobile_number?: string;
+  address?: Address;
   allocation: number;
   guardian_name?: string;
-  guardian_email?: string;
-  guardian_pan?: string;
-  guardian_address?: string;
 };
 
 /**
@@ -67,14 +66,18 @@ function mapNomineeDTOToNominee(dto: NomineeDTO): Nominee {
     name: dto.name,
     relationship: dto.relationship as Nominee["relationship"],
     dob: dto.dob,
-    pan: dto.pan,
-    email: dto.email,
-    address: dto.address,
+    pan: dto.pan || "",
+    email: dto.email || "",
+    mobileNumber: dto.mobile_number || "",
+    address: dto.address || {
+      address_line: "",
+      city: "",
+      state: "",
+      pin_code: "",
+      country: "",
+    },
     allocation: dto.allocation,
     guardianName: dto.guardian_name,
-    guardianEmail: dto.guardian_email,
-    guardianPan: dto.guardian_pan,
-    guardianAddress: dto.guardian_address,
   };
 }
 
@@ -88,11 +91,9 @@ function mapNomineePayloadToDTO(payload: NomineePayload): Partial<NomineeDTO> {
     dob: payload.dob,
     pan: payload.pan,
     email: payload.email,
+    mobile_number: payload.mobileNumber,
     address: payload.address,
     allocation: payload.allocation,
     guardian_name: payload.guardianName,
-    guardian_email: payload.guardianEmail,
-    guardian_pan: payload.guardianPan,
-    guardian_address: payload.guardianAddress,
   };
 }

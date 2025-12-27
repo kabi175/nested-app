@@ -1,3 +1,5 @@
+import type { Address } from "./auth";
+
 // Relationship types for nominees (must match backend enum values)
 export type RelationshipType =
   | "father"
@@ -30,15 +32,13 @@ export type NomineeDraft = {
   name: string;
   relationship: RelationshipType;
   dob: string; // yyyy-MM-dd format
-  pan?: string;
-  email?: string;
-  address?: string;
+  pan: string;
+  email: string;
+  mobileNumber: string;
+  address: Address;
   allocation: number;
   isMinor: boolean; // CLIENT ONLY - derived from DOB
   guardianName?: string;
-  guardianEmail?: string;
-  guardianPan?: string;
-  guardianAddress?: string;
 };
 
 // API response model (doesn't include isMinor)
@@ -47,14 +47,12 @@ export type Nominee = {
   name: string;
   relationship: RelationshipType;
   dob: string; // yyyy-MM-dd format
-  pan?: string;
-  email?: string;
-  address?: string;
+  pan: string;
+  email: string;
+  mobileNumber: string;
+  address: Address;
   allocation: number;
   guardianName?: string;
-  guardianEmail?: string;
-  guardianPan?: string;
-  guardianAddress?: string;
 };
 
 // API payload (for add/edit - excludes isMinor)
@@ -73,11 +71,15 @@ export type NomineeValidationErrors = {
   dob?: string;
   pan?: string;
   email?: string;
-  address?: string;
+  mobileNumber?: string;
+  address?: {
+    address_line?: string;
+    city?: string;
+    state?: string;
+    pin_code?: string;
+    country?: string;
+  };
   allocation?: string;
   guardianName?: string;
-  guardianEmail?: string;
-  guardianPan?: string;
-  guardianAddress?: string;
   _global?: string; // For cross-nominee validation errors
 };

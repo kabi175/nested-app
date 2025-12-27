@@ -1,6 +1,6 @@
 import { NomineeCard } from "@/components/nominee/NomineeCard";
 import type { NomineeDraft } from "@/types/nominee";
-import { Card, Text } from "@ui-kitten/components";
+import { Text } from "@ui-kitten/components";
 import React from "react";
 import { StyleSheet, View } from "react-native";
 
@@ -27,12 +27,10 @@ export function DraftNomineeCard({
           dob: draft.dob,
           pan: draft.pan,
           email: draft.email,
+          mobileNumber: draft.mobileNumber,
           address: draft.address,
           allocation: draft.allocation,
           guardianName: draft.guardianName,
-          guardianEmail: draft.guardianEmail,
-          guardianPan: draft.guardianPan,
-          guardianAddress: draft.guardianAddress,
         }}
         onEdit={onEdit}
         onDelete={onDelete}
@@ -67,4 +65,3 @@ const styles = StyleSheet.create({
     fontSize: 10,
   },
 });
-

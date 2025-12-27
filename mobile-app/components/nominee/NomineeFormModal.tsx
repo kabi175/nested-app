@@ -1,21 +1,37 @@
 import { SearchableDropdown } from "@/components/ui/SearchableDropdown";
-import { RELATIONSHIP_OPTIONS } from "@/utils/nominee";
-import { formatDateToYYYYMMDD, parseDateFromYYYYMMDD, getRelationshipLabel } from "@/utils/nominee";
-import type { NomineeDraft, RelationshipType } from "@/types/nominee";
+import type {
+  NomineeDraft,
+  NomineeValidationErrors,
+  RelationshipType,
+} from "@/types/nominee";
+import {
+  RELATIONSHIP_OPTIONS,
+  formatDateToYYYYMMDD,
+  parseDateFromYYYYMMDD,
+} from "@/utils/nominee";
 import {
   Button,
   Datepicker,
+  IndexPath,
   Input,
+  Select,
+  SelectItem,
   Text,
 } from "@ui-kitten/components";
 import { CalendarDays, ChevronDown, ChevronUp, X } from "lucide-react-native";
 import React, { useEffect, useState } from "react";
-import { Modal, ScrollView, StyleSheet, TouchableOpacity, View } from "react-native";
+import {
+  Modal,
+  ScrollView,
+  StyleSheet,
+  TouchableOpacity,
+  View,
+} from "react-native";
 
 interface NomineeFormModalProps {
   visible: boolean;
   draft: NomineeDraft | null;
-  errors: Record<string, string>;
+  errors: NomineeValidationErrors;
   remainingAllocation: number;
   isEditMode: boolean;
   isEditingExistingNominee?: boolean; // True when editing an existing nominee from server (only name/relationship editable)
@@ -55,7 +71,10 @@ export function NomineeFormModal({
     }
   }, [draft?.relationship]);
 
-  const handleRelationshipSelect = (option: { label: string; value: RelationshipType }) => {
+  const handleRelationshipSelect = (option: {
+    label: string;
+    value: RelationshipType;
+  }) => {
     setSelectedRelationship(option);
     onFieldChange("relationship", option.value);
   };
@@ -81,6 +100,56 @@ export function NomineeFormModal({
     if (!draft?.dob) return undefined;
     return parseDateFromYYYYMMDD(draft.dob);
   };
+
+  const handleAddressChange = (
+    field: keyof NonNullable<NomineeDraft["address"]>,
+    value: string
+  ) => {
+    const currentAddress = draft?.address || {};
+    onFieldChange("address", {
+      ...currentAddress,
+      [field]: value,
+    });
+  };
+
+  const states = [
+    "Andhra Pradesh",
+    "Arunachal Pradesh",
+    "Assam",
+    "Bihar",
+    "Chhattisgarh",
+    "Delhi",
+    "Goa",
+    "Gujarat",
+    "Haryana",
+    "Himachal Pradesh",
+    "Jammu & Kashmir",
+    "Jharkhand",
+    "Karnataka",
+    "Kerala",
+    "Madhya Pradesh",
+    "Maharashtra",
+    "Manipur",
+    "Meghalaya",
+    "Mizoram",
+    "Nagaland",
+    "Odisha",
+    "Punjab",
+    "Rajasthan",
+    "Sikkim",
+    "Tamil Nadu",
+    "Telangana",
+    "Tripura",
+    "Uttar Pradesh",
+    "Uttarakhand",
+    "West Bengal",
+  ];
+
+  const selectedStateIndex = draft?.address?.state
+    ? states.indexOf(draft.address.state) >= 0
+      ? new IndexPath(states.indexOf(draft.address.state))
+      : undefined
+    : undefined;
 
   if (!draft) return null;
 
@@ -179,8 +248,14 @@ export function NomineeFormModal({
                   value={draft.allocation.toString()}
                   onChangeText={(value) => {
                     const num = parseInt(value) || 0;
-                    const maxAllowed = Math.min(100, remainingAllocation + draft.allocation);
-                    onFieldChange("allocation", Math.min(Math.max(1, num), maxAllowed));
+                    const maxAllowed = Math.min(
+                      100,
+                      remainingAllocation + draft.allocation
+                    );
+                    onFieldChange(
+                      "allocation",
+                      Math.min(Math.max(1, num), maxAllowed)
+                    );
                   }}
                   keyboardType="number-pad"
                   status={errors.allocation ? "danger" : "basic"}
@@ -191,17 +266,31 @@ export function NomineeFormModal({
                 <View style={styles.allocationControls}>
                   <TouchableOpacity
                     onPress={handleAllocationIncrement}
-                    disabled={isEditingExistingNominee || isSubmitting || draft.allocation >= 100}
+                    disabled={
+                      isEditingExistingNominee ||
+                      isSubmitting ||
+                      draft.allocation >= 100
+                    }
                     style={styles.allocationButton}
                   >
-                    <ChevronUp size={16} color={draft.allocation >= 100 ? "#CCC" : "#666"} />
+                    <ChevronUp
+                      size={16}
+                      color={draft.allocation >= 100 ? "#CCC" : "#666"}
+                    />
                   </TouchableOpacity>
                   <TouchableOpacity
                     onPress={handleAllocationDecrement}
-                    disabled={isEditingExistingNominee || isSubmitting || draft.allocation <= 1}
+                    disabled={
+                      isEditingExistingNominee ||
+                      isSubmitting ||
+                      draft.allocation <= 1
+                    }
                     style={styles.allocationButton}
                   >
-                    <ChevronDown size={16} color={draft.allocation <= 1 ? "#CCC" : "#666"} />
+                    <ChevronDown
+                      size={16}
+                      color={draft.allocation <= 1 ? "#CCC" : "#666"}
+                    />
                   </TouchableOpacity>
                 </View>
               </View>
@@ -230,55 +319,165 @@ export function NomineeFormModal({
               </View>
             </View>
 
-            {/* PAN (only for non-minors, or optional for minors) */}
-            {!draft.isMinor && (
-              <>
-                <Input
-                  label="PAN *"
-                  placeholder="Enter PAN"
-                  value={draft.pan || ""}
-                  onChangeText={(value) => onFieldChange("pan", value.toUpperCase())}
-                  status={errors.pan ? "danger" : "basic"}
-                  caption={errors.pan}
-                  style={styles.input}
-                  size="large"
-                  disabled={isEditingExistingNominee || isSubmitting}
-                  maxLength={10}
-                />
-                <Input
-                  label="Email"
-                  placeholder="Enter email (optional)"
-                  value={draft.email || ""}
-                  onChangeText={(value) => onFieldChange("email", value)}
-                  keyboardType="email-address"
-                  autoCapitalize="none"
-                  status={errors.email ? "danger" : "basic"}
-                  caption={errors.email}
-                  style={styles.input}
-                  size="large"
-                  disabled={isEditingExistingNominee || isSubmitting}
-                />
-                <Input
-                  label="Address"
-                  placeholder="Enter address (optional)"
-                  value={draft.address || ""}
-                  onChangeText={(value) => onFieldChange("address", value)}
-                  status={errors.address ? "danger" : "basic"}
-                  caption={errors.address}
-                  style={styles.input}
-                  size="large"
-                  multiline
-                  numberOfLines={3}
-                  textAlignVertical="top"
-                  disabled={isEditingExistingNominee || isSubmitting}
-                />
-              </>
-            )}
+            {/* PAN, Email, Mobile Number, Address (required for all) */}
+            <Input
+              label="PAN *"
+              placeholder="Enter PAN"
+              value={draft.pan || ""}
+              onChangeText={(value) =>
+                onFieldChange("pan", value.toUpperCase())
+              }
+              status={errors.pan ? "danger" : "basic"}
+              caption={errors.pan}
+              style={styles.input}
+              size="large"
+              disabled={isEditingExistingNominee || isSubmitting}
+              maxLength={10}
+            />
+            <Input
+              label="Email *"
+              placeholder="Enter email"
+              value={draft.email || ""}
+              onChangeText={(value) => onFieldChange("email", value)}
+              keyboardType="email-address"
+              autoCapitalize="none"
+              status={errors.email ? "danger" : "basic"}
+              caption={errors.email}
+              style={styles.input}
+              size="large"
+              disabled={isEditingExistingNominee || isSubmitting}
+            />
+            <Input
+              label="Mobile Number *"
+              placeholder="Enter mobile number"
+              value={draft.mobileNumber || ""}
+              onChangeText={(value) => onFieldChange("mobileNumber", value)}
+              keyboardType="phone-pad"
+              status={errors.mobileNumber ? "danger" : "basic"}
+              caption={errors.mobileNumber}
+              style={styles.input}
+              size="large"
+              disabled={isEditingExistingNominee || isSubmitting}
+            />
+            <Input
+              label="Address Line *"
+              placeholder="Enter address line"
+              value={draft.address?.address_line || ""}
+              onChangeText={(value) =>
+                handleAddressChange("address_line", value)
+              }
+              status={
+                typeof errors.address === "object" &&
+                errors.address?.address_line
+                  ? "danger"
+                  : "basic"
+              }
+              caption={
+                typeof errors.address === "object"
+                  ? errors.address?.address_line
+                  : undefined
+              }
+              style={styles.input}
+              size="large"
+              disabled={isEditingExistingNominee || isSubmitting}
+            />
+            <Input
+              label="City *"
+              placeholder="Enter city"
+              value={draft.address?.city || ""}
+              onChangeText={(value) => handleAddressChange("city", value)}
+              status={
+                typeof errors.address === "object" && errors.address?.city
+                  ? "danger"
+                  : "basic"
+              }
+              caption={
+                typeof errors.address === "object"
+                  ? errors.address?.city
+                  : undefined
+              }
+              style={styles.input}
+              size="large"
+              disabled={isEditingExistingNominee || isSubmitting}
+            />
+            <View style={styles.inputContainer}>
+              <Text category="label" style={styles.label}>
+                State *
+              </Text>
+              <Select
+                selectedIndex={selectedStateIndex}
+                value={draft.address?.state || undefined}
+                onSelect={(index) => {
+                  const row = Array.isArray(index) ? index[0].row : index.row;
+                  handleAddressChange("state", states[row]);
+                }}
+                status={
+                  typeof errors.address === "object" && errors.address?.state
+                    ? "danger"
+                    : "basic"
+                }
+                caption={
+                  typeof errors.address === "object"
+                    ? errors.address?.state
+                    : undefined
+                }
+                placeholder="Select state"
+              >
+                {states.map((s) => (
+                  <SelectItem key={s} title={s} />
+                ))}
+              </Select>
+            </View>
+            <Input
+              label="PIN Code *"
+              placeholder="Enter PIN code"
+              value={draft.address?.pin_code || ""}
+              onChangeText={(value) =>
+                handleAddressChange("pin_code", value.replace(/[^0-9]/g, ""))
+              }
+              keyboardType="number-pad"
+              maxLength={6}
+              status={
+                typeof errors.address === "object" && errors.address?.pin_code
+                  ? "danger"
+                  : "basic"
+              }
+              caption={
+                typeof errors.address === "object"
+                  ? errors.address?.pin_code
+                  : undefined
+              }
+              style={styles.input}
+              size="large"
+              disabled={isEditingExistingNominee || isSubmitting}
+            />
+            <Input
+              label="Country *"
+              placeholder="Enter country"
+              value={draft.address?.country || ""}
+              onChangeText={(value) => handleAddressChange("country", value)}
+              status={
+                typeof errors.address === "object" && errors.address?.country
+                  ? "danger"
+                  : "basic"
+              }
+              caption={
+                typeof errors.address === "object"
+                  ? errors.address?.country
+                  : undefined
+              }
+              style={styles.input}
+              size="large"
+              disabled={isEditingExistingNominee || isSubmitting}
+            />
 
             {/* Guardian Details (only for minors) */}
             {draft.isMinor && (
               <>
-                <Text category="s1" style={[styles.sectionTitle, styles.guardianSectionTitle]}>
+                <Text
+                  category="s1"
+                  style={[styles.sectionTitle, styles.guardianSectionTitle]}
+                >
                   Guardian Details
                 </Text>
 
@@ -291,48 +490,6 @@ export function NomineeFormModal({
                   caption={errors.guardianName}
                   style={styles.input}
                   size="large"
-                  disabled={isEditingExistingNominee || isSubmitting}
-                />
-
-                <Input
-                  label="Guardian Email *"
-                  placeholder="Enter guardian email"
-                  value={draft.guardianEmail || ""}
-                  onChangeText={(value) => onFieldChange("guardianEmail", value)}
-                  keyboardType="email-address"
-                  autoCapitalize="none"
-                  status={errors.guardianEmail ? "danger" : "basic"}
-                  caption={errors.guardianEmail}
-                  style={styles.input}
-                  size="large"
-                  disabled={isEditingExistingNominee || isSubmitting}
-                />
-
-                <Input
-                  label="Guardian PAN *"
-                  placeholder="Enter guardian PAN"
-                  value={draft.guardianPan || ""}
-                  onChangeText={(value) => onFieldChange("guardianPan", value.toUpperCase())}
-                  status={errors.guardianPan ? "danger" : "basic"}
-                  caption={errors.guardianPan}
-                  style={styles.input}
-                  size="large"
-                  disabled={isEditingExistingNominee || isSubmitting}
-                  maxLength={10}
-                />
-
-                <Input
-                  label="Guardian Address *"
-                  placeholder="Enter guardian address"
-                  value={draft.guardianAddress || ""}
-                  onChangeText={(value) => onFieldChange("guardianAddress", value)}
-                  status={errors.guardianAddress ? "danger" : "basic"}
-                  caption={errors.guardianAddress}
-                  style={styles.input}
-                  size="large"
-                  multiline
-                  numberOfLines={3}
-                  textAlignVertical="top"
                   disabled={isEditingExistingNominee || isSubmitting}
                 />
               </>
@@ -495,4 +652,3 @@ const styles = StyleSheet.create({
     borderColor: "#E5E7EB",
   },
 });
-

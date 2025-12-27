@@ -8,6 +8,9 @@ const PAN_REGEX = /^[A-Z]{5}[0-9]{4}[A-Z]{1}$/;
 // Email validation
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
+// Mobile number validation (10 digits, optionally with country code)
+const MOBILE_REGEX = /^(\+91|0)?[6-9]\d{9}$/;
+
 /**
  * Validate PAN format
  */
@@ -52,49 +55,81 @@ export function validateNomineeDraft(
     }
   }
 
-  // PAN validation (required for non-minors)
-  if (!isMinor) {
-    if (!draft.pan || draft.pan.trim().length === 0) {
-      errors.pan = "PAN is required for adults";
-    } else if (!isValidPAN(draft.pan)) {
-      errors.pan = "Invalid PAN format (e.g., ABCDE1234F)";
-    }
+  // PAN validation (required for all)
+  if (!draft.pan || draft.pan.trim().length === 0) {
+    errors.pan = "PAN is required";
+  } else if (!isValidPAN(draft.pan)) {
+    errors.pan = "Invalid PAN format (e.g., ABCDE1234F)";
+  }
+
+  // Email validation (required)
+  if (!draft.email || draft.email.trim().length === 0) {
+    errors.email = "Email is required";
+  } else if (!EMAIL_REGEX.test(draft.email)) {
+    errors.email = "Invalid email format";
+  }
+
+  // Mobile number validation (required)
+  if (!draft.mobileNumber || draft.mobileNumber.trim().length === 0) {
+    errors.mobileNumber = "Mobile number is required";
   } else {
-    // Optional for minors, but if provided, must be valid
-    if (draft.pan && draft.pan.trim().length > 0 && !isValidPAN(draft.pan)) {
-      errors.pan = "Invalid PAN format (e.g., ABCDE1234F)";
+    // Remove spaces and dashes for validation
+    const cleanedMobile = draft.mobileNumber.replace(/[\s-]/g, "");
+    if (!MOBILE_REGEX.test(cleanedMobile)) {
+      errors.mobileNumber = "Invalid mobile number format (10 digits required)";
     }
   }
 
-  // Email validation (optional, but must be valid if provided)
-  if (draft.email && draft.email.trim().length > 0) {
-    if (!EMAIL_REGEX.test(draft.email)) {
-      errors.email = "Invalid email format";
+  // Address validation (required)
+  if (!draft.address) {
+    errors.address = {
+      address_line: "Address is required",
+    };
+  } else {
+    const addressErrors: {
+      address_line?: string;
+      city?: string;
+      state?: string;
+      pin_code?: string;
+      country?: string;
+    } = {};
+
+    if (!draft.address.address_line || draft.address.address_line.trim().length === 0) {
+      addressErrors.address_line = "Address line is required";
+    }
+
+    if (!draft.address.city || draft.address.city.trim().length === 0) {
+      addressErrors.city = "City is required";
+    }
+
+    if (!draft.address.state || draft.address.state.trim().length === 0) {
+      addressErrors.state = "State is required";
+    }
+
+    if (!draft.address.pin_code || draft.address.pin_code.trim().length === 0) {
+      addressErrors.pin_code = "PIN code is required";
+    } else if (!/^\d{6}$/.test(draft.address.pin_code)) {
+      addressErrors.pin_code = "PIN code must be 6 digits";
+    }
+
+    if (!draft.address.country || draft.address.country.trim().length === 0) {
+      addressErrors.country = "Country is required";
+    }
+
+    if (Object.keys(addressErrors).length > 0) {
+      errors.address = addressErrors;
     }
   }
 
-  // Guardian validation (required for minors)
+  // Guardian validation (required only for minors)
   if (isMinor) {
     if (!draft.guardianName || draft.guardianName.trim().length === 0) {
       errors.guardianName = "Guardian name is required for minors";
     }
-    if (!draft.guardianEmail || draft.guardianEmail.trim().length === 0) {
-      errors.guardianEmail = "Guardian email is required for minors";
-    } else if (!EMAIL_REGEX.test(draft.guardianEmail)) {
-      errors.guardianEmail = "Invalid guardian email format";
-    }
-    if (!draft.guardianPan || draft.guardianPan.trim().length === 0) {
-      errors.guardianPan = "Guardian PAN is required for minors";
-    } else if (!isValidPAN(draft.guardianPan)) {
-      errors.guardianPan = "Invalid guardian PAN format";
-    }
-    if (!draft.guardianAddress || draft.guardianAddress.trim().length === 0) {
-      errors.guardianAddress = "Guardian address is required for minors";
-    }
   } else {
-    // Guardian fields must be empty for non-minors
-    if (draft.guardianName || draft.guardianEmail || draft.guardianPan || draft.guardianAddress) {
-      errors.guardianName = "Guardian details should not be provided for adults";
+    // Guardian name should not be provided for adults
+    if (draft.guardianName && draft.guardianName.trim().length > 0) {
+      errors.guardianName = "Guardian name should not be provided for adults";
     }
   }
 
@@ -118,7 +153,7 @@ export function validateNomineeDraft(
   if (draft.pan && draft.pan.trim().length > 0) {
     const duplicatePan = allOtherNominees.find((n) => {
       const pan = "pan" in n ? n.pan : undefined;
-      return pan && pan.toUpperCase() === draft.pan!.toUpperCase();
+      return pan && pan.toUpperCase() === draft.pan.toUpperCase();
     });
     if (duplicatePan) {
       errors.pan = "PAN already used by another nominee";
@@ -129,32 +164,24 @@ export function validateNomineeDraft(
   if (draft.email && draft.email.trim().length > 0) {
     const duplicateEmail = allOtherNominees.find((n) => {
       const email = "email" in n ? n.email : undefined;
-      return email && email.toLowerCase() === draft.email!.toLowerCase();
+      return email && email.toLowerCase() === draft.email.toLowerCase();
     });
     if (duplicateEmail) {
       errors.email = "Email already used by another nominee";
     }
   }
 
-  // Guardian PAN uniqueness
-  if (isMinor && draft.guardianPan && draft.guardianPan.trim().length > 0) {
-    const duplicateGuardianPan = allOtherNominees.find((n) => {
-      const guardianPan = "guardianPan" in n ? n.guardianPan : undefined;
-      return guardianPan && guardianPan.toUpperCase() === draft.guardianPan!.toUpperCase();
+  // Mobile number uniqueness
+  if (draft.mobileNumber && draft.mobileNumber.trim().length > 0) {
+    const cleanedMobile = draft.mobileNumber.replace(/[\s-]/g, "");
+    const duplicateMobile = allOtherNominees.find((n) => {
+      const mobileNumber = "mobileNumber" in n ? n.mobileNumber : undefined;
+      if (!mobileNumber) return false;
+      const cleanedOtherMobile = mobileNumber.replace(/[\s-]/g, "");
+      return cleanedOtherMobile === cleanedMobile;
     });
-    if (duplicateGuardianPan) {
-      errors.guardianPan = "Guardian PAN already used by another nominee";
-    }
-  }
-
-  // Guardian Email uniqueness
-  if (isMinor && draft.guardianEmail && draft.guardianEmail.trim().length > 0) {
-    const duplicateGuardianEmail = allOtherNominees.find((n) => {
-      const guardianEmail = "guardianEmail" in n ? n.guardianEmail : undefined;
-      return guardianEmail && guardianEmail.toLowerCase() === draft.guardianEmail!.toLowerCase();
-    });
-    if (duplicateGuardianEmail) {
-      errors.guardianEmail = "Guardian email already used by another nominee";
+    if (duplicateMobile) {
+      errors.mobileNumber = "Mobile number already used by another nominee";
     }
   }
 
