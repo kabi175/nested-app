@@ -1,25 +1,26 @@
-import { useAtom, useSetAtom } from "jotai";
-import { useState } from "react";
-import { Alert } from "react-native";
-import { router } from "expo-router";
 import {
-  nomineeListAtom,
-  nomineeDraftAtom,
   draftNomineesAtom,
+  mfaStateAtom,
+  nomineeDraftAtom,
+  nomineeListAtom,
+  pendingActionAtom,
   pendingNomineeIdAtom,
   validationErrorsAtom,
-  mfaStateAtom,
 } from "@/atoms/nominee";
 import type { NomineeDraft } from "@/types/nominee";
 import {
-  nomineeToDraft,
   calculateIsMinor,
   formatDateToYYYYMMDD,
+  nomineeToDraft,
 } from "@/utils/nominee";
 import {
-  validateNomineeDraftComplete,
   validateAllocationTotalForDrafts,
+  validateNomineeDraftComplete,
 } from "@/utils/nomineeValidation";
+import { router } from "expo-router";
+import { useAtom, useSetAtom } from "jotai";
+import { useState } from "react";
+import { Alert } from "react-native";
 
 const MAX_NOMINEES = 3;
 
@@ -29,19 +30,23 @@ export function useNomineeManagement() {
   const [draft, setDraft] = useAtom(nomineeDraftAtom);
   const [pendingNomineeId, setPendingNomineeId] = useAtom(pendingNomineeIdAtom);
   const [validationErrors, setValidationErrors] = useAtom(validationErrorsAtom);
+  const setPendingAction = useSetAtom(pendingActionAtom);
   const setMfaState = useSetAtom(mfaStateAtom);
 
   const [showFormModal, setShowFormModal] = useState(false);
-  const [showOptOutModal, setShowOptOutModal] = useState(false);
-  const [optOutNomineeId, setOptOutNomineeId] = useState<number | null>(null);
-  const [editingDraftIndex, setEditingDraftIndex] = useState<number | null>(null);
+  const [editingDraftIndex, setEditingDraftIndex] = useState<number | null>(
+    null
+  );
 
-  const activeNominees = nomineeList.filter((n) => !n.optedOut);
+  const activeNominees = nomineeList;
 
   const handleAddNominee = () => {
     const totalCount = activeNominees.length + draftNominees.length;
     if (totalCount >= MAX_NOMINEES) {
-      Alert.alert("Limit Reached", `You can add up to ${MAX_NOMINEES} nominees.`);
+      Alert.alert(
+        "Limit Reached",
+        `You can add up to ${MAX_NOMINEES} nominees.`
+      );
       return;
     }
 
@@ -85,9 +90,12 @@ export function useNomineeManagement() {
     setDraftNominees((prev) => prev.filter((_, i) => i !== index));
   };
 
-  const handleOptOutNominee = (nomineeId: number) => {
-    setOptOutNomineeId(nomineeId);
-    setShowOptOutModal(true);
+  const handleOptOutNominee = () => {
+    // Set pending action to optOut and navigate to verify screen
+    setPendingAction("optOut");
+    setPendingNomineeId(null);
+    setMfaState("pending");
+    router.push("/nominees/verify");
   };
 
   const handleFieldChange = (field: keyof NomineeDraft, value: any) => {
@@ -139,33 +147,42 @@ export function useNomineeManagement() {
 
   const handleSaveAll = () => {
     if (draftNominees.length === 0) {
-      Alert.alert("No Nominees", "Please add at least one nominee before saving.");
+      Alert.alert(
+        "No Nominees",
+        "Please add at least one nominee before saving."
+      );
       return;
     }
 
-    const allocationErrors = validateAllocationTotalForDrafts(nomineeList, draftNominees);
+    const allocationErrors = validateAllocationTotalForDrafts(
+      nomineeList,
+      draftNominees
+    );
     if (Object.keys(allocationErrors).length > 0) {
-      Alert.alert("Validation Error", allocationErrors._global || "Please fix the validation errors.");
+      Alert.alert(
+        "Validation Error",
+        allocationErrors._global || "Please fix the validation errors."
+      );
       return;
     }
 
     for (let i = 0; i < draftNominees.length; i++) {
       const draft = draftNominees[i];
-      const errors = validateNomineeDraftComplete(draft, nomineeList, draftNominees, i);
+      const errors = validateNomineeDraftComplete(
+        draft,
+        nomineeList,
+        draftNominees,
+        i
+      );
       if (Object.keys(errors).length > 0) {
-        Alert.alert("Validation Error", `Please fix errors in nominee ${i + 1}.`);
+        Alert.alert(
+          "Validation Error",
+          `Please fix errors in nominee ${i + 1}.`
+        );
         return;
       }
     }
 
-    router.push("/nominees/verify");
-  };
-
-  const handleConfirmOptOut = () => {
-    if (!optOutNomineeId) return;
-    setShowOptOutModal(false);
-    setPendingNomineeId(optOutNomineeId);
-    setMfaState("pending");
     router.push("/nominees/verify");
   };
 
@@ -177,16 +194,8 @@ export function useNomineeManagement() {
     setValidationErrors({});
   };
 
-  const handleCancelOptOut = () => {
-    setShowOptOutModal(false);
-    setOptOutNomineeId(null);
-  };
-
-  const optOutNominee = optOutNomineeId
-    ? nomineeList.find((n) => n.id === optOutNomineeId)
-    : null;
-
-  const canAddMore = activeNominees.length + draftNominees.length < MAX_NOMINEES;
+  const canAddMore =
+    activeNominees.length + draftNominees.length < MAX_NOMINEES;
 
   return {
     // State
@@ -197,8 +206,6 @@ export function useNomineeManagement() {
     editingDraftIndex,
     pendingNomineeId,
     showFormModal,
-    showOptOutModal,
-    optOutNominee,
     canAddMore,
     // Handlers
     handleAddNominee,
@@ -209,9 +216,6 @@ export function useNomineeManagement() {
     handleFieldChange,
     handleSaveDraft,
     handleSaveAll,
-    handleConfirmOptOut,
     handleCancelForm,
-    handleCancelOptOut,
   };
 }
-

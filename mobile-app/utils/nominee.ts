@@ -30,7 +30,7 @@ export function nomineeToDraft(nominee: Nominee): NomineeDraft {
 /**
  * Convert draft to API payload (removes isMinor and id)
  */
-export function draftToPayload(draft: NomineeDraft): Omit<Nominee, "id" | "optedOut"> {
+export function draftToPayload(draft: NomineeDraft): Omit<Nominee, "id"> {
   const { id, isMinor, ...payload } = draft;
   return payload;
 }

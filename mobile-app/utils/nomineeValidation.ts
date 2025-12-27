@@ -110,7 +110,7 @@ export function validateNomineeDraft(
   // Cross-nominee validation: Combine existing and draft nominees (excluding current draft)
   const otherDrafts = draftNominees.filter((_, index) => editingIndex === undefined || index !== editingIndex);
   const allOtherNominees = [
-    ...existingNominees.filter((n) => !n.optedOut),
+    ...existingNominees,
     ...otherDrafts,
   ];
 
@@ -169,10 +169,9 @@ export function validateAllocationTotalForDrafts(
   draftNominees: NomineeDraft[]
 ): NomineeValidationErrors {
   const errors: NomineeValidationErrors = {};
-  const activeNominees = existingNominees.filter((n) => !n.optedOut);
 
   // Calculate total allocation
-  let total = activeNominees.reduce((sum, n) => sum + n.allocation, 0);
+  let total = existingNominees.reduce((sum, n) => sum + n.allocation, 0);
   total += draftNominees.reduce((sum, n) => sum + n.allocation, 0);
 
   if (total !== 100) {

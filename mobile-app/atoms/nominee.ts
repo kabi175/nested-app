@@ -35,9 +35,7 @@ export const mfaStateAtom = atom<MfaState>("idle");
 // Computed: Total allocation
 export const allocationTotalAtom = atom<number>((get) => {
   const nominees = get(nomineeListAtom);
-  return nominees
-    .filter((n) => !n.optedOut)
-    .reduce((sum, n) => sum + n.allocation, 0);
+  return nominees.reduce((sum, n) => sum + n.allocation, 0);
 });
 
 // Helper: Calculate remaining allocation

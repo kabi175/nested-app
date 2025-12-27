@@ -4,7 +4,6 @@ import { NomineeFooter } from "@/components/nominee/NomineeFooter";
 import { NomineeFormModal } from "@/components/nominee/NomineeFormModal";
 import { NomineeList } from "@/components/nominee/NomineeList";
 import { NomineeScreenHeader } from "@/components/nominee/NomineeScreenHeader";
-import { OptOutWarningModal } from "@/components/nominee/OptOutWarningModal";
 import { useNomineeAllocations } from "@/hooks/useNomineeAllocations";
 import { useNomineeManagement } from "@/hooks/useNomineeManagement";
 import { useNominees } from "@/hooks/useNominees";
@@ -30,8 +29,6 @@ export default function NomineesScreen() {
     editingDraftIndex,
     pendingNomineeId,
     showFormModal,
-    showOptOutModal,
-    optOutNominee,
     canAddMore,
     handleAddNominee,
     handleEditNominee,
@@ -41,9 +38,7 @@ export default function NomineesScreen() {
     handleFieldChange,
     handleSaveDraft,
     handleSaveAll,
-    handleConfirmOptOut,
     handleCancelForm,
-    handleCancelOptOut,
   } = useNomineeManagement();
 
   const { totalAllocation, remainingAllocation } = useNomineeAllocations();
@@ -84,7 +79,10 @@ export default function NomineesScreen() {
         />
 
         {!hasNominees ? (
-          <NomineeEmptyState onAddPress={handleAddNominee} />
+          <NomineeEmptyState
+            onAddPress={handleAddNominee}
+            onOptOut={handleOptOutNominee}
+          />
         ) : (
           <>
             <NomineeList
@@ -93,7 +91,6 @@ export default function NomineesScreen() {
               onEditNominee={handleEditNominee}
               onEditDraft={handleEditDraftNominee}
               onDeleteDraft={handleDeleteDraftNominee}
-              onOptOut={handleOptOutNominee}
             />
 
             <NomineeFooter
@@ -115,16 +112,6 @@ export default function NomineesScreen() {
             onFieldChange={handleFieldChange}
             onSave={handleSaveDraft}
             onCancel={handleCancelForm}
-            isSubmitting={false}
-          />
-        )}
-
-        {optOutNominee && (
-          <OptOutWarningModal
-            visible={showOptOutModal}
-            nomineeName={optOutNominee.name}
-            onConfirm={handleConfirmOptOut}
-            onCancel={handleCancelOptOut}
             isSubmitting={false}
           />
         )}

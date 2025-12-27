@@ -33,7 +33,6 @@ export function DraftNomineeCard({
           guardianEmail: draft.guardianEmail,
           guardianPan: draft.guardianPan,
           guardianAddress: draft.guardianAddress,
-          optedOut: false,
         }}
         onEdit={onEdit}
         onDelete={onDelete}

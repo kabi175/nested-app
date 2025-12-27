@@ -5,9 +5,13 @@ import { ScrollView, StyleSheet, View } from "react-native";
 
 interface NomineeEmptyStateProps {
   onAddPress: () => void;
+  onOptOut?: () => void;
 }
 
-export function NomineeEmptyState({ onAddPress }: NomineeEmptyStateProps) {
+export function NomineeEmptyState({
+  onAddPress,
+  onOptOut,
+}: NomineeEmptyStateProps) {
   return (
     <ScrollView
       contentContainerStyle={styles.container}
@@ -33,6 +37,16 @@ export function NomineeEmptyState({ onAddPress }: NomineeEmptyStateProps) {
       >
         Add Your First Nominee
       </Button>
+      {onOptOut && (
+        <Button
+          style={styles.addLaterButton}
+          appearance="ghost"
+          status="basic"
+          onPress={onOptOut}
+        >
+          Opt out for nominee nomination
+        </Button>
+      )}
     </ScrollView>
   );
 }
@@ -72,6 +86,10 @@ const styles = StyleSheet.create({
   addButton: {
     borderRadius: 12,
     paddingHorizontal: 24,
+    marginBottom: 12,
+  },
+  addLaterButton: {
+    borderRadius: 12,
+    paddingHorizontal: 24,
   },
 });
-

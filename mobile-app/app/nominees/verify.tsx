@@ -21,16 +21,25 @@ import { upsertNominees } from "@/api/nomineeApi";
 import { OtpInput } from "@/components/ui/OtpInput";
 import { useAuth } from "@/hooks/auth";
 import { Spinner, Text } from "@ui-kitten/components";
-import { draftNomineesAtom } from "@/atoms/nominee";
-import { useAtom } from "jotai";
+import {
+  draftNomineesAtom,
+  pendingActionAtom,
+  pendingNomineeIdAtom,
+} from "@/atoms/nominee";
+import { useAtom, useAtomValue, useSetAtom } from "jotai";
 import { useQueryClient } from "@tanstack/react-query";
 import { QUERY_KEYS } from "@/constants/queryKeys";
 import { draftToPayload } from "@/utils/nominee";
+import { useOptOutNominee } from "@/hooks/useOptOutNominee";
 
 export default function NomineeVerificationScreen() {
   const auth = useAuth();
   const [draftNominees, setDraftNominees] = useAtom(draftNomineesAtom);
+  const pendingAction = useAtomValue(pendingActionAtom);
+  const [pendingNomineeId, setPendingNomineeId] = useAtom(pendingNomineeIdAtom);
+  const setPendingAction = useSetAtom(pendingActionAtom);
   const queryClient = useQueryClient();
+  const optOutNomineeMutation = useOptOutNominee();
   const [confirm, setConfirm] =
     useState<FirebaseAuthTypes.ConfirmationResult | null>(null);
   const [otpCode, setOtpCode] = useState("");
@@ -41,16 +50,18 @@ export default function NomineeVerificationScreen() {
   const [fadeAnim] = useState(new Animated.Value(0));
   const [scaleAnim] = useState(new Animated.Value(0.9));
 
+  const isOptOutFlow = pendingAction === "optOut";
+
   // Get user's phone number from auth
   const userPhoneNumber =
     auth.user?.phoneNumber || getAuth().currentUser?.phoneNumber || "";
 
-  // Redirect if no draft nominees
+  // Redirect if no draft nominees and not opt-out flow
   useEffect(() => {
-    if (draftNominees.length === 0) {
+    if (!isOptOutFlow && draftNominees.length === 0) {
       router.replace("/nominees");
     }
-  }, [draftNominees.length]);
+  }, [draftNominees.length, isOptOutFlow]);
 
   // Auto-send OTP when component mounts
   useEffect(() => {
@@ -138,7 +149,12 @@ export default function NomineeVerificationScreen() {
   };
 
   const handleVerifyAndContinue = async () => {
-    if (!confirm || draftNominees.length === 0) {
+    if (!confirm) {
+      Alert.alert("Error", "Missing verification data. Please try again.");
+      return;
+    }
+
+    if (!isOptOutFlow && draftNominees.length === 0) {
       Alert.alert("Error", "Missing verification data. Please try again.");
       return;
     }
@@ -148,16 +164,30 @@ export default function NomineeVerificationScreen() {
       // Reauthenticate with Firebase SMS MFA
       await confirm.confirm(otpCode);
 
-      // After Firebase reauth, save nominees
-      setIsProcessingNominees(true);
-      const payloads = draftNominees.map((draft) => draftToPayload(draft));
-      await upsertNominees(payloads);
+      if (isOptOutFlow) {
+        // Opt-out flow
+        setIsProcessingNominees(true);
+        await optOutNomineeMutation.mutateAsync();
 
-      // Refresh nominees
-      await queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.nominees] });
+        // Refresh nominees and user (mutation already invalidates these)
+        await queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.nominees] });
+        await queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.user] });
 
-      // Clear draft nominees
-      setDraftNominees([]);
+        // Clear pending action and nominee ID
+        setPendingNomineeId(null);
+        setPendingAction(null);
+      } else {
+        // Save nominees flow (existing logic)
+        setIsProcessingNominees(true);
+        const payloads = draftNominees.map((draft) => draftToPayload(draft));
+        await upsertNominees(payloads);
+
+        // Refresh nominees
+        await queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.nominees] });
+
+        // Clear draft nominees
+        setDraftNominees([]);
+      }
 
       // Redirect back to nominees screen
       router.replace("/nominees");
@@ -292,9 +322,13 @@ export default function NomineeVerificationScreen() {
                       )}
                       <Text style={styles.verifyButtonText}>
                         {isProcessingNominees
-                          ? "Saving Nominees..."
+                          ? isOptOutFlow
+                            ? "Opting Out..."
+                            : "Saving Nominees..."
                           : isVerifying
                           ? "Verifying..."
+                          : isOptOutFlow
+                          ? "Verify & Opt Out"
                           : "Verify & Save"}
                       </Text>
                     </LinearGradient>

@@ -55,11 +55,10 @@ export type Nominee = {
   guardianEmail?: string;
   guardianPan?: string;
   guardianAddress?: string;
-  optedOut?: boolean; // Server-side opt-out status
 };
 
 // API payload (for add/edit - excludes isMinor)
-export type NomineePayload = Omit<Nominee, "id" | "optedOut">;
+export type NomineePayload = Omit<Nominee, "id">;
 
 // MFA state
 export type MfaState = "idle" | "pending" | "verifying" | "success" | "failed";
@@ -82,4 +81,3 @@ export type NomineeValidationErrors = {
   guardianAddress?: string;
   _global?: string; // For cross-nominee validation errors
 };
-

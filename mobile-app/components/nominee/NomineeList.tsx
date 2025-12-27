@@ -14,7 +14,6 @@ interface NomineeListProps {
   onEditNominee: (id: number) => void;
   onEditDraft: (index: number) => void;
   onDeleteDraft: (index: number) => void;
-  onOptOut: (id: number) => void;
 }
 
 export function NomineeList({
@@ -23,7 +22,6 @@ export function NomineeList({
   onEditNominee,
   onEditDraft,
   onDeleteDraft,
-  onOptOut,
 }: NomineeListProps) {
   const items: NomineeListItem[] = [
     ...existingNominees.map((n) => ({
@@ -58,7 +56,6 @@ export function NomineeList({
             <NomineeCard
               nominee={item.nominee}
               onEdit={() => onEditNominee(item.nominee.id)}
-              onOptOut={() => onOptOut(item.nominee.id)}
             />
           );
         }
@@ -75,4 +72,3 @@ const styles = StyleSheet.create({
     paddingBottom: 180, // Space for footer
   },
 });
-

@@ -1,15 +1,14 @@
+import { ProgressBar } from "@/components/ui/ProgressBar";
 import type { Nominee } from "@/types/nominee";
 import { calculateIsMinor, getRelationshipLabel } from "@/utils/nominee";
-import { Card, Text, Modal } from "@ui-kitten/components";
-import { MoreVertical, User, Edit2, LogOut } from "lucide-react-native";
+import { Card, Modal, Text } from "@ui-kitten/components";
+import { Edit2, LogOut, MoreVertical, User } from "lucide-react-native";
 import React, { useState } from "react";
 import { StyleSheet, TouchableOpacity, View } from "react-native";
-import { ProgressBar } from "@/components/ui/ProgressBar";
 
 interface NomineeCardProps {
   nominee: Nominee;
   onEdit?: () => void;
-  onOptOut?: () => void;
   onDelete?: () => void;
 }
 
@@ -17,7 +16,7 @@ interface NomineeCardProps {
  * Nominee Card Component
  * Displays nominee information with allocation progress bar
  */
-export function NomineeCard({ nominee, onEdit, onOptOut, onDelete }: NomineeCardProps) {
+export function NomineeCard({ nominee, onEdit, onDelete }: NomineeCardProps) {
   const isMinor = calculateIsMinor(nominee.dob);
   const [showMenu, setShowMenu] = useState(false);
 
@@ -69,7 +68,7 @@ export function NomineeCard({ nominee, onEdit, onOptOut, onDelete }: NomineeCard
         </View>
 
         {/* Actions */}
-        {(onEdit || onOptOut || onDelete) && (
+        {(onEdit || onDelete) && (
           <>
             <TouchableOpacity
               style={styles.menuButton}
@@ -113,21 +112,6 @@ export function NomineeCard({ nominee, onEdit, onOptOut, onDelete }: NomineeCard
                     <LogOut size={20} color="#EF4444" />
                     <Text category="s1" style={styles.menuItemTextDestructive}>
                       Delete
-                    </Text>
-                  </TouchableOpacity>
-                )}
-                {onOptOut && (
-                  <TouchableOpacity
-                    style={[styles.menuItem, styles.menuItemDestructive]}
-                    onPress={() => {
-                      setShowMenu(false);
-                      onOptOut();
-                    }}
-                    activeOpacity={0.7}
-                  >
-                    <LogOut size={20} color="#EF4444" />
-                    <Text category="s1" style={styles.menuItemTextDestructive}>
-                      Opt Out
                     </Text>
                   </TouchableOpacity>
                 )}
@@ -244,4 +228,3 @@ const styles = StyleSheet.create({
     color: "#EF4444",
   },
 });
-

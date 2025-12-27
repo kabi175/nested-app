@@ -56,7 +56,6 @@ type NomineeDTO = {
   guardian_email?: string;
   guardian_pan?: string;
   guardian_address?: string;
-  opted_out?: boolean;
 };
 
 /**
@@ -76,7 +75,6 @@ function mapNomineeDTOToNominee(dto: NomineeDTO): Nominee {
     guardianEmail: dto.guardian_email,
     guardianPan: dto.guardian_pan,
     guardianAddress: dto.guardian_address,
-    optedOut: dto.opted_out ?? false,
   };
 }
 
