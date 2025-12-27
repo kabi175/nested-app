@@ -198,6 +198,12 @@ public class InvestorAPIClient implements com.nested.app.client.mf.InvestorAPICl
 
   @Override
   public Mono<EntityResponse> createNominees(String investorRef, Nominee request) {
+    try {
+      log.info("createNominees with request: {}", objectMapper.writeValueAsString(request));
+    } catch (Exception e) {
+      log.warn("Failed to serialize request for logging", e);
+    }
+
     return api.withAuth()
         .post()
         .uri(RELATED_PARTY_API_URL)

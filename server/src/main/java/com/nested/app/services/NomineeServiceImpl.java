@@ -1,6 +1,7 @@
 package com.nested.app.services;
 
 import com.nested.app.client.mf.InvestorAPIClient;
+import com.nested.app.dto.AddressDto;
 import com.nested.app.dto.NomineeRequestDTO;
 import com.nested.app.dto.NomineeResponseDTO;
 import com.nested.app.entity.Nominee;
@@ -54,6 +55,12 @@ public class NomineeServiceImpl implements NomineeService {
       validateAllocation(dto.getAllocation());
       totalAllocation += dto.getAllocation();
 
+      // Validate at least one address is provided
+      if (dto.getAddress() == null) {
+        throw new IllegalArgumentException(
+            "Either nominee address or guardian address is required");
+      }
+
       // Validate guardian info if minor
       if (isMinor(dto.getDob())) {
         validateGuardianInfo(dto);
@@ -89,11 +96,9 @@ public class NomineeServiceImpl implements NomineeService {
                         .dob(dto.getDob())
                         .pan(dto.getPan())
                         .email(dto.getEmail())
-                        .address(dto.getAddress())
+                        .mobileNumber(dto.getMobileNumber())
+                        .address(AddressDto.toEntity(dto.getAddress()))
                         .guardianName(dto.getGuardianName())
-                        .guardianEmail(dto.getGuardianEmail())
-                        .guardianPan(dto.getGuardianPan())
-                        .guardianAddress(dto.getGuardianAddress())
                         .allocation(dto.getAllocation())
                         .user(user)
                         .build();
@@ -122,11 +127,9 @@ public class NomineeServiceImpl implements NomineeService {
                     existing.setDob(dto.getDob());
                     existing.setPan(dto.getPan());
                     existing.setEmail(dto.getEmail());
-                    existing.setAddress(dto.getAddress());
+                    existing.setMobileNumber(dto.getMobileNumber());
+                    existing.setAddress(AddressDto.toEntity(dto.getAddress()));
                     existing.setGuardianName(dto.getGuardianName());
-                    existing.setGuardianEmail(dto.getGuardianEmail());
-                    existing.setGuardianPan(dto.getGuardianPan());
-                    existing.setGuardianAddress(dto.getGuardianAddress());
                     existing.setAllocation(dto.getAllocation());
 
                     return existing;
@@ -338,11 +341,9 @@ public class NomineeServiceImpl implements NomineeService {
         .dob(nominee.getDob())
         .pan(nominee.getPan())
         .email(nominee.getEmail())
-        .address(nominee.getAddress())
+        .mobileNumber(nominee.getMobileNumber())
+        .address(AddressDto.fromEntity(nominee.getAddress()))
         .guardianName(nominee.getGuardianName())
-        .guardianEmail(nominee.getGuardianEmail())
-        .guardianPan(nominee.getGuardianPan())
-        .guardianAddress(nominee.getGuardianAddress())
         .allocation(nominee.getAllocation())
         .isMinor(nominee.isMinor())
         .createdAt(nominee.getCreatedAt())
@@ -369,10 +370,6 @@ public class NomineeServiceImpl implements NomineeService {
     if (requestDTO.getGuardianName() == null || requestDTO.getGuardianName().isBlank()) {
       throw new IllegalArgumentException("Guardian name is required for minor nominees");
     }
-    if (requestDTO.getGuardianPan() == null || requestDTO.getGuardianPan().isBlank()) {
-      throw new IllegalArgumentException("Guardian PAN is required for minor nominees");
-    }
-    validatePanFormat(requestDTO.getGuardianPan());
   }
 
   /** Validate PAN format (if provided) PAN format: 10 alphanumeric characters */

@@ -1,5 +1,7 @@
 package com.nested.app.services.mapper;
 
+import com.nested.app.client.mf.dto.Address;
+import com.nested.app.entity.Nominee;
 import lombok.extern.slf4j.Slf4j;
 
 /**
@@ -19,7 +21,7 @@ public class NomineeMapper {
    * @return Mapped nominee DTO ready for external API
    */
   public static com.nested.app.client.mf.dto.Nominee mapToClientNominee(
-      com.nested.app.entity.Nominee nomineeEntity, String investorRef) {
+      Nominee nomineeEntity, String investorRef) {
     com.nested.app.client.mf.dto.Nominee clientNominee = new com.nested.app.client.mf.dto.Nominee();
 
     // Set external ID if nominee already synced
@@ -34,15 +36,20 @@ public class NomineeMapper {
     clientNominee.setName(nomineeEntity.getName());
     clientNominee.setRelationship(nomineeEntity.getRelationship());
     clientNominee.setDob(nomineeEntity.getDob());
-    clientNominee.setPan(nomineeEntity.getPan());
-    clientNominee.setEmail(nomineeEntity.getEmail());
-    clientNominee.setAddress(nomineeEntity.getAddress());
+    if (nomineeEntity.isMinor()) {
+      // Map guardian fields
+      clientNominee.setGuardianName(nomineeEntity.getGuardianName());
+      clientNominee.setGuardianPan(nomineeEntity.getPan());
+      clientNominee.setGuardianEmail(nomineeEntity.getEmail());
+      clientNominee.setGuardianMobileNumber(nomineeEntity.getMobileNumber());
+      clientNominee.setGuardianAddress(convertToClientAddress(nomineeEntity.getAddress()));
+    } else {
+      clientNominee.setPan(nomineeEntity.getPan());
+      clientNominee.setEmail(nomineeEntity.getEmail());
+      clientNominee.setMobileNumber(nomineeEntity.getMobileNumber());
+      clientNominee.setAddress(convertToClientAddress(nomineeEntity.getAddress()));
+    }
 
-    // Map guardian fields
-    clientNominee.setGuardianName(nomineeEntity.getGuardianName());
-    clientNominee.setGuardianEmail(nomineeEntity.getGuardianEmail());
-    clientNominee.setGuardianPan(nomineeEntity.getGuardianPan());
-    clientNominee.setGuardianAddress(nomineeEntity.getGuardianAddress());
     clientNominee.setAllocation(nomineeEntity.getAllocation());
 
     // Note: allocation is not sent to external API during create/update
@@ -52,5 +59,43 @@ public class NomineeMapper {
         "Mapped nominee {} to client DTO for investor {}", nomineeEntity.getId(), investorRef);
 
     return clientNominee;
+  }
+
+  /**
+   * Convert internal Address entity to client Address DTO
+   *
+   * @param address Internal Address entity
+   * @return Client Address DTO
+   */
+  private static Address convertToClientAddress(com.nested.app.entity.Address address) {
+    if (address == null) {
+      return null;
+    }
+    Address clientAddress = new Address();
+    clientAddress.setAddressLine1(address.getAddressLine());
+    clientAddress.setCity(address.getCity());
+    clientAddress.setState(address.getState());
+    clientAddress.setCountry(address.getCountry());
+    clientAddress.setPinCode(address.getPinCode());
+    return clientAddress;
+  }
+
+  /**
+   * Format Address entity to string format for external API (for guardian address which is String)
+   *
+   * @param address Address entity
+   * @return Formatted address string
+   */
+  private static String formatAddressForExternalAPI(com.nested.app.entity.Address address) {
+    if (address == null) {
+      return null;
+    }
+    return String.format(
+        "%s, %s, %s, %s %s",
+        address.getAddressLine(),
+        address.getCity(),
+        address.getState(),
+        address.getCountry(),
+        address.getPinCode());
   }
 }

@@ -37,19 +37,13 @@ public class NomineeResponseDTO {
 
   private String email;
 
-  private String address;
+  @JsonProperty("mobile_number")
+  private String mobileNumber;
+
+  private AddressDto address;
 
   @JsonProperty("guardian_name")
   private String guardianName;
-
-  @JsonProperty("guardian_email")
-  private String guardianEmail;
-
-  @JsonProperty("guardian_pan")
-  private String guardianPan;
-
-  @JsonProperty("guardian_address")
-  private String guardianAddress;
 
   private Integer allocation;
 

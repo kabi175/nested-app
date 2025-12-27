@@ -1,6 +1,7 @@
 package com.nested.app.entity;
 
 import com.nested.app.enums.RelationshipType;
+import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -10,6 +11,7 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
+import jakarta.persistence.OneToOne;
 import java.sql.Timestamp;
 import java.time.LocalDate;
 import java.time.Period;
@@ -45,15 +47,14 @@ public class Nominee {
 
   private String email;
 
-  private String address;
+  @Column(nullable = false)
+  private String mobileNumber;
+
+  @OneToOne(cascade = CascadeType.ALL)
+  @JoinColumn(name = "nominee_address_id")
+  private Address address;
 
   private String guardianName;
-
-  private String guardianEmail;
-
-  private String guardianPan;
-
-  private String guardianAddress;
 
   // External ref
   private String ref;

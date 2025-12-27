@@ -6,6 +6,7 @@ import com.nested.app.enums.RelationshipType;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Pattern;
 import java.util.Date;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -49,18 +50,14 @@ public class NomineeRequestDTO {
   @JsonProperty("email")
   private String email;
 
+  @NotNull(message = "Mobile number is required")
+  @JsonProperty("mobile_number")
+  @Pattern(regexp = "^[0-9]{10}$", message = "Mobile number must be 10 digits")
+  private String mobileNumber;
+
   @JsonProperty("address")
-  private String address;
+  private AddressDto address;
 
   @JsonProperty("guardian_name")
   private String guardianName;
-
-  @JsonProperty("guardian_email")
-  private String guardianEmail;
-
-  @JsonProperty("guardian_pan")
-  private String guardianPan;
-
-  @JsonProperty("guardian_address")
-  private String guardianAddress;
 }

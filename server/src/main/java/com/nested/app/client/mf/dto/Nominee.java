@@ -46,11 +46,12 @@ public class Nominee {
   private String guardianPan;
 
   @JsonProperty("guardian_address")
-  private String guardianAddress;
+  private Address guardianAddress;
 
   @JsonIgnore private int allocation;
 
   @JsonIgnore private String mobileNumber;
+  @JsonIgnore private String guardianMobileNumber;
 
   public static int calculateAge(Date dateOfBirth) {
     // Convert java.util.Date to java.time.LocalDate
@@ -67,7 +68,18 @@ public class Nominee {
 
   @JsonProperty("phone_number")
   public Map<String, Object> phone_number() {
+    if (mobileNumber == null) {
+      return null;
+    }
     return getStringObjectMap(mobileNumber);
+  }
+
+  @JsonProperty("guardian_phone_number")
+  public Map<String, Object> guardian_phone_number() {
+    if (guardianMobileNumber == null) {
+      return null;
+    }
+    return getStringObjectMap(guardianMobileNumber);
   }
 
   private @NonNull Map<String, Object> getStringObjectMap(String mobile) {
