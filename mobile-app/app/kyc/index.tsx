@@ -1,4 +1,4 @@
-import { useAuth } from "@/hooks/auth";
+import { useAuth, useReloadAuth } from "@/hooks/auth";
 import { useUser } from "@/hooks/useUser";
 import { Button, Layout, Text } from "@ui-kitten/components";
 import { useRouter } from "expo-router";
@@ -10,10 +10,13 @@ export default function KycIntroScreen() {
   const { user: authUser } = useAuth();
   const router = useRouter();
   const { data: user, isLoading: isUserLoading } = useUser();
+  const { reloadAuth } = useReloadAuth();
 
   const isButtonDisabled = isUserLoading;
 
   const handleContinue = async () => {
+    await reloadAuth();
+
     if (!authUser?.email) {
       router.push("/user/email-update");
       return;

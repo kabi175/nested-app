@@ -231,6 +231,7 @@ export default function AddressScreen() {
           </View>
           <Select
             selectedIndex={selectedStateIndex}
+            value={data.address.state || undefined}
             onSelect={(index) => {
               const row = Array.isArray(index) ? index[0].row : index.row;
               update("address", { state: states[row] });
