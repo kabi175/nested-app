@@ -11,6 +11,7 @@ import java.time.ZoneId;
 import java.util.Date;
 import java.util.Map;
 import lombok.Data;
+import org.jspecify.annotations.NonNull;
 
 @Data
 @JsonInclude(JsonInclude.Include.NON_NULL)
@@ -33,7 +34,7 @@ public class Nominee {
   @JsonProperty("email_address")
   private String email;
 
-  @JsonIgnore private String address;
+  private Address address;
 
   @JsonProperty("guardian_name")
   private String guardianName;
@@ -49,25 +50,7 @@ public class Nominee {
 
   @JsonIgnore private int allocation;
 
-  @JsonProperty("phone_number")
-  public Map<String, Object> phone_number() {
-    return Map.of("isd", "+91", "number", "9092390923");
-  }
-
-  @JsonProperty("address")
-  public Map<String, Object> address() {
-    return Map.of(
-        "line1",
-        "213, 1st cross, JP Nagar",
-        "city",
-        "Bengaluru",
-        "state",
-        "Karnataka",
-        "postal_code",
-        "560102",
-        "country",
-        "in");
-  }
+  @JsonIgnore private String mobileNumber;
 
   public static int calculateAge(Date dateOfBirth) {
     // Convert java.util.Date to java.time.LocalDate
@@ -80,6 +63,25 @@ public class Nominee {
     Period period = Period.between(birthDate, currentDate);
 
     return period.getYears();
+  }
+
+  @JsonProperty("phone_number")
+  public Map<String, Object> phone_number() {
+    return getStringObjectMap(mobileNumber);
+  }
+
+  private @NonNull Map<String, Object> getStringObjectMap(String mobile) {
+    var isd = "91";
+    if (mobile.startsWith("+")) {
+      mobile = mobile.substring(1);
+    }
+
+    if (mobile.length() > 10) {
+      isd = mobile.substring(0, mobile.length() - 10);
+      mobile = mobile.substring(mobile.length() - 10);
+    }
+
+    return Map.of("isd", isd, "number", mobile);
   }
 
   private boolean isMinor() {
