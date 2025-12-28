@@ -92,8 +92,9 @@ public class PendingActivityServiceImpl implements PendingActivityService {
 
     // Sort by priority (HIGH -> MEDIUM -> LOW) and then by createdAt
     filteredActivities.sort(
-        Comparator.<PendingActivityDTO<?>, ActivityPriority>comparing(
-                PendingActivityDTO::getPriority, Comparator.reverseOrder())
+        Comparator.comparingInt(
+                (PendingActivityDTO<?> activity) -> getPriorityValue(activity.getPriority()))
+            .reversed()
             .thenComparing(PendingActivityDTO::getCreatedAt));
     // Build summary
     ActivitySummaryDTO summary = buildSummary(filteredActivities);
@@ -239,5 +240,13 @@ public class PendingActivityServiceImpl implements PendingActivityService {
         .summary(ActivitySummaryDTO.builder().totalCount(0).byType(Collections.emptyMap()).build())
         .lastUpdated(Timestamp.from(Instant.now()))
         .build();
+  }
+
+  private int getPriorityValue(ActivityPriority priority) {
+    return switch (priority) {
+      case HIGH -> 3;
+      case MEDIUM -> 2;
+      case LOW -> 1;
+    };
   }
 }
