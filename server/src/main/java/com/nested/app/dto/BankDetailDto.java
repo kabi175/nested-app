@@ -44,11 +44,11 @@ public class BankDetailDto {
 
     @NotBlank(message = "IFSC code is required")
     @Pattern(regexp = "^[A-Z]{4}0[A-Z0-9]{6}$", message = "IFSC code format is invalid")
-    @Schema(description = "IFSC code of the bank branch", example = "SBIN0001234", required = true)
+    @Schema(description = "IFSC code of the bank branch", example = "SBIN0001234")
     private String ifscCode;
 
     @NotNull(message = "Primary flag is required")
-    @Schema(description = "Whether this is the primary bank account", example = "true", required = true)
+    @Schema(description = "Whether this is the primary bank account", example = "true")
     private Boolean isPrimary;
 
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd HH:mm:ss")
