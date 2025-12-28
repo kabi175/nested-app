@@ -9,29 +9,55 @@ import WhyParentTrustUs from "@/components/WhyParentTrustUs";
 import { useAuth } from "@/hooks/auth";
 import { Divider, Layout, Text } from "@ui-kitten/components";
 import { StatusBar } from "expo-status-bar";
-import React from "react";
-import { ScrollView, StyleSheet } from "react-native";
+import React, { useRef } from "react";
+import { ScrollView, StyleSheet, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import EducationCostEstimator from "./EducationCostEstimator";
 
 export default function NestedIntro() {
   const auth = useAuth();
+  const scrollViewRef = useRef<ScrollView>(null);
+  const superFDListYPosition = useRef<number>(0);
+  const layoutYPosition = useRef<number>(0);
+
+  const handleScrollToSuperFD = () => {
+    if (scrollViewRef.current && superFDListYPosition.current >= 0) {
+      const totalY = layoutYPosition.current + superFDListYPosition.current;
+      scrollViewRef.current.scrollTo({
+        y: Math.max(0, totalY - 20), // Small offset for better visibility
+        animated: true,
+      });
+    }
+  };
+
   return (
     <SafeAreaView style={styles.rootContainer}>
       <StatusBar style="auto" backgroundColor="#FFFFFF" />
 
       <Layout style={styles.container}>
         <ScrollView
+          ref={scrollViewRef}
           showsVerticalScrollIndicator={false}
           contentContainerStyle={styles.scrollContent}
         >
           <Text category="h6"> Hello, {auth.user?.displayName} </Text>
-          <EducationCostEstimator />
-          <Layout style={styles.content}>
+          <EducationCostEstimator onInvestNowPress={handleScrollToSuperFD} />
+          <Layout
+            style={styles.content}
+            onLayout={(event) => {
+              layoutYPosition.current = event.nativeEvent.layout.y;
+            }}
+          >
             <HowNestedHelps />
             <Divider />
 
-            <SuperFDList />
+            <View
+              onLayout={(event) => {
+                superFDListYPosition.current = event.nativeEvent.layout.y;
+              }}
+            >
+              <SuperFDList />
+            </View>
 
             <KnowMore />
             <Divider />

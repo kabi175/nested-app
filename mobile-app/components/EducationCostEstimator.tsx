@@ -12,12 +12,14 @@ interface EducationCostEstimatorProps {
   onCourseSelect?: (course: string) => void;
   onCollegeSelect?: (college: string) => void;
   onTimelineChange?: (years: number) => void;
+  onInvestNowPress?: () => void;
 }
 
 export default function EducationCostEstimator({
   onCourseSelect,
   onCollegeSelect,
   onTimelineChange,
+  onInvestNowPress,
 }: EducationCostEstimatorProps) {
   const [selectedCourse, setSelectedCourse] = useState<Education | null>(null);
   const [selectedCollege, setSelectedCollege] = useState<Education | null>(
@@ -100,7 +102,7 @@ export default function EducationCostEstimator({
           // Handle card press if needed
         }}
         onInvestNowPress={() => {
-          // Handle invest now press if needed
+          onInvestNowPress?.();
         }}
       />
 
