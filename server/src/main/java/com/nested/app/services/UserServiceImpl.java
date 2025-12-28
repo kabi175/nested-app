@@ -121,13 +121,13 @@ public class UserServiceImpl implements UserService {
 
     if (userDTO.getDateOfBirth() != null
         && !Objects.equals(userDTO.getDateOfBirth(), originalUser.getDateOfBirth())) {
-        updatedUser = updatedUser.withDateOfBirth(userDTO.getDateOfBirth());
-      }
+      updatedUser = updatedUser.withDateOfBirth(userDTO.getDateOfBirth());
+    }
 
     if (userDTO.getGender() != null
         && !Objects.equals(userDTO.getGender(), originalUser.getGender())) {
-        updatedUser = updatedUser.withGender(userDTO.getGender());
-      }
+      updatedUser = updatedUser.withGender(userDTO.getGender());
+    }
 
     if (!Strings.isNullOrEmpty(userDTO.getPanNumber())
         && !Objects.equals(userDTO.getPanNumber(), originalUser.getPanNumber())) {
@@ -136,7 +136,7 @@ public class UserServiceImpl implements UserService {
 
     if (!Strings.isNullOrEmpty(userDTO.getAadhaarLast4())
         && !Objects.equals(userDTO.getAadhaarLast4(), originalUser.getAadhaarLast4())) {
-      updatedUser = originalUser.withAadhaarLast4(userDTO.getAadhaarLast4());
+      updatedUser = updatedUser.withAadhaarLast4(userDTO.getAadhaarLast4());
     }
 
     if (!Strings.isNullOrEmpty(userDTO.getFatherName())
