@@ -4,7 +4,7 @@ import { StepProgress } from "@/components/ui/StepProgress";
 import { QUERY_KEYS } from "@/constants/queryKeys";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Button, Layout, Text } from "@ui-kitten/components";
-import { useRouter } from "expo-router";
+import { Redirect, useRouter } from "expo-router";
 import { useAtom } from "jotai";
 import React, { useEffect, useState } from "react";
 import {
@@ -70,6 +70,10 @@ export default function WaitingForApprovalScreen() {
   const handleGoBack = () => {
     router.replace("/child");
   };
+
+  if (user?.kycStatus === "esign_pending") {
+    return <Redirect href="/kyc/esign-upload" />;
+  }
 
   return (
     <KeyboardAvoidingView

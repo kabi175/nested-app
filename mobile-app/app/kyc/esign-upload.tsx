@@ -1,15 +1,14 @@
 import { fetchEsignUploadRedirectUrl } from "@/api/userApi";
-import { userAtom } from "@/atoms/user";
 import { StepProgress } from "@/components/ui/StepProgress";
-import { Button, Layout, Text } from "@ui-kitten/components";
-import { useRouter } from "expo-router";
+import { useUser } from "@/hooks/useUser";
+import { Button, Layout, Spinner, Text } from "@ui-kitten/components";
+import { Redirect, useRouter } from "expo-router";
 import * as WebBrowser from "expo-web-browser";
-import { useAtomValue } from "jotai";
 import React, { useCallback, useState } from "react";
 import { KeyboardAvoidingView, Platform, ScrollView, View } from "react-native";
 
 export default function EsignUploadScreen() {
-  const user = useAtomValue(userAtom);
+  const { data: user, isLoading } = useUser();
   const router = useRouter();
   const [isLaunching, setIsLaunching] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -44,6 +43,14 @@ export default function EsignUploadScreen() {
       setIsLaunching(false);
     }
   }, [user]);
+
+  if (isLoading) {
+    return <Spinner />;
+  }
+
+  if (user?.kycStatus === "aadhaar_pending") {
+    return <Redirect href="/kyc/aadhaar-upload" />;
+  }
 
   return (
     <KeyboardAvoidingView
