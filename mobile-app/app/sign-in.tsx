@@ -77,7 +77,6 @@ export default function SignIn() {
   async function confirmCode() {
     try {
       await confirm?.confirm(otpCode);
-      console.log("confirm....");
       router.replace("/name-input");
     } catch (error: any) {
       if (error.code === "auth/invalid-verification-code") {
