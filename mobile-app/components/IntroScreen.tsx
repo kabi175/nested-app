@@ -8,6 +8,7 @@ import WhatParentsSay from "@/components/WhatParentsSay";
 import WhyParentTrustUs from "@/components/WhyParentTrustUs";
 import { useAuth } from "@/hooks/auth";
 import { Divider, Layout, Text } from "@ui-kitten/components";
+import { router } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import React, { useRef } from "react";
 import { ScrollView, StyleSheet, View } from "react-native";
@@ -28,6 +29,10 @@ export default function NestedIntro() {
         animated: true,
       });
     }
+  };
+
+  const handleInvestNowPress = (basketId: string) => {
+    router.push(`/basket?type=${basketId}`);
   };
 
   return (
@@ -56,7 +61,7 @@ export default function NestedIntro() {
                 superFDListYPosition.current = event.nativeEvent.layout.y;
               }}
             >
-              <SuperFDList />
+              <SuperFDList onInvestNowPress={handleInvestNowPress} />
             </View>
 
             <KnowMore />

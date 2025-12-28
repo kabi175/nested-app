@@ -81,7 +81,6 @@ const superFDBaskets: BasketCardData[] = [
 export default function SuperFDList({
   onCardPress,
   onInvestNowPress,
-  onLearnMorePress,
 }: SuperFDListProps) {
   const { width } = useWindowDimensions();
   const cardWidth = width - 40; // Account for left padding (20) + right padding (20)

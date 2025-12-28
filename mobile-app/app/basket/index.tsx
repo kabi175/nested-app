@@ -80,28 +80,175 @@ const transformBasketFundToRecommendedFund = (
 };
 
 const popularBaskets = {
-  "choti-sip": {
-    title: "Choti SIP",
-    basketName: "choti-sip",
-    description: "SIP in safe funds with low risk, no lock-in, no TDS",
-    description2: null,
+  "gold-silver-basket": {
+    title: "Gold & Silver Basket",
+    basketName: "gold-silver-basket",
+    description: "Earn from precious metals",
     targetYears: 1,
   },
-  "all-weather": {
-    title: "All-weather funds",
-    basketName: "all-weather",
-    description: "Start your first steps for equity investing.",
-    description2: "Ideal for 3+ years investment timeline.",
-    targetYears: 5,
-  },
-  "better-than-fd": {
-    title: "Better than FD",
-    basketName: "better-than-fd",
-    description: "Monthly income of upto ₹775 per ₹ 1 lakh invested.",
-    description2: "TDS of 10% above Rs 5000 payout in a financial year",
+  "secure-money": {
+    title: "Secure Money",
+    basketName: "secure-money",
+    description: "Upto 7.50% per year. Ideal for 6+ months holding.",
     targetYears: 3,
   },
+  "grow-money": {
+    title: "Grow Money",
+    basketName: "grow-money",
+    description: "Upto 11.00% per year. Ideal for 12+ months holding.",
+    targetYears: 5,
+  },
 };
+
+type IconType =
+  | typeof Unlock
+  | typeof Shield
+  | typeof Star
+  | typeof Zap
+  | typeof Target;
+
+interface FeatureCardConfig {
+  title: string;
+  subtitle: string;
+  backgroundColor: string;
+  iconType: IconType;
+  iconColor: string;
+  iconSize?: number;
+  isFullWidth?: boolean;
+}
+
+const basketFeatures: Record<keyof typeof popularBaskets, FeatureCardConfig[]> =
+  {
+    "gold-silver-basket": [
+      {
+        title: "No lock-in period",
+        subtitle: "Withdraw anytime",
+        backgroundColor: "#FCE7F3",
+        iconType: Unlock,
+        iconColor: "#DC2626",
+        iconSize: 20,
+      },
+      {
+        title: "Moderate",
+        subtitle: "Risk",
+        backgroundColor: "#FEF3C7",
+        iconType: Shield,
+        iconColor: "#D97706",
+        iconSize: 20,
+      },
+      {
+        title: "Top Rated Funds",
+        subtitle: "",
+        backgroundColor: "#D1FAE5",
+        iconType: Star,
+        iconColor: "#059669",
+        iconSize: 20,
+      },
+      {
+        title: "Instant withdrawal",
+        subtitle: "Directly to your bank",
+        backgroundColor: "#DBEAFE",
+        iconType: Zap,
+        iconColor: "#2563EB",
+        iconSize: 20,
+      },
+      {
+        title: "No share market risk",
+        subtitle: "100% safe investments",
+        backgroundColor: "#F3E8FF",
+        iconType: Target,
+        iconColor: "#7C3AED",
+        iconSize: 20,
+        isFullWidth: true,
+      },
+    ],
+    "secure-money": [
+      {
+        title: "No lock-in period",
+        subtitle: "Withdraw anytime",
+        backgroundColor: "#FCE7F3",
+        iconType: Unlock,
+        iconColor: "#DC2626",
+        iconSize: 20,
+      },
+      {
+        title: "Moderate",
+        subtitle: "Risk",
+        backgroundColor: "#FEF3C7",
+        iconType: Shield,
+        iconColor: "#D97706",
+        iconSize: 20,
+      },
+      {
+        title: "Top Rated Funds",
+        subtitle: "",
+        backgroundColor: "#D1FAE5",
+        iconType: Star,
+        iconColor: "#059669",
+        iconSize: 20,
+      },
+      {
+        title: "Instant withdrawal",
+        subtitle: "Directly to your bank",
+        backgroundColor: "#DBEAFE",
+        iconType: Zap,
+        iconColor: "#2563EB",
+        iconSize: 20,
+      },
+      {
+        title: "No share market risk",
+        subtitle: "100% safe investments",
+        backgroundColor: "#F3E8FF",
+        iconType: Target,
+        iconColor: "#7C3AED",
+        iconSize: 20,
+        isFullWidth: true,
+      },
+    ],
+    "grow-money": [
+      {
+        title: "No lock-in period",
+        subtitle: "Withdraw anytime",
+        backgroundColor: "#FCE7F3",
+        iconType: Unlock,
+        iconColor: "#DC2626",
+        iconSize: 20,
+      },
+      {
+        title: "Moderate",
+        subtitle: "Risk",
+        backgroundColor: "#FEF3C7",
+        iconType: Shield,
+        iconColor: "#D97706",
+        iconSize: 20,
+      },
+      {
+        title: "Top Rated Funds",
+        subtitle: "",
+        backgroundColor: "#D1FAE5",
+        iconType: Star,
+        iconColor: "#059669",
+        iconSize: 20,
+      },
+      {
+        title: "Instant withdrawal",
+        subtitle: "Directly to your bank",
+        backgroundColor: "#DBEAFE",
+        iconType: Zap,
+        iconColor: "#2563EB",
+        iconSize: 20,
+      },
+      {
+        title: "Share market investment less than 50%",
+        subtitle: "Rest in gold and safer debt",
+        backgroundColor: "#F3E8FF",
+        iconType: Target,
+        iconColor: "#7C3AED",
+        iconSize: 20,
+        isFullWidth: true,
+      },
+    ],
+  };
 
 export default function BasketInvestingScreen() {
   const { type } = useLocalSearchParams<{
@@ -271,44 +418,29 @@ export default function BasketInvestingScreen() {
           <ThemedText style={styles.descriptionText}>
             {basket.description}
           </ThemedText>
-          <ThemedText style={styles.descriptionText}>
-            {basket.description2 ?? ""}
-          </ThemedText>
         </View>
 
         {/* Feature Cards Grid */}
         <View style={styles.featureCardsContainer}>
-          <FeatureCard
-            title="No lock-in period"
-            subtitle="Withdraw anytime"
-            backgroundColor="#FCE7F3"
-            icon={<Unlock size={20} color="#DC2626" />}
-          />
-          <FeatureCard
-            title="Moderate"
-            subtitle="Risk"
-            backgroundColor="#FEF3C7"
-            icon={<Shield size={20} color="#D97706" />}
-          />
-          <FeatureCard
-            title="Top Rated Funds"
-            subtitle=""
-            backgroundColor="#D1FAE5"
-            icon={<Star size={20} color="#059669" />}
-          />
-          <FeatureCard
-            title="Instant withdrawal"
-            subtitle="Directly to your bank"
-            backgroundColor="#DBEAFE"
-            icon={<Zap size={20} color="#2563EB" />}
-          />
-          <FeatureCard
-            title="Monthly payout"
-            subtitle="Regular income to your account"
-            backgroundColor="#F3E8FF"
-            icon={<Target size={20} color="#7C3AED" />}
-            isFullWidth
-          />
+          {basket &&
+            basketFeatures[type]?.map((feature, index) => {
+              const IconComponent = feature.iconType;
+              return (
+                <FeatureCard
+                  key={index}
+                  title={feature.title}
+                  subtitle={feature.subtitle}
+                  backgroundColor={feature.backgroundColor}
+                  icon={
+                    <IconComponent
+                      size={feature.iconSize || 20}
+                      color={feature.iconColor}
+                    />
+                  }
+                  isFullWidth={feature.isFullWidth}
+                />
+              );
+            })}
         </View>
 
         {/* Investment Inputs Section */}
