@@ -10,6 +10,7 @@ import java.time.Period;
 import java.time.ZoneId;
 import java.util.Date;
 import java.util.Map;
+import javax.annotation.Nullable;
 import lombok.Data;
 import org.jspecify.annotations.NonNull;
 
@@ -66,16 +67,18 @@ public class Nominee {
     return period.getYears();
   }
 
+  @Nullable
   @JsonProperty("phone_number")
-  public Map<String, Object> phone_number() {
+  public Map<String, Object> phoneNumber() {
     if (mobileNumber == null) {
       return null;
     }
     return getStringObjectMap(mobileNumber);
   }
 
+  @Nullable
   @JsonProperty("guardian_phone_number")
-  public Map<String, Object> guardian_phone_number() {
+  public Map<String, Object> guardianPhoneNumber() {
     if (guardianMobileNumber == null) {
       return null;
     }
@@ -96,7 +99,4 @@ public class Nominee {
     return Map.of("isd", isd, "number", mobile);
   }
 
-  private boolean isMinor() {
-    return calculateAge(dob) < 18;
-  }
 }

@@ -11,6 +11,7 @@ import com.nested.app.entity.OrderItems;
 import com.nested.app.entity.Payment;
 import com.nested.app.entity.SIPOrder;
 import com.nested.app.events.OrderItemsRefUpdatedEvent;
+import com.nested.app.exception.ExternalServiceException;
 import com.nested.app.repository.OrderItemsRepository;
 import com.nested.app.repository.PaymentRepository;
 import com.nested.app.repository.TenantAwareGoalRepository;
@@ -89,10 +90,10 @@ public class SipOrderPaymentServiceImpl implements SipOrderPaymentService {
           "Error from MF provider while verifying SIP order payment: {}",
           e.getResponseBodyAsString(),
           e);
-      throw new RuntimeException(e);
+      throw new ExternalServiceException("Error from MF provider: " + e.getMessage(), e);
     } catch (Exception e) {
       log.error("Error verifying SIP order payment: {}", e.getMessage(), e);
-      throw new RuntimeException("Failed to verify SIP order payment", e);
+      throw new ExternalServiceException("Failed to verify SIP order payment", e);
     }
   }
 
@@ -149,7 +150,7 @@ public class SipOrderPaymentServiceImpl implements SipOrderPaymentService {
 
       var orderResponse = sipOrderApiClient.placeSipOrder(sipPlanDetails).block();
       if (orderResponse == null) {
-        throw new RuntimeException("Failed to place SIP order with MF provider");
+        throw new ExternalServiceException("Failed to place SIP order with MF provider");
       }
 
       var orderItems =
@@ -221,10 +222,10 @@ public class SipOrderPaymentServiceImpl implements SipOrderPaymentService {
           paymentID,
           e.getResponseBodyAsString(),
           e);
-      throw new RuntimeException(e);
+      throw new ExternalServiceException("Error from MF provider: " + e.getMessage(), e);
     } catch (Exception e) {
       log.error("Error fetching SIP order payment URL: {}", e.getMessage(), e);
-      throw new RuntimeException("Failed to fetch SIP order payment URL", e);
+      throw new ExternalServiceException("Failed to fetch SIP order payment URL", e);
     }
   }
 

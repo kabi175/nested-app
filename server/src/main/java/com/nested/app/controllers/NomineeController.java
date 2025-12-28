@@ -58,7 +58,7 @@ public class NomineeController {
    * relationship are immutable (cannot be changed on update) - For minors: guardianName and
    * guardianPan are required
    *
-   * @param nomineeDTOs List of all nominees to create/update
+   * @param request List of all nominees to create/update
    * @return ResponseEntity with all saved nominees
    */
   @PostMapping(
@@ -86,24 +86,14 @@ public class NomineeController {
         @ApiResponse(responseCode = "401", description = "Unauthorized"),
         @ApiResponse(responseCode = "500", description = "Internal server error")
       })
-  public ResponseEntity<?> upsertNominees(@Valid @RequestBody Entity<NomineeRequestDTO> request) {
+  public ResponseEntity<Entity<NomineeResponseDTO>> upsertNominees(
+      @Valid @RequestBody Entity<NomineeRequestDTO> request) {
     var nomineeDTOs = request.getData();
     log.info("POST /api/v1/users/nominees - Upserting nominees (count: {})", nomineeDTOs.size());
-
-
-    try {
       User user = userContext.getUser();
       List<NomineeResponseDTO> response = nomineeService.upsertNominees(nomineeDTOs, user);
       log.info("Nominees upserted successfully: {} total", response.size());
       return ResponseEntity.ok(Entity.of(response));
-    } catch (IllegalArgumentException e) {
-      log.warn("Validation error while upserting nominees: {}", e.getMessage());
-      return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
-    } catch (Exception e) {
-      log.error("Error upserting nominees: {}", e.getMessage(), e);
-      return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-          .body(Map.of("error", "Failed to upsert nominees"));
-    }
   }
 
   /**

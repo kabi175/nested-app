@@ -1,27 +1,25 @@
 package com.nested.app.services;
 
-import java.io.IOException;
-import java.util.List;
-import java.util.Objects;
-import java.util.Optional;
-
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.multipart.MultipartFile;
-
 import com.nested.app.buckets.S3Service;
 import com.nested.app.dto.DocumentDto;
 import com.nested.app.dto.UploadResponse;
 import com.nested.app.entity.Document;
 import com.nested.app.enums.DocumentVisibility;
 import com.nested.app.exception.DocumentNotFoundException;
+import com.nested.app.exception.ExternalServiceException;
 import com.nested.app.repository.DocumentRepository;
-
+import java.io.IOException;
+import java.util.List;
+import java.util.Objects;
+import java.util.Optional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
 @Service
 @RequiredArgsConstructor
@@ -156,7 +154,7 @@ public class DocumentService {
 
         } catch (Exception e) {
             log.error("Error deleting document with ID: {}", documentId, e);
-            throw new RuntimeException("Failed to delete document with ID: " + documentId, e);
+      throw new ExternalServiceException("Failed to delete document with ID: " + documentId, e);
         }
     }
 

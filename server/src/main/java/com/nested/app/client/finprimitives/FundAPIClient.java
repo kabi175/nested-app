@@ -9,7 +9,7 @@ import reactor.core.publisher.Mono;
 @Service
 @RequiredArgsConstructor
 public class FundAPIClient {
-  private static final String fundsApiUrl = "/v2/mf_scheme_plans/cybrillapoa";
+  private static final String FUNDS_API_URL = "/v2/mf_scheme_plans/cybrillapoa";
 
   private final FinPrimitivesAPI api;
 
@@ -19,7 +19,7 @@ public class FundAPIClient {
         .uri(
             uriBuilder ->
                 uriBuilder
-                    .path(fundsApiUrl)
+                    .path(FUNDS_API_URL)
                     .queryParam("size", pageable.getPageSize())
                     .queryParam("page", pageable.getPageNumber())
                     .queryParam("expand", "mf_scheme,mf_fund")

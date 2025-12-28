@@ -31,9 +31,6 @@ public class SipOrderDetail extends OrderDetail {
   @JsonProperty("installment_day")
   private String installmentDay;
 
-  @JsonProperty("user_ip")
-  private String userIP;
-
   @JsonIgnore private String email;
 
   @JsonIgnore private String mobile;

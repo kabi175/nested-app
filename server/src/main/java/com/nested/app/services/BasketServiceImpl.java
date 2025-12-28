@@ -5,6 +5,7 @@ import com.nested.app.dto.FundDTO;
 import com.nested.app.entity.Basket;
 import com.nested.app.entity.BasketFund;
 import com.nested.app.entity.Fund;
+import com.nested.app.exception.ExternalServiceException;
 import com.nested.app.repository.BasketFundRepository;
 import com.nested.app.repository.BasketRepository;
 import com.nested.app.repository.FundRepository;
@@ -61,7 +62,7 @@ public class BasketServiceImpl implements BasketService {
       throw new IllegalArgumentException("Invalid basket ID format: " + id);
     } catch (Exception e) {
       log.error("Error retrieving basket with ID {}: {}", id, e.getMessage(), e);
-      throw new RuntimeException("Failed to retrieve basket", e);
+      throw new ExternalServiceException("Failed to retrieve basket", e);
     }
   }
 
@@ -94,7 +95,7 @@ public class BasketServiceImpl implements BasketService {
 
     } catch (Exception e) {
       log.error("Error retrieving basket with name {}: {}", name, e.getMessage(), e);
-      throw new RuntimeException("Failed to retrieve basket", e);
+      throw new ExternalServiceException("Failed to retrieve basket", e);
     }
   }
 
@@ -118,7 +119,7 @@ public class BasketServiceImpl implements BasketService {
 
     } catch (Exception e) {
       log.error("Error retrieving all baskets: {}", e.getMessage(), e);
-      throw new RuntimeException("Failed to retrieve baskets", e);
+      throw new ExternalServiceException("Failed to retrieve baskets", e);
     }
   }
 
@@ -159,7 +160,7 @@ public class BasketServiceImpl implements BasketService {
 
     } catch (Exception e) {
       log.error("Error creating basket: {}", e.getMessage(), e);
-      throw new RuntimeException("Failed to create basket", e);
+      throw new ExternalServiceException("Failed to create basket", e);
     }
   }
 
@@ -217,7 +218,7 @@ public class BasketServiceImpl implements BasketService {
 
     } catch (Exception e) {
       log.error("Error updating basket with ID {}: {}", basketDTO.getId(), e.getMessage(), e);
-      throw new RuntimeException("Failed to update basket", e);
+      throw new ExternalServiceException("Failed to update basket", e);
     }
   }
 
@@ -304,7 +305,7 @@ public class BasketServiceImpl implements BasketService {
 
     } catch (Exception e) {
       log.error("Error deleting basket with ID {}: {}", basketDTO.getId(), e.getMessage(), e);
-      throw new RuntimeException("Failed to delete basket", e);
+      throw new ExternalServiceException("Failed to delete basket", e);
     }
   }
 
@@ -328,7 +329,7 @@ public class BasketServiceImpl implements BasketService {
 
     } catch (Exception e) {
       log.error("Error deleting baskets: {}", e.getMessage(), e);
-      throw new RuntimeException("Failed to delete baskets", e);
+      throw new ExternalServiceException("Failed to delete baskets", e);
     }
   }
 

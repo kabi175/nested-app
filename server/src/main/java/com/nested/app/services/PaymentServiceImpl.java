@@ -25,6 +25,7 @@ import com.nested.app.entity.Payment;
 import com.nested.app.entity.SIPOrder;
 import com.nested.app.entity.User;
 import com.nested.app.events.OrderItemsRefUpdatedEvent;
+import com.nested.app.exception.ExternalServiceException;
 import com.nested.app.repository.BankDetailRepository;
 import com.nested.app.repository.FolioRepository;
 import com.nested.app.repository.OrderRepository;
@@ -135,7 +136,7 @@ public class PaymentServiceImpl implements PaymentService {
 
       var otpResp = otpApiClient.sendOtp(otpRequest).block();
       if (otpResp == null) {
-        throw new RuntimeException("Failed to get OTP from MF provider");
+        throw new ExternalServiceException("Failed to get OTP from MF provider");
       }
       payment.setVerificationRef(otpResp.getOtpId());
 
@@ -174,10 +175,10 @@ public class PaymentServiceImpl implements PaymentService {
           e.getResponseBodyAsString(),
           e);
 
-      throw new RuntimeException(e);
+      throw new ExternalServiceException("Error from MF provider: " + e.getMessage(), e);
     } catch (Exception e) {
       log.error("Error creating payment with orders: {}", e.getMessage(), e);
-      throw new RuntimeException("Failed to create payment with orders", e);
+      throw new ExternalServiceException("Failed to create payment with orders", e);
     }
   }
 
@@ -246,7 +247,7 @@ public class PaymentServiceImpl implements PaymentService {
 
     var orderResponse = buyOrderApiClient.placeBuyOrder(buyOrdersDetails).block();
     if (orderResponse == null) {
-      throw new RuntimeException("Failed to place buy order with MF provider");
+      throw new ExternalServiceException("Failed to place buy order with MF provider");
     }
 
     var orderItemsList =
@@ -307,7 +308,7 @@ public class PaymentServiceImpl implements PaymentService {
     ServletRequestAttributes attributes =
         (ServletRequestAttributes) RequestContextHolder.getRequestAttributes();
     if (attributes == null) {
-      throw new RuntimeException("Error while getting request");
+      throw new IllegalStateException("Error while getting request");
     }
     HttpServletRequest request = attributes.getRequest();
     var ipAddress = IpUtils.getClientIpAddress(request);

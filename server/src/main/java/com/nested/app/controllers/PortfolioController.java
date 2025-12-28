@@ -1,6 +1,7 @@
 package com.nested.app.controllers;
 
 import com.nested.app.contect.UserContext;
+import com.nested.app.dto.Entity;
 import com.nested.app.dto.GoalHoldingDTO;
 import com.nested.app.dto.PortfolioGoalDTO;
 import com.nested.app.dto.PortfolioOverallDTO;
@@ -71,7 +72,7 @@ public class PortfolioController {
                     schema = @Schema(implementation = Map.class))),
         @ApiResponse(responseCode = "500", description = "Internal server error")
       })
-  public ResponseEntity<Map<String, List<TransactionDTO>>> getGoalTransactions(
+  public ResponseEntity<Entity<TransactionDTO>> getGoalTransactions(
       @Parameter(description = "Goal ID", required = true) @PathVariable Long goalId,
       @PageableDefault(sort = "executedAt", direction = Sort.Direction.DESC, size = 20)
           Pageable pageable) {
@@ -84,11 +85,11 @@ public class PortfolioController {
           portfolioService.getGoalTransactions(goalId, pageable, userContext.getUser());
       log.info("Successfully retrieved {} transactions for goal {}", transactions.size(), goalId);
 
-      return ResponseEntity.ok(Map.of("data", transactions));
+      return ResponseEntity.ok(Entity.of(transactions));
 
     } catch (Exception e) {
       log.error("Error retrieving transactions for goal {}: {}", goalId, e.getMessage(), e);
-      return ResponseEntity.ok(Map.of("data", List.of()));
+      return ResponseEntity.ok(Entity.of(List.of()));
     }
   }
 

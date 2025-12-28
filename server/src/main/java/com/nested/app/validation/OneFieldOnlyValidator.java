@@ -3,7 +3,6 @@ package com.nested.app.validation;
 import com.nested.app.annotation.OneFieldOnly;
 import jakarta.validation.ConstraintValidator;
 import jakarta.validation.ConstraintValidatorContext;
-
 import java.lang.reflect.Field;
 
 public class OneFieldOnlyValidator implements ConstraintValidator<OneFieldOnly, Object> {
@@ -37,7 +36,8 @@ public class OneFieldOnlyValidator implements ConstraintValidator<OneFieldOnly, 
             return hasFirst ^ hasSecond; // XOR: exactly one is set
 
         } catch (NoSuchFieldException | IllegalAccessException e) {
-            throw new RuntimeException("Invalid field names in @OneFieldOnly", e);
+      throw new IllegalArgumentException(
+          "Invalid field names in @OneFieldOnly: " + e.getMessage(), e);
         }
     }
 }

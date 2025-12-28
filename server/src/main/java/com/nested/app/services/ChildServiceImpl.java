@@ -3,6 +3,7 @@ package com.nested.app.services;
 import com.nested.app.dto.ChildDTO;
 import com.nested.app.entity.Child;
 import com.nested.app.entity.User;
+import com.nested.app.exception.ExternalServiceException;
 import com.nested.app.repository.TenantAwareChildRepository;
 import com.nested.app.repository.UserRepository;
 import java.time.LocalDate;
@@ -52,7 +53,7 @@ public class ChildServiceImpl implements ChildService {
 
     } catch (Exception e) {
       log.error("Error retrieving children: {}", e.getMessage(), e);
-      throw new RuntimeException("Failed to retrieve children", e);
+      throw new ExternalServiceException("Failed to retrieve children", e);
     }
   }
 
@@ -85,7 +86,7 @@ public class ChildServiceImpl implements ChildService {
 
     } catch (Exception e) {
       log.error("Error creating child: {}", e.getMessage(), e);
-      throw new RuntimeException("Failed to create child", e);
+      throw new ExternalServiceException("Failed to create child", e);
     }
   }
 
@@ -109,7 +110,8 @@ public class ChildServiceImpl implements ChildService {
           childRepository
               .findById(childDTO.getId(), user)
               .orElseThrow(
-                  () -> new RuntimeException("Child not found with ID: " + childDTO.getId()));
+                  () ->
+                      new IllegalArgumentException("Child not found with ID: " + childDTO.getId()));
 
       // Update fields
       existingChild.setFirstName(childDTO.getFirstName());
@@ -126,7 +128,7 @@ public class ChildServiceImpl implements ChildService {
 
     } catch (Exception e) {
       log.error("Error updating child with ID {}: {}", childDTO.getId(), e.getMessage(), e);
-      throw new RuntimeException("Failed to update child", e);
+      throw new ExternalServiceException("Failed to update child", e);
     }
   }
 
@@ -164,7 +166,7 @@ public class ChildServiceImpl implements ChildService {
 
     } catch (Exception e) {
       log.error("Error creating children: {}", e.getMessage(), e);
-      throw new RuntimeException("Failed to create children", e);
+      throw new ExternalServiceException("Failed to create children", e);
     }
   }
 
@@ -181,16 +183,14 @@ public class ChildServiceImpl implements ChildService {
 
     try {
       List<ChildDTO> updatedChildren =
-          children.stream()
-              .map(childDTO -> updateChild(childDTO, user))
-              .collect(Collectors.toList());
+          children.stream().map(childDTO -> updateChild(childDTO, user)).toList();
 
       log.info("Successfully updated {} children", updatedChildren.size());
       return updatedChildren;
 
     } catch (Exception e) {
       log.error("Error updating children: {}", e.getMessage(), e);
-      throw new RuntimeException("Failed to update children", e);
+      throw new ExternalServiceException("Failed to update children", e);
     }
   }
 

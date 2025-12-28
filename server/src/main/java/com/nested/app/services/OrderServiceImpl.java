@@ -10,6 +10,7 @@ import com.nested.app.entity.Order;
 import com.nested.app.entity.OrderItems;
 import com.nested.app.entity.SIPOrder;
 import com.nested.app.entity.User;
+import com.nested.app.exception.ExternalServiceException;
 import com.nested.app.repository.OrderRepository;
 import com.nested.app.repository.TenantAwareGoalRepository;
 import java.time.LocalDate;
@@ -70,7 +71,7 @@ public class OrderServiceImpl implements OrderService {
       throw new IllegalArgumentException("Invalid goal ID format: " + goalId);
     } catch (Exception e) {
       log.error("Error retrieving orders for goal ID {}: {}", goalId, e.getMessage(), e);
-      throw new RuntimeException("Failed to retrieve orders for goal", e);
+      throw new ExternalServiceException("Failed to retrieve orders for goal", e);
     }
   }
 

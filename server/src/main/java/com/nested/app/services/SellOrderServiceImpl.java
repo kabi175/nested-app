@@ -13,7 +13,9 @@ import com.nested.app.entity.Goal;
 import com.nested.app.entity.Order;
 import com.nested.app.entity.OrderItems;
 import com.nested.app.entity.SellOrder;
+import com.nested.app.entity.Transaction;
 import com.nested.app.entity.User;
+import com.nested.app.exception.ExternalServiceException;
 import com.nested.app.repository.FolioRepository;
 import com.nested.app.repository.FundRepository;
 import com.nested.app.repository.OrderItemsRepository;
@@ -73,7 +75,7 @@ public class SellOrderServiceImpl implements SellOrderService {
             .map(SellOrderRequestDTO.SellOrderItemDTO::getGoal)
             .map(MinifiedGoalDTO::getId)
             .distinct()
-            .collect(Collectors.toList());
+            .toList();
 
     var goals = goalRepository.findAllById(goalIds);
     if (goals.size() != goalIds.size()) {
@@ -95,7 +97,7 @@ public class SellOrderServiceImpl implements SellOrderService {
         sellOrderRequest.getSellOrders().stream()
             .map(SellOrderRequestDTO.SellOrderItemDTO::getFundId)
             .distinct()
-            .collect(Collectors.toList());
+            .toList();
 
     var funds = fundRepository.findAllById(fundIds);
     if (funds.size() != fundIds.size()) {
@@ -194,7 +196,7 @@ public class SellOrderServiceImpl implements SellOrderService {
       ServletRequestAttributes attributes =
           (ServletRequestAttributes) RequestContextHolder.getRequestAttributes();
       if (attributes == null) {
-        throw new RuntimeException("Error while getting request");
+        throw new IllegalStateException("Error while getting request");
       }
       HttpServletRequest request = attributes.getRequest();
       var ipAddress = IpUtils.getClientIpAddress(request);
@@ -224,20 +226,20 @@ public class SellOrderServiceImpl implements SellOrderService {
             // Don't fail the order placement if scheduling fails
           }
         } else {
-          throw new RuntimeException("Failed to place sell order - no reference returned");
+          throw new ExternalServiceException("Failed to place sell order - no reference returned");
         }
       } catch (Exception e) {
         log.error("Failed to place sell order for fund ID: {}", fund.getId(), e);
         savedOrder.setStatus(Order.OrderStatus.FAILED);
         orderRepository.save(savedOrder);
-        throw new RuntimeException("Failed to place sell order: " + e.getMessage(), e);
+        throw new ExternalServiceException("Failed to place sell order: " + e.getMessage(), e);
       }
 
       createdOrders.add(savedOrder);
     }
 
     // Return DTOs
-    return createdOrders.stream().map(OrderDTO::fromEntity).collect(Collectors.toList());
+    return createdOrders.stream().map(OrderDTO::fromEntity).toList();
   }
 
   @Override
@@ -267,7 +269,7 @@ public class SellOrderServiceImpl implements SellOrderService {
             .map(OrderItems::getRef)
             .filter(ref -> ref != null && !ref.isEmpty())
             .distinct()
-            .collect(Collectors.toList());
+            .toList();
 
     if (orderRefs.isEmpty()) {
       throw new IllegalStateException("No valid order references found for verification");
@@ -304,7 +306,7 @@ public class SellOrderServiceImpl implements SellOrderService {
 
     } catch (Exception e) {
       log.error("Failed to verify sell orders", e);
-      throw new RuntimeException("Failed to verify sell orders: " + e.getMessage(), e);
+      throw new ExternalServiceException("Failed to verify sell orders: " + e.getMessage(), e);
     }
   }
 
@@ -321,7 +323,7 @@ public class SellOrderServiceImpl implements SellOrderService {
 
     return transactions.stream()
         .filter(t -> t.getFund().getId().equals(fundId))
-        .mapToDouble(t -> t.getUnits())
+        .mapToDouble(Transaction::getUnits)
         .sum();
   }
 }

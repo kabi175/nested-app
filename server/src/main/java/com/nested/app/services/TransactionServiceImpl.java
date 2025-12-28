@@ -9,7 +9,6 @@ import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
 import java.util.List;
-import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -84,9 +83,7 @@ public class TransactionServiceImpl implements TransactionService {
       }
 
       List<TransactionDTO> transactions =
-          transactionPage.getContent().stream()
-              .map(this::convertToDTO)
-              .collect(Collectors.toList());
+          transactionPage.getContent().stream().map(this::convertToDTO).toList();
 
       log.info("Successfully retrieved {} transactions for user {}", transactions.size(), userId);
       return transactions;
@@ -97,7 +94,7 @@ public class TransactionServiceImpl implements TransactionService {
           "Invalid date format. Expected yyyy-MM-dd format. " + e.getMessage());
     } catch (Exception e) {
       log.error("Error retrieving transactions for user {}: {}", userId, e.getMessage(), e);
-      throw new RuntimeException("Error retrieving transactions: " + e.getMessage(), e);
+      throw new IllegalStateException("Error retrieving transactions: " + e.getMessage(), e);
     }
   }
 

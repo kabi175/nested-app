@@ -11,7 +11,6 @@ import com.nested.app.repository.NomineeRepository;
 import com.nested.app.repository.UserRepository;
 import com.nested.app.services.mapper.NomineeMapper;
 import java.util.List;
-import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -136,7 +135,7 @@ public class NomineeServiceImpl implements NomineeService {
                     return existing;
                   }
                 })
-            .collect(Collectors.toList());
+            .toList();
 
     // Save all nominees in one transaction
     List<Nominee> saved = nomineeRepository.saveAll(nominees);
@@ -145,7 +144,7 @@ public class NomineeServiceImpl implements NomineeService {
     syncNomineeToExternalService(saved, user);
     log.info("Nominees upserted successfully: {} total for user: {}", saved.size(), user.getId());
 
-    return saved.stream().map(this::convertToResponseDTO).collect(Collectors.toList());
+    return saved.stream().map(this::convertToResponseDTO).toList();
   }
 
   /**
@@ -314,7 +313,7 @@ public class NomineeServiceImpl implements NomineeService {
     log.info("Fetching nominees for user: {}", user.getId());
     return nomineeRepository.findByUserId(user.getId()).stream()
         .map(this::convertToResponseDTO)
-        .collect(Collectors.toList());
+        .toList();
   }
 
   @Override

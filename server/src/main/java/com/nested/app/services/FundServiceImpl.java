@@ -2,6 +2,7 @@ package com.nested.app.services;
 
 import com.nested.app.dto.FundDTO;
 import com.nested.app.entity.Fund;
+import com.nested.app.exception.ExternalServiceException;
 import com.nested.app.repository.FundRepository;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -36,7 +37,7 @@ public class FundServiceImpl implements FundService {
       return funds.stream().map(this::convertToDTO).collect(Collectors.toList());
     } catch (Exception e) {
       log.error("Error retrieving funds: {}", e.getMessage(), e);
-      throw new RuntimeException("Failed to retrieve funds", e);
+      throw new ExternalServiceException("Failed to retrieve funds", e);
     }
   }
 
@@ -56,7 +57,7 @@ public class FundServiceImpl implements FundService {
       return activeFunds;
     } catch (Exception e) {
       log.error("Error retrieving active funds: {}", e.getMessage(), e);
-      throw new RuntimeException("Failed to retrieve active funds", e);
+      throw new ExternalServiceException("Failed to retrieve active funds", e);
     }
   }
 

@@ -192,7 +192,7 @@ public class PortfolioService {
                     t.getUnitPrice(),
                     t.getAmount(),
                     t.getExecutedAt()))
-        .collect(Collectors.toList());
+        .toList();
   }
 
   @Transactional(readOnly = true)
@@ -232,6 +232,6 @@ public class PortfolioService {
                   currentValue,
                   returnsAmount);
             })
-        .collect(Collectors.toList());
+        .toList();
   }
 }

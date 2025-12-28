@@ -144,21 +144,19 @@ public class SchemeWiseReportService {
                     investor.getId(),
                     investor.getAccountRef()))
         .doOnSuccess(
-            resp -> {
-              resp.data
-                  .getRows()
-                  .forEach(
-                      report -> {
-                        fundRepository
-                            .findFundByIsinCode(report.getIsin())
-                            .ifPresent(
-                                fund -> {
-                                  fund.setNavDate(parseDate(report.getAsOn()));
-                                  fund.setNav(report.getNav().doubleValue());
-                                  fundRepository.save(fund);
-                                });
-                      });
-            });
+            resp ->
+                resp.getData()
+                    .getRows()
+                    .forEach(
+                        report ->
+                            fundRepository
+                                .findFundByIsinCode(report.getIsin())
+                                .ifPresent(
+                                    fund -> {
+                                      fund.setNavDate(parseDate(report.getAsOn()));
+                                      fund.setNav(report.getNav().doubleValue());
+                                      fundRepository.save(fund);
+                                    })));
   }
 
   private Timestamp parseDate(String dateStr) {

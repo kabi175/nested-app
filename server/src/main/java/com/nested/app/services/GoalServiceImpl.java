@@ -8,6 +8,7 @@ import com.nested.app.dto.MinifiedUserDTO;
 import com.nested.app.entity.Basket;
 import com.nested.app.entity.Goal;
 import com.nested.app.entity.User;
+import com.nested.app.exception.ExternalServiceException;
 import com.nested.app.repository.BasketRepository;
 import com.nested.app.repository.EducationRepository;
 import com.nested.app.repository.TenantAwareGoalRepository;
@@ -56,7 +57,7 @@ public class GoalServiceImpl implements GoalService {
 
     } catch (Exception e) {
       log.error("Error retrieving goals: {}", e.getMessage(), e);
-      throw new RuntimeException("Failed to retrieve goals", e);
+      throw new ExternalServiceException("Failed to retrieve goals", e);
     }
   }
 
@@ -67,7 +68,7 @@ public class GoalServiceImpl implements GoalService {
       return goals.map(this::convertToDTO).orElse(null);
     } catch (Exception e) {
       log.error("Error retrieving goals: {}", e.getMessage(), e);
-      throw new RuntimeException("Failed to retrieve goals", e);
+      throw new ExternalServiceException("Failed to retrieve goals", e);
     }
   }
 
@@ -116,7 +117,7 @@ public class GoalServiceImpl implements GoalService {
       throw e;
     } catch (Exception e) {
       log.error("Error updating goal with ID {}: {}", goalDTO.getId(), e.getMessage(), e);
-      throw new RuntimeException("Failed to update goal", e);
+      throw new ExternalServiceException("Failed to update goal", e);
     }
   }
 
@@ -133,8 +134,7 @@ public class GoalServiceImpl implements GoalService {
 
     try {
 
-      List<Goal> goalEntities =
-          goalDtos.stream().map(this::convertToEntity).collect(Collectors.toList());
+      List<Goal> goalEntities = goalDtos.stream().map(this::convertToEntity).toList();
 
       goalEntities.forEach(
           goal -> {
@@ -169,7 +169,7 @@ public class GoalServiceImpl implements GoalService {
 
     } catch (Exception e) {
       log.error("Error creating goalDtos: {}", e.getMessage(), e);
-      throw new RuntimeException("Failed to create goalDtos", e);
+      throw new ExternalServiceException("Failed to create goalDtos", e);
     }
   }
 
@@ -193,7 +193,7 @@ public class GoalServiceImpl implements GoalService {
                       return updateGoal(goal, user);
                     } catch (Exception e) {
                       log.error("Error updating goal with ID {}: {}", goal.getId(), e.getMessage());
-                      throw new RuntimeException(
+                      throw new ExternalServiceException(
                           "Failed to update goal with ID: " + goal.getId(), e);
                     }
                   })
@@ -204,7 +204,7 @@ public class GoalServiceImpl implements GoalService {
 
     } catch (Exception e) {
       log.error("Error updating goals: {}", e.getMessage(), e);
-      throw new RuntimeException("Failed to update goals", e);
+      throw new ExternalServiceException("Failed to update goals", e);
     }
   }
 

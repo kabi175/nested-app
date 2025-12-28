@@ -1,18 +1,16 @@
 package com.nested.app.services;
 
-import com.nested.app.entity.ReversePennyDrop;
-import com.nested.app.repository.PaymentRepository;
-import com.nested.app.repository.ReversePennyDropRepository;
-import org.springframework.stereotype.Service;
+import static com.nested.app.listeners.UserPreFillHandler.generateRefId;
 
 import com.nested.app.client.bulkpe.ReversePennyDropClient;
 import com.nested.app.client.bulkpe.dto.ReversePennyDropRequest;
 import com.nested.app.client.bulkpe.dto.ReversePennyDropResponse;
-
+import com.nested.app.entity.ReversePennyDrop;
+import com.nested.app.exception.ExternalServiceException;
+import com.nested.app.repository.ReversePennyDropRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-
-import static com.nested.app.listeners.UserPreFillHandler.generateRefId;
+import org.springframework.stereotype.Service;
 
 @Slf4j
 @Service
@@ -22,27 +20,28 @@ public class ReversePennyDropService {
   private final ReversePennyDropClient reversePennyDropClient;
   private final ReversePennyDropRepository reversePennyDropRepository;
 
-  /**
-   * Initiate Reverse Penny Drop with Bulkpe and return the payment/validation details.
-   */
-  public ReversePennyDropResponse initiate(Long UserID) {
+  /** Initiate Reverse Penny Drop with Bulkpe and return the payment/validation details. */
+  public ReversePennyDropResponse initiate(Long userID) {
     ReversePennyDropRequest request = new ReversePennyDropRequest();
 
     String referenceId = generateRefId();
     request.setReferenceId(referenceId);
 
-    String transactionNote = "Reverse Penny Drop for UserID: " + UserID;
+    String transactionNote = "Reverse Penny Drop for userID: " + userID;
     request.setTranscationNote(transactionNote);
 
-    log.info("ReversePennyDropService.initiate referenceId={} for user={}", request.getReferenceId(), UserID);
+    log.info(
+        "ReversePennyDropService.initiate referenceId={} for user={}",
+        request.getReferenceId(),
+        userID);
     try {
       ReversePennyDropResponse response = reversePennyDropClient.getReversePennyDropUrl(request).block();
       if (response == null) {
-        throw new RuntimeException("Null response from Reverse Penny Drop API");
+        throw new ExternalServiceException("Null response from Reverse Penny Drop API");
       }
 
       ReversePennyDrop reversePennyDrop = new ReversePennyDrop();
-      reversePennyDrop.setUserId(UserID);
+      reversePennyDrop.setUserId(userID);
       reversePennyDrop.setReferenceId(referenceId);
       reversePennyDrop.setTransactionNote(transactionNote);
       reversePennyDrop.setStatus( ReversePennyDrop.ReversePennyDropStatus.PENDING );
@@ -52,7 +51,7 @@ public class ReversePennyDropService {
       return response;
     } catch (Exception e) {
       log.error("Failed to initiate reverse penny drop for referenceId={}: {}", request.getReferenceId(), e.getMessage(), e);
-      throw new RuntimeException("Failed to initiate reverse penny drop", e);
+      throw new ExternalServiceException("Failed to initiate reverse penny drop", e);
     }
   }
 

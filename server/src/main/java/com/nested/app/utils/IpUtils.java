@@ -84,6 +84,7 @@ public class IpUtils {
         return inet.getHostAddress();
       }
     } catch (Exception ignored) {
+      log.warn("Could not parse ipv4 from string '{}'", ip);
     }
     return null;
   }

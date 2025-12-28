@@ -66,7 +66,7 @@ class SchemeWiseReportServiceTest {
     // Then
     assertThat(summary.totalProcessed()).isEqualTo(2); // Only 2 have accountRef
     assertThat(summary.successCount()).isEqualTo(2);
-    assertThat(summary.failureCount()).isEqualTo(0);
+    assertThat(summary.failureCount()).isZero();
     assertThat(summary.successRate()).isEqualTo(100.0);
 
     verify(reportApiClient, times(2)).fetchSchemeWiseReport(anyString());
@@ -84,9 +84,9 @@ class SchemeWiseReportServiceTest {
     ReportFetchSummary summary = schemeWiseReportService.fetchReportsForAllInvestors();
 
     // Then
-    assertThat(summary.totalProcessed()).isEqualTo(0);
-    assertThat(summary.successCount()).isEqualTo(0);
-    assertThat(summary.failureCount()).isEqualTo(0);
+    assertThat(summary.totalProcessed()).isZero();
+    assertThat(summary.successCount()).isZero();
+    assertThat(summary.failureCount()).isZero();
 
     verify(reportApiClient, never()).fetchSchemeWiseReport(anyString());
   }
@@ -104,7 +104,7 @@ class SchemeWiseReportServiceTest {
     ReportFetchSummary summary = schemeWiseReportService.fetchReportsForAllInvestors();
 
     // Then
-    assertThat(summary.totalProcessed()).isEqualTo(0);
+    assertThat(summary.totalProcessed()).isZero();
     verify(reportApiClient, never()).fetchSchemeWiseReport(anyString());
   }
 

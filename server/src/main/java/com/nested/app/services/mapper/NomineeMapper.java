@@ -2,6 +2,7 @@ package com.nested.app.services.mapper;
 
 import com.nested.app.client.mf.dto.Address;
 import com.nested.app.entity.Nominee;
+import lombok.experimental.UtilityClass;
 import lombok.extern.slf4j.Slf4j;
 
 /**
@@ -11,6 +12,7 @@ import lombok.extern.slf4j.Slf4j;
  * @version 1.0
  */
 @Slf4j
+@UtilityClass
 public class NomineeMapper {
 
   /**
@@ -78,24 +80,5 @@ public class NomineeMapper {
     clientAddress.setCountry(address.getCountry());
     clientAddress.setPinCode(address.getPinCode());
     return clientAddress;
-  }
-
-  /**
-   * Format Address entity to string format for external API (for guardian address which is String)
-   *
-   * @param address Address entity
-   * @return Formatted address string
-   */
-  private static String formatAddressForExternalAPI(com.nested.app.entity.Address address) {
-    if (address == null) {
-      return null;
-    }
-    return String.format(
-        "%s, %s, %s, %s %s",
-        address.getAddressLine(),
-        address.getCity(),
-        address.getState(),
-        address.getCountry(),
-        address.getPinCode());
   }
 }
