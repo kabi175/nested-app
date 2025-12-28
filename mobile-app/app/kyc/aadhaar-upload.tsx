@@ -35,6 +35,7 @@ export default function AadhaarUploadScreen() {
           dismissButtonStyle: "done",
           readerMode: false,
         });
+        router.push("/kyc/esign-upload");
       }
     } catch (err) {
       console.error("Failed to start Aadhaar upload flow", err);
@@ -43,7 +44,6 @@ export default function AadhaarUploadScreen() {
       );
     } finally {
       setIsLaunching(false);
-      router.push("/kyc/esign-upload");
     }
   }, [user]);
 
