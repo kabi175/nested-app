@@ -527,13 +527,10 @@ export default function PaymentMethodScreen() {
         {/* Proceed to Pay Button */}
         <View style={styles.buttonContainer}>
           <Button
-            style={[
-              styles.proceedButton,
-              (!selectedMethod || !selectedBank) && styles.disabledButton,
-            ]}
             onPress={handleConfirmOrder}
             disabled={!selectedMethod || !selectedBank || isProcessing}
             size="large"
+            status="primary"
             accessoryLeft={() =>
               isProcessing ? (
                 <ActivityIndicator color="white" size="small" />
@@ -933,7 +930,6 @@ const styles = StyleSheet.create({
     elevation: 5,
   },
   proceedButton: {
-    backgroundColor: "#2563EB",
     borderRadius: 14,
     shadowColor: "#2563EB",
     shadowOffset: {
@@ -943,9 +939,6 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.3,
     shadowRadius: 8,
     elevation: 6,
-  },
-  disabledButton: {
-    opacity: 0.5,
   },
   orderSummary: {
     borderRadius: 12,
