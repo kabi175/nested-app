@@ -1,16 +1,16 @@
 package com.nested.app.client.tarrakki;
 
+import java.time.Instant;
+import java.util.HashMap;
+import java.util.Map;
 import lombok.Data;
+import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.*;
 import org.springframework.stereotype.Component;
-import org.springframework.web.client.RestTemplate;
 import org.springframework.web.client.HttpStatusCodeException;
-
-import java.time.Instant;
-import java.util.HashMap;
-import java.util.Map;
+import org.springframework.web.client.RestTemplate;
 
 /**
  * Provider for managing Tarrakki API OAuth tokens with caching (using RestTemplate)
@@ -112,16 +112,9 @@ public class TarrakkiTokenProvider {
     }
 
     @Data
+    @Getter
     public static class TokenResponse {
-        private String access_token;
-        private long expires_in;
-
-        public String getAccessToken() {
-            return access_token;
-        }
-
-        public long getExpiresIn() {
-            return expires_in;
-        }
+        private String accessToken;
+        private long expiresIn;
     }
 }
