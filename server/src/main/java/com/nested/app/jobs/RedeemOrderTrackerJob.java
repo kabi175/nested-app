@@ -102,9 +102,9 @@ public class RedeemOrderTrackerJob implements Job {
       transactions.forEach(
           transaction -> {
             TransactionStatus previousStatus = transaction.getStatus();
-            transaction.setUnits(-orderData.getRedeemedUnits());
-            transaction.setUnitPrice(orderData.getRedeemedPrice());
-            transaction.setAmount(-orderData.getRedeemedAmount());
+            transaction.setUnits(-Objects.requireNonNullElse(orderData.getRedeemedUnits(), 0d));
+            transaction.setUnitPrice(Objects.requireNonNullElse(orderData.getRedeemedPrice(), 0d));
+            transaction.setAmount(-Objects.requireNonNullElse(orderData.getRedeemedAmount(), 0d));
 
             switch (orderData.getState()) {
               case CREATED, PENDING, UNDER_REVIEW:
@@ -215,9 +215,11 @@ public class RedeemOrderTrackerJob implements Job {
                   transaction.setType(TransactionType.SELL);
                   transaction.setStatus(TransactionStatus.VERIFICATION_PENDING);
                   transaction.setUnits(
-                      -Objects.requireNonNullElse(orderData.getRedeemedUnits(), (double) 0));
-                  transaction.setUnitPrice(orderData.getRedeemedPrice());
-                  transaction.setAmount(-orderData.getRedeemedAmount());
+                      -Objects.requireNonNullElse(orderData.getRedeemedUnits(), 0d));
+                  transaction.setUnitPrice(
+                      Objects.requireNonNullElse(orderData.getRedeemedPrice(), 0d));
+                  transaction.setAmount(
+                      -Objects.requireNonNullElse(orderData.getRedeemedAmount(), 0d));
                   transaction.setExecutedAt(orderData.getSubmittedAt());
                   transaction.setSourceOrderItemId(oi.getId());
 
