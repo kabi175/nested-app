@@ -13,6 +13,7 @@ import java.util.List;
 import java.util.Objects;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.quartz.DisallowConcurrentExecution;
 import org.quartz.Job;
 import org.quartz.JobDataMap;
 import org.quartz.JobExecutionContext;
@@ -44,6 +45,7 @@ import org.springframework.stereotype.Component;
 @Slf4j
 @Component
 @AllArgsConstructor
+@DisallowConcurrentExecution
 public class RedeemOrderTrackerJob implements Job {
   private SellOrderApiClient sellOrderApiClient;
   private OrderItemsRepository orderItemsRepository;

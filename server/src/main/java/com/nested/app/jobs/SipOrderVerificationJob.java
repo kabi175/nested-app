@@ -3,6 +3,7 @@ package com.nested.app.jobs;
 import com.nested.app.services.SipOrderPaymentService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.quartz.DisallowConcurrentExecution;
 import org.quartz.Job;
 import org.quartz.JobDataMap;
 import org.quartz.JobExecutionContext;
@@ -16,6 +17,7 @@ import org.springframework.stereotype.Component;
 @Slf4j
 @Component
 @RequiredArgsConstructor
+@DisallowConcurrentExecution
 public class SipOrderVerificationJob implements Job {
   private final SipOrderPaymentService sipOrderPaymentService;
 

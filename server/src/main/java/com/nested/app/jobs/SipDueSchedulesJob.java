@@ -3,6 +3,7 @@ package com.nested.app.jobs;
 import com.nested.app.services.SipOrderSchedulerService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.quartz.DisallowConcurrentExecution;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
@@ -10,6 +11,7 @@ import org.springframework.stereotype.Component;
 @Slf4j
 @Component
 @RequiredArgsConstructor
+@DisallowConcurrentExecution
 public class SipDueSchedulesJob {
   private final SipOrderSchedulerService sipOrderSchedulerService;
 
