@@ -1,9 +1,11 @@
 package com.nested.app.client.mf.dto;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
+import com.fasterxml.jackson.annotation.JsonGetter;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonSetter;
 import com.nested.app.enums.RelationshipType;
 import java.time.LocalDate;
 import java.time.Period;
@@ -68,7 +70,7 @@ public class Nominee {
   }
 
   @Nullable
-  @JsonProperty("phone_number")
+  @JsonGetter("phone_number")
   public Map<String, Object> phoneNumber() {
     if (mobileNumber == null) {
       return null;
@@ -76,13 +78,27 @@ public class Nominee {
     return getStringObjectMap(mobileNumber);
   }
 
+  @JsonSetter("phone_number")
+  public void setPhoneNumber(Map<String, Object> phoneNumber) {
+    if (phoneNumber != null && phoneNumber.containsKey("number")) {
+      mobileNumber = (String) phoneNumber.get("number");
+    }
+  }
+
   @Nullable
-  @JsonProperty("guardian_phone_number")
+  @JsonGetter("guardian_phone_number")
   public Map<String, Object> guardianPhoneNumber() {
     if (guardianMobileNumber == null) {
       return null;
     }
     return getStringObjectMap(guardianMobileNumber);
+  }
+
+  @JsonSetter("guardian_phone_number")
+  public void setGuardianPhoneNumber(Map<String, Object> phoneNumber) {
+    if (phoneNumber != null && phoneNumber.containsKey("number")) {
+      guardianMobileNumber = (String) phoneNumber.get("number");
+    }
   }
 
   private @NonNull Map<String, Object> getStringObjectMap(String mobile) {

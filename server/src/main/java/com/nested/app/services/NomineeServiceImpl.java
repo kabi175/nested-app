@@ -185,10 +185,8 @@ public class NomineeServiceImpl implements NomineeService {
         if (nominee.getRef() == null) {
           // CREATE new nominee in external service
           createNomineeInExternalService(nominee, investorRef);
-        } else {
-          // UPDATE existing nominee in external service
-          updateNomineeInExternalService(nominee, investorRef);
         }
+        // Update is not support in external service
       }
 
       investorAPIClient
@@ -251,56 +249,6 @@ public class NomineeServiceImpl implements NomineeService {
           e);
       throw new ExternalServiceException(
           "Failed to create nominee '"
-              + nominee.getName()
-              + "' in external service: "
-              + e.getMessage(),
-          e);
-    }
-  }
-
-  /**
-   * Updates an existing nominee in the external service
-   *
-   * @param nominee Nominee to update
-   * @param investorRef Investor reference ID
-   * @throws RuntimeException if update fails
-   */
-  private void updateNomineeInExternalService(Nominee nominee, String investorRef) {
-    try {
-      log.info(
-          "Updating nominee '{}' (ref: {}) in external service for investor: {}",
-          nominee.getName(),
-          nominee.getRef(),
-          investorRef);
-
-      com.nested.app.client.mf.dto.Nominee clientNominee =
-          NomineeMapper.mapToClientNominee(nominee, investorRef);
-      nominee.setPan(null);
-      nominee.setRef(null);
-      nominee.setRelationship(null);
-
-      var response = investorAPIClient.updateNominees(investorRef, clientNominee).block();
-
-      if (response == null) {
-        throw new ExternalServiceException(
-            "External service returned null response for nominee update");
-      }
-
-      log.info(
-          "Successfully updated nominee '{}' (ref: {}) in external service",
-          nominee.getName(),
-          nominee.getRef());
-
-    } catch (Exception e) {
-      log.error(
-          "Failed to update nominee '{}' (ref: {}) in external service for investor {}: {}",
-          nominee.getName(),
-          nominee.getRef(),
-          investorRef,
-          e.getMessage(),
-          e);
-      throw new ExternalServiceException(
-          "Failed to update nominee '"
               + nominee.getName()
               + "' in external service: "
               + e.getMessage(),
