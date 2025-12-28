@@ -111,10 +111,10 @@ public class TarrakkiTokenProvider {
         log.debug("Token cached. Expiry time: {}", expiryTime);
     }
 
-    @Data
-    @Getter
-    public static class TokenResponse {
-        private String accessToken;
-        private long expiresIn;
+  @Data
+  @Getter
+  public static class TokenResponse {
+    private String accessToken;
+    private long expiresIn;
     }
 }
