@@ -22,7 +22,7 @@ import { OtpInput } from "@/components/ui/OtpInput";
 import { useAuth } from "@/hooks/auth";
 import { Spinner, Text } from "@ui-kitten/components";
 import {
-  draftNomineesAtom,
+  nomineeListAtom,
   pendingActionAtom,
   pendingNomineeIdAtom,
 } from "@/atoms/nominee";
@@ -34,7 +34,7 @@ import { useOptOutNominee } from "@/hooks/useOptOutNominee";
 
 export default function NomineeVerificationScreen() {
   const auth = useAuth();
-  const [draftNominees, setDraftNominees] = useAtom(draftNomineesAtom);
+  const [nomineeList, setNomineeList] = useAtom(nomineeListAtom);
   const pendingAction = useAtomValue(pendingActionAtom);
   const [pendingNomineeId, setPendingNomineeId] = useAtom(pendingNomineeIdAtom);
   const setPendingAction = useSetAtom(pendingActionAtom);
@@ -56,12 +56,12 @@ export default function NomineeVerificationScreen() {
   const userPhoneNumber =
     auth.user?.phoneNumber || getAuth().currentUser?.phoneNumber || "";
 
-  // Redirect if no draft nominees and not opt-out flow
+  // Redirect if no nominees and not opt-out flow
   useEffect(() => {
-    if (!isOptOutFlow && draftNominees.length === 0) {
+    if (!isOptOutFlow && nomineeList.length === 0) {
       router.replace("/nominees");
     }
-  }, [draftNominees.length, isOptOutFlow]);
+  }, [nomineeList.length, isOptOutFlow]);
 
   // Auto-send OTP when component mounts
   useEffect(() => {
@@ -154,7 +154,7 @@ export default function NomineeVerificationScreen() {
       return;
     }
 
-    if (!isOptOutFlow && draftNominees.length === 0) {
+    if (!isOptOutFlow && nomineeList.length === 0) {
       Alert.alert("Error", "Missing verification data. Please try again.");
       return;
     }
@@ -177,16 +177,23 @@ export default function NomineeVerificationScreen() {
         setPendingNomineeId(null);
         setPendingAction(null);
       } else {
-        // Save nominees flow (existing logic)
+        // Save nominees flow - upsert all nominees
         setIsProcessingNominees(true);
-        const payloads = draftNominees.map((draft) => draftToPayload(draft));
+        const payloads = nomineeList.map((nominee) => {
+          const payload = draftToPayload(nominee as any);
+          // Include id if present for updates
+          if (nominee.id) {
+            return { ...payload, id: nominee.id };
+          }
+          return payload;
+        });
         await upsertNominees(payloads);
 
         // Refresh nominees
         await queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.nominees] });
 
-        // Clear draft nominees
-        setDraftNominees([]);
+        // Clear nominee list (will be repopulated from server)
+        setNomineeList([]);
       }
 
       // Redirect back to nominees screen

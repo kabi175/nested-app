@@ -1,5 +1,4 @@
 import {
-  draftNomineesAtom,
   mfaStateAtom,
   nomineeDraftAtom,
   nomineeListAtom,
@@ -25,8 +24,7 @@ import { Alert } from "react-native";
 const MAX_NOMINEES = 3;
 
 export function useNomineeManagement() {
-  const [nomineeList] = useAtom(nomineeListAtom);
-  const [draftNominees, setDraftNominees] = useAtom(draftNomineesAtom);
+  const [nomineeList, setNomineeList] = useAtom(nomineeListAtom);
   const [draft, setDraft] = useAtom(nomineeDraftAtom);
   const [pendingNomineeId, setPendingNomineeId] = useAtom(pendingNomineeIdAtom);
   const [validationErrors, setValidationErrors] = useAtom(validationErrorsAtom);
@@ -34,15 +32,13 @@ export function useNomineeManagement() {
   const setMfaState = useSetAtom(mfaStateAtom);
 
   const [showFormModal, setShowFormModal] = useState(false);
-  const [editingDraftIndex, setEditingDraftIndex] = useState<number | null>(
-    null
-  );
+  const [editingIndex, setEditingIndex] = useState<number | null>(null);
 
-  const activeNominees = nomineeList;
+  // Single list containing all nominees (existing with id, new without id)
+  const allNominees = nomineeList;
 
   const handleAddNominee = () => {
-    const totalCount = activeNominees.length + draftNominees.length;
-    if (totalCount >= MAX_NOMINEES) {
+    if (allNominees.length >= MAX_NOMINEES) {
       Alert.alert(
         "Limit Reached",
         `You can add up to ${MAX_NOMINEES} nominees.`
@@ -62,42 +58,33 @@ export function useNomineeManagement() {
         city: "",
         state: "",
         pin_code: "",
-        country: "",
+        country: "in",
       },
       allocation: 0,
       isMinor: false,
     });
-    setEditingDraftIndex(null);
+    setEditingIndex(null);
     setPendingNomineeId(null);
     setValidationErrors({});
     setShowFormModal(true);
   };
 
-  const handleEditNominee = (nomineeId: number) => {
-    const nominee = nomineeList.find((n) => n.id === nomineeId);
+  const handleEditNominee = (index: number) => {
+    const nominee = allNominees[index];
     if (!nominee) return;
 
-    const nomineeDraft = nomineeToDraft(nominee);
+    const nomineeDraft = nominee.id
+      ? nomineeToDraft(nominee as any)
+      : (nominee as NomineeDraft);
     setDraft(nomineeDraft);
-    setEditingDraftIndex(null);
-    setPendingNomineeId(nomineeId);
+    setEditingIndex(index);
+    setPendingNomineeId(nominee.id || null);
     setValidationErrors({});
     setShowFormModal(true);
   };
 
-  const handleEditDraftNominee = (index: number) => {
-    const draftNominee = draftNominees[index];
-    if (!draftNominee) return;
-
-    setDraft({ ...draftNominee });
-    setEditingDraftIndex(index);
-    setPendingNomineeId(null);
-    setValidationErrors({});
-    setShowFormModal(true);
-  };
-
-  const handleDeleteDraftNominee = (index: number) => {
-    setDraftNominees((prev) => prev.filter((_, i) => i !== index));
+  const handleDeleteNominee = (index: number) => {
+    setNomineeList((prev) => prev.filter((_, i) => i !== index));
   };
 
   const handleOptOutNominee = () => {
@@ -131,9 +118,10 @@ export function useNomineeManagement() {
 
     const errors = validateNomineeDraftComplete(
       draft,
-      nomineeList,
-      draftNominees,
-      editingDraftIndex ?? undefined
+      allNominees.filter((n) => n.id !== undefined) as any[],
+      allNominees.filter((n) => !n.id) as NomineeDraft[],
+      editingIndex ?? undefined,
+      pendingNomineeId ?? undefined
     );
 
     if (Object.keys(errors).length > 0) {
@@ -141,22 +129,30 @@ export function useNomineeManagement() {
       return;
     }
 
-    if (editingDraftIndex !== null) {
-      setDraftNominees((prev) =>
-        prev.map((n, idx) => (idx === editingDraftIndex ? draft : n))
+    if (editingIndex !== null) {
+      // Editing an existing nominee (update in place)
+      const { isMinor, ...nomineeUpdate } = draft;
+      const updatedNominee = pendingNomineeId
+        ? { ...nomineeUpdate, id: pendingNomineeId }
+        : (draft as any);
+
+      setNomineeList((prev) =>
+        prev.map((n, idx) => (idx === editingIndex ? updatedNominee : n))
       );
     } else {
-      setDraftNominees((prev) => [...prev, draft]);
+      // Adding a new nominee
+      setNomineeList((prev) => [...prev, draft as any]);
     }
 
     setDraft(null);
-    setEditingDraftIndex(null);
+    setEditingIndex(null);
+    setPendingNomineeId(null);
     setValidationErrors({});
     setShowFormModal(false);
   };
 
   const handleSaveAll = () => {
-    if (draftNominees.length === 0) {
+    if (allNominees.length === 0) {
       Alert.alert(
         "No Nominees",
         "Please add at least one nominee before saving."
@@ -165,8 +161,8 @@ export function useNomineeManagement() {
     }
 
     const allocationErrors = validateAllocationTotalForDrafts(
-      nomineeList,
-      draftNominees
+      allNominees.filter((n) => n.id !== undefined) as any[],
+      allNominees.filter((n) => !n.id) as NomineeDraft[]
     );
     if (Object.keys(allocationErrors).length > 0) {
       Alert.alert(
@@ -176,12 +172,14 @@ export function useNomineeManagement() {
       return;
     }
 
-    for (let i = 0; i < draftNominees.length; i++) {
-      const draft = draftNominees[i];
+    for (let i = 0; i < allNominees.length; i++) {
+      const nominee = allNominees[i];
       const errors = validateNomineeDraftComplete(
-        draft,
-        nomineeList,
-        draftNominees,
+        nominee as NomineeDraft,
+        allNominees.filter(
+          (n) => n.id !== undefined && n.id !== nominee.id
+        ) as any[],
+        allNominees.filter((n) => !n.id && n !== nominee) as NomineeDraft[],
         i
       );
       if (Object.keys(errors).length > 0) {
@@ -199,29 +197,26 @@ export function useNomineeManagement() {
   const handleCancelForm = () => {
     setShowFormModal(false);
     setDraft(null);
-    setEditingDraftIndex(null);
+    setEditingIndex(null);
     setPendingNomineeId(null);
     setValidationErrors({});
   };
 
-  const canAddMore =
-    activeNominees.length + draftNominees.length < MAX_NOMINEES;
+  const canAddMore = allNominees.length < MAX_NOMINEES;
 
   return {
     // State
     draft,
-    draftNominees,
-    activeNominees,
+    allNominees,
     validationErrors,
-    editingDraftIndex,
+    editingIndex,
     pendingNomineeId,
     showFormModal,
     canAddMore,
     // Handlers
     handleAddNominee,
     handleEditNominee,
-    handleEditDraftNominee,
-    handleDeleteDraftNominee,
+    handleDeleteNominee,
     handleOptOutNominee,
     handleFieldChange,
     handleSaveDraft,

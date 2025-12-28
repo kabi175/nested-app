@@ -34,7 +34,7 @@ interface NomineeFormModalProps {
   errors: NomineeValidationErrors;
   remainingAllocation: number;
   isEditMode: boolean;
-  isEditingExistingNominee?: boolean; // True when editing an existing nominee from server (only name/relationship editable)
+  isEditingExistingNominee?: boolean; // True when editing an existing nominee from server (only allocation editable)
   onFieldChange: (field: keyof NomineeDraft, value: any) => void;
   onSave: () => void;
   onCancel: () => void;
@@ -43,7 +43,7 @@ interface NomineeFormModalProps {
 
 /**
  * Add/Edit Nominee Form Modal
- * Supports adding new nominees and editing existing ones (name & relationship only)
+ * Supports adding new nominees and editing existing ones (only allocation editable for existing nominees)
  */
 export function NomineeFormModal({
   visible,
@@ -109,6 +109,7 @@ export function NomineeFormModal({
     onFieldChange("address", {
       ...currentAddress,
       [field]: value,
+      country: "in", // Always set country to "in"
     });
   };
 
@@ -197,7 +198,7 @@ export function NomineeFormModal({
               caption={errors.name || "2-100 characters"}
               style={styles.input}
               size="large"
-              disabled={isSubmitting}
+              disabled={isEditingExistingNominee || isSubmitting}
             />
 
             {/* Relationship */}
@@ -213,6 +214,7 @@ export function NomineeFormModal({
                 onSelect={handleRelationshipSelect}
                 selectedValue={selectedRelationship}
                 searchPlaceholder="Search relationship..."
+                disabled={isEditingExistingNominee || isSubmitting}
               />
               {errors.relationship && (
                 <Text category="c2" status="danger" style={styles.errorText}>
@@ -261,16 +263,12 @@ export function NomineeFormModal({
                   status={errors.allocation ? "danger" : "basic"}
                   style={styles.allocationInput}
                   size="large"
-                  disabled={isEditingExistingNominee || isSubmitting}
+                  disabled={isSubmitting}
                 />
                 <View style={styles.allocationControls}>
                   <TouchableOpacity
                     onPress={handleAllocationIncrement}
-                    disabled={
-                      isEditingExistingNominee ||
-                      isSubmitting ||
-                      draft.allocation >= 100
-                    }
+                    disabled={isSubmitting || draft.allocation >= 100}
                     style={styles.allocationButton}
                   >
                     <ChevronUp
@@ -280,11 +278,7 @@ export function NomineeFormModal({
                   </TouchableOpacity>
                   <TouchableOpacity
                     onPress={handleAllocationDecrement}
-                    disabled={
-                      isEditingExistingNominee ||
-                      isSubmitting ||
-                      draft.allocation <= 1
-                    }
+                    disabled={isSubmitting || draft.allocation <= 1}
                     style={styles.allocationButton}
                   >
                     <ChevronDown
@@ -328,12 +322,16 @@ export function NomineeFormModal({
                 onFieldChange("pan", value.toUpperCase())
               }
               status={errors.pan ? "danger" : "basic"}
-              caption={errors.pan}
               style={styles.input}
               size="large"
               disabled={isEditingExistingNominee || isSubmitting}
               maxLength={10}
             />
+            {errors.pan && (
+              <Text category="c2" status="danger" style={styles.errorText}>
+                {errors.pan}
+              </Text>
+            )}
             <Input
               label="Email *"
               placeholder="Enter email"
@@ -342,11 +340,15 @@ export function NomineeFormModal({
               keyboardType="email-address"
               autoCapitalize="none"
               status={errors.email ? "danger" : "basic"}
-              caption={errors.email}
               style={styles.input}
               size="large"
               disabled={isEditingExistingNominee || isSubmitting}
             />
+            {errors.email && (
+              <Text category="c2" status="danger" style={styles.errorText}>
+                {errors.email}
+              </Text>
+            )}
             <Input
               label="Mobile Number *"
               placeholder="Enter mobile number"
@@ -354,11 +356,15 @@ export function NomineeFormModal({
               onChangeText={(value) => onFieldChange("mobileNumber", value)}
               keyboardType="phone-pad"
               status={errors.mobileNumber ? "danger" : "basic"}
-              caption={errors.mobileNumber}
               style={styles.input}
               size="large"
               disabled={isEditingExistingNominee || isSubmitting}
             />
+            {errors.mobileNumber && (
+              <Text category="c2" status="danger" style={styles.errorText}>
+                {errors.mobileNumber}
+              </Text>
+            )}
             <Input
               label="Address Line *"
               placeholder="Enter address line"
@@ -422,6 +428,7 @@ export function NomineeFormModal({
                     : undefined
                 }
                 placeholder="Select state"
+                disabled={isEditingExistingNominee || isSubmitting}
               >
                 {states.map((s) => (
                   <SelectItem key={s} title={s} />
@@ -445,25 +452,6 @@ export function NomineeFormModal({
               caption={
                 typeof errors.address === "object"
                   ? errors.address?.pin_code
-                  : undefined
-              }
-              style={styles.input}
-              size="large"
-              disabled={isEditingExistingNominee || isSubmitting}
-            />
-            <Input
-              label="Country *"
-              placeholder="Enter country"
-              value={draft.address?.country || ""}
-              onChangeText={(value) => handleAddressChange("country", value)}
-              status={
-                typeof errors.address === "object" && errors.address?.country
-                  ? "danger"
-                  : "basic"
-              }
-              caption={
-                typeof errors.address === "object"
-                  ? errors.address?.country
                   : undefined
               }
               style={styles.input}

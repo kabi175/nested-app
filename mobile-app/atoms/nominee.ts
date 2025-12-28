@@ -8,8 +8,8 @@ import type {
   NomineeValidationErrors,
 } from "@/types/nominee";
 
-// Server-synced nominee list
-export const nomineeListAtom = atom<Nominee[]>([]);
+// Single list containing all nominees (existing with id, new without id)
+export const nomineeListAtom = atom<(Nominee | NomineeDraft)[]>([]);
 
 // Draft nominees list (stored in memory, up to 3 nominees)
 export const draftNomineesAtom = atom<NomineeDraft[]>([]);

@@ -1,7 +1,6 @@
-import { Ionicons } from "@expo/vector-icons";
 import { Text } from "@ui-kitten/components";
 import { router } from "expo-router";
-import { ChevronLeft } from "lucide-react-native";
+import { ChevronLeft, Plus } from "lucide-react-native";
 import React from "react";
 import { StyleSheet, TouchableOpacity, View } from "react-native";
 
@@ -26,8 +25,13 @@ export function NomineeScreenHeader({
       <Text category="h4" style={styles.title}>
         Nominee Management
       </Text>
-      <TouchableOpacity style={styles.infoButton} activeOpacity={0.7}>
-        <Ionicons name="information-circle-outline" size={24} color="#000000" />
+      <TouchableOpacity
+        style={styles.addButton}
+        onPress={onAddPress}
+        activeOpacity={0.7}
+        disabled={!showAddMoreButton}
+      >
+        <Plus size={24} color={!showAddMoreButton ? "#9CA3AF" : "#000000"} />
       </TouchableOpacity>
     </View>
   );
@@ -55,10 +59,12 @@ const styles = StyleSheet.create({
     flex: 1,
     textAlign: "center",
   },
-  infoButton: {
+  addButton: {
     width: 40,
     height: 40,
+    borderRadius: 8,
+    backgroundColor: "#F3F4F6",
     justifyContent: "center",
-    alignItems: "flex-end",
+    alignItems: "center",
   },
 });

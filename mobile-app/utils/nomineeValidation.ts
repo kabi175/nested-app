@@ -25,7 +25,8 @@ export function validateNomineeDraft(
   draft: NomineeDraft,
   existingNominees: Nominee[] = [],
   draftNominees: NomineeDraft[] = [],
-  editingIndex?: number
+  editingIndex?: number,
+  editingNomineeId?: number
 ): NomineeValidationErrors {
   const errors: NomineeValidationErrors = {};
   const isMinor = draft.isMinor;
@@ -114,6 +115,8 @@ export function validateNomineeDraft(
 
     if (!draft.address.country || draft.address.country.trim().length === 0) {
       addressErrors.country = "Country is required";
+    } else if (draft.address.country.toLowerCase() !== "in") {
+      addressErrors.country = "Country must be India (IN)";
     }
 
     if (Object.keys(addressErrors).length > 0) {
@@ -144,8 +147,12 @@ export function validateNomineeDraft(
 
   // Cross-nominee validation: Combine existing and draft nominees (excluding current draft)
   const otherDrafts = draftNominees.filter((_, index) => editingIndex === undefined || index !== editingIndex);
+  // Exclude the current nominee being edited from existing nominees
+  const otherExistingNominees = editingNomineeId
+    ? existingNominees.filter((n) => n.id !== editingNomineeId)
+    : existingNominees;
   const allOtherNominees = [
-    ...existingNominees,
+    ...otherExistingNominees,
     ...otherDrafts,
   ];
 
@@ -216,8 +223,9 @@ export function validateNomineeDraftComplete(
   draft: NomineeDraft,
   existingNominees: Nominee[],
   draftNominees: NomineeDraft[] = [],
-  editingIndex?: number
+  editingIndex?: number,
+  editingNomineeId?: number
 ): NomineeValidationErrors {
   // Only validate individual fields (no allocation total validation here)
-  return validateNomineeDraft(draft, existingNominees, draftNominees, editingIndex);
+  return validateNomineeDraft(draft, existingNominees, draftNominees, editingIndex, editingNomineeId);
 }

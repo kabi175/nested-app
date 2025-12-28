@@ -18,6 +18,7 @@ interface SearchableDropdownProps<T> {
   onSelect: (item: T) => void;
   selectedValue?: T | null;
   searchPlaceholder?: string;
+  disabled?: boolean;
 }
 
 export function SearchableDropdown<T extends Record<string, any>>({
@@ -28,6 +29,7 @@ export function SearchableDropdown<T extends Record<string, any>>({
   onSelect,
   selectedValue,
   searchPlaceholder = "Search...",
+  disabled = false,
 }: SearchableDropdownProps<T>) {
   const [isOpen, setIsOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
@@ -61,9 +63,10 @@ export function SearchableDropdown<T extends Record<string, any>>({
     <>
       {/* Dropdown Button */}
       <TouchableOpacity
-        style={styles.dropdownField}
-        onPress={() => setIsOpen(true)}
+        style={[styles.dropdownField, disabled && styles.dropdownFieldDisabled]}
+        onPress={() => !disabled && setIsOpen(true)}
         activeOpacity={0.7}
+        disabled={disabled}
       >
         <Text
           style={[
@@ -171,6 +174,10 @@ const styles = StyleSheet.create({
   },
   dropdownPlaceholder: {
     color: "#6B7280",
+  },
+  dropdownFieldDisabled: {
+    opacity: 0.5,
+    backgroundColor: "#E5E7EB",
   },
   modalOverlay: {
     flex: 1,

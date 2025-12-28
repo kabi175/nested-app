@@ -4,58 +4,40 @@ import type { Nominee, NomineeDraft } from "@/types/nominee";
 import React from "react";
 import { FlatList, StyleSheet } from "react-native";
 
-type NomineeListItem =
-  | { type: "existing"; nominee: Nominee; id: string }
-  | { type: "draft"; nominee: NomineeDraft; id: string; index: number };
-
 interface NomineeListProps {
-  existingNominees: Nominee[];
-  draftNominees: NomineeDraft[];
-  onEditNominee: (id: number) => void;
-  onEditDraft: (index: number) => void;
-  onDeleteDraft: (index: number) => void;
+  nominees: (Nominee | NomineeDraft)[];
+  onEditNominee: (index: number) => void;
+  onDeleteNominee: (index: number) => void;
 }
 
 export function NomineeList({
-  existingNominees,
-  draftNominees,
+  nominees,
   onEditNominee,
-  onEditDraft,
-  onDeleteDraft,
+  onDeleteNominee,
 }: NomineeListProps) {
-  const items: NomineeListItem[] = [
-    ...existingNominees.map((n) => ({
-      type: "existing" as const,
-      nominee: n,
-      id: n.id.toString(),
-    })),
-    ...draftNominees.map((n, idx) => ({
-      type: "draft" as const,
-      nominee: n,
-      id: `draft-${idx}`,
-      index: idx,
-    })),
-  ];
-
   return (
     <FlatList
-      data={items}
-      keyExtractor={(item) => item.id}
-      renderItem={({ item }) => {
-        if (item.type === "draft") {
+      data={nominees}
+      keyExtractor={(item, index) =>
+        item.id ? item.id.toString() : `draft-${index}`
+      }
+      renderItem={({ item, index }) => {
+        if (item.id) {
+          // Existing nominee (has id)
           return (
-            <DraftNomineeCard
-              draft={item.nominee}
-              index={item.index}
-              onEdit={() => onEditDraft(item.index)}
-              onDelete={() => onDeleteDraft(item.index)}
+            <NomineeCard
+              nominee={item as Nominee}
+              onEdit={() => onEditNominee(index)}
             />
           );
         } else {
+          // New nominee (no id - draft)
           return (
-            <NomineeCard
-              nominee={item.nominee}
-              onEdit={() => onEditNominee(item.nominee.id)}
+            <DraftNomineeCard
+              draft={item as NomineeDraft}
+              index={index}
+              onEdit={() => onEditNominee(index)}
+              onDelete={() => onDeleteNominee(index)}
             />
           );
         }

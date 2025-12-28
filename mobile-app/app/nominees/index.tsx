@@ -23,17 +23,15 @@ export default function NomineesScreen() {
 
   const {
     draft,
-    draftNominees,
-    activeNominees,
+    allNominees,
     validationErrors,
-    editingDraftIndex,
+    editingIndex,
     pendingNomineeId,
     showFormModal,
     canAddMore,
     handleAddNominee,
     handleEditNominee,
-    handleEditDraftNominee,
-    handleDeleteDraftNominee,
+    handleDeleteNominee,
     handleOptOutNominee,
     handleFieldChange,
     handleSaveDraft,
@@ -43,10 +41,25 @@ export default function NomineesScreen() {
 
   const { totalAllocation, remainingAllocation } = useNomineeAllocations();
 
-  // Sync nominees from query to atom
+  // Sync nominees from query to atom (merge server data with local changes)
   useEffect(() => {
     if (nominees) {
-      setNomineeList(nominees);
+      setNomineeList((prev) => {
+        // Merge: keep local changes (by id), add/update server nominees
+        const localById = new Map(
+          prev.filter((n) => n.id).map((n) => [n.id, n])
+        );
+        const localWithoutId = prev.filter((n) => !n.id);
+
+        // Update existing or add new server nominees
+        nominees.forEach((n) => {
+          if (n.id) {
+            localById.set(n.id, n);
+          }
+        });
+
+        return [...Array.from(localById.values()), ...localWithoutId];
+      });
     }
   }, [nominees, setNomineeList]);
 
@@ -63,11 +76,10 @@ export default function NomineesScreen() {
     );
   }
 
-  const hasNominees = activeNominees.length > 0 || draftNominees.length > 0;
+  const hasNominees = allNominees.length > 0;
   const calculatedRemainingAllocation =
-    editingDraftIndex !== null
-      ? remainingAllocation +
-        (draftNominees[editingDraftIndex]?.allocation || 0)
+    editingIndex !== null
+      ? remainingAllocation + (allNominees[editingIndex]?.allocation || 0)
       : remainingAllocation;
 
   return (
@@ -75,7 +87,7 @@ export default function NomineesScreen() {
       <Layout style={styles.layout} level="1">
         <NomineeScreenHeader
           onAddPress={handleAddNominee}
-          showAddMoreButton={hasNominees && !canAddMore}
+          showAddMoreButton={hasNominees && canAddMore}
         />
 
         {!hasNominees ? (
@@ -86,16 +98,14 @@ export default function NomineesScreen() {
         ) : (
           <>
             <NomineeList
-              existingNominees={activeNominees}
-              draftNominees={draftNominees}
+              nominees={allNominees}
               onEditNominee={handleEditNominee}
-              onEditDraft={handleEditDraftNominee}
-              onDeleteDraft={handleDeleteDraftNominee}
+              onDeleteNominee={handleDeleteNominee}
             />
 
             <NomineeFooter
               totalAllocation={totalAllocation}
-              draftNomineesCount={draftNominees.length}
+              draftNomineesCount={allNominees.length}
               onSave={handleSaveAll}
             />
           </>
@@ -107,7 +117,7 @@ export default function NomineesScreen() {
             draft={draft}
             errors={validationErrors}
             remainingAllocation={calculatedRemainingAllocation}
-            isEditMode={editingDraftIndex !== null || pendingNomineeId !== null}
+            isEditMode={editingIndex !== null}
             isEditingExistingNominee={pendingNomineeId !== null}
             onFieldChange={handleFieldChange}
             onSave={handleSaveDraft}
