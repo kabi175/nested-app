@@ -48,7 +48,8 @@ public class OrderData {
 
   @Nullable
   @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd")
-  private Date traded_on;
+  @JsonProperty("traded_on")
+  private Date tradedOn;
 
   @Nullable
   @JsonProperty("submitted_at")
