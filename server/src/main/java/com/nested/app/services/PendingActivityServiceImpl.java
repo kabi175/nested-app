@@ -56,6 +56,8 @@ public class PendingActivityServiceImpl implements PendingActivityService {
         activities.add(kycActivity);
       }
     }
+    // TODO: add nominee nomination to the pending activity if the
+    // user.nomineeStatus is unknow
 
     // Check for goals with pending payments
     if (type == null || type == ActivityType.GOAL_PAYMENT_PENDING) {
