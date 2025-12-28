@@ -1,6 +1,7 @@
 import { userAtom } from "@/atoms/user";
 import { ThemedText } from "@/components/ThemedText";
 import { useAuth, useSignOut } from "@/hooks/auth";
+import { clearNomineeAtoms } from "@/utils/nominee";
 import { openWhatsApp } from "@/utils/whtsapp";
 import { Ionicons } from "@expo/vector-icons";
 import { useQueryClient } from "@tanstack/react-query";
@@ -33,7 +34,6 @@ export default function AccountScreen() {
   const { signOut } = useSignOut();
   const queryClient = useQueryClient();
   const setUser = useSetAtom(userAtom);
-
   const getInitials = (name: string) => {
     return name
       .split(" ")
@@ -59,6 +59,7 @@ export default function AccountScreen() {
             await signOut();
             queryClient.clear();
             setUser(null);
+            clearNomineeAtoms();
             router.replace("/sign-in");
           },
         },

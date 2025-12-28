@@ -1,4 +1,15 @@
-import type { NomineeDraft, Nominee, RelationshipType } from "@/types/nominee";
+import {
+  draftNomineesAtom,
+  mfaStateAtom,
+  nomineeDraftAtom,
+  nomineeListAtom,
+  pendingActionAtom,
+  pendingNomineeIdAtom,
+  pendingPayloadAtom,
+  validationErrorsAtom,
+} from "@/atoms/nominee";
+import type { Nominee, NomineeDraft, RelationshipType } from "@/types/nominee";
+import { getDefaultStore } from "jotai";
 
 /**
  * Calculate if a nominee is a minor based on DOB
@@ -10,7 +21,10 @@ export function calculateIsMinor(dob: string): boolean {
   const age = today.getFullYear() - birthDate.getFullYear();
   const monthDiff = today.getMonth() - birthDate.getMonth();
 
-  if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
+  if (
+    monthDiff < 0 ||
+    (monthDiff === 0 && today.getDate() < birthDate.getDate())
+  ) {
     return age - 1 < 18;
   }
 
@@ -88,7 +102,10 @@ function formatRelationshipLabel(value: RelationshipType): string {
 /**
  * Get relationship options with user-friendly labels
  */
-export const RELATIONSHIP_OPTIONS: { label: string; value: RelationshipType }[] = [
+export const RELATIONSHIP_OPTIONS: {
+  label: string;
+  value: RelationshipType;
+}[] = [
   { label: formatRelationshipLabel("spouse"), value: "spouse" },
   { label: formatRelationshipLabel("father"), value: "father" },
   { label: formatRelationshipLabel("mother"), value: "mother" },
@@ -99,7 +116,10 @@ export const RELATIONSHIP_OPTIONS: { label: string; value: RelationshipType }[] 
   { label: formatRelationshipLabel("father_in_law"), value: "father_in_law" },
   { label: formatRelationshipLabel("mother_in_law"), value: "mother_in_law" },
   { label: formatRelationshipLabel("son_in_law"), value: "son_in_law" },
-  { label: formatRelationshipLabel("daughter_in_law"), value: "daughter_in_law" },
+  {
+    label: formatRelationshipLabel("daughter_in_law"),
+    value: "daughter_in_law",
+  },
   { label: formatRelationshipLabel("brother_in_law"), value: "brother_in_law" },
   { label: formatRelationshipLabel("sister_in_law"), value: "sister_in_law" },
   { label: formatRelationshipLabel("grand_father"), value: "grand_father" },
@@ -110,7 +130,10 @@ export const RELATIONSHIP_OPTIONS: { label: string; value: RelationshipType }[] 
   { label: formatRelationshipLabel("aunt"), value: "aunt" },
   { label: formatRelationshipLabel("nephew"), value: "nephew" },
   { label: formatRelationshipLabel("niece"), value: "niece" },
-  { label: formatRelationshipLabel("court_appointed_legal_guardian"), value: "court_appointed_legal_guardian" },
+  {
+    label: formatRelationshipLabel("court_appointed_legal_guardian"),
+    value: "court_appointed_legal_guardian",
+  },
   { label: formatRelationshipLabel("other"), value: "other" },
 ];
 
@@ -121,3 +144,19 @@ export function getRelationshipLabel(value: RelationshipType): string {
   return formatRelationshipLabel(value);
 }
 
+/**
+ * Clear all nominee-related atoms to their default values
+ * This resets all nominee state including lists, drafts, pending actions, and validation errors
+ */
+export function clearNomineeAtoms(): void {
+  const store = getDefaultStore();
+
+  store.set(nomineeListAtom, []);
+  store.set(draftNomineesAtom, []);
+  store.set(nomineeDraftAtom, null);
+  store.set(pendingActionAtom, null);
+  store.set(pendingPayloadAtom, null);
+  store.set(pendingNomineeIdAtom, null);
+  store.set(validationErrorsAtom, {});
+  store.set(mfaStateAtom, "idle");
+}
