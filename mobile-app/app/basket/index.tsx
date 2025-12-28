@@ -1,6 +1,7 @@
 import { BasketFund } from "@/api/basketAPI";
 import { CreateOrderRequest } from "@/api/paymentAPI";
 import { cartAtom } from "@/atoms/cart";
+import { FAQAccordion } from "@/components/FAQAccordion";
 import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
 import { useBasket } from "@/hooks/useBasket";
@@ -249,6 +250,51 @@ const basketFeatures: Record<keyof typeof popularBaskets, FeatureCardConfig[]> =
       },
     ],
   };
+
+const basketFaqs = [
+  {
+    question: "What is this?",
+    answer:
+      "A safe-plus money plan.\nMostly (more than 80%) in gold and safe debt.\nOnly a small part (less than 20%) in shares.",
+  },
+  {
+    question: "How is it different from FD?",
+    answer:
+      "FD gives 4–6%.\nThese funds give 10–11%.\nYou can take money out anytime.",
+  },
+  {
+    question: "What is the minimum investment?",
+    answer: "Start with ₹1000 or ₹200 monthly.",
+  },
+  {
+    question: "What is the past returns?",
+    answer:
+      "Returns change every year, but this has given 11–15% in past years:\n~11% in 10 years\n~13% in 5 years\n~15% in 3 years",
+  },
+  {
+    question: "What is expected returns?",
+    answer:
+      "The funds can deliver 6% to 13% p.a. on holding of at least 12 months.",
+  },
+  {
+    question: "Is it safe?",
+    answer:
+      "Yes.\nThese plans are checked by SEBI and run by big trusted companies.\nChance of loss for investment over one year is small.",
+  },
+  {
+    question: "Can I withdraw?",
+    answer: "Yes.\nNo lock-in.\nMoney comes to your bank in 2–3 working days.",
+  },
+  {
+    question: "Will TDS be deducted?",
+    answer: "No TDS at all.",
+  },
+  {
+    question: "What is Nested's fee?",
+    answer:
+      "Nested does not charge you anything. We get about 0.04% p.m. (less than ₹ 50 per month for ₹ 1 lakh investment) from the mutual fund company.",
+  },
+];
 
 export default function BasketInvestingScreen() {
   const { type } = useLocalSearchParams<{
@@ -540,6 +586,20 @@ export default function BasketInvestingScreen() {
           )}
         </View>
 
+        {/* FAQ Section */}
+        <View style={styles.faqSection}>
+          <ThemedText style={styles.sectionTitle}>
+            Frequently Asked Questions
+          </ThemedText>
+          {basketFaqs.map((faq, index) => (
+            <FAQAccordion
+              key={index}
+              question={faq.question}
+              answer={faq.answer}
+            />
+          ))}
+        </View>
+
         {/* Invest Button */}
         <TouchableOpacity
           style={[
@@ -827,6 +887,9 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
   },
   fundsSection: {
+    marginBottom: 24,
+  },
+  faqSection: {
     marginBottom: 24,
   },
   fundCard: {
