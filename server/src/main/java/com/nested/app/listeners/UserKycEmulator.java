@@ -40,7 +40,8 @@ public class UserKycEmulator {
 
   private void scheduleKycCompletion(Long userId) {
     // Use a separate thread to avoid blocking
-    new Thread(
+    Thread.ofVirtual()
+        .start(
             () -> {
               try {
                 log.info(
@@ -72,7 +73,6 @@ public class UserKycEmulator {
               } catch (Exception e) {
                 log.error("KYC Emulator: Error completing KYC for user {}", userId, e);
               }
-            })
-        .start();
+            });
   }
 }

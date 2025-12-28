@@ -119,17 +119,15 @@ public class UserServiceImpl implements UserService {
       }
     }
 
-    if (userDTO.getDateOfBirth() != null) {
-      if (!Objects.equals(userDTO.getDateOfBirth(), originalUser.getDateOfBirth())) {
+    if (userDTO.getDateOfBirth() != null
+        && !Objects.equals(userDTO.getDateOfBirth(), originalUser.getDateOfBirth())) {
         updatedUser = updatedUser.withDateOfBirth(userDTO.getDateOfBirth());
       }
-    }
 
-    if (userDTO.getGender() != null) {
-      if (!Objects.equals(userDTO.getGender(), originalUser.getGender())) {
+    if (userDTO.getGender() != null
+        && !Objects.equals(userDTO.getGender(), originalUser.getGender())) {
         updatedUser = updatedUser.withGender(userDTO.getGender());
       }
-    }
 
     if (!Strings.isNullOrEmpty(userDTO.getPanNumber())
         && !Objects.equals(userDTO.getPanNumber(), originalUser.getPanNumber())) {
@@ -363,12 +361,6 @@ public class UserServiceImpl implements UserService {
         .type("esign_upload")
         .redirectUrl(actionRequired.getRedirectUrl())
         .build();
-  }
-
-  private String getExtension(String filename) {
-    if (filename == null) return "";
-    int dot = filename.lastIndexOf('.');
-    return (dot == -1) ? "" : filename.substring(dot + 1);
   }
 
   private void updateAddressFields(Address address, AddressDto addressDto) {
