@@ -66,16 +66,15 @@ export default function AuthProvider({
     const subscriber = onAuthStateChanged(
       getAuth(),
       (user: FirebaseAuthTypes.User | null) => {
-        if (!user) {
-          router.replace("/sign-in");
-          return;
-        }
-
         setAuthState({
           isLoaded: true,
           isSignedIn: !!user,
           user,
         });
+
+        if (!user) {
+          router.replace("/sign-in");
+        }
       }
     );
     return subscriber; // unsubscribe on unmount
