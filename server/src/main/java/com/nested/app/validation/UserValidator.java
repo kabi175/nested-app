@@ -76,10 +76,10 @@ public class UserValidator {
      * Basic phone number validation
      */
     private boolean isValidPhoneNumber(String phoneNumber) {
-        // Simple validation - adjust based on your requirements
-        // This allows: +1234567890, 1234567890, +91-1234567890, etc.
-        return phoneNumber.matches("^[+]?[0-9\\-\\s()]+$") && 
-               phoneNumber.replaceAll("[^0-9]", "").length() >= 10;
+    // Simple validation - adjust based on your requirements
+    // This allows: +1234567890, 1234567890, +91-1234567890, etc.
+    return phoneNumber.matches("^[+]?[0-9\\-\\s()]+$")
+        && phoneNumber.replaceAll("\\D", "").length() >= 10;
     }
 }
 

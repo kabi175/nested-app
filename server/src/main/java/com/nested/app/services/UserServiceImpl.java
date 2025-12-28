@@ -18,7 +18,6 @@ import com.nested.app.repository.BankDetailRepository;
 import com.nested.app.repository.UserRepository;
 import java.util.List;
 import java.util.Objects;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -51,7 +50,7 @@ public class UserServiceImpl implements UserService {
           case INACTIVE -> userRepository.findByIsActive(false, pageable).stream();
           default -> userRepository.findAll(pageable).stream();
         };
-    return users.map(UserDTO::fromEntity).collect(Collectors.toList());
+    return users.map(UserDTO::fromEntity).toList();
   }
 
   @Override
