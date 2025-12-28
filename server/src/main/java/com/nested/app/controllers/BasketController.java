@@ -158,7 +158,7 @@ public class BasketController {
                     schema = @Schema(implementation = Map.class))),
         @ApiResponse(responseCode = "500", description = "Internal server error")
       })
-  public ResponseEntity<?> getBasketByName(
+  public ResponseEntity<BasketDTO> getBasketByName(
       @Parameter(description = "Basket name (title)", required = true) @PathVariable String name) {
 
     log.info("GET /api/v1/bucket/name/{} - Retrieving basket details by name", name);
@@ -167,8 +167,7 @@ public class BasketController {
       BasketDTO basket = basketService.getBasketByName(name);
       if (basket == null) {
         log.warn("Basket not found with name: {}", name);
-        return ResponseEntity.status(HttpStatus.NOT_FOUND)
-            .body(Map.<String, Object>of("error", "Basket not found"));
+        return ResponseEntity.status(HttpStatus.NO_CONTENT).build();
       }
 
       log.info("Successfully retrieved basket details for name: {}", name);
