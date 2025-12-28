@@ -11,6 +11,7 @@ import com.nested.app.dto.UserDTO;
 import com.nested.app.entity.Address;
 import com.nested.app.entity.User;
 import com.nested.app.events.UserUpdateEvent;
+import com.nested.app.exception.ExternalServiceException;
 import com.nested.app.mapper.BankAccountTypeMapper;
 import com.nested.app.repository.AddressRepository;
 import com.nested.app.repository.BankDetailRepository;
@@ -196,7 +197,7 @@ public class UserServiceImpl implements UserService {
     bank.setUser(user);
 
     if (!user.isReadyToInvest()) {
-      throw new RuntimeException("Complete KYC to create");
+      throw new IllegalArgumentException("Complete KYC to create");
     }
 
     var request =
@@ -209,7 +210,7 @@ public class UserServiceImpl implements UserService {
             .build();
     var resp = investorAPIClient.addBankAccount(request).block();
     if (resp == null) {
-      throw new RuntimeException("Exception during bank account creation");
+      throw new ExternalServiceException("Exception during bank account creation");
     }
     bank.setRefId(resp.getBankId());
     bank.setPaymentRef(resp.getPaymentRef());
@@ -246,7 +247,7 @@ public class UserServiceImpl implements UserService {
 
     var resp = investorAPIClient.uploadDocument("signature", file).block();
     if (resp == null || resp.getId() == null) {
-      throw new RuntimeException("Failed to upload signature document to external service");
+      throw new ExternalServiceException("Failed to upload signature document to external service");
     }
 
     user = user.withSignatureFileID(resp.getId());
@@ -269,7 +270,8 @@ public class UserServiceImpl implements UserService {
     var resp = investorAPIClient.fetchDocument(user.getSignatureFileID()).block();
 
     if (resp == null || resp.getUrl() == null) {
-      throw new RuntimeException("Failed to fetch signature document from external service");
+      throw new ExternalServiceException(
+          "Failed to fetch signature document from external service");
     }
 
     return resp.getUrl();
@@ -291,7 +293,8 @@ public class UserServiceImpl implements UserService {
         kycAPIClient.createAadhaarUploadRequest(user.getInvestor().getKycRequestRef()).block();
 
     if (actionRequired == null) {
-      throw new RuntimeException("Failed to create Aadhaar upload request from KYC service");
+      throw new ExternalServiceException(
+          "Failed to create Aadhaar upload request from KYC service");
     }
 
     if (actionRequired.isCompleted()) {
@@ -305,7 +308,7 @@ public class UserServiceImpl implements UserService {
     }
 
     if (actionRequired.getRedirectUrl() == null) {
-      throw new RuntimeException(
+      throw new ExternalServiceException(
           "Failed to create Aadhaar upload request " + "url" + " from KYC service");
     }
 
@@ -338,7 +341,7 @@ public class UserServiceImpl implements UserService {
     var actionRequired = kycAPIClient.createESignRequest(kycRequestId).block();
 
     if (actionRequired == null || actionRequired.getId() == null) {
-      throw new RuntimeException("Failed to create eSign upload request from KYC service");
+      throw new ExternalServiceException("Failed to create eSign upload request from KYC service");
     }
 
     if (actionRequired.isCompleted()) {

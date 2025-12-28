@@ -6,6 +6,7 @@ import com.nested.app.dto.NomineeRequestDTO;
 import com.nested.app.dto.NomineeResponseDTO;
 import com.nested.app.entity.Nominee;
 import com.nested.app.entity.User;
+import com.nested.app.exception.ExternalServiceException;
 import com.nested.app.repository.NomineeRepository;
 import com.nested.app.repository.UserRepository;
 import com.nested.app.services.mapper.NomineeMapper;
@@ -158,7 +159,7 @@ public class NomineeServiceImpl implements NomineeService {
     try {
       // Validate investor reference
       if (user.getInvestor() == null || user.getInvestor().getRef() == null) {
-        throw new RuntimeException(
+        throw new ExternalServiceException(
             "Cannot sync nominees: investor reference not found for user ID: " + user.getId());
       }
 
@@ -204,7 +205,7 @@ public class NomineeServiceImpl implements NomineeService {
 
     } catch (Exception e) {
       log.error("Failed to sync nominees to external service for user ID: {}", user.getId(), e);
-      throw new RuntimeException(
+      throw new ExternalServiceException(
           "Failed to sync nominees to external service: " + e.getMessage(), e);
     }
   }
@@ -229,7 +230,8 @@ public class NomineeServiceImpl implements NomineeService {
       var response = investorAPIClient.createNominees(investorRef, clientNominee).block();
 
       if (response == null) {
-        throw new RuntimeException("External service returned null response for nominee creation");
+        throw new ExternalServiceException(
+            "External service returned null response for nominee creation");
       }
 
       // Store external ID for future updates
@@ -248,7 +250,7 @@ public class NomineeServiceImpl implements NomineeService {
           investorRef,
           e.getMessage(),
           e);
-      throw new RuntimeException(
+      throw new ExternalServiceException(
           "Failed to create nominee '"
               + nominee.getName()
               + "' in external service: "
@@ -281,7 +283,8 @@ public class NomineeServiceImpl implements NomineeService {
       var response = investorAPIClient.updateNominees(investorRef, clientNominee).block();
 
       if (response == null) {
-        throw new RuntimeException("External service returned null response for nominee update");
+        throw new ExternalServiceException(
+            "External service returned null response for nominee update");
       }
 
       log.info(
@@ -297,7 +300,7 @@ public class NomineeServiceImpl implements NomineeService {
           investorRef,
           e.getMessage(),
           e);
-      throw new RuntimeException(
+      throw new ExternalServiceException(
           "Failed to update nominee '"
               + nominee.getName()
               + "' in external service: "

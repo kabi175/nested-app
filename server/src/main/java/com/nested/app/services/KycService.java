@@ -3,6 +3,7 @@ package com.nested.app.services;
 import com.nested.app.client.mf.KycAPIClient;
 import com.nested.app.entity.User;
 import com.nested.app.events.UserUpdateEvent;
+import com.nested.app.exception.ExternalServiceException;
 import com.nested.app.repository.InvestorRepository;
 import com.nested.app.repository.UserRepository;
 import com.nested.app.services.mapper.CreateKYCRequestMapper;
@@ -43,7 +44,8 @@ public class KycService {
             kycAPIClient.isKycRecordAvailable(user.getPanNumber(), user.getDateOfBirth()).block();
 
         if (resp == null) {
-          throw new RuntimeException("Failed to check KYC record: No response from KYC service");
+          throw new ExternalServiceException(
+              "Failed to check KYC record: No response from KYC service");
         }
 
         user =
@@ -82,7 +84,7 @@ public class KycService {
       var response = kycAPIClient.createKyc(request).block();
 
       if (response == null) {
-        throw new RuntimeException("Failed to initiate KYC: No response from KYC service");
+        throw new ExternalServiceException("Failed to initiate KYC: No response from KYC service");
       }
 
       user.setKycStatus(User.KYCStatus.AADHAAR_PENDING);
@@ -93,7 +95,7 @@ public class KycService {
       log.info("KYC initiated successfully for user ID: {}", userId);
     } catch (Exception e) {
       log.error("Failed to initiate KYC for user ID: {}", userId, e);
-      throw new RuntimeException("Failed to initiate KYC for user ID: " + userId, e);
+      throw new ExternalServiceException("Failed to initiate KYC for user ID: " + userId, e);
     }
   }
 }

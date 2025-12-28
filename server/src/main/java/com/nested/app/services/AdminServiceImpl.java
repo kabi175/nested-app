@@ -1,21 +1,19 @@
 package com.nested.app.services;
 
-import java.util.HashMap;
-import java.util.Map;
-
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseAuthException;
 import com.google.firebase.auth.UserRecord;
 import com.nested.app.dto.CreateAdminRequest;
 import com.nested.app.dto.UserDTO;
 import com.nested.app.entity.User;
+import com.nested.app.exception.FirebaseException;
 import com.nested.app.repository.UserRepository;
-
+import java.util.HashMap;
+import java.util.Map;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Slf4j
 @Service
@@ -55,8 +53,10 @@ public class AdminServiceImpl implements AdminService {
     public UserDTO promoteToAdmin(Long userId) {
         log.info("Promoting user {} to admin", userId);
 
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new RuntimeException("User not found with ID: " + userId));
+    User user =
+        userRepository
+            .findById(userId)
+            .orElseThrow(() -> new FirebaseException("User not found with ID: " + userId));
 
         if (user.getRole() == User.Role.ADMIN) {
             throw new IllegalArgumentException("User is already an admin");
@@ -77,8 +77,10 @@ public class AdminServiceImpl implements AdminService {
     public UserDTO demoteFromAdmin(Long userId) {
         log.info("Demoting user {} from admin", userId);
 
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new RuntimeException("User not found with ID: " + userId));
+    User user =
+        userRepository
+            .findById(userId)
+            .orElseThrow(() -> new FirebaseException("User not found with ID: " + userId));
 
         if (user.getRole() != User.Role.ADMIN) {
             throw new IllegalArgumentException("User is not an admin");
@@ -115,7 +117,7 @@ public class AdminServiceImpl implements AdminService {
 
         } catch (FirebaseAuthException e) {
             log.error("Firebase user not found with UID: {}", firebaseUid, e);
-            throw new RuntimeException("Firebase user not found with UID: " + firebaseUid);
+      throw new FirebaseException("Firebase user not found with UID: " + firebaseUid);
         }
     }
 
@@ -140,10 +142,10 @@ public class AdminServiceImpl implements AdminService {
 
         } catch (FirebaseAuthException e) {
             log.error("Firebase user not found with email: {}", email, e);
-            throw new RuntimeException(
-                "Firebase user not found with email: " + email + 
-                ". Please create the user in Firebase Console first."
-            );
+      throw new FirebaseException(
+          "Firebase user not found with email: "
+              + email
+              + ". Please create the user in Firebase Console first.");
         }
     }
 
@@ -206,7 +208,7 @@ public class AdminServiceImpl implements AdminService {
             log.info("Firebase admin claims set for UID: {}", firebaseUid);
         } catch (FirebaseAuthException e) {
             log.error("Failed to set Firebase custom claims for UID: {}", firebaseUid, e);
-            throw new RuntimeException("Failed to set Firebase admin claims: " + e.getMessage());
+      throw new FirebaseException("Failed to set Firebase admin claims: " + e.getMessage());
         }
     }
 
@@ -222,7 +224,7 @@ public class AdminServiceImpl implements AdminService {
             log.info("Firebase admin claims removed for UID: {}", firebaseUid);
         } catch (FirebaseAuthException e) {
             log.error("Failed to remove Firebase custom claims for UID: {}", firebaseUid, e);
-            throw new RuntimeException("Failed to remove Firebase admin claims: " + e.getMessage());
+      throw new FirebaseException("Failed to remove Firebase admin claims: " + e.getMessage());
         }
     }
 
