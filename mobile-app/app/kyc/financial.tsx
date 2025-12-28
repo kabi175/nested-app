@@ -134,6 +134,7 @@ export default function FinancialScreen() {
       const needsKycInit =
         kycStatus === "unknown" ||
         kycStatus === "pending" ||
+        kycStatus === "failed" ||
         kycStatus === undefined;
 
       if (needsKycInit && latestUser) {

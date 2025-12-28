@@ -29,13 +29,13 @@ export default function WaitingForApprovalScreen() {
     refetchIntervalInBackground: false, // Only poll when app is in foreground
   });
 
-  // Update user atom when data changes
+  // Update user atom on each refetch
   useEffect(() => {
-    if (currentUser) {
+    if (currentUser !== undefined) {
       setUser(currentUser);
 
       // Stop polling if we reach a final status
-      const status = currentUser.kycStatus;
+      const status = currentUser?.kycStatus;
       if (status === "completed" || status === "failed") {
         setShouldPoll(false);
       }
@@ -64,9 +64,7 @@ export default function WaitingForApprovalScreen() {
   const isFailed = displayStatus === "failed";
 
   const handleRetry = () => {
-    // Restart polling and refresh the query immediately
-    setShouldPoll(true);
-    queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.user] });
+    router.push("/kyc/basic-details");
   };
 
   const handleGoBack = () => {

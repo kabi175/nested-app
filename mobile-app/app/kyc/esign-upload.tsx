@@ -36,12 +36,12 @@ export default function EsignUploadScreen() {
           readerMode: false,
         });
       }
+      router.push("/kyc/waiting-for-approval");
     } catch (err) {
       console.error("Failed to launch eSign flow", err);
       setError("We couldn't launch the eSign flow. Please retry in a moment.");
     } finally {
       setIsLaunching(false);
-      router.push("/kyc/waiting-for-approval");
     }
   }, [user]);
 
