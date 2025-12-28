@@ -10,6 +10,8 @@ import com.nested.app.enums.TransactionType;
 import com.nested.app.repository.OrderItemsRepository;
 import com.nested.app.repository.TransactionRepository;
 import java.util.List;
+import java.util.Objects;
+import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.quartz.Job;
 import org.quartz.JobDataMap;
@@ -17,7 +19,6 @@ import org.quartz.JobExecutionContext;
 import org.quartz.JobExecutionException;
 import org.quartz.Scheduler;
 import org.quartz.SchedulerException;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 /**
@@ -42,12 +43,12 @@ import org.springframework.stereotype.Component;
  */
 @Slf4j
 @Component
+@AllArgsConstructor
 public class RedeemOrderTrackerJob implements Job {
-
-  @Autowired private SellOrderApiClient sellOrderApiClient;
-  @Autowired private OrderItemsRepository orderItemsRepository;
-  @Autowired private TransactionRepository transactionRepository;
-  @Autowired private Scheduler scheduler;
+  private SellOrderApiClient sellOrderApiClient;
+  private OrderItemsRepository orderItemsRepository;
+  private TransactionRepository transactionRepository;
+  private Scheduler scheduler;
 
   /**
    * Executes the redeem order tracking job.
@@ -104,13 +105,10 @@ public class RedeemOrderTrackerJob implements Job {
             transaction.setAmount(-orderData.getRedeemedAmount());
 
             switch (orderData.getState()) {
-              case CREATED:
-              case PENDING:
-              case UNDER_REVIEW:
+              case CREATED, PENDING, UNDER_REVIEW:
                 transaction.setStatus(TransactionStatus.VERIFICATION_PENDING);
                 break;
-              case CONFIRMED:
-              case SUBMITTED:
+              case CONFIRMED, SUBMITTED:
                 transaction.setStatus(TransactionStatus.SUBMITTED);
                 transaction.setExecutedAt(orderData.getSubmittedAt());
                 break;
@@ -118,8 +116,7 @@ public class RedeemOrderTrackerJob implements Job {
                 transaction.setStatus(TransactionStatus.COMPLETED);
                 transaction.setExecutedAt(orderData.getSubmittedAt());
                 break;
-              case FAILED:
-              case CANCELLED:
+              case FAILED, CANCELLED:
                 transaction.setStatus(TransactionStatus.FAILED);
                 transaction.setExecutedAt(orderData.getFailedAt());
                 break;
@@ -154,17 +151,15 @@ public class RedeemOrderTrackerJob implements Job {
       orders.forEach(
           order -> {
             switch (orderData.getState()) {
-              case CREATED:
-              case PENDING:
-              case UNDER_REVIEW:
-              case CONFIRMED:
-              case SUBMITTED:
+              case CREATED, PENDING, UNDER_REVIEW, CONFIRMED, SUBMITTED:
                 order.setStatus(Order.OrderStatus.PLACED);
+                break;
               case SUCCESSFUL:
                 order.setStatus(Order.OrderStatus.COMPLETED);
-              case FAILED:
-              case CANCELLED:
+                break;
+              case FAILED, CANCELLED:
                 order.setStatus(Order.OrderStatus.FAILED);
+                break;
               case REVERSED:
                 order.setStatus(Order.OrderStatus.REVERSED);
             }
@@ -217,7 +212,8 @@ public class RedeemOrderTrackerJob implements Job {
                   transaction.setFund(oi.getFund());
                   transaction.setType(TransactionType.SELL);
                   transaction.setStatus(TransactionStatus.VERIFICATION_PENDING);
-                  transaction.setUnits(-orderData.getRedeemedUnits());
+                  transaction.setUnits(
+                      -Objects.requireNonNullElse(orderData.getRedeemedUnits(), (double) 0));
                   transaction.setUnitPrice(orderData.getRedeemedPrice());
                   transaction.setAmount(-orderData.getRedeemedAmount());
                   transaction.setExecutedAt(orderData.getSubmittedAt());
