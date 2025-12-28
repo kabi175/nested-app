@@ -34,7 +34,6 @@ interface BasketCardProps {
   cardWidth?: number;
   onPress?: () => void;
   onInvestNowPress?: () => void;
-  onLearnMorePress?: () => void;
 }
 
 export default function BasketCard({
@@ -42,7 +41,6 @@ export default function BasketCard({
   cardWidth,
   onPress,
   onInvestNowPress,
-  onLearnMorePress,
 }: BasketCardProps) {
   const { width } = useWindowDimensions();
   const calculatedCardWidth = cardWidth ?? width - 80; // Account for margins and padding

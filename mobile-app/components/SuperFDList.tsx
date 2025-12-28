@@ -113,7 +113,6 @@ export default function SuperFDList({
               cardWidth={cardWidth}
               onPress={() => onCardPress?.(item.id)}
               onInvestNowPress={() => onInvestNowPress?.(item.id)}
-              onLearnMorePress={() => onLearnMorePress?.(item.id)}
             />
           </View>
         ))}
