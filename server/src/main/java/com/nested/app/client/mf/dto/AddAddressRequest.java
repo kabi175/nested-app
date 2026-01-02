@@ -29,12 +29,12 @@ public class AddAddressRequest {
   @JsonProperty("postal_code")
   private String pincode;
 
-  @Builder.Default private Nature nature = Nature.Residential;
+  @Builder.Default private Nature nature = Nature.RESIDENTIAL;
 
   @RequiredArgsConstructor
   public enum Nature {
-    Residential("residential"),
-    Business("business_location");
+    RESIDENTIAL("residential"),
+    BUSINESS("business_location");
 
     @JsonValue @Getter private final String value;
   }
