@@ -4,6 +4,7 @@ import com.google.common.base.Strings;
 import com.nested.app.client.bulkpe.PrefilClient;
 import com.nested.app.client.bulkpe.dto.PrefilRequest;
 import com.nested.app.client.bulkpe.dto.PrefillResponse;
+import com.nested.app.client.meta.LocationApiClient;
 import com.nested.app.entity.Address;
 import com.nested.app.entity.User;
 import com.nested.app.events.UserCreatedEvent;
@@ -30,10 +31,29 @@ import org.springframework.transaction.event.TransactionalEventListener;
 public record UserPreFillHandler(
     PrefilClient prefilClient,
     InvestorRepository investorRepository,
-    UserRepository userRepository) {
+    UserRepository userRepository,
+    LocationApiClient locationApiClient) {
 
   private static final List<DateTimeFormatter> FORMATTERS =
       List.of(DateTimeFormatter.ofPattern("yyyy-MM-dd"), DateTimeFormatter.ofPattern("dd-MM-yyyy"));
+
+  public static String generateRefId() {
+    String timestamp = DateTimeFormatter.ofPattern("yyyyMMddHHmmss").format(LocalDateTime.now());
+    int randomNum = ThreadLocalRandom.current().nextInt(1000, 9999);
+    return "REF-" + timestamp + "-" + randomNum;
+  }
+
+  // TODO: mohan recheck this
+  public static Date parseDate(String dateStr) {
+    for (DateTimeFormatter formatter : FORMATTERS) {
+      try {
+        LocalDate localDate = LocalDate.parse(dateStr, formatter);
+        return Date.from(localDate.atStartOfDay(ZoneId.systemDefault()).toInstant());
+      } catch (DateTimeParseException ignored) {
+      }
+    }
+    throw new IllegalArgumentException("Invalid date format: " + dateStr);
+  }
 
   @TransactionalEventListener(phase = TransactionPhase.BEFORE_COMMIT)
   public void afterCreate(UserCreatedEvent event) {
@@ -46,23 +66,6 @@ public record UserPreFillHandler(
         || event.oldUser().getPrefillStatus().equals(User.PrefillStatus.INCOMPLETE)) {
       preFillUserData(event.newUser());
     }
-  }
-
-  public static String generateRefId() {
-    String timestamp = DateTimeFormatter.ofPattern("yyyyMMddHHmmss").format(LocalDateTime.now());
-    int randomNum = ThreadLocalRandom.current().nextInt(1000, 9999);
-    return "REF-" + timestamp + "-" + randomNum;
-  }
-
-  // TODO: mohan recheck this
-  public static Date parseDate(String dateStr) {
-      for (DateTimeFormatter formatter : FORMATTERS) {
-          try {
-              LocalDate localDate = LocalDate.parse(dateStr, formatter);
-              return Date.from(localDate.atStartOfDay(ZoneId.systemDefault()).toInstant());
-          } catch (DateTimeParseException ignored) {}
-      }
-      throw new IllegalArgumentException("Invalid date format: " + dateStr);
   }
 
   void preFillUserData(User user) {
@@ -116,14 +119,12 @@ public record UserPreFillHandler(
           "Prefill data saved for userId={} with clientCode={}",
           user.getId(),
           user.getClientCode());
-    }
-    else {
+    } else {
       log.warn(
-              "Prefill failed for userId={} reference={} message={}",
-              user.getId(),
-              prefilRequest.getReference(),
-              response.getMessage()
-      );
+          "Prefill failed for userId={} reference={} message={}",
+          user.getId(),
+          prefilRequest.getReference(),
+          response.getMessage());
       User.PrefillStatus status = mapPrefillFailureStatus(response);
       userRepository.save(user.withPrefillStatus(status));
     }
@@ -132,8 +133,10 @@ public record UserPreFillHandler(
   private User.PrefillStatus mapPrefillFailureStatus(PrefillResponse response) {
     if (response.getStatusCode() == 400) {
       return switch (response.getMessage()) {
-        case "Data not found in Bureau" -> User.PrefillStatus.FAILED_WITH_INVALID_NAME_OR_PHONE_NUMBER;
-        case "Input payload validation failed" -> User.PrefillStatus.FAILED_WITH_INVALID_PHONE_NUMBER_FORAMATE;
+        case "Data not found in Bureau" ->
+            User.PrefillStatus.FAILED_WITH_INVALID_NAME_OR_PHONE_NUMBER;
+        case "Input payload validation failed" ->
+            User.PrefillStatus.FAILED_WITH_INVALID_PHONE_NUMBER_FORAMATE;
         default -> User.PrefillStatus.UNKNOWN_FAILURE;
       };
     }
@@ -144,11 +147,11 @@ public record UserPreFillHandler(
   private void mapToUser(PrefillResponse response, User savedUser) {
     var data = response.getData();
 
-    if(savedUser.getFirstName() == null || savedUser.getFirstName().isEmpty()) {
-        savedUser.setFirstName(data.getName()); // you may want to split name
+    if (savedUser.getFirstName() == null || savedUser.getFirstName().isEmpty()) {
+      savedUser.setFirstName(data.getName()); // you may want to split name
     }
-    if(savedUser.getEmail() == null) {
-        savedUser.setEmail(data.getEmailInfo().getFirst().getEmailAddress().toLowerCase());
+    if (savedUser.getEmail() == null) {
+      savedUser.setEmail(data.getEmailInfo().getFirst().getEmailAddress().toLowerCase());
     }
     savedUser.setClientCode(data.getReference());
     if (savedUser.getPanNumber() == null) {
@@ -159,8 +162,8 @@ public record UserPreFillHandler(
               ? data.getIdentityInfo().getPanNumber().getFirst().getIdNumber()
               : null);
     }
-    if(savedUser.getDateOfBirth() == null) {
-        savedUser.setDateOfBirth(parseDate(data.getPersonalInfo().getDob()));
+    if (savedUser.getDateOfBirth() == null) {
+      savedUser.setDateOfBirth(parseDate(data.getPersonalInfo().getDob()));
     }
 
     if (data.getAddressInfo() != null && !data.getAddressInfo().isEmpty()) {
@@ -169,10 +172,21 @@ public record UserPreFillHandler(
         Address address = new Address();
 
         address.setAddressLine(addressInfo.getAddress());
-        address.setState(addressInfo.getState());
-        address.setCity(""); // TODO: find a way to get city
-        address.setCountry("IN");
         address.setPinCode(addressInfo.getPostal());
+        address.setState(addressInfo.getState());
+        address.setCountry("IN");
+
+        if (addressInfo.getPostal() != null && !addressInfo.getPostal().isBlank()) {
+          try {
+            var location = locationApiClient.fetchLocation(addressInfo.getPostal()).block();
+            if (location != null) {
+              address.setCity(location.getCity());
+            }
+          } catch (Exception e) {
+            log.error("Error while trying to fetch location from API", e);
+            address.setCity("");
+          }
+        }
 
         savedUser.setAddress(address);
       }
@@ -180,5 +194,4 @@ public record UserPreFillHandler(
 
     savedUser.setPrefillStatus(User.PrefillStatus.COMPLETED);
   }
-
 }
