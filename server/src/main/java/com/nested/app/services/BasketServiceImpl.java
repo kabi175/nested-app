@@ -11,7 +11,6 @@ import com.nested.app.repository.BasketRepository;
 import com.nested.app.repository.FundRepository;
 import java.util.List;
 import java.util.Optional;
-import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -111,8 +110,7 @@ public class BasketServiceImpl implements BasketService {
 
     try {
       List<Basket> baskets = basketRepository.findAll();
-      List<BasketDTO> basketDTOs =
-          baskets.stream().map(this::convertToDTO).collect(Collectors.toList());
+      List<BasketDTO> basketDTOs = baskets.stream().map(this::convertToDTO).toList();
 
       log.info("Successfully retrieved {} baskets", basketDTOs.size());
       return basketDTOs;
@@ -250,7 +248,7 @@ public class BasketServiceImpl implements BasketService {
                     fundDTO.setAllocationPercentage(basketFund.getAllocationPercentage());
                     return fundDTO;
                   })
-              .collect(Collectors.toList()));
+              .toList());
     }
 
     return dto;
@@ -321,8 +319,7 @@ public class BasketServiceImpl implements BasketService {
     log.info("Deleting {} baskets", baskets.size());
 
     try {
-      List<BasketDTO> deletedBaskets =
-          baskets.stream().map(this::deleteBasket).collect(Collectors.toList());
+      List<BasketDTO> deletedBaskets = baskets.stream().map(this::deleteBasket).toList();
 
       log.info("Successfully deleted {} baskets", deletedBaskets.size());
       return deletedBaskets;

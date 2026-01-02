@@ -10,8 +10,11 @@ import lombok.Data;
 
 @Data
 public abstract class BaseKYCRequest {
-  protected final String country_of_birth = "IN";
-  protected final String place_of_birth = "IN";
+  @JsonProperty("country_of_birth")
+  protected final String countryOfBirth = "IN";
+
+  @JsonProperty("place_of_birth")
+  protected final String placeOfBirth = "IN";
 
   @JsonIgnore protected String firstName;
   @JsonIgnore protected String lastName;

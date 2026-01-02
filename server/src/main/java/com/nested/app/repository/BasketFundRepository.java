@@ -24,30 +24,4 @@ public interface BasketFundRepository extends JpaRepository<BasketFund, BasketFu
    */
   List<BasketFund> findByBasketId(Long basketId);
 
-  /**
-   * Find basket funds by fund ID
-   *
-   * @param fundId Fund ID
-   * @return List of basket funds for the specified fund
-   */
-  List<BasketFund> findByFundId(Long fundId);
-
-  /**
-   * Delete all basket funds for a specific basket
-   * NOTE: This method is deprecated. Use entity-based delete in service layer instead
-   * to ensure entity-level authorization filters are applied.
-   * @param basketId Basket ID
-   * @deprecated Use service method that loads entities first (filtered) then deletes
-   */
-  @Deprecated
-  void deleteByBasketId(Long basketId);
-
-  /**
-   * Check if a basket fund exists for a specific basket and fund
-   *
-   * @param basketId Basket ID
-   * @param fundId Fund ID
-   * @return true if exists, false otherwise
-   */
-  boolean existsByBasketIdAndFundId(Long basketId, Long fundId);
 }

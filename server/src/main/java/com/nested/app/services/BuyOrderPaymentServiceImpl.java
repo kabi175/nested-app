@@ -43,7 +43,7 @@ public class BuyOrderPaymentServiceImpl implements BuyOrderPaymentService {
   private final PaymentServiceImpl paymentServiceHelper;
 
   @Value("${app.url}")
-  private String APP_URL;
+  private String appUrl;
 
   /**
    * Verifies a buy order payment using verification code
@@ -195,6 +195,6 @@ public class BuyOrderPaymentServiceImpl implements BuyOrderPaymentService {
   }
 
   private String callbackUrl(Long paymentID) {
-    return APP_URL + "/redirects/payment/" + paymentID;
+    return appUrl + "/redirects/payment/" + paymentID;
   }
 }

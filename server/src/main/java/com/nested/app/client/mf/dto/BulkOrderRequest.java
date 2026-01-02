@@ -1,5 +1,6 @@
 package com.nested.app.client.mf.dto;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
@@ -12,7 +13,11 @@ import lombok.Data;
 @Valid
 @Builder
 public class BulkOrderRequest {
-  @NotNull @NotNull @NotEmpty private String auth_ref;
+  @JsonProperty("auth_ref")
+  @NotNull
+  @NotNull
+  @NotEmpty
+  private String authRef;
 
   @NotNull
   @Size(min = 1)

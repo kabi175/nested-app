@@ -1,7 +1,6 @@
 package com.nested.app.validation;
 
 import com.nested.app.annotation.ActiveUserOnly;
-import com.nested.app.entity.Fund;
 import com.nested.app.entity.User;
 import jakarta.validation.ConstraintValidator;
 import jakarta.validation.ConstraintValidatorContext;

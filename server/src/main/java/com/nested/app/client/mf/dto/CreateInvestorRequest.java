@@ -14,7 +14,8 @@ import lombok.RequiredArgsConstructor;
 @EqualsAndHashCode(callSuper = true)
 @JsonIgnoreProperties({"email"})
 public class CreateInvestorRequest extends BaseKYCRequest {
-  private final String tax_status = "resident_individual";
+  @JsonProperty("tax_status")
+  private final String taxStatus = "resident_individual";
 
   @JsonProperty("type")
   private InvestorType investorType;
@@ -25,7 +26,7 @@ public class CreateInvestorRequest extends BaseKYCRequest {
 
   @JsonProperty("first_tax_residency")
   public Map<String, String> getTaxResidency() {
-    return Map.of("country", country_of_birth, "taxid_type", "pan", "taxid_number", pan);
+    return Map.of("country", countryOfBirth, "taxid_type", "pan", "taxid_number", pan);
   }
 
   @JsonProperty("occupation")

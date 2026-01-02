@@ -1,9 +1,7 @@
 package com.nested.app.client.bulkpe.dto;
 
-import java.time.Instant;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-
 import lombok.Data;
 
 /**

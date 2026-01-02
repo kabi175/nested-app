@@ -9,7 +9,6 @@ import com.nested.app.repository.UserRepository;
 import java.time.LocalDate;
 import java.util.Date;
 import java.util.List;
-import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -45,8 +44,7 @@ public class ChildServiceImpl implements ChildService {
 
     try {
       List<Child> children = childRepository.findAll(user);
-      List<ChildDTO> childDTOs =
-          children.stream().map(this::convertToDTO).collect(Collectors.toList());
+      List<ChildDTO> childDTOs = children.stream().map(this::convertToDTO).toList();
 
       log.info("Successfully retrieved {} children", childDTOs.size());
       return childDTOs;
@@ -153,13 +151,10 @@ public class ChildServiceImpl implements ChildService {
       }
 
       List<Child> childEntities =
-          children.stream()
-              .map(childDTO -> convertToEntity(childDTO, user))
-              .collect(Collectors.toList());
+          children.stream().map(childDTO -> convertToEntity(childDTO, user)).toList();
 
       List<Child> savedChildren = childRepository.saveAll(childEntities);
-      List<ChildDTO> savedChildDTOs =
-          savedChildren.stream().map(this::convertToDTO).collect(Collectors.toList());
+      List<ChildDTO> savedChildDTOs = savedChildren.stream().map(this::convertToDTO).toList();
 
       log.info("Successfully created {} children", savedChildDTOs.size());
       return savedChildDTOs;
