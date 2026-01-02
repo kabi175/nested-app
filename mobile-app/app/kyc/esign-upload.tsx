@@ -8,7 +8,7 @@ import React, { useCallback, useState } from "react";
 import { KeyboardAvoidingView, Platform, ScrollView, View } from "react-native";
 
 export default function EsignUploadScreen() {
-  const { data: user, isLoading } = useUser();
+  const { data: user, isLoading, refetch } = useUser();
   const router = useRouter();
   const [isLaunching, setIsLaunching] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -35,6 +35,7 @@ export default function EsignUploadScreen() {
           readerMode: false,
         });
       }
+      await refetch();
       router.push("/kyc/waiting-for-approval");
     } catch (err) {
       console.error("Failed to launch eSign flow", err);

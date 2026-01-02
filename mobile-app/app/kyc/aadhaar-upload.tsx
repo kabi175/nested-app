@@ -1,6 +1,7 @@
 import { fetchAadhaarUploadRedirectUrl } from "@/api/userApi";
 import { userAtom } from "@/atoms/user";
 import { StepProgress } from "@/components/ui/StepProgress";
+import { useUser } from "@/hooks/useUser";
 import { Button, Layout, Text } from "@ui-kitten/components";
 import { useRouter } from "expo-router";
 import * as WebBrowser from "expo-web-browser";
@@ -15,6 +16,7 @@ export default function AadhaarUploadScreen() {
   const [error, setError] = useState<string | null>(null);
   const totalSteps = 6;
   const currentStep = 6;
+  const { refetch } = useUser();
 
   const startAadhaarUpload = useCallback(async () => {
     if (!user) {
@@ -35,6 +37,7 @@ export default function AadhaarUploadScreen() {
           dismissButtonStyle: "done",
           readerMode: false,
         });
+        await refetch();
         router.push("/kyc/esign-upload");
       }
     } catch (err) {
