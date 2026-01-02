@@ -29,28 +29,28 @@ public class AddressDto {
 
   @NotBlank(message = "Address line is required")
   @Size(max = 255, message = "Address line cannot exceed 255 characters")
-  @Schema(description = "Address line", example = "123 Main Street, Apartment 4B", required = true)
+  @Schema(description = "Address line", example = "123 Main Street, Apartment 4B")
   @JsonProperty("address_line")
   private String addressLine;
 
-    @NotBlank(message = "City is required")
-    @Size(max = 100, message = "City name cannot exceed 100 characters")
-    @Schema(description = "City name", example = "Mumbai", required = true)
-    private String city;
+  @NotBlank(message = "City is required")
+  @Size(max = 100, message = "City name cannot exceed 100 characters")
+  @Schema(description = "City name", example = "Mumbai")
+  private String city;
 
-    @NotBlank(message = "State is required")
-    @Size(max = 100, message = "State name cannot exceed 100 characters")
-    @Schema(description = "State name", example = "Maharashtra", required = true)
-    private String state;
+  @NotBlank(message = "State is required")
+  @Size(max = 100, message = "State name cannot exceed 100 characters")
+  @Schema(description = "State name", example = "Maharashtra")
+  private String state;
 
-    @NotBlank(message = "Country is required")
-    @Size(max = 100, message = "Country name cannot exceed 100 characters")
-    @Schema(description = "Country name", example = "India", required = true)
-    private String country;
+  @NotBlank(message = "Country is required")
+  @Size(max = 100, message = "Country name cannot exceed 100 characters")
+  @Schema(description = "Country name", example = "India")
+  private String country;
 
   @NotBlank(message = "Pin code is required")
   @Pattern(regexp = "^[0-9]{6}$", message = "Pin code must be 6 digits")
-  @Schema(description = "Pin code", example = "400001", required = true)
+  @Schema(description = "Pin code", example = "400001")
   @JsonProperty("pin_code")
   private String pinCode;
 
