@@ -37,6 +37,11 @@ public class GlobalExceptionHandler {
     return buildErrorResponse(HttpStatus.BAD_REQUEST, ex.getMessage());
   }
 
+  @ExceptionHandler(UnsupportedOperationException.class)
+  public ResponseEntity<Map<String, Object>> handleException(UnsupportedOperationException ex) {
+    return buildErrorResponse(HttpStatus.BAD_REQUEST, ex.getMessage());
+  }
+
   @ExceptionHandler(RuntimeException.class)
   public ResponseEntity<Map<String, Object>> handleRuntimeException(RuntimeException ex) {
     log.error("Runtime error: {}", ex.getMessage(), ex);

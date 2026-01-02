@@ -1,6 +1,7 @@
 package com.nested.app.services;
 
 import com.google.common.base.Strings;
+import com.nested.app.client.meta.BankApiClient;
 import com.nested.app.client.mf.InvestorAPIClient;
 import com.nested.app.client.mf.KycAPIClient;
 import com.nested.app.client.mf.dto.BankAccountRequest;
@@ -40,6 +41,7 @@ public class UserServiceImpl implements UserService {
   private final KycAPIClient kycAPIClient;
   private final ApplicationEventPublisher publisher;
   private final KycRedirectService kycRedirectService;
+  private final BankApiClient bankApiClient;
 
   @Override
   public List<UserDTO> findAllUsers(Type type, Pageable pageable, User user) {
@@ -194,7 +196,19 @@ public class UserServiceImpl implements UserService {
     bank.setUser(user);
 
     if (!user.isReadyToInvest()) {
-      throw new IllegalArgumentException("Complete KYC to create");
+      throw new IllegalArgumentException("Complete KYC before adding bank details");
+    }
+
+    try {
+      var ifscData = bankApiClient.fetchIfscData(bank.getIfscCode()).block();
+
+      if (ifscData == null) {
+        throw new IllegalArgumentException("Invalid IFSC code");
+      }
+
+      bank.setBankName(ifscData.getBankName());
+    } catch (Exception e) {
+      throw new IllegalArgumentException("Invalid IFSC code");
     }
 
     var request =
@@ -207,7 +221,7 @@ public class UserServiceImpl implements UserService {
             .build();
     var resp = investorAPIClient.addBankAccount(request).block();
     if (resp == null) {
-      throw new ExternalServiceException("Exception during bank account creation");
+      throw new IllegalArgumentException("Invalid Bank Details");
     }
     bank.setRefId(resp.getBankId());
     bank.setPaymentRef(resp.getPaymentRef());
@@ -229,8 +243,7 @@ public class UserServiceImpl implements UserService {
 
   @Override
   public void deleteBankAccount(Long userID, Long bankAccountID) {
-    var bankAccount = bankDetailRepository.findById(bankAccountID).orElseThrow();
-    bankDetailRepository.delete(bankAccount);
+    throw new UnsupportedOperationException("Bank account deletion is not supported");
   }
 
   @Override
