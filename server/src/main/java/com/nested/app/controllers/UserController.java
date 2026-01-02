@@ -107,7 +107,8 @@ public class UserController {
       tags = "user",
       summary = "Create investor for user",
       description =
-          "Creates an investor profile in Tarrakki for the specified user (individual type)")
+          "Creates an investor profile in Exteral Provider for the specified "
+              + "user (individual type)")
   @ApiResponses(
       value = {
         @ApiResponse(

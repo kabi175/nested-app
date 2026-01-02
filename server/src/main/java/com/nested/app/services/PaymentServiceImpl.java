@@ -2,7 +2,6 @@ package com.nested.app.services;
 
 import com.nested.app.client.mf.BuyOrderApiClient;
 import com.nested.app.client.mf.MandateApiClient;
-import com.nested.app.client.mf.OtpApiClient;
 import com.nested.app.client.mf.dto.BulkOrderOtpRequest;
 import com.nested.app.client.mf.dto.MandateDto;
 import com.nested.app.client.mf.dto.OrderDetail;
@@ -69,8 +68,6 @@ public class PaymentServiceImpl implements PaymentService {
   private final MandateApiClient mandateApiClient;
   private final ApplicationEventPublisher eventPublisher;
 
-  private final OtpApiClient otpApiClient;
-
   /**
    * Creates a payment with multiple orders for a child
    *
@@ -100,7 +97,6 @@ public class PaymentServiceImpl implements PaymentService {
       }
 
       var investor = orders.getFirst().getInvestor();
-
 
       // Create payment entity
       Payment payment = new Payment();
@@ -133,12 +129,6 @@ public class PaymentServiceImpl implements PaymentService {
 
       OtpRequest otpRequest =
           BulkOrderOtpRequest.getInstance(payment.getInvestor().getRef(), otpDetails);
-
-      var otpResp = otpApiClient.sendOtp(otpRequest).block();
-      if (otpResp == null) {
-        throw new ExternalServiceException("Failed to get OTP from MF provider");
-      }
-      payment.setVerificationRef(otpResp.getOtpId());
 
       payment.setOrders(orders);
       if (orders.stream().anyMatch(BuyOrder.class::isInstance)) {
