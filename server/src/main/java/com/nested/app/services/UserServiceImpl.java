@@ -1,6 +1,9 @@
 package com.nested.app.services;
 
 import com.google.common.base.Strings;
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseAuthException;
+import com.google.firebase.auth.UserRecord;
 import com.nested.app.client.meta.BankApiClient;
 import com.nested.app.client.mf.InvestorAPIClient;
 import com.nested.app.client.mf.KycAPIClient;
@@ -13,6 +16,7 @@ import com.nested.app.entity.Address;
 import com.nested.app.entity.User;
 import com.nested.app.events.UserUpdateEvent;
 import com.nested.app.exception.ExternalServiceException;
+import com.nested.app.exception.FirebaseException;
 import com.nested.app.mapper.BankAccountTypeMapper;
 import com.nested.app.repository.AddressRepository;
 import com.nested.app.repository.BankDetailRepository;
@@ -28,7 +32,6 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
-// TODO: Refer this update to update all other serives
 @Slf4j
 @Service
 @RequiredArgsConstructor
@@ -64,7 +67,6 @@ public class UserServiceImpl implements UserService {
     return UserDTO.fromEntity(savedUser);
   }
 
-  // TODO: sync the username & email to firebase auth as well
   @Override
   public UserDTO updateUser(UserDTO userDTO, User user) {
     Long userId = userDTO.getId();
@@ -81,6 +83,17 @@ public class UserServiceImpl implements UserService {
                     new OpenApiResourceNotFoundException("User with id " + userId + " not found"));
 
     User updatedUser = originalUser;
+    UserRecord userRecord;
+    try {
+      userRecord = FirebaseAuth.getInstance().getUser(originalUser.getFirebaseUid());
+    } catch (FirebaseAuthException e) {
+      throw new OpenApiResourceNotFoundException("User with id " + userId + " not found");
+    }
+
+    if (userRecord.getEmail() != null) {
+      // always update the email from firebase
+      userDTO.setEmail(userRecord.getEmail());
+    }
 
     if (!Strings.isNullOrEmpty(userDTO.getFirstName())
         && !Objects.equals(userDTO.getFirstName(), originalUser.getFirstName())) {
@@ -180,6 +193,16 @@ public class UserServiceImpl implements UserService {
       return UserDTO.fromEntity(originalUser);
     }
     User updated = userRepository.save(updatedUser);
+
+    // sync user full name to firebase
+    if (!Objects.equals(updatedUser.getFullName(), originalUser.getFullName())) {
+      try {
+        FirebaseAuth.getInstance()
+            .updateUser(userRecord.updateRequest().setDisplayName(updatedUser.getFullName()));
+      } catch (FirebaseAuthException e) {
+        throw new FirebaseException(e.getMessage());
+      }
+    }
     // publish event after successful update
     publisher.publishEvent(new UserUpdateEvent(originalUser, updatedUser));
     return UserDTO.fromEntity(updated);
