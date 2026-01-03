@@ -7,6 +7,7 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public enum ActivityType {
   BANK_ACCOUNT_PENDING("bank_account_pending"),
+  NOMINEE_CONFIGURATION_PENDING("nominee_configuration_pending"),
   PROFILE_INCOMPLETE("profile_incomplete"),
   GOAL_PAYMENT_PENDING("goal_payment_pending"),
   KYC_INCOMPLETE("kyc_incomplete");

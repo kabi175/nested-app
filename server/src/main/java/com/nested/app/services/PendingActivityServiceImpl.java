@@ -56,8 +56,6 @@ public class PendingActivityServiceImpl implements PendingActivityService {
         activities.add(kycActivity);
       }
     }
-    // TODO: add nominee nomination to the pending activity if the
-    // user.nomineeStatus is unknow
 
     // Check for goals with pending payments
     if (type == null || type == ActivityType.GOAL_PAYMENT_PENDING) {
@@ -70,6 +68,13 @@ public class PendingActivityServiceImpl implements PendingActivityService {
       PendingActivityDTO<?> profileActivity = checkProfileCompletion(user);
       if (profileActivity != null) {
         activities.add(profileActivity);
+      }
+    }
+
+    if (type == null || type == ActivityType.NOMINEE_CONFIGURATION_PENDING) {
+      var nomineeActivity = checkNomineeStatus(user);
+      if (nomineeActivity != null) {
+        activities.add(nomineeActivity);
       }
     }
 
@@ -105,6 +110,24 @@ public class PendingActivityServiceImpl implements PendingActivityService {
         .summary(summary)
         .lastUpdated(Timestamp.from(Instant.now()))
         .build();
+  }
+
+  private PendingActivityDTO<?> checkNomineeStatus(User user) {
+    var nomineeStatus = user.getNomineeStatus();
+    if (nomineeStatus == null || nomineeStatus == User.NomineeStatus.UNKNOWN) {
+      return PendingActivityDTO.builder()
+          .id(UUID.randomUUID().toString())
+          .type(ActivityType.NOMINEE_CONFIGURATION_PENDING)
+          .title("Complete nominee nomination")
+          .description("Complete nominee nomination to start investing")
+          .priority(ActivityPriority.HIGH)
+          .createdAt(user.getCreatedAt())
+          .metadata(MinifiedUserDTO.fromEntity(user))
+          .actionUrl("/api/v1/users/nominees")
+          .status("PENDING")
+          .build();
+    }
+    return null;
   }
 
   private PendingActivityDTO<?> checkKycStatus(User user) {
