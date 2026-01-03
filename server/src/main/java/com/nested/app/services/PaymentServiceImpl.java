@@ -173,22 +173,33 @@ public class PaymentServiceImpl implements PaymentService {
   }
 
   private void createMandateWithExternalAPI(Payment payment) {
+    var today = Instant.now().atZone(ZoneId.of("Asia/Kolkata")).toLocalDate();
     var sipOrders =
         payment.getOrders().stream()
             .filter(SIPOrder.class::isInstance)
             .map(SIPOrder.class::cast)
             .toList();
 
-    // TODO: compute the  mandate amount order amount & setup amount
+    var stepUPAmount =
+        sipOrders.stream()
+            .filter(o -> o.getSipStepUp() != null)
+            .map(
+                o -> {
+                  var totalYears = o.getEndDate().getYear() - today.getYear();
+                  return o.getSipStepUp().getStepUpAmount() * totalYears;
+                })
+            .reduce(0d, Double::sum);
+
     var totalAmount = sipOrders.stream().map(SIPOrder::getAmount).reduce(0d, Double::sum);
 
+    var mandateAmount = stepUPAmount + totalAmount;
+
     var bank = bankDetailRepository.findById(payment.getBank().getId()).orElseThrow();
-    var today = Instant.now().atZone(ZoneId.of("Asia/Kolkata")).toLocalDate();
     var mandate =
         mandateApiClient
             .createMandate(
                 MandateDto.builder()
-                    .amount(totalAmount)
+                    .amount(mandateAmount)
                     .bankAccount(bank.getPaymentRef().toString())
                     .startDate(today)
                     .endDate(today.plusYears(29))
