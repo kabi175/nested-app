@@ -43,7 +43,6 @@ public record UserPreFillHandler(
     return "REF-" + timestamp + "-" + randomNum;
   }
 
-  // TODO: mohan recheck this
   public static Date parseDate(String dateStr) {
     for (DateTimeFormatter formatter : FORMATTERS) {
       try {
@@ -52,7 +51,8 @@ public record UserPreFillHandler(
       } catch (DateTimeParseException ignored) {
       }
     }
-    throw new IllegalArgumentException("Invalid date format: " + dateStr);
+    log.warn("Invalid date format: {}", dateStr);
+    return null;
   }
 
   @TransactionalEventListener(phase = TransactionPhase.BEFORE_COMMIT)
