@@ -10,6 +10,7 @@ import com.nested.app.client.mf.dto.CreateInvestorResponse;
 import com.nested.app.client.mf.dto.EntityResponse;
 import com.nested.app.client.mf.dto.FileDto;
 import com.nested.app.client.mf.dto.Nominee;
+import com.nested.app.utils.FormatterUtil;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -122,17 +123,12 @@ public class InvestorAPIClient implements com.nested.app.client.mf.InvestorAPICl
 
   @Override
   public Mono<EntityResponse> addMobileNumber(String investorRef, String mobileNumber) {
-    var isd = "91";
-    if (mobileNumber.startsWith("+")) {
-      mobileNumber = mobileNumber.substring(1);
+    var request = FormatterUtil.formatMobileNumber(mobileNumber);
+    if (request == null) {
+      return Mono.error(new Exception("mobileNumber can't be empty"));
     }
 
-    if (mobileNumber.length() > 10) {
-      isd = mobileNumber.substring(0, mobileNumber.length() - 10);
-      mobileNumber = mobileNumber.substring(mobileNumber.length() - 10);
-    }
-
-    var request = Map.of("profile", investorRef, "isd", isd, "number", mobileNumber);
+    request.put("profile", investorRef);
     return api.withAuth()
         .post()
         .uri(MOBILE_API_URL)

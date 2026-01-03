@@ -2,8 +2,8 @@ package com.nested.app.client.mf.dto;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.nested.app.utils.FormatterUtil;
 import java.time.LocalDate;
-import java.util.HashMap;
 import java.util.Map;
 import lombok.Builder;
 import lombok.Data;
@@ -37,12 +37,10 @@ public class SipOrderDetail extends OrderDetail {
 
   @JsonProperty("consent")
   private Map<String, String> getConsent() {
-    var map = new HashMap<String, String>();
+    var map = FormatterUtil.formatMobileNumberForConsent(mobile);
     if (email != null && !email.isBlank()) {
       map.put("email", email);
     }
-    // TODO: handle conversion for mobile
-
     return map;
   }
 }

@@ -7,14 +7,11 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonSetter;
 import com.nested.app.enums.RelationshipType;
-import java.time.LocalDate;
-import java.time.Period;
-import java.time.ZoneId;
+import com.nested.app.utils.FormatterUtil;
 import java.util.Date;
 import java.util.Map;
 import javax.annotation.Nullable;
 import lombok.Data;
-import org.jspecify.annotations.NonNull;
 
 @Data
 @JsonInclude(JsonInclude.Include.NON_NULL)
@@ -56,26 +53,10 @@ public class Nominee {
   @JsonIgnore private String mobileNumber;
   @JsonIgnore private String guardianMobileNumber;
 
-  public static int calculateAge(Date dateOfBirth) {
-    // Convert java.util.Date to java.time.LocalDate
-    // Assumes the system default time zone for the conversion
-    LocalDate birthDate = dateOfBirth.toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
-
-    LocalDate currentDate = LocalDate.now();
-
-    // Calculate the period between the dates
-    Period period = Period.between(birthDate, currentDate);
-
-    return period.getYears();
-  }
-
   @Nullable
   @JsonGetter("phone_number")
   public Map<String, Object> phoneNumber() {
-    if (mobileNumber == null) {
-      return null;
-    }
-    return getStringObjectMap(mobileNumber);
+    return FormatterUtil.formatMobileNumber(mobileNumber);
   }
 
   @JsonSetter("phone_number")
@@ -88,10 +69,7 @@ public class Nominee {
   @Nullable
   @JsonGetter("guardian_phone_number")
   public Map<String, Object> guardianPhoneNumber() {
-    if (guardianMobileNumber == null) {
-      return null;
-    }
-    return getStringObjectMap(guardianMobileNumber);
+    return FormatterUtil.formatMobileNumber(guardianMobileNumber);
   }
 
   @JsonSetter("guardian_phone_number")
@@ -100,19 +78,4 @@ public class Nominee {
       guardianMobileNumber = (String) phoneNumber.get("number");
     }
   }
-
-  private @NonNull Map<String, Object> getStringObjectMap(String mobile) {
-    var isd = "91";
-    if (mobile.startsWith("+")) {
-      mobile = mobile.substring(1);
-    }
-
-    if (mobile.length() > 10) {
-      isd = mobile.substring(0, mobile.length() - 10);
-      mobile = mobile.substring(mobile.length() - 10);
-    }
-
-    return Map.of("isd", isd, "number", mobile);
-  }
-
 }
