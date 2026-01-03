@@ -25,4 +25,6 @@ public interface OrderRepository extends JpaRepository<Order, Long> {
   List<Order> findByGoalIdAndStatus(Long goalId, Order.OrderStatus status);
 
   List<Order> findByPaymentId(Long paymentId);
+
+  boolean existsByGoalId(Long goalId);
 }

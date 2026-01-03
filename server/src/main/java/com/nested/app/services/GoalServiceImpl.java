@@ -11,6 +11,7 @@ import com.nested.app.entity.User;
 import com.nested.app.exception.ExternalServiceException;
 import com.nested.app.repository.BasketRepository;
 import com.nested.app.repository.EducationRepository;
+import com.nested.app.repository.OrderRepository;
 import com.nested.app.repository.TenantAwareGoalRepository;
 import java.util.List;
 import java.util.Optional;
@@ -36,6 +37,7 @@ public class GoalServiceImpl implements GoalService {
   private final TenantAwareGoalRepository goalRepository;
   private final BasketRepository basketRepository;
   private final EducationRepository educationRepository;
+  private final OrderRepository orderRepository;
 
   /**
    * Retrieves all goals from the system
@@ -217,12 +219,7 @@ public class GoalServiceImpl implements GoalService {
    */
   private boolean hasActiveOrders(Goal goal) {
     log.debug("Checking for active orders for goal ID: {}", goal.getId());
-
-    // TODO: Implement actual check against order repository
-    // For now, return false as placeholder
-    // In real implementation, this would check if any orders exist for this goal
-
-    return false;
+    return orderRepository.existsByGoalId(goal.getId());
   }
 
   /**
