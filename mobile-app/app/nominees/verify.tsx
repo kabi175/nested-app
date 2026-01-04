@@ -18,19 +18,19 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import { upsertNominees } from "@/api/nomineeApi";
-import { OtpInput } from "@/components/ui/OtpInput";
-import { useAuth } from "@/hooks/auth";
-import { Spinner, Text } from "@ui-kitten/components";
 import {
   nomineeListAtom,
   pendingActionAtom,
   pendingNomineeIdAtom,
 } from "@/atoms/nominee";
-import { useAtom, useAtomValue, useSetAtom } from "jotai";
-import { useQueryClient } from "@tanstack/react-query";
+import { OtpInput } from "@/components/ui/OtpInput";
 import { QUERY_KEYS } from "@/constants/queryKeys";
-import { draftToPayload } from "@/utils/nominee";
+import { useAuth } from "@/hooks/auth";
 import { useOptOutNominee } from "@/hooks/useOptOutNominee";
+import { draftToPayload } from "@/utils/nominee";
+import { useQueryClient } from "@tanstack/react-query";
+import { Spinner, Text } from "@ui-kitten/components";
+import { useAtom, useAtomValue, useSetAtom } from "jotai";
 
 export default function NomineeVerificationScreen() {
   const auth = useAuth();
@@ -169,10 +169,6 @@ export default function NomineeVerificationScreen() {
         setIsProcessingNominees(true);
         await optOutNomineeMutation.mutateAsync();
 
-        // Refresh nominees and user (mutation already invalidates these)
-        await queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.nominees] });
-        await queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.user] });
-
         // Clear pending action and nominee ID
         setPendingNomineeId(null);
         setPendingAction(null);
@@ -190,7 +186,15 @@ export default function NomineeVerificationScreen() {
         await upsertNominees(payloads);
 
         // Refresh nominees
-        await queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.nominees] });
+        await queryClient.invalidateQueries({
+          queryKey: [QUERY_KEYS.nominees],
+        });
+        await queryClient.invalidateQueries({
+          queryKey: [QUERY_KEYS.user],
+        });
+        await queryClient.invalidateQueries({
+          queryKey: [QUERY_KEYS.pendingActivities],
+        });
 
         // Clear nominee list (will be repopulated from server)
         setNomineeList([]);
@@ -292,7 +296,9 @@ export default function NomineeVerificationScreen() {
                   <TouchableOpacity
                     onPress={handleVerifyAndContinue}
                     disabled={
-                      otpCode.length !== 6 || isVerifying || isProcessingNominees
+                      otpCode.length !== 6 ||
+                      isVerifying ||
+                      isProcessingNominees
                     }
                     style={[
                       styles.verifyButton,
@@ -595,4 +601,3 @@ const styles = StyleSheet.create({
     lineHeight: 18,
   },
 });
-

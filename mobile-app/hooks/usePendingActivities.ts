@@ -8,7 +8,7 @@ export function usePendingActivities() {
   const userId = user?.id;
 
   const queryResult = useQuery({
-    queryKey: [QUERY_KEYS.pendingActivities, userId],
+    queryKey: [QUERY_KEYS.pendingActivities],
     queryFn: () => {
       if (!userId) {
         throw new Error("User ID is required to fetch pending activities");
@@ -23,5 +23,3 @@ export function usePendingActivities() {
     isLoading: isUserLoading || queryResult.isLoading,
   };
 }
-
-
