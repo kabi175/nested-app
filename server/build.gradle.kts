@@ -53,8 +53,6 @@ dependencies {
 
 	implementation("org.flywaydb:flyway-core")
 	implementation("org.flywaydb:flyway-database-postgresql")
-    implementation("com.twilio.sdk:twilio:11.3.0")
-
 
 //	runtimeOnly("io.netty:netty-resolver-dns-native-macos:4.1.94.Final:osx-aarch_64");
 

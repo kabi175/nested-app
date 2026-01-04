@@ -42,18 +42,6 @@ public class GlobalExceptionHandler {
     return buildErrorResponse(HttpStatus.BAD_REQUEST, ex.getMessage());
   }
 
-  @ExceptionHandler(MfaException.class)
-  public ResponseEntity<Map<String, Object>> handleMfaException(MfaException ex) {
-    log.error("MFA error: {}", ex.getMessage());
-    Map<String, Object> errorResponse = new HashMap<>();
-    errorResponse.put("timestamp", LocalDateTime.now());
-    errorResponse.put("status", HttpStatus.FORBIDDEN.value());
-    errorResponse.put("error", "MFA_REQUIRED");
-    errorResponse.put("message", ex.getMessage());
-    errorResponse.put("errorCode", ex.getErrorCode());
-    return new ResponseEntity<>(errorResponse, HttpStatus.FORBIDDEN);
-  }
-
   @ExceptionHandler(RuntimeException.class)
   public ResponseEntity<Map<String, Object>> handleRuntimeException(RuntimeException ex) {
     log.error("Runtime error: {}", ex.getMessage(), ex);

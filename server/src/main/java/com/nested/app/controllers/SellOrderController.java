@@ -1,6 +1,5 @@
 package com.nested.app.controllers;
 
-import com.nested.app.annotation.RequiresMfa;
 import com.nested.app.contect.UserContext;
 import com.nested.app.dto.Entity;
 import com.nested.app.dto.OrderDTO;
@@ -61,7 +60,6 @@ public class SellOrderController {
    * @param verifyRequest Verification request with order IDs only
    * @return Success response
    */
-  @RequiresMfa(action = "MF_SELL")
   @PostMapping("/verify")
   public ResponseEntity<?> verifySellOrders(@Valid @RequestBody SellOrderVerifyDTO verifyRequest) {
     log.info("Received request to verify {} sell orders", verifyRequest.getOrderIds().size());

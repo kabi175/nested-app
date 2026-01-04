@@ -1,6 +1,5 @@
 package com.nested.app.controllers;
 
-import com.nested.app.annotation.RequiresMfa;
 import com.nested.app.contect.UserContext;
 import com.nested.app.dto.Entity;
 import com.nested.app.dto.NomineeRequestDTO;
@@ -62,7 +61,6 @@ public class NomineeController {
    * @param request List of all nominees to create/update
    * @return ResponseEntity with all saved nominees
    */
-  @RequiresMfa(action = "NOMINEE_UPDATE")
   @PostMapping(
       path = "/nominees",
       consumes = MediaType.APPLICATION_JSON_VALUE,
