@@ -1,4 +1,9 @@
 import { Ionicons } from "@expo/vector-icons";
+import {
+  FirebaseAuthTypes,
+  getAuth,
+  signInWithPhoneNumber,
+} from "@react-native-firebase/auth";
 import { LinearGradient } from "expo-linear-gradient";
 import { router, useLocalSearchParams } from "expo-router";
 import { useEffect, useState } from "react";
@@ -16,12 +21,6 @@ import { verifyPayment } from "@/api/paymentAPI";
 import { OtpInput } from "@/components/ui/OtpInput";
 import { useAuth } from "@/hooks/auth";
 import { usePayment } from "@/hooks/usePayment";
-import {
-  setCurrentAction,
-  startMfaSession,
-  verifyOtp,
-  type MfaAction,
-} from "@/services/mfaService";
 import { Spinner, Text } from "@ui-kitten/components";
 
 export default function PaymentVerificationScreen() {
@@ -30,7 +29,8 @@ export default function PaymentVerificationScreen() {
     bankName?: string;
   }>();
   const auth = useAuth();
-  const [mfaSessionId, setMfaSessionId] = useState<string | null>(null);
+  const [confirm, setConfirm] =
+    useState<FirebaseAuthTypes.ConfirmationResult | null>(null);
   const [otpCode, setOtpCode] = useState("");
   const [resendTimer, setResendTimer] = useState(0);
   const [isLoading, setIsLoading] = useState(false);
@@ -42,20 +42,28 @@ export default function PaymentVerificationScreen() {
 
   const paymentMethod = payment?.payment_method;
 
+  // Get user's phone number from auth
+  const userPhoneNumber =
+    auth.user?.phoneNumber || getAuth().currentUser?.phoneNumber || "";
+
   // Auto-send OTP when component mounts
   useEffect(() => {
-    if (auth.isLoaded && auth.user && !mfaSessionId && !isLoading) {
+    if (userPhoneNumber && !confirm && !isLoading) {
       sendOTP();
-    } else if (!auth.user && auth.isLoaded) {
-      Alert.alert("Error", "Please sign in to continue.", [
-        {
-          text: "OK",
-          onPress: () => router.back(),
-        },
-      ]);
+    } else if (!userPhoneNumber && auth.isLoaded) {
+      Alert.alert(
+        "Error",
+        "Phone number not found. Please ensure you're signed in with a phone number.",
+        [
+          {
+            text: "OK",
+            onPress: () => router.back(),
+          },
+        ]
+      );
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [auth.isLoaded, auth.user]);
+  }, [userPhoneNumber, auth.isLoaded]);
 
   // Animation on mount
   useEffect(() => {
@@ -76,28 +84,23 @@ export default function PaymentVerificationScreen() {
   }, []);
 
   const sendOTP = async () => {
-    if (!auth.user) {
-      Alert.alert("Error", "Please sign in to continue.");
+    if (!userPhoneNumber) {
+      Alert.alert("Error", "Phone number not found. Please sign in again.");
       router.back();
       return;
     }
 
     try {
       setIsLoading(true);
-      // Set action for payment verification (using MF_BUY for payment-related actions)
-      const action: MfaAction = "MF_BUY";
-      await setCurrentAction(action);
-
-      // Start MFA session
-      const response = await startMfaSession(action, "SMS");
-      setMfaSessionId(response.mfaSessionId);
-      setResendTimer(30);
-    } catch (error: any) {
-      console.log("Error sending OTP", error);
-      Alert.alert(
-        "Error",
-        error.message || "Failed to send OTP. Please try again."
+      const confirmation = await signInWithPhoneNumber(
+        getAuth(),
+        userPhoneNumber
       );
+      setConfirm(confirmation);
+      setResendTimer(30);
+    } catch (error) {
+      console.log("Error sending OTP", error);
+      Alert.alert("Error", "Failed to send OTP. Please try again.");
     } finally {
       setIsLoading(false);
     }
@@ -129,23 +132,17 @@ export default function PaymentVerificationScreen() {
   };
 
   const handleVerifyAndContinue = async () => {
-    if (!mfaSessionId || !paymentId) {
+    if (!confirm || !paymentId) {
       Alert.alert("Error", "Missing verification data. Please try again.");
-      return;
-    }
-
-    if (otpCode.length !== 6) {
-      Alert.alert("Error", "Please enter a valid 6-digit OTP.");
       return;
     }
 
     try {
       setIsVerifying(true);
-      // Verify OTP with custom MFA service
-      await verifyOtp(mfaSessionId, otpCode);
+      // Reauthenticate with Firebase SMS MFA
+      await confirm.confirm(otpCode);
 
-      console.log("MFA verification successful");
-      // After MFA verification, verify payment
+      // After Firebase reauth, verify payment
       setIsProcessingPayment(true);
       await verifyPayment(paymentId);
 
@@ -157,11 +154,15 @@ export default function PaymentVerificationScreen() {
           bankName,
         },
       });
+
+      // Then initiate payment and redirect
     } catch (error: any) {
       console.error("Verification error", error);
-      const errorMessage =
-        error.message || "Failed to verify. Please try again.";
-      Alert.alert("Error", errorMessage);
+      if (error.code === "auth/invalid-verification-code") {
+        Alert.alert("Error", "Invalid verification code. Please try again.");
+      } else {
+        Alert.alert("Error", "Failed to verify. Please try again.");
+      }
     } finally {
       setIsVerifying(false);
       setIsProcessingPayment(false);
@@ -221,7 +222,7 @@ export default function PaymentVerificationScreen() {
             </Text>
 
             {/* Loading state while sending OTP */}
-            {!mfaSessionId && isLoading && (
+            {!confirm && isLoading && (
               <View style={styles.loadingContainer}>
                 <View style={styles.loadingSpinnerWrapper}>
                   <Spinner size="small" status="primary" />
@@ -232,8 +233,8 @@ export default function PaymentVerificationScreen() {
               </View>
             )}
 
-            {/* OTP Input - shown when session is created */}
-            {mfaSessionId && !isLoading && (
+            {/* OTP Input - shown when confirmed */}
+            {confirm && !isLoading && (
               <>
                 <View style={styles.otpContainer}>
                   <OtpInput

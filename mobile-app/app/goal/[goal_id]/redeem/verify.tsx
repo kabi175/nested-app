@@ -1,4 +1,9 @@
 import { Ionicons } from "@expo/vector-icons";
+import {
+  FirebaseAuthTypes,
+  getAuth,
+  signInWithPhoneNumber,
+} from "@react-native-firebase/auth";
 import { router, useLocalSearchParams } from "expo-router";
 import { useEffect, useState } from "react";
 import {
@@ -12,13 +17,8 @@ import { SafeAreaView } from "react-native-safe-area-context";
 
 import { verifyRedeemOrder } from "@/api/redeemAPI";
 import { OtpInput } from "@/components/ui/OtpInput";
+import { ThemedText } from "@/components/ThemedText";
 import { useAuth } from "@/hooks/auth";
-import {
-  setCurrentAction,
-  startMfaSession,
-  verifyOtp,
-  type MfaAction,
-} from "@/services/mfaService";
 import { Spinner, Text } from "@ui-kitten/components";
 
 export default function RedeemVerificationScreen() {
@@ -29,54 +29,58 @@ export default function RedeemVerificationScreen() {
     goalId?: string;
   }>();
   const auth = useAuth();
-  const [mfaSessionId, setMfaSessionId] = useState<string | null>(null);
+  const [confirm, setConfirm] =
+    useState<FirebaseAuthTypes.ConfirmationResult | null>(null);
   const [otpCode, setOtpCode] = useState("");
   const [resendTimer, setResendTimer] = useState(0);
   const [isLoading, setIsLoading] = useState(false);
   const [isVerifying, setIsVerifying] = useState(false);
   const [isProcessingRedeem, setIsProcessingRedeem] = useState(false);
 
+  // Get user's phone number from auth
+  const userPhoneNumber =
+    auth.user?.phoneNumber || getAuth().currentUser?.phoneNumber || "";
+
   // Parse order IDs
   const parsedOrderIds = orderIds ? JSON.parse(orderIds) : [];
 
   // Auto-send OTP when component mounts
   useEffect(() => {
-    if (auth.isLoaded && auth.user && !mfaSessionId && !isLoading) {
+    if (userPhoneNumber && !confirm && !isLoading) {
       sendOTP();
-    } else if (!auth.user && auth.isLoaded) {
-      Alert.alert("Error", "Please sign in to continue.", [
-        {
-          text: "OK",
-          onPress: () => router.back(),
-        },
-      ]);
+    } else if (!userPhoneNumber && auth.isLoaded) {
+      Alert.alert(
+        "Error",
+        "Phone number not found. Please ensure you're signed in with a phone number.",
+        [
+          {
+            text: "OK",
+            onPress: () => router.back(),
+          },
+        ]
+      );
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [auth.isLoaded, auth.user]);
+  }, [userPhoneNumber, auth.isLoaded]);
 
   const sendOTP = async () => {
-    if (!auth.user) {
-      Alert.alert("Error", "Please sign in to continue.");
+    if (!userPhoneNumber) {
+      Alert.alert("Error", "Phone number not found. Please sign in again.");
       router.back();
       return;
     }
 
     try {
       setIsLoading(true);
-      // Set action for redeem verification
-      const action: MfaAction = "MF_SELL";
-      await setCurrentAction(action);
-
-      // Start MFA session
-      const response = await startMfaSession(action, "SMS");
-      setMfaSessionId(response.mfaSessionId);
-      setResendTimer(30);
-    } catch (error: any) {
-      console.log("Error sending OTP", error);
-      Alert.alert(
-        "Error",
-        error.message || "Failed to send OTP. Please try again."
+      const confirmation = await signInWithPhoneNumber(
+        getAuth(),
+        userPhoneNumber
       );
+      setConfirm(confirmation);
+      setResendTimer(30);
+    } catch (error) {
+      console.log("Error sending OTP", error);
+      Alert.alert("Error", "Failed to send OTP. Please try again.");
     } finally {
       setIsLoading(false);
     }
@@ -108,22 +112,17 @@ export default function RedeemVerificationScreen() {
   };
 
   const handleVerifyAndContinue = async () => {
-    if (!mfaSessionId || !parsedOrderIds || parsedOrderIds.length === 0) {
+    if (!confirm || !parsedOrderIds || parsedOrderIds.length === 0) {
       Alert.alert("Error", "Missing verification data. Please try again.");
-      return;
-    }
-
-    if (otpCode.length !== 6) {
-      Alert.alert("Error", "Please enter a valid 6-digit OTP.");
       return;
     }
 
     try {
       setIsVerifying(true);
-      // Verify OTP with custom MFA service
-      await verifyOtp(mfaSessionId, otpCode);
+      // Reauthenticate with Firebase SMS MFA
+      await confirm.confirm(otpCode);
 
-      // After MFA verification, verify redeem order
+      // After Firebase reauth, verify redeem order
       setIsProcessingRedeem(true);
       await verifyRedeemOrder(parsedOrderIds);
 
@@ -136,9 +135,11 @@ export default function RedeemVerificationScreen() {
       });
     } catch (error: any) {
       console.error("Verification error", error);
-      const errorMessage =
-        error.message || "Failed to verify. Please try again.";
-      Alert.alert("Error", errorMessage);
+      if (error.code === "auth/invalid-verification-code") {
+        Alert.alert("Error", "Invalid verification code. Please try again.");
+      } else {
+        Alert.alert("Error", "Failed to verify. Please try again.");
+      }
     } finally {
       setIsVerifying(false);
       setIsProcessingRedeem(false);
@@ -184,7 +185,7 @@ export default function RedeemVerificationScreen() {
             </Text>
 
             {/* Loading state while sending OTP */}
-            {!mfaSessionId && isLoading && (
+            {!confirm && isLoading && (
               <View style={styles.loadingContainer}>
                 <Spinner size="small" status="primary" />
                 <Text category="s1" style={styles.loadingText}>
@@ -193,8 +194,8 @@ export default function RedeemVerificationScreen() {
               </View>
             )}
 
-            {/* OTP Input - shown when session is created */}
-            {mfaSessionId && !isLoading && (
+            {/* OTP Input - shown when confirmed */}
+            {confirm && !isLoading && (
               <>
                 <View style={styles.otpContainer}>
                   <OtpInput
@@ -210,7 +211,9 @@ export default function RedeemVerificationScreen() {
                   <TouchableOpacity
                     onPress={handleVerifyAndContinue}
                     disabled={
-                      otpCode.length !== 6 || isVerifying || isProcessingRedeem
+                      otpCode.length !== 6 ||
+                      isVerifying ||
+                      isProcessingRedeem
                     }
                     style={[
                       styles.verifyButton,
@@ -458,3 +461,4 @@ const styles = StyleSheet.create({
     fontSize: 11,
   },
 });
+

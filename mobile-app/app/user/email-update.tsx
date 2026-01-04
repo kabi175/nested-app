@@ -1,7 +1,9 @@
 import { Ionicons } from "@expo/vector-icons";
 import {
+  FirebaseAuthTypes,
   getAuth,
   onAuthStateChanged,
+  signInWithPhoneNumber,
   verifyBeforeUpdateEmail,
 } from "@react-native-firebase/auth";
 import { LinearGradient } from "expo-linear-gradient";
@@ -21,12 +23,6 @@ import { SafeAreaView } from "react-native-safe-area-context";
 
 import { OtpInput } from "@/components/ui/OtpInput";
 import { useAuth } from "@/hooks/auth";
-import {
-  setCurrentAction,
-  startMfaSession,
-  verifyOtp,
-  type MfaAction,
-} from "@/services/mfaService";
 import { Input, Spinner, Text } from "@ui-kitten/components";
 
 type Step = "email" | "mfa" | "sending" | "success";
@@ -36,7 +32,8 @@ export default function EmailUpdateScreen() {
   const [step, setStep] = useState<Step>("email");
   const [newEmail, setNewEmail] = useState("");
   const [emailError, setEmailError] = useState<string | null>(null);
-  const [mfaSessionId, setMfaSessionId] = useState<string | null>(null);
+  const [confirm, setConfirm] =
+    useState<FirebaseAuthTypes.ConfirmationResult | null>(null);
   const [otpCode, setOtpCode] = useState("");
   const [resendTimer, setResendTimer] = useState(0);
   const [isLoading, setIsLoading] = useState(false);
@@ -44,6 +41,10 @@ export default function EmailUpdateScreen() {
   const [isSendingEmail, setIsSendingEmail] = useState(false);
   const [fadeAnim] = useState(new Animated.Value(0));
   const [scaleAnim] = useState(new Animated.Value(0.9));
+
+  // Get user's phone number from auth
+  const userPhoneNumber =
+    auth.user?.phoneNumber || getAuth().currentUser?.phoneNumber || "";
 
   // Animation on mount
   useEffect(() => {
@@ -132,32 +133,31 @@ export default function EmailUpdateScreen() {
   };
 
   const sendOTP = async () => {
-    if (!auth.user) {
-      Alert.alert("Error", "Please sign in to continue.", [
-        {
-          text: "OK",
-          onPress: () => router.back(),
-        },
-      ]);
+    if (!userPhoneNumber) {
+      Alert.alert(
+        "Error",
+        "Phone number not found. Please ensure you're signed in with a phone number.",
+        [
+          {
+            text: "OK",
+            onPress: () => router.back(),
+          },
+        ]
+      );
       return;
     }
 
     try {
       setIsLoading(true);
-      // Set action for email update
-      const action: MfaAction = "EMAIL_UPDATE";
-      await setCurrentAction(action);
-
-      // Start MFA session
-      const response = await startMfaSession(action, "SMS");
-      setMfaSessionId(response.mfaSessionId);
+      const confirmation = await signInWithPhoneNumber(
+        getAuth(),
+        userPhoneNumber
+      );
+      setConfirm(confirmation);
       setResendTimer(30);
     } catch (error: any) {
       console.log("Error sending OTP", error);
-      Alert.alert(
-        "Error",
-        error.message || "Failed to send OTP. Please try again."
-      );
+      Alert.alert("Error", "Failed to send OTP. Please try again.");
       setStep("email");
     } finally {
       setIsLoading(false);
@@ -190,22 +190,17 @@ export default function EmailUpdateScreen() {
   };
 
   const handleVerifyAndUpdateEmail = async () => {
-    if (!mfaSessionId || !newEmail.trim()) {
+    if (!confirm || !newEmail.trim()) {
       Alert.alert("Error", "Missing verification data. Please try again.");
-      return;
-    }
-
-    if (otpCode.length !== 6) {
-      Alert.alert("Error", "Please enter a valid 6-digit OTP.");
       return;
     }
 
     try {
       setIsVerifying(true);
-      // Verify OTP with custom MFA service
-      await verifyOtp(mfaSessionId, otpCode);
+      // Reauthenticate with Firebase SMS MFA
+      await confirm.confirm(otpCode);
 
-      // After MFA verification, send verification email
+      // After Firebase reauth, send verification email
       setIsSendingEmail(true);
       setStep("sending");
 
@@ -236,7 +231,9 @@ export default function EmailUpdateScreen() {
     } catch (error: any) {
       console.error("Verification error", error);
       setStep("mfa");
-      if (error.code === "auth/email-already-in-use") {
+      if (error.code === "auth/invalid-verification-code") {
+        Alert.alert("Error", "Invalid verification code. Please try again.");
+      } else if (error.code === "auth/email-already-in-use") {
         Alert.alert(
           "Error",
           "This email is already in use by another account."
@@ -244,9 +241,7 @@ export default function EmailUpdateScreen() {
       } else if (error.code === "auth/invalid-email") {
         Alert.alert("Error", "Please enter a valid email address.");
       } else {
-        const errorMessage =
-          error.message || "Failed to update email. Please try again.";
-        Alert.alert("Error", errorMessage);
+        Alert.alert("Error", "Failed to update email. Please try again.");
       }
     } finally {
       setIsVerifying(false);
@@ -257,7 +252,7 @@ export default function EmailUpdateScreen() {
   const handleBack = () => {
     if (step === "mfa" || step === "sending") {
       setStep("email");
-      setMfaSessionId(null);
+      setConfirm(null);
       setOtpCode("");
       setResendTimer(0);
     } else {
@@ -384,7 +379,7 @@ export default function EmailUpdateScreen() {
                   </Text>
 
                   {/* Loading state while sending OTP */}
-                  {!mfaSessionId && isLoading && (
+                  {!confirm && isLoading && (
                     <View style={styles.loadingContainer}>
                       <View style={styles.loadingSpinnerWrapper}>
                         <Spinner size="small" status="primary" />
@@ -395,8 +390,8 @@ export default function EmailUpdateScreen() {
                     </View>
                   )}
 
-                  {/* OTP Input - shown when session is created and not sending email */}
-                  {mfaSessionId && step === "mfa" && !isLoading && (
+                  {/* OTP Input - shown when confirmed and not sending email */}
+                  {confirm && step === "mfa" && !isLoading && (
                     <>
                       <View style={styles.otpContainer}>
                         <OtpInput

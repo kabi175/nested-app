@@ -1,16 +1,11 @@
-import { mfaStateAtom } from "@/atoms/nominee";
 import { OtpInput } from "@/components/ui/OtpInput";
-import {
-  setCurrentAction,
-  startMfaSession,
-  verifyOtp,
-  type MfaAction,
-} from "@/services/mfaService";
+import { mfaStateAtom } from "@/atoms/nominee";
 import { Button, Layout, Text } from "@ui-kitten/components";
-import { useAtom } from "jotai";
 import { X } from "lucide-react-native";
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import { Modal, StyleSheet, TouchableOpacity, View } from "react-native";
+import { useAtom } from "jotai";
+import { api } from "@/api/client";
 
 interface MfaModalProps {
   visible: boolean;
@@ -23,44 +18,10 @@ interface MfaModalProps {
  * MFA Modal Component
  * Handles OTP verification before nominee mutations
  */
-export function MfaModal({
-  visible,
-  onVerify,
-  onCancel,
-  action,
-}: MfaModalProps) {
+export function MfaModal({ visible, onVerify, onCancel, action }: MfaModalProps) {
   const [otp, setOtp] = useState("");
   const [mfaState, setMfaState] = useAtom(mfaStateAtom);
   const [error, setError] = useState<string | null>(null);
-  const [mfaSessionId, setMfaSessionId] = useState<string | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
-
-  // Auto-send OTP when modal becomes visible
-  useEffect(() => {
-    if (visible && !mfaSessionId && !isLoading) {
-      sendOTP();
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [visible]);
-
-  const sendOTP = async () => {
-    try {
-      setIsLoading(true);
-      // Set action for nominee verification
-      const mfaAction: MfaAction = "NOMINEE_UPDATE";
-      await setCurrentAction(mfaAction);
-
-      // Start MFA session
-      const response = await startMfaSession(mfaAction, "SMS");
-      setMfaSessionId(response.mfaSessionId);
-    } catch (err: any) {
-      console.error("Error sending OTP:", err);
-      setError(err.message || "Failed to send OTP. Please try again.");
-      setMfaState("failed");
-    } finally {
-      setIsLoading(false);
-    }
-  };
 
   const handleOtpChange = (value: string) => {
     setOtp(value);
@@ -79,30 +40,26 @@ export function MfaModal({
       return;
     }
 
-    if (!mfaSessionId) {
-      setError("Session not initialized. Please try again.");
-      return;
-    }
-
     setMfaState("verifying");
     setError(null);
 
     try {
-      // Verify OTP with custom MFA service
-      await verifyOtp(mfaSessionId, otpToVerify);
-
+      // Verify OTP with backend
+      await api.post("/api/v1/users/actions/verify-otp", { otp: otpToVerify });
+      
       // If verification successful, call onVerify callback
       setMfaState("success");
       await onVerify(otpToVerify);
-
+      
       // Reset state
       setOtp("");
-      setMfaSessionId(null);
       setMfaState("idle");
     } catch (err: any) {
       console.error("MFA verification error:", err);
       setMfaState("failed");
-      setError(err.message || "Invalid OTP. Please try again.");
+      setError(
+        err.response?.data?.message || "Invalid OTP. Please try again."
+      );
       // Keep OTP input for retry
     }
   };
@@ -110,7 +67,6 @@ export function MfaModal({
   const handleCancel = () => {
     setOtp("");
     setError(null);
-    setMfaSessionId(null);
     setMfaState("idle");
     onCancel();
   };
@@ -152,26 +108,15 @@ export function MfaModal({
             </TouchableOpacity>
           </View>
 
-          {/* Loading state while sending OTP */}
-          {isLoading && (
-            <View style={styles.loadingContainer}>
-              <Text category="s2" style={styles.loadingText}>
-                Sending verification code...
-              </Text>
-            </View>
-          )}
-
-          {/* OTP Input - shown when session is created */}
-          {mfaSessionId && !isLoading && (
-            <View style={styles.otpContainer}>
-              <OtpInput
-                length={6}
-                onComplete={handleOtpComplete}
-                onChange={handleOtpChange}
-                disabled={mfaState === "verifying"}
-              />
-            </View>
-          )}
+          {/* OTP Input */}
+          <View style={styles.otpContainer}>
+            <OtpInput
+              length={6}
+              onComplete={handleOtpComplete}
+              onChange={handleOtpChange}
+              disabled={mfaState === "verifying"}
+            />
+          </View>
 
           {/* Error Message */}
           {error && (
@@ -197,12 +142,7 @@ export function MfaModal({
               style={[styles.button, styles.verifyButton]}
               status="primary"
               onPress={() => handleVerify()}
-              disabled={
-                mfaState === "verifying" ||
-                otp.length !== 6 ||
-                !mfaSessionId ||
-                isLoading
-              }
+              disabled={mfaState === "verifying" || otp.length !== 6}
             >
               {mfaState === "verifying" ? "Verifying..." : "Verify"}
             </Button>
@@ -250,15 +190,6 @@ const styles = StyleSheet.create({
   closeButton: {
     padding: 4,
   },
-  loadingContainer: {
-    marginBottom: 16,
-    alignItems: "center",
-    paddingVertical: 12,
-  },
-  loadingText: {
-    color: "#6B7280",
-    fontSize: 14,
-  },
   otpContainer: {
     marginBottom: 16,
     alignItems: "center",
@@ -285,3 +216,4 @@ const styles = StyleSheet.create({
     backgroundColor: "#2563EB",
   },
 });
+
