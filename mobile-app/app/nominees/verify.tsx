@@ -17,18 +17,16 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
-import { upsertNominees } from "@/api/nomineeApi";
 import {
   nomineeListAtom,
   pendingActionAtom,
   pendingNomineeIdAtom,
 } from "@/atoms/nominee";
 import { OtpInput } from "@/components/ui/OtpInput";
-import { QUERY_KEYS } from "@/constants/queryKeys";
 import { useAuth } from "@/hooks/auth";
 import { useOptOutNominee } from "@/hooks/useOptOutNominee";
+import { useUpsertNominees } from "@/hooks/useUpsertNominees";
 import { draftToPayload } from "@/utils/nominee";
-import { useQueryClient } from "@tanstack/react-query";
 import { Spinner, Text } from "@ui-kitten/components";
 import { useAtom, useAtomValue, useSetAtom } from "jotai";
 
@@ -38,8 +36,8 @@ export default function NomineeVerificationScreen() {
   const pendingAction = useAtomValue(pendingActionAtom);
   const [pendingNomineeId, setPendingNomineeId] = useAtom(pendingNomineeIdAtom);
   const setPendingAction = useSetAtom(pendingActionAtom);
-  const queryClient = useQueryClient();
   const optOutNomineeMutation = useOptOutNominee();
+  const upsertNomineesMutation = useUpsertNominees();
   const [confirm, setConfirm] =
     useState<FirebaseAuthTypes.ConfirmationResult | null>(null);
   const [otpCode, setOtpCode] = useState("");
@@ -183,18 +181,7 @@ export default function NomineeVerificationScreen() {
           }
           return payload;
         });
-        await upsertNominees(payloads);
-
-        // Refresh nominees
-        await queryClient.invalidateQueries({
-          queryKey: [QUERY_KEYS.nominees],
-        });
-        await queryClient.invalidateQueries({
-          queryKey: [QUERY_KEYS.user],
-        });
-        await queryClient.invalidateQueries({
-          queryKey: [QUERY_KEYS.pendingActivities],
-        });
+        await upsertNomineesMutation.mutateAsync(payloads);
 
         // Clear nominee list (will be repopulated from server)
         setNomineeList([]);
