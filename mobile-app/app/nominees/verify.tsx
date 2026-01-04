@@ -1,9 +1,4 @@
 import { Ionicons } from "@expo/vector-icons";
-import {
-  FirebaseAuthTypes,
-  getAuth,
-  signInWithPhoneNumber,
-} from "@react-native-firebase/auth";
 import { LinearGradient } from "expo-linear-gradient";
 import { router } from "expo-router";
 import { useEffect, useState } from "react";
@@ -18,19 +13,26 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import { upsertNominees } from "@/api/nomineeApi";
-import { OtpInput } from "@/components/ui/OtpInput";
-import { useAuth } from "@/hooks/auth";
-import { Spinner, Text } from "@ui-kitten/components";
 import {
   nomineeListAtom,
   pendingActionAtom,
   pendingNomineeIdAtom,
 } from "@/atoms/nominee";
-import { useAtom, useAtomValue, useSetAtom } from "jotai";
-import { useQueryClient } from "@tanstack/react-query";
+import { OtpInput } from "@/components/ui/OtpInput";
 import { QUERY_KEYS } from "@/constants/queryKeys";
-import { draftToPayload } from "@/utils/nominee";
+import { useAuth } from "@/hooks/auth";
 import { useOptOutNominee } from "@/hooks/useOptOutNominee";
+import { useUser } from "@/hooks/useUser";
+import {
+  setCurrentAction,
+  startMfaSession,
+  verifyOtp,
+  type MfaAction,
+} from "@/services/mfaService";
+import { draftToPayload } from "@/utils/nominee";
+import { useQueryClient } from "@tanstack/react-query";
+import { Spinner, Text } from "@ui-kitten/components";
+import { useAtom, useAtomValue, useSetAtom } from "jotai";
 
 export default function NomineeVerificationScreen() {
   const auth = useAuth();
@@ -39,9 +41,9 @@ export default function NomineeVerificationScreen() {
   const [pendingNomineeId, setPendingNomineeId] = useAtom(pendingNomineeIdAtom);
   const setPendingAction = useSetAtom(pendingActionAtom);
   const queryClient = useQueryClient();
+  const { data: user } = useUser();
   const optOutNomineeMutation = useOptOutNominee();
-  const [confirm, setConfirm] =
-    useState<FirebaseAuthTypes.ConfirmationResult | null>(null);
+  const [mfaSessionId, setMfaSessionId] = useState<string | null>(null);
   const [otpCode, setOtpCode] = useState("");
   const [resendTimer, setResendTimer] = useState(0);
   const [isLoading, setIsLoading] = useState(false);
@@ -52,10 +54,6 @@ export default function NomineeVerificationScreen() {
 
   const isOptOutFlow = pendingAction === "optOut";
 
-  // Get user's phone number from auth
-  const userPhoneNumber =
-    auth.user?.phoneNumber || getAuth().currentUser?.phoneNumber || "";
-
   // Redirect if no nominees and not opt-out flow
   useEffect(() => {
     if (!isOptOutFlow && nomineeList.length === 0) {
@@ -65,22 +63,18 @@ export default function NomineeVerificationScreen() {
 
   // Auto-send OTP when component mounts
   useEffect(() => {
-    if (userPhoneNumber && !confirm && !isLoading) {
+    if (auth.isLoaded && auth.user && !mfaSessionId && !isLoading) {
       sendOTP();
-    } else if (!userPhoneNumber && auth.isLoaded) {
-      Alert.alert(
-        "Error",
-        "Phone number not found. Please ensure you're signed in with a phone number.",
-        [
-          {
-            text: "OK",
-            onPress: () => router.back(),
-          },
-        ]
-      );
+    } else if (!auth.user && auth.isLoaded) {
+      Alert.alert("Error", "Please sign in to continue.", [
+        {
+          text: "OK",
+          onPress: () => router.back(),
+        },
+      ]);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [userPhoneNumber, auth.isLoaded]);
+  }, [auth.isLoaded, auth.user]);
 
   // Animation on mount
   useEffect(() => {
@@ -101,23 +95,28 @@ export default function NomineeVerificationScreen() {
   }, []);
 
   const sendOTP = async () => {
-    if (!userPhoneNumber) {
-      Alert.alert("Error", "Phone number not found. Please sign in again.");
+    if (!auth.user) {
+      Alert.alert("Error", "Please sign in to continue.");
       router.back();
       return;
     }
 
     try {
       setIsLoading(true);
-      const confirmation = await signInWithPhoneNumber(
-        getAuth(),
-        userPhoneNumber
-      );
-      setConfirm(confirmation);
+      // Set action for nominee verification
+      const action: MfaAction = "NOMINEE_UPDATE";
+      await setCurrentAction(action);
+
+      // Start MFA session
+      const response = await startMfaSession(action, "SMS");
+      setMfaSessionId(response.mfaSessionId);
       setResendTimer(30);
-    } catch (error) {
+    } catch (error: any) {
       console.log("Error sending OTP", error);
-      Alert.alert("Error", "Failed to send OTP. Please try again.");
+      Alert.alert(
+        "Error",
+        error.message || "Failed to send OTP. Please try again."
+      );
     } finally {
       setIsLoading(false);
     }
@@ -149,7 +148,7 @@ export default function NomineeVerificationScreen() {
   };
 
   const handleVerifyAndContinue = async () => {
-    if (!confirm) {
+    if (!mfaSessionId) {
       Alert.alert("Error", "Missing verification data. Please try again.");
       return;
     }
@@ -159,10 +158,15 @@ export default function NomineeVerificationScreen() {
       return;
     }
 
+    if (otpCode.length !== 6) {
+      Alert.alert("Error", "Please enter a valid 6-digit OTP.");
+      return;
+    }
+
     try {
       setIsVerifying(true);
-      // Reauthenticate with Firebase SMS MFA
-      await confirm.confirm(otpCode);
+      // Verify OTP with custom MFA service
+      await verifyOtp(mfaSessionId, otpCode);
 
       if (isOptOutFlow) {
         // Opt-out flow
@@ -170,8 +174,13 @@ export default function NomineeVerificationScreen() {
         await optOutNomineeMutation.mutateAsync();
 
         // Refresh nominees and user (mutation already invalidates these)
-        await queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.nominees] });
+        await queryClient.invalidateQueries({
+          queryKey: [QUERY_KEYS.nominees],
+        });
         await queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.user] });
+        await queryClient.invalidateQueries({
+          queryKey: [QUERY_KEYS.pendingActivities, user?.id],
+        });
 
         // Clear pending action and nominee ID
         setPendingNomineeId(null);
@@ -190,7 +199,13 @@ export default function NomineeVerificationScreen() {
         await upsertNominees(payloads);
 
         // Refresh nominees
-        await queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.nominees] });
+        await queryClient.invalidateQueries({
+          queryKey: [QUERY_KEYS.nominees],
+        });
+        await queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.user] });
+        await queryClient.invalidateQueries({
+          queryKey: [QUERY_KEYS.pendingActivities, user?.id],
+        });
 
         // Clear nominee list (will be repopulated from server)
         setNomineeList([]);
@@ -200,11 +215,9 @@ export default function NomineeVerificationScreen() {
       router.replace("/nominees");
     } catch (error: any) {
       console.error("Verification error", error);
-      if (error.code === "auth/invalid-verification-code") {
-        Alert.alert("Error", "Invalid verification code. Please try again.");
-      } else {
-        Alert.alert("Error", "Failed to verify. Please try again.");
-      }
+      const errorMessage =
+        error.message || "Failed to verify. Please try again.";
+      Alert.alert("Error", errorMessage);
     } finally {
       setIsVerifying(false);
       setIsProcessingNominees(false);
@@ -264,7 +277,7 @@ export default function NomineeVerificationScreen() {
             </Text>
 
             {/* Loading state while sending OTP */}
-            {!confirm && isLoading && (
+            {!mfaSessionId && isLoading && (
               <View style={styles.loadingContainer}>
                 <View style={styles.loadingSpinnerWrapper}>
                   <Spinner size="small" status="primary" />
@@ -275,8 +288,8 @@ export default function NomineeVerificationScreen() {
               </View>
             )}
 
-            {/* OTP Input - shown when confirmed */}
-            {confirm && !isLoading && (
+            {/* OTP Input - shown when session is created */}
+            {mfaSessionId && !isLoading && (
               <>
                 <View style={styles.otpContainer}>
                   <OtpInput
@@ -292,7 +305,9 @@ export default function NomineeVerificationScreen() {
                   <TouchableOpacity
                     onPress={handleVerifyAndContinue}
                     disabled={
-                      otpCode.length !== 6 || isVerifying || isProcessingNominees
+                      otpCode.length !== 6 ||
+                      isVerifying ||
+                      isProcessingNominees
                     }
                     style={[
                       styles.verifyButton,
@@ -595,4 +610,3 @@ const styles = StyleSheet.create({
     lineHeight: 18,
   },
 });
-
