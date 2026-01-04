@@ -70,6 +70,9 @@ export function PendingActivityBanner({ onPress }: PendingActivityBannerProps) {
         }
         router.push("/payment");
         break;
+      case "nominee_configuration_pending":
+        router.push("/nominees");
+        break;
       case "profile_incomplete":
       default:
         router.push("/account");

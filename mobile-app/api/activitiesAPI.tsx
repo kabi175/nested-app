@@ -8,7 +8,8 @@ type Activity = {
     | "kyc_incomplete"
     | "bank_account_pending"
     | "goal_payment_pending"
-    | "profile_incomplete";
+    | "profile_incomplete"
+    | "nominee_configuration_pending";
   priority: "low" | "medium" | "high";
   description: string;
   status: "PENDING";
