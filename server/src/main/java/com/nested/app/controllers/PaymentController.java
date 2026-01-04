@@ -1,5 +1,6 @@
 package com.nested.app.controllers;
 
+import com.nested.app.annotation.RequiresMfa;
 import com.nested.app.contect.UserContext;
 import com.nested.app.dto.PaymentDTO;
 import com.nested.app.dto.PlaceOrderDTO;
@@ -47,6 +48,7 @@ public class PaymentController {
   }
 
   // Buy Order Payment Endpoints
+  @RequiresMfa(action = "MF_BUY")
   @PostMapping("{payment_id}/actions/verify")
   public ResponseEntity<?> verifyBuyOrder(@Valid @RequestBody VerifyOrderDTO verifyOrderRequest) {
     log.info("Verifying buy order payment for payment ID: {}", verifyOrderRequest.getId());
@@ -68,5 +70,4 @@ public class PaymentController {
     var payment = sipOrderPaymentService.fetchSipOrderPaymentUrl(paymentID);
     return ResponseEntity.ok(payment);
   }
-
 }
