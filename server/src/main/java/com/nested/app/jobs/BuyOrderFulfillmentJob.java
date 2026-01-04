@@ -14,6 +14,7 @@ import java.math.RoundingMode;
 import java.sql.Timestamp;
 import java.time.Instant;
 import java.util.List;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.quartz.DisallowConcurrentExecution;
 import org.quartz.Job;
@@ -22,7 +23,6 @@ import org.quartz.JobExecutionContext;
 import org.quartz.JobExecutionException;
 import org.quartz.Scheduler;
 import org.quartz.SchedulerException;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 /**
@@ -34,17 +34,18 @@ import org.springframework.stereotype.Component;
  */
 @Slf4j
 @Component
+@RequiredArgsConstructor
 @DisallowConcurrentExecution
 public class BuyOrderFulfillmentJob implements Job {
 
   private static final int DECIMAL_SCALE = 4;
   private static final int CALCULATION_SCALE = 8;
 
-  @Autowired private BuyOrderApiClient buyOrderAPIClient;
-  @Autowired private OrderItemsRepository orderItemsRepository;
-  @Autowired private Scheduler scheduler;
-  @Autowired private TransactionRepository transactionRepository;
-  @Autowired private FolioRepository folioRepository;
+  private final BuyOrderApiClient buyOrderAPIClient;
+  private final OrderItemsRepository orderItemsRepository;
+  private final Scheduler scheduler;
+  private final TransactionRepository transactionRepository;
+  private final FolioRepository folioRepository;
 
   @Override
   public void execute(JobExecutionContext context) throws JobExecutionException {
