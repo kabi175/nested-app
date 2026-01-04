@@ -25,7 +25,7 @@ export default function Layout() {
     user &&
     user.kycStatus === "completed" &&
     user.is_ready_to_invest &&
-    user.nominee_status !== "completed"
+    user.nominee_status === "unknown"
   ) {
     return <Redirect href="/nominees" />;
   }
