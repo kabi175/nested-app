@@ -15,6 +15,7 @@ import com.nested.app.entity.OrderItems;
 import com.nested.app.entity.SellOrder;
 import com.nested.app.entity.Transaction;
 import com.nested.app.entity.User;
+import com.nested.app.enums.TransactionStatus;
 import com.nested.app.exception.ExternalServiceException;
 import com.nested.app.repository.FolioRepository;
 import com.nested.app.repository.FundRepository;
@@ -170,7 +171,6 @@ public class SellOrderServiceImpl implements SellOrderService {
       sellOrder.setUser(user);
       sellOrder.setGoal(goal);
       sellOrder.setInvestor(investor);
-      sellOrder.setStatus(Order.OrderStatus.NOT_PLACED);
 
       var savedOrder = orderRepository.save(sellOrder);
 
@@ -180,7 +180,7 @@ public class SellOrderServiceImpl implements SellOrderService {
       orderItem.setFund(fund);
       orderItem.setAmount(sellOrderItem.getAmount() != null ? sellOrderItem.getAmount() : 0.0);
       orderItem.setUser(user);
-      orderItem.setProcessingState(OrderItems.ProcessingState.SUCCESS);
+      orderItem.setStatus(TransactionStatus.VERIFICATION_PENDING);
       // TODO: handle the  processing state properly
 
       orderItemsRepository.save(orderItem);
@@ -207,7 +207,7 @@ public class SellOrderServiceImpl implements SellOrderService {
         if (placedOrder != null && placedOrder.getRef() != null) {
           orderItem.setRef(placedOrder.getRef());
           orderItemsRepository.save(orderItem);
-          savedOrder.setStatus(Order.OrderStatus.PLACED);
+          savedOrder.setPlaced(true);
           orderRepository.save(savedOrder);
 
           log.info(
@@ -230,8 +230,6 @@ public class SellOrderServiceImpl implements SellOrderService {
         }
       } catch (Exception e) {
         log.error("Failed to place sell order for fund ID: {}", fund.getId(), e);
-        savedOrder.setStatus(Order.OrderStatus.FAILED);
-        orderRepository.save(savedOrder);
         throw new ExternalServiceException("Failed to place sell order: " + e.getMessage(), e);
       }
 

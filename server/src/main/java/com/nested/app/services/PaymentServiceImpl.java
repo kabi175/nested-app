@@ -90,10 +90,10 @@ public class PaymentServiceImpl implements PaymentService {
         throw new IllegalArgumentException("All orders must belong to the same investor");
       }
 
-      // If any of the order is in not placed state or any of the order has
+      // If any of the order is in placed or any of the order has
       // a payment, then throw an exception
       var isOrdersAlreadyPlaced =
-          orders.stream().map(Order::getStatus).anyMatch(o -> o != Order.OrderStatus.NOT_PLACED)
+          orders.stream().anyMatch(Order::isPlaced)
               || orders.stream().map(Order::getPayment).anyMatch(Objects::nonNull);
 
       if (isOrdersAlreadyPlaced) {
@@ -138,7 +138,7 @@ public class PaymentServiceImpl implements PaymentService {
 
         payment.getOrders().stream()
             .filter(BuyOrder.class::isInstance)
-            .forEach(buyOrder -> buyOrder.setStatus(Order.OrderStatus.PLACED));
+            .forEach(buyOrder -> buyOrder.setPlaced(true));
       }
       // Save payment and orders
       Payment savedPayment = paymentRepository.save(payment);

@@ -37,8 +37,8 @@ public class OrderDTO {
   @JsonProperty(access = JsonProperty.Access.READ_ONLY)
   private MinifiedGoalDTO goal;
 
-  @JsonProperty(access = JsonProperty.Access.READ_ONLY)
-  private Order.OrderStatus status;
+  @JsonProperty(value = "is_placed", access = JsonProperty.Access.READ_ONLY)
+  private Boolean isPlaced;
 
   @JsonProperty(value = "created_at", access = JsonProperty.Access.READ_ONLY)
   private Timestamp createdAt;
@@ -51,7 +51,7 @@ public class OrderDTO {
     OrderDTO dto = new OrderDTO();
     dto.setId(order.getId());
     dto.setAmount(order.getAmount());
-    dto.setStatus(order.getStatus());
+    dto.setIsPlaced(order.isPlaced());
     dto.setCreatedAt(order.getCreatedAt());
     dto.setUpdatedAt(order.getUpdatedAt());
 

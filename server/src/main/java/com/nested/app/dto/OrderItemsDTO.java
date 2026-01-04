@@ -3,6 +3,7 @@ package com.nested.app.dto;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.nested.app.entity.OrderItems;
 import com.nested.app.entity.SIPOrder;
+import com.nested.app.enums.TransactionStatus;
 import java.time.LocalDate;
 import lombok.Data;
 
@@ -68,9 +69,9 @@ public class OrderItemsDTO {
     dto.setOrderId(orderItems.getOrder() != null ? orderItems.getOrder().getId() : null);
     dto.setUserId(orderItems.getUser() != null ? orderItems.getUser().getId() : null);
     dto.setProcessingState(
-        orderItems.getProcessingState() != null
-            ? orderItems.getProcessingState().getValue()
-            : OrderItems.ProcessingState.PENDING.getValue());
+        orderItems.getStatus() != null
+            ? orderItems.getStatus().getValue()
+            : TransactionStatus.VERIFICATION_PENDING.getValue());
     dto.setVersion(orderItems.getVersion());
 
     if (orderItems.getOrder() != null && orderItems.getOrder() instanceof SIPOrder sipOrder) {
