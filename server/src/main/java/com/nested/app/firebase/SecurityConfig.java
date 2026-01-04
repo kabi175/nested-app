@@ -41,6 +41,8 @@ public class SecurityConfig {
             )
         // add Firebase filter before Spring's own UsernamePasswordAuthenticationFilter
         .addFilterBefore(firebaseAuthFilter, UsernamePasswordAuthenticationFilter.class);
+    // Note: MfaEnforcementFilter is registered as a HandlerInterceptor via WebMvcConfigurer
+    // It runs after handler resolution, allowing access to @RequiresMfa annotations
 
     return http.build();
   }
