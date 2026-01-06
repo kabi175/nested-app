@@ -1,6 +1,5 @@
 import { getMfaToken } from "@/services/mfaService";
 import axios, { AxiosError, InternalAxiosRequestConfig } from "axios";
-import { useAuth0 } from "react-native-auth0";
 
 export const api = axios.create({
   baseURL: process.env.EXPO_PUBLIC_API_URL,
@@ -18,12 +17,6 @@ export const redirectClient = axios.create({
 // Request interceptor: Add auth token and MFA token
 api.interceptors.request.use(
   async (config: InternalAxiosRequestConfig) => {
-    const { getCredentials } = useAuth0();
-    const credentials = await getCredentials();
-    if (credentials) {
-      config.headers.Authorization = `Bearer ${credentials.accessToken}`;
-    }
-
     // Add MFA token if available
     const mfaToken = await getMfaToken();
     if (mfaToken) {
