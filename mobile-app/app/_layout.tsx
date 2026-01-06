@@ -8,13 +8,13 @@ import { Stack } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import "react-native-reanimated";
 
-import AuthProvider from "@/components/auth";
 import { useAuth } from "@/hooks/auth";
 import { useColorScheme } from "@/hooks/useColorScheme";
 import { QueryProvider } from "@/providers/QueryProvider";
 import * as eva from "@eva-design/eva";
 import { ApplicationProvider } from "@ui-kitten/components";
 import React from "react";
+import { Auth0Provider } from "react-native-auth0";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 
 export default function RootLayout() {
@@ -31,7 +31,10 @@ export default function RootLayout() {
   return (
     <ApplicationProvider {...eva} theme={eva.light}>
       <QueryProvider>
-        <AuthProvider>
+        <Auth0Provider
+          domain={process.env.EXPO_PUBLIC_AUTH0_DOMAIN}
+          clientId={process.env.EXPO_PUBLIC_AUTH0_CLIENT_ID}
+        >
           <ThemeProvider
             value={colorScheme === "dark" ? DarkTheme : DefaultTheme}
           >
@@ -40,7 +43,7 @@ export default function RootLayout() {
             </SafeAreaProvider>
             <StatusBar style="auto" />
           </ThemeProvider>
-        </AuthProvider>
+        </Auth0Provider>
       </QueryProvider>
     </ApplicationProvider>
   );

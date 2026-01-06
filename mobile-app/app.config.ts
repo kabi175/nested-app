@@ -56,6 +56,12 @@ module.exports = () => ({
             "The app accesses your photos to let you upload your signature.",
         },
       ],
+      [
+        "react-native-auth0",
+        {
+          domain: "dev-yscagulfy0qamarm.us.auth0.com",
+        },
+      ],
     ],
     extra: {
       router: {},

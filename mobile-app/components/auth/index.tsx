@@ -1,11 +1,4 @@
-import { defaultAuthState, FirebaseAuthContext, useAuth } from "@/hooks/auth";
-import {
-  FirebaseAuthTypes,
-  getAuth,
-  onAuthStateChanged,
-} from "@react-native-firebase/auth";
-import { router } from "expo-router";
-import { useEffect, useState } from "react";
+import { useAuth } from "@/hooks/auth";
 
 export function AuthLoaded({
   children,
@@ -53,34 +46,4 @@ export function SignedOut({
   }
 
   return <>{fallback}</>;
-}
-
-export default function AuthProvider({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
-  const [authState, setAuthState] = useState(defaultAuthState);
-
-  useEffect(() => {
-    const subscriber = onAuthStateChanged(
-      getAuth(),
-      (user: FirebaseAuthTypes.User | null) => {
-        setAuthState({
-          isLoaded: true,
-          isSignedIn: !!user,
-          user,
-        });
-
-        if (!user) {
-          router.replace("/sign-in");
-        }
-      }
-    );
-    return subscriber; // unsubscribe on unmount
-  }, []);
-
-  return (
-    <FirebaseAuthContext value={authState}>{children}</FirebaseAuthContext>
-  );
 }

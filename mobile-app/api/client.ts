@@ -1,6 +1,6 @@
 import { getMfaToken } from "@/services/mfaService";
-import { getAuth, getIdToken } from "@react-native-firebase/auth";
 import axios, { AxiosError, InternalAxiosRequestConfig } from "axios";
+import { useAuth0 } from "react-native-auth0";
 
 export const api = axios.create({
   baseURL: process.env.EXPO_PUBLIC_API_URL,
@@ -15,15 +15,13 @@ export const redirectClient = axios.create({
   timeout: 10000,
 });
 
-// Request interceptor: Add Firebase token and MFA token
+// Request interceptor: Add auth token and MFA token
 api.interceptors.request.use(
   async (config: InternalAxiosRequestConfig) => {
-    const auth = getAuth();
-    const user = auth.currentUser;
-
-    if (user) {
-      const token = await getIdToken(user);
-      config.headers.Authorization = `Bearer ${token}`;
+    const { getCredentials } = useAuth0();
+    const credentials = await getCredentials();
+    if (credentials) {
+      config.headers.Authorization = `Bearer ${credentials.accessToken}`;
     }
 
     // Add MFA token if available
