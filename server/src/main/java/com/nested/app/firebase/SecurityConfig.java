@@ -1,28 +1,23 @@
 package com.nested.app.firebase;
 
-import com.nested.app.filter.FirebaseAuthFilter;
-import com.nested.app.utils.AppEnvironment;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
+import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
+import org.springframework.security.oauth2.jwt.JwtDecoder;
+import org.springframework.security.oauth2.jwt.NimbusJwtDecoder;
 import org.springframework.security.web.SecurityFilterChain;
-import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.web.cors.CorsConfigurationSource;
 
-@Configuration
 public class SecurityConfig {
 
-  private final FirebaseAuthFilter firebaseAuthFilter;
-  private final AppEnvironment appEnvironment;
+  @Value("${auth0.domain}")
+  private String auth0Domain;
+
   private final CorsConfigurationSource corsConfigurationSource;
 
-  public SecurityConfig(
-      FirebaseAuthFilter firebaseAuthFilter,
-      AppEnvironment appEnvironment,
-      CorsConfigurationSource corsConfigurationSource) {
-    this.firebaseAuthFilter = firebaseAuthFilter;
-    this.appEnvironment = appEnvironment;
+  public SecurityConfig(CorsConfigurationSource corsConfigurationSource) {
     this.corsConfigurationSource = corsConfigurationSource;
   }
 
@@ -39,11 +34,14 @@ public class SecurityConfig {
                     .anyRequest()
                     .authenticated() // everything else requires auth
             )
-        // add Firebase filter before Spring's own UsernamePasswordAuthenticationFilter
-        .addFilterBefore(firebaseAuthFilter, UsernamePasswordAuthenticationFilter.class);
-    // Note: MfaEnforcementFilter is registered as a HandlerInterceptor via WebMvcConfigurer
-    // It runs after handler resolution, allowing access to @RequiresMfa annotations
+        .oauth2ResourceServer(a -> a.jwt(Customizer.withDefaults()));
 
     return http.build();
+  }
+
+  @Bean
+  public JwtDecoder jwtDecoder() {
+    String issuerUri = "https://" + auth0Domain + "/";
+    return NimbusJwtDecoder.withIssuerLocation(issuerUri).build();
   }
 }

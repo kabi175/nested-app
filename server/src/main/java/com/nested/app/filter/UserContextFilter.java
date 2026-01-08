@@ -1,18 +1,21 @@
 package com.nested.app.filter;
 
-import com.google.firebase.auth.FirebaseAuth;
+import com.auth0.client.mgmt.ManagementAPI;
+import com.auth0.client.mgmt.filter.UserFilter;
+import com.auth0.exception.Auth0Exception;
 import com.google.firebase.auth.FirebaseAuthException;
-import com.google.firebase.auth.UserRecord;
 import com.nested.app.contect.UserContext;
 import com.nested.app.entity.Investor;
 import com.nested.app.entity.User;
 import com.nested.app.repository.InvestorRepository;
 import com.nested.app.repository.UserRepository;
+import com.nimbusds.jwt.JWT;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
+import java.text.ParseException;
 import lombok.AllArgsConstructor;
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
@@ -42,12 +45,20 @@ public class UserContextFilter extends OncePerRequestFilter {
     Authentication auth = SecurityContextHolder.getContext().getAuthentication();
     if (!(auth instanceof AnonymousAuthenticationToken)) {
       Object principal = auth.getPrincipal(); // can be a UserDetails
-      var user = userRepository.findByFirebaseUid(principal.toString());
-      user.ifPresent(userContext::setUser);
-      if (user.isEmpty()) {
+      if (principal instanceof JWT jwt) {
         try {
-          userContext.setUser(createUser(auth));
-        } catch (FirebaseAuthException e) {
+          var userIdentifier = jwt.getJWTClaimsSet().getSubject();
+          var user = userRepository.findByFirebaseUid(userIdentifier);
+          user.ifPresent(userContext::setUser);
+          if (user.isEmpty()) {
+            try {
+              userContext.setUser(createUser(userIdentifier));
+            } catch (FirebaseAuthException e) {
+              throw new RuntimeException(e);
+            }
+          }
+
+        } catch (ParseException e) {
           throw new RuntimeException(e);
         }
       }
@@ -56,20 +67,21 @@ public class UserContextFilter extends OncePerRequestFilter {
     filterChain.doFilter(request, response);
   }
 
-  public User createUser(Authentication auth) throws FirebaseAuthException {
-    String firebaseUid = auth.getPrincipal().toString();
+  public User createUser(String firebaseUid) throws FirebaseAuthException, Auth0Exception {
     log.info("Starting user creation for firebaseUid={}", firebaseUid);
 
     // Fetch Firebase user details
-    UserRecord userRecord = FirebaseAuth.getInstance().getUser(firebaseUid);
+    //    UserRecord userRecord = FirebaseAuth.getInstance().getUser(firebaseUid);
+    ManagementAPI mgmt =
+        ManagementAPI.newBuilder("{YOUR_DOMAIN}", "{MANAGEMENT_API_TOKEN}").build();
+    var userRecord = mgmt.users().get(firebaseUid, new UserFilter()).execute().getBody();
 
     var user =
         User.builder()
-            .firebaseUid(auth.getPrincipal().toString())
+            .firebaseUid(firebaseUid)
             .email(userRecord.getEmail())
             .phoneNumber(userRecord.getPhoneNumber())
-            .phoneNumber(userRecord.getPhoneNumber())
-            .firstName(userRecord.getDisplayName())
+            .firstName(userRecord.getName())
             .investor(Investor.builder().build())
             .build();
 
