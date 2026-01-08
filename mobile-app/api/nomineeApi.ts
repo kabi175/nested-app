@@ -1,11 +1,11 @@
 import type { Address } from "@/types/auth";
 import type { Nominee, NomineePayload } from "@/types/nominee";
-import { api } from "./client";
+import type { AxiosInstance } from "axios";
 
 /**
  * Get all nominees
  */
-export const getNominees = async (): Promise<Nominee[]> => {
+export const getNominees = async (api: AxiosInstance): Promise<Nominee[]> => {
   const { data } = await api.get("/users/nominees");
   return (data.data ?? []).map(
     (nominee: NomineeDTO): Nominee => mapNomineeDTOToNominee(nominee)
@@ -18,6 +18,7 @@ export const getNominees = async (): Promise<Nominee[]> => {
  * Accepts array of nominees. If nominee has id, it will update; otherwise it will create.
  */
 export const upsertNominees = async (
+  api: AxiosInstance,
   payloads: (NomineePayload & { id?: number })[]
 ): Promise<Nominee[]> => {
   const dtos = payloads.map((payload) => {
@@ -39,7 +40,7 @@ export const upsertNominees = async (
  * Opt-out a nominee
  * Note: MFA should be verified before calling this
  */
-export const optOutNominee = async (): Promise<void> => {
+export const optOutNominee = async (api: AxiosInstance): Promise<void> => {
   await api.post("/users/actions/nominee-opt-out");
 };
 

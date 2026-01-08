@@ -1,5 +1,6 @@
 import { mfaStateAtom } from "@/atoms/nominee";
 import { OtpInput } from "@/components/ui/OtpInput";
+import { useAuthAxios } from "@/hooks/useAuthAxios";
 import {
   setCurrentAction,
   startMfaSession,
@@ -29,6 +30,7 @@ export function MfaModal({
   onCancel,
   action,
 }: MfaModalProps) {
+  const api = useAuthAxios();
   const [otp, setOtp] = useState("");
   const [mfaState, setMfaState] = useAtom(mfaStateAtom);
   const [error, setError] = useState<string | null>(null);
@@ -51,7 +53,7 @@ export function MfaModal({
       await setCurrentAction(mfaAction);
 
       // Start MFA session
-      const response = await startMfaSession(mfaAction, "SMS");
+      const response = await startMfaSession(mfaAction, "SMS", api);
       setMfaSessionId(response.mfaSessionId);
     } catch (err: any) {
       console.error("Error sending OTP:", err);
@@ -89,7 +91,7 @@ export function MfaModal({
 
     try {
       // Verify OTP with custom MFA service
-      await verifyOtp(mfaSessionId, otpToVerify);
+      await verifyOtp(mfaSessionId, otpToVerify, api);
 
       // If verification successful, call onVerify callback
       setMfaState("success");

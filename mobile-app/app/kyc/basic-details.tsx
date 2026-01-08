@@ -3,6 +3,7 @@ import { GenericSelect } from "@/components/ui/GenericSelect";
 import { InfoTooltip } from "@/components/ui/InfoTooltip";
 import { StepProgress } from "@/components/ui/StepProgress";
 import { useAuth } from "@/hooks/auth";
+import { useAuthAxios } from "@/hooks/useAuthAxios";
 import { useKyc } from "@/providers/KycProvider";
 import { Button, Datepicker, Input, Text } from "@ui-kitten/components";
 import { useRouter } from "expo-router";
@@ -23,6 +24,7 @@ const maritalStatusOptions = [
 
 export default function BasicDetailsScreen() {
   const { user } = useAuth();
+  const api = useAuthAxios();
   const { data, update, validateBasic } = useKyc();
   const router = useRouter();
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -37,7 +39,7 @@ export default function BasicDetailsScreen() {
     let mounted = true;
     (async () => {
       setLoading(true);
-      const apiUser = await getUser();
+      const apiUser = await getUser(api);
       if (mounted && apiUser) {
         userIdRef.current = apiUser.id;
         // Map API user to form values
@@ -77,7 +79,7 @@ export default function BasicDetailsScreen() {
         // Map gender to API
         const genderLower = data.basic.gender;
         if (id) {
-          await updateUser(id, {
+          await updateUser(api, id, {
             firstName,
             lastName,
             email: user?.email || data.basic.email,

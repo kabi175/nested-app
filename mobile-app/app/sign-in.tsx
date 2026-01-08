@@ -75,6 +75,7 @@ export default function SignIn() {
       await authorizeWithSMS({
         phoneNumber: fullPhoneNumber,
         code: otpCode,
+        scope: "offline_access",
       });
       console.log("Authorization successful");
       router.replace("/name-input");
@@ -207,7 +208,6 @@ export default function SignIn() {
                     placeholder="Enter 10-digit mobile number"
                     value={phoneNumber}
                     onChangeText={setPhoneNumber}
-                    keyboardType="phone-pad"
                     maxLength={10}
                   />
                 </Layout>

@@ -12,10 +12,11 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
-import { verifyPayment } from "@/api/paymentAPI";
 import { OtpInput } from "@/components/ui/OtpInput";
 import { useAuth } from "@/hooks/auth";
+import { useAuthAxios } from "@/hooks/useAuthAxios";
 import { usePayment } from "@/hooks/usePayment";
+import { useVerifyPayment } from "@/hooks/usePaymentMutations";
 import {
   setCurrentAction,
   startMfaSession,
@@ -30,6 +31,8 @@ export default function PaymentVerificationScreen() {
     bankName?: string;
   }>();
   const auth = useAuth();
+  const api = useAuthAxios();
+  const verifyPaymentMutation = useVerifyPayment();
   const [mfaSessionId, setMfaSessionId] = useState<string | null>(null);
   const [otpCode, setOtpCode] = useState("");
   const [resendTimer, setResendTimer] = useState(0);
@@ -89,7 +92,7 @@ export default function PaymentVerificationScreen() {
       await setCurrentAction(action);
 
       // Start MFA session
-      const response = await startMfaSession(action, "SMS");
+      const response = await startMfaSession(action, "SMS", api);
       setMfaSessionId(response.mfaSessionId);
       setResendTimer(30);
     } catch (error: any) {
@@ -142,12 +145,12 @@ export default function PaymentVerificationScreen() {
     try {
       setIsVerifying(true);
       // Verify OTP with custom MFA service
-      await verifyOtp(mfaSessionId, otpCode);
+      await verifyOtp(mfaSessionId, otpCode, api);
 
       console.log("MFA verification successful");
       // After MFA verification, verify payment
       setIsProcessingPayment(true);
-      await verifyPayment(paymentId);
+      await verifyPaymentMutation.mutateAsync(paymentId);
 
       router.replace({
         pathname: "/payment/processing",

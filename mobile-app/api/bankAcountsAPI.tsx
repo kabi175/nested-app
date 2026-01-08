@@ -1,7 +1,8 @@
 import { BankAccount } from "@/types/bank";
-import { api } from "./client";
+import type { AxiosInstance } from "axios";
 
 export const getBankAccounts = async (
+  api: AxiosInstance,
   user_id: string
 ): Promise<BankAccount[]> => {
   try {
@@ -35,6 +36,7 @@ export const getBankAccounts = async (
 };
 
 export const addBankAccount = async (
+  api: AxiosInstance,
   user_id: string,
   bank_account: {
     accountNumber: string;
@@ -60,6 +62,7 @@ export const addBankAccount = async (
 };
 
 export const deleteBankAccount = async (
+  api: AxiosInstance,
   user_id: string,
   bank_id: string
 ): Promise<void> => {
@@ -72,6 +75,7 @@ export type LinkBankAccountAction = {
 };
 
 export const linkBankAccount = async (
+  api: AxiosInstance,
   userID: string
 ): Promise<LinkBankAccountAction> => {
   const { data } = await api.post(`users/${userID}/actions/reverse-penny-drop`);
@@ -79,6 +83,7 @@ export const linkBankAccount = async (
 };
 
 export const getLinkBankAccountStatus = async (
+  api: AxiosInstance,
   userID: string,
   actionID: string
 ): Promise<"pending" | "completed" | "failed" | "cancelled"> => {

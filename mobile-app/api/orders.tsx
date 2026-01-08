@@ -1,5 +1,5 @@
 import { FundAllocation } from "@/types/fund";
-import { api } from "./client";
+import type { AxiosInstance } from "axios";
 
 export type SipOrder = {
   id: string;
@@ -15,7 +15,7 @@ export type SipOrder = {
   updated_at: Date;
 };
 
-export const getSipOrders = async (page: number) => {
+export const getSipOrders = async (api: AxiosInstance, page: number) => {
   const { data } = await api.get("/order-items/sip", {
     params: {
       page,
@@ -34,6 +34,7 @@ export type Transaction = {
 };
 
 export const getTransactions = async (
+  api: AxiosInstance,
   page: number,
   fromDate?: Date,
   toDate?: Date
@@ -50,16 +51,23 @@ export const getTransactions = async (
     params.to_date = toDate.toISOString().split("T")[0];
   }
 
-  const { data } = await api.get("/transactions", {
-    params,
-  });
-  return data.data.map((transaction: Transaction) => ({
-    ...transaction,
-    executed_at: new Date(transaction.executed_at),
-  }));
+  try {
+    const { data } = await api.get("/transactions", {
+      params,
+    });
+    console.log(data);
+    return data.data.map((transaction: Transaction) => ({
+      ...transaction,
+      executed_at: new Date(transaction.executed_at),
+    }));
+  } catch (error) {
+    console.error("Error fetching transactions:", error);
+    throw error;
+  }
 };
 
 export const getFundAllocationWithOrders = async (
+  api: AxiosInstance,
   orderIds: string[]
 ): Promise<FundAllocation[]> => {
   const { data } = await api.get(`/orders/allocation`, {

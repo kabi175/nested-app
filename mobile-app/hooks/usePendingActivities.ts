@@ -2,8 +2,10 @@ import { fetchPendingActivities } from "@/api/activitiesAPI";
 import { QUERY_KEYS } from "@/constants/queryKeys";
 import { useQuery } from "@tanstack/react-query";
 import { useUser } from "./useUser";
+import { useAuthAxios } from "./useAuthAxios";
 
 export function usePendingActivities() {
+  const api = useAuthAxios();
   const { data: user, isLoading: isUserLoading } = useUser();
   const userId = user?.id;
 
@@ -13,7 +15,7 @@ export function usePendingActivities() {
       if (!userId) {
         throw new Error("User ID is required to fetch pending activities");
       }
-      return fetchPendingActivities(userId);
+      return fetchPendingActivities(api, userId);
     },
     enabled: !!userId,
   });

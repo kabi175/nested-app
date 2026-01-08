@@ -1,13 +1,10 @@
-import { getAuth, getIdToken } from "@react-native-firebase/auth";
-import axios from "axios";
+import { AxiosInstance } from "axios";
 import * as SecureStore from "expo-secure-store";
 
 const MFA_TOKEN_KEY = "mfa_token";
 const MFA_TOKEN_EXPIRY_KEY = "mfa_token_expiry";
 const MFA_ACTION_KEY = "mfa_action";
 const MFA_SESSION_ID_KEY = "mfa_session_id";
-
-const API_BASE_URL = process.env.EXPO_PUBLIC_API_URL;
 
 export type MfaAction =
   | "MF_BUY"
@@ -35,31 +32,16 @@ export interface VerifyOtpResponse {
  */
 export async function startMfaSession(
   action: MfaAction,
-  channel: MfaChannel = "SMS"
+  channel: MfaChannel = "SMS",
+  api: AxiosInstance
 ): Promise<StartMfaSessionResponse> {
   try {
-    const auth = getAuth();
-    const user = auth.currentUser;
-
-    if (!user) {
-      throw new Error("User not authenticated");
-    }
-
-    // Get Firebase ID token
-    const firebaseToken = await getIdToken(user);
-
     // Call backend API to start MFA session
-    const response = await axios.post<StartMfaSessionResponse>(
-      `${API_BASE_URL}/auth/mfa/start`,
+    const response = await api.post<StartMfaSessionResponse>(
+      "/auth/mfa/start",
       {
         action,
         channel,
-      },
-      {
-        headers: {
-          Authorization: `Bearer ${firebaseToken}`,
-          "Content-Type": "application/json",
-        },
       }
     );
 
@@ -89,33 +71,15 @@ export async function startMfaSession(
  */
 export async function verifyOtp(
   sessionId: string,
-  otp: string
+  otp: string,
+  api: AxiosInstance
 ): Promise<VerifyOtpResponse> {
   try {
-    const auth = getAuth();
-    const user = auth.currentUser;
-
-    if (!user) {
-      throw new Error("User not authenticated");
-    }
-
-    // Get Firebase ID token
-    const firebaseToken = await getIdToken(user);
-
     // Call backend API to verify OTP
-    const response = await axios.post<VerifyOtpResponse>(
-      `${API_BASE_URL}/auth/mfa/verify`,
-      {
-        mfaSessionId: sessionId,
-        otp,
-      },
-      {
-        headers: {
-          Authorization: `Bearer ${firebaseToken}`,
-          "Content-Type": "application/json",
-        },
-      }
-    );
+    const response = await api.post<VerifyOtpResponse>("/auth/mfa/verify", {
+      mfaSessionId: sessionId,
+      otp,
+    });
 
     const { mfaToken, message } = response.data;
 

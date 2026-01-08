@@ -1,7 +1,6 @@
 import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
 import { useAuth } from "@/hooks/auth";
-import { updateProfile } from "@react-native-firebase/auth";
 import { Button } from "@ui-kitten/components";
 import { Redirect, router } from "expo-router";
 import React, { useState } from "react";
@@ -32,7 +31,8 @@ export default function NameInputScreen() {
 
     try {
       if (!auth.user) return;
-      await updateProfile(auth.user, { displayName: name.trim() });
+      // await updateProfile(auth.user, { displayName: name.trim() });
+      //TODO: Update user profile
 
       // Navigate back or to next screen
       router.replace("/child");

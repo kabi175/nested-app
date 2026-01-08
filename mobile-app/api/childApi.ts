@@ -1,7 +1,7 @@
 import type { Child } from "@/types/child";
-import { api } from "./client";
+import type { AxiosInstance } from "axios";
 
-export const createChild = async (payload: Child): Promise<Child> => {
+export const createChild = async (api: AxiosInstance, payload: Child): Promise<Child> => {
   const childDTO = {
     first_name: payload.firstName,
     last_name: payload.lastName,
@@ -14,7 +14,7 @@ export const createChild = async (payload: Child): Promise<Child> => {
   return data;
 };
 
-export const getChildren = async (): Promise<Child[]> => {
+export const getChildren = async (api: AxiosInstance): Promise<Child[]> => {
   const { data } = await api.get("/children");
 
   const children = data.data.map(

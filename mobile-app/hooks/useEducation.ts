@@ -1,16 +1,18 @@
 import { getCourses, getInstitutions } from "@/api/educationAPI";
 import { Education } from "@/types/education";
 import { useQuery } from "@tanstack/react-query";
+import { useAuthAxios } from "./useAuthAxios";
 
 export const useEducation = (search?: string) => {
+  const api = useAuthAxios();
   const coursesQuery = useQuery<Education[]>({
     queryKey: ["education", "courses"],
-    queryFn: () => getCourses(search),
+    queryFn: () => getCourses(api, search),
   });
 
   const institutionsQuery = useQuery<Education[]>({
     queryKey: ["education", "institutions"],
-    queryFn: () => getInstitutions(search),
+    queryFn: () => getInstitutions(api, search),
   });
 
   return {

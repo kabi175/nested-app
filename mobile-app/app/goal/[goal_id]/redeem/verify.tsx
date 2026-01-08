@@ -10,9 +10,10 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
-import { verifyRedeemOrder } from "@/api/redeemAPI";
 import { OtpInput } from "@/components/ui/OtpInput";
 import { useAuth } from "@/hooks/auth";
+import { useAuthAxios } from "@/hooks/useAuthAxios";
+import { useVerifyRedeemOrder } from "@/hooks/useRedeem";
 import {
   setCurrentAction,
   startMfaSession,
@@ -29,6 +30,8 @@ export default function RedeemVerificationScreen() {
     goalId?: string;
   }>();
   const auth = useAuth();
+  const api = useAuthAxios();
+  const verifyRedeemOrderMutation = useVerifyRedeemOrder();
   const [mfaSessionId, setMfaSessionId] = useState<string | null>(null);
   const [otpCode, setOtpCode] = useState("");
   const [resendTimer, setResendTimer] = useState(0);
@@ -68,7 +71,7 @@ export default function RedeemVerificationScreen() {
       await setCurrentAction(action);
 
       // Start MFA session
-      const response = await startMfaSession(action, "SMS");
+      const response = await startMfaSession(action, "SMS", api);
       setMfaSessionId(response.mfaSessionId);
       setResendTimer(30);
     } catch (error: any) {
@@ -121,11 +124,11 @@ export default function RedeemVerificationScreen() {
     try {
       setIsVerifying(true);
       // Verify OTP with custom MFA service
-      await verifyOtp(mfaSessionId, otpCode);
+      await verifyOtp(mfaSessionId, otpCode, api);
 
       // After MFA verification, verify redeem order
       setIsProcessingRedeem(true);
-      await verifyRedeemOrder(parsedOrderIds);
+      await verifyRedeemOrderMutation.mutateAsync(parsedOrderIds);
 
       router.replace({
         pathname: `/goal/${goalId}/redeem/success`,

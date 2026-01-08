@@ -1,12 +1,12 @@
 import type { Goal } from "@/types/investment";
-import { api } from "./client";
+import type { AxiosInstance } from "axios";
 
-export const getGoals = async (): Promise<Goal[]> => {
+export const getGoals = async (api: AxiosInstance): Promise<Goal[]> => {
   const { data } = await api.get("/goals");
   return (data.data ?? []).map((goal: GoalDTO): Goal => mapGoalToGoal(goal));
 };
 
-export const getGoal = async (id: string): Promise<Goal> => {
+export const getGoal = async (api: AxiosInstance, id: string): Promise<Goal> => {
   const { data } = await api.get(`/goals/${id}`);
   const goals = (data.data ?? []).map(
     (goal: GoalDTO): Goal => mapGoalToGoal(goal)
@@ -26,6 +26,7 @@ export type CreateGoalRequest = {
   targetDate: Date;
 };
 export const createGoal = async (
+  api: AxiosInstance,
   goals: CreateGoalRequest[]
 ): Promise<Goal[]> => {
   const payload = goals.map((goal) => {

@@ -6,6 +6,7 @@ export const QUERY_KEYS = {
   goals: "goals",
   goal: "goal",
   pendingActivities: "pendingActivities",
+  pendingOrders: "pendingOrders",
   portfolio: "portfolio",
   payment: "payment",
   sipOrders: "sipOrders",

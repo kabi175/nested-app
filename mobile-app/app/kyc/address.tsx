@@ -5,6 +5,7 @@ import { QUERY_KEYS } from "@/constants/queryKeys";
 import { useUser } from "@/hooks/useUser";
 import { useKyc } from "@/providers/KycProvider";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useAuthAxios } from "@/hooks/useAuthAxios";
 import {
   Button,
   IndexPath,
@@ -24,6 +25,7 @@ import {
 } from "react-native";
 
 export default function AddressScreen() {
+  const api = useAuthAxios();
   const { data, update, validateAddress } = useKyc();
   const router = useRouter();
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -121,7 +123,7 @@ export default function AddressScreen() {
         .filter((value) => value && value.length > 0)
         .join(", ");
 
-      return updateUser(user.id, {
+      return updateUser(api, user.id, {
         address: {
           address_line: addressLine,
           city: addressValues.city,

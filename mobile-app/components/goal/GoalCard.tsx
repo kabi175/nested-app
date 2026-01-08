@@ -2,8 +2,11 @@ import { getPendingOrdersByGoalId } from "@/api/paymentAPI";
 import { cartAtom } from "@/atoms/cart";
 import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
+import { QUERY_KEYS } from "@/constants/queryKeys";
+import { useAuthAxios } from "@/hooks/useAuthAxios";
 import type { Goal } from "@/types/investment";
 import { formatCurrency } from "@/utils/formatters";
+import { useQueryClient } from "@tanstack/react-query";
 import { ProgressBar } from "@ui-kitten/components";
 import { router } from "expo-router";
 import { useSetAtom } from "jotai";
@@ -55,6 +58,8 @@ function getGoalBorderColor(goalId: string): string {
 }
 
 export function GoalCard({ goal }: GoalCardProps) {
+  const api = useAuthAxios();
+  const queryClient = useQueryClient();
   const setCart = useSetAtom(cartAtom);
   const progressPercentage = goal.currentAmount / goal.targetAmount;
   const borderColor = getGoalBorderColor(goal.id);
@@ -74,7 +79,10 @@ export function GoalCard({ goal }: GoalCardProps) {
         },
       });
     } else if (goal.status === "payment_pending") {
-      const orders = await getPendingOrdersByGoalId(goal.id);
+      const orders = await queryClient.fetchQuery({
+        queryKey: [QUERY_KEYS.pendingOrders, goal.id],
+        queryFn: () => getPendingOrdersByGoalId(api, goal.id),
+      });
       if (orders.length > 0) {
         setCart(orders);
 

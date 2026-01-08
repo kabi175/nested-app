@@ -19,6 +19,7 @@ import {
 } from "@/atoms/nominee";
 import { OtpInput } from "@/components/ui/OtpInput";
 import { useAuth } from "@/hooks/auth";
+import { useAuthAxios } from "@/hooks/useAuthAxios";
 import { useOptOutNominee } from "@/hooks/useOptOutNominee";
 import { useUpsertNominees } from "@/hooks/useUpsertNominees";
 import {
@@ -33,6 +34,7 @@ import { useAtom, useAtomValue, useSetAtom } from "jotai";
 
 export default function NomineeVerificationScreen() {
   const auth = useAuth();
+  const api = useAuthAxios();
   const [nomineeList, setNomineeList] = useAtom(nomineeListAtom);
   const pendingAction = useAtomValue(pendingActionAtom);
   const [pendingNomineeId, setPendingNomineeId] = useAtom(pendingNomineeIdAtom);
@@ -104,7 +106,7 @@ export default function NomineeVerificationScreen() {
       await setCurrentAction(action);
 
       // Start MFA session
-      const response = await startMfaSession(action, "SMS");
+      const response = await startMfaSession(action, "SMS", api);
       setMfaSessionId(response.mfaSessionId);
       setResendTimer(30);
     } catch (error: any) {
@@ -162,7 +164,7 @@ export default function NomineeVerificationScreen() {
     try {
       setIsVerifying(true);
       // Verify OTP with custom MFA service
-      await verifyOtp(mfaSessionId, otpCode);
+      await verifyOtp(mfaSessionId, otpCode, api);
 
       if (isOptOutFlow) {
         // Opt-out flow

@@ -4,17 +4,17 @@ import {
   ThemeProvider,
 } from "@react-navigation/native";
 import { useFonts } from "expo-font";
-import { Stack } from "expo-router";
+import { Stack, usePathname, useSegments } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import "react-native-reanimated";
 
-import { useAuth } from "@/hooks/auth";
 import { useColorScheme } from "@/hooks/useColorScheme";
 import { QueryProvider } from "@/providers/QueryProvider";
 import * as eva from "@eva-design/eva";
 import { ApplicationProvider } from "@ui-kitten/components";
-import React from "react";
-import { Auth0Provider } from "react-native-auth0";
+import React, { useEffect } from "react";
+import { ActivityIndicator, View } from "react-native";
+import { Auth0Provider, useAuth0 } from "react-native-auth0";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 
 export default function RootLayout() {
@@ -23,9 +23,21 @@ export default function RootLayout() {
     SpaceMono: require("../assets/fonts/SpaceMono-Regular.ttf"),
   });
 
+  const pathname = usePathname();
+  const segments = useSegments();
+
+  useEffect(() => {
+    console.log("Current route:", pathname);
+    console.log("Segments:", segments);
+  }, [pathname, segments]);
+
   if (!loaded) {
     // Async font loading only occurs in development.
-    return null;
+    return (
+      <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
+        <ActivityIndicator size="large" color="#2563EB" />
+      </View>
+    );
   }
 
   return (
@@ -54,7 +66,7 @@ export const unstable_settings = {
 };
 
 function RootNavigator() {
-  const auth = useAuth();
+  const { user } = useAuth0();
 
   return (
     <Stack
@@ -62,15 +74,15 @@ function RootNavigator() {
         headerShown: false,
       }}
     >
-      <Stack.Protected guard={auth.isSignedIn === true}>
+      <Stack.Protected guard={!!user}>
         <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
         <Stack.Screen name="payment" />
         <Stack.Screen name="bank-accounts" />
         <Stack.Screen name="+not-found" />
-        <Stack.Screen name="name-input" options={{ headerShown: false }} />
+        {/* <Stack.Screen name="name-input" options={{ headerShown: false }} /> */}
       </Stack.Protected>
 
-      <Stack.Protected guard={auth.isSignedIn === false}>
+      <Stack.Protected guard={!user}>
         <Stack.Screen
           name="sign-in"
           options={{ headerShown: false, presentation: "card" }}

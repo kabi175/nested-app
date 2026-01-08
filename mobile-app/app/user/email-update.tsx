@@ -1,9 +1,4 @@
 import { Ionicons } from "@expo/vector-icons";
-import {
-  getAuth,
-  onAuthStateChanged,
-  verifyBeforeUpdateEmail,
-} from "@react-native-firebase/auth";
 import { LinearGradient } from "expo-linear-gradient";
 import { router } from "expo-router";
 import { useEffect, useState } from "react";
@@ -21,12 +16,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 
 import { OtpInput } from "@/components/ui/OtpInput";
 import { useAuth } from "@/hooks/auth";
-import {
-  setCurrentAction,
-  startMfaSession,
-  verifyOtp,
-  type MfaAction,
-} from "@/services/mfaService";
+import { setCurrentAction, type MfaAction } from "@/services/mfaService";
 import { Input, Spinner, Text } from "@ui-kitten/components";
 
 type Step = "email" | "mfa" | "sending" | "success";
@@ -73,33 +63,6 @@ export default function EmailUpdateScreen() {
     }
     return () => clearInterval(interval);
   }, [resendTimer]);
-
-  // Monitor auth state changes (session expiration after email verification)
-  useEffect(() => {
-    if (step !== "success") return;
-
-    const unsubscribe = onAuthStateChanged(getAuth(), (user) => {
-      if (!user) {
-        // Session expired after email verification, redirect to login
-        Alert.alert(
-          "Email Updated",
-          "Your email has been successfully updated. Please sign in again with your new email address.",
-          [
-            {
-              text: "OK",
-              onPress: () => {
-                router.replace("/sign-in");
-              },
-            },
-          ]
-        );
-      } else {
-        router.replace("/sign-in");
-      }
-    });
-
-    return () => unsubscribe();
-  }, [step]);
 
   const validateEmail = (email: string): boolean => {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -149,8 +112,8 @@ export default function EmailUpdateScreen() {
       await setCurrentAction(action);
 
       // Start MFA session
-      const response = await startMfaSession(action, "SMS");
-      setMfaSessionId(response.mfaSessionId);
+      // const response = await startMfaSession(action, "SMS");
+      // setMfaSessionId(response.mfaSessionId);
       setResendTimer(30);
     } catch (error: any) {
       console.log("Error sending OTP", error);
@@ -203,21 +166,17 @@ export default function EmailUpdateScreen() {
     try {
       setIsVerifying(true);
       // Verify OTP with custom MFA service
-      await verifyOtp(mfaSessionId, otpCode);
+      // await verifyOtp(mfaSessionId, otpCode);
 
       // After MFA verification, send verification email
       setIsSendingEmail(true);
       setStep("sending");
 
-      const currentUser = getAuth().currentUser;
-      if (!currentUser) {
-        throw new Error("User not authenticated");
-      }
-
       // Call verifyBeforeUpdateEmail
       // This sends a verification email to the new address
       // The email will only be updated after the user clicks the verification link
-      await verifyBeforeUpdateEmail(currentUser, newEmail.trim());
+      // await verifyBeforeUpdateEmail(currentUser, newEmail.trim());
+      //TODO: handle update email
 
       setStep("success");
       Alert.alert(

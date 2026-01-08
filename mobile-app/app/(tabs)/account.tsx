@@ -57,6 +57,7 @@ export default function AccountScreen() {
           style: "destructive",
           onPress: async () => {
             await signOut();
+            console.log("Signed out successfully");
             queryClient.clear();
             setUser(null);
             clearNomineeAtoms();

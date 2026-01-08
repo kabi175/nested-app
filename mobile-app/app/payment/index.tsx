@@ -1,4 +1,4 @@
-import { createPayment } from "@/api/paymentAPI";
+import { useCreatePayment } from "@/hooks/usePaymentMutations";
 import { cartAtom } from "@/atoms/cart";
 import { ThemedText } from "@/components/ThemedText";
 import { useBankAccounts } from "@/hooks/useBankAccount";
@@ -25,6 +25,7 @@ export default function PaymentMethodScreen() {
   const cart = useAtomValue(cartAtom);
   const { data: bankAccountsData, isLoading: isLoadingBanks } =
     useBankAccounts();
+  const createPaymentMutation = useCreatePayment();
   // Ensure bankAccounts is always an array
   const bankAccounts = useMemo(
     () => (Array.isArray(bankAccountsData) ? bankAccountsData : []),
@@ -148,9 +149,12 @@ export default function PaymentMethodScreen() {
       const paymentMethod =
         selectedMethod === "netbanking" ? "net_banking" : "upi";
 
-      const payment = await createPayment(cart, {
-        payment_method: paymentMethod,
-        bank_id: selectedBank.id,
+      const payment = await createPaymentMutation.mutateAsync({
+        orders: cart,
+        paymentOption: {
+          payment_method: paymentMethod,
+          bank_id: selectedBank.id,
+        },
       });
 
       // Redirect to verification screen

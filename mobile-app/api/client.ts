@@ -1,4 +1,3 @@
-import { getMfaToken } from "@/services/mfaService";
 import axios, { AxiosError, InternalAxiosRequestConfig } from "axios";
 
 export const api = axios.create({
@@ -17,7 +16,8 @@ export const redirectClient = axios.create({
 // Request interceptor: Add auth token and MFA token
 api.interceptors.request.use(
   async (config: InternalAxiosRequestConfig) => {
-    // Add MFA token if available
+    // Add MFA token if available (dynamic import to avoid circular dependency)
+    const { getMfaToken } = await import("@/services/mfaService");
     const mfaToken = await getMfaToken();
     if (mfaToken) {
       config.headers["X-MFA-Token"] = mfaToken;

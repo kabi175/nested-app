@@ -17,7 +17,10 @@ export function useAuth(): AuthState {
 
 export function useSignOut() {
   const { clearSession } = useAuth0();
-  return { signOut: async () => await clearSession() };
+  return {
+    signOut: async () =>
+      await clearSession({ returnToUrl: "nested://sign-in" }),
+  };
 }
 
 export function useReloadAuth() {
