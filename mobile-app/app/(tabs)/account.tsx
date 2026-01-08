@@ -124,7 +124,7 @@ export default function AccountScreen() {
       icon: "chatbubble-outline",
       iconColor: "#3B82F6",
       borderColor: "#3B82F6",
-      onPress: () => openWhatsApp("916382751431", "Hello 👋"),
+      onPress: () => openWhatsApp("916305209273", "Hello 👋"),
     },
     {
       id: "support",
@@ -132,7 +132,7 @@ export default function AccountScreen() {
       icon: "help-circle-outline",
       iconColor: "#10B981",
       borderColor: "#10B981",
-      onPress: () => openWhatsApp("916382751431", "Hello 👋"),
+      onPress: () => openWhatsApp("916305209273", "Hello 👋"),
     },
     {
       id: "logout",

@@ -42,7 +42,7 @@ export default function NestedFooter() {
       <View style={styles.contactContainer}>
         <Text style={styles.contactLabel}>Phone/WhatsApp: </Text>
         <Pressable onPress={handlePhonePress}>
-          <Text style={styles.contactLink}>+91 XXXXX XXXXX</Text>
+          <Text style={styles.contactLink}>+91 63052 09273</Text>
         </Pressable>
       </View>
 
@@ -58,7 +58,7 @@ export default function NestedFooter() {
           All rights reserved.
         </Text>
         <View style={styles.legalLinksContainer}>
-          <Text style={styles.copyrightText}>ARN - 212121. </Text>
+          <Text style={styles.copyrightText}>ARN - 348380. </Text>
           <View style={styles.legalLinksContainer}>
             <Pressable onPress={handleTermsPress}>
               <Text style={styles.legalLink}> Terms & Conditions </Text>
