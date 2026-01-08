@@ -78,6 +78,33 @@ public class FundServiceImpl implements FundService {
     }
   }
 
+  @Override
+  @Transactional
+  public FundDTO updateFundLabel(Long id, String label) {
+    log.info("Updating fund label for ID: {} with label: {}", id, label);
+    
+    try {
+      Fund fund = fundRepository.findById(id)
+          .orElseThrow(() -> new IllegalArgumentException("Fund not found with ID: " + id));
+      
+      if (label == null || label.trim().isEmpty()) {
+        throw new IllegalArgumentException("Label cannot be null or empty");
+      }
+      
+      fund.setLabel(label.trim());
+      Fund updatedFund = fundRepository.save(fund);
+      
+      log.info("Successfully updated fund label for ID: {}", id);
+      return convertToDTO(updatedFund);
+    } catch (IllegalArgumentException e) {
+      log.error("Validation error updating fund label: {}", e.getMessage());
+      throw e;
+    } catch (Exception e) {
+      log.error("Error updating fund label for ID {}: {}", id, e.getMessage(), e);
+      throw new RuntimeException("Failed to update fund label", e);
+    }
+  }
+
   /**
    * Converts Fund entity to FundDTO
    *

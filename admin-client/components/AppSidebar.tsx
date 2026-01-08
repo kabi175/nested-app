@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation"; // Next.js hook to get current path
-import { LayoutDashboard, Users, GraduationCap, Package, BarChart3, LogOut, User } from "lucide-react";
+import { LayoutDashboard, Users, GraduationCap, Package, BarChart3, LogOut, User, TrendingUp } from "lucide-react";
 import {
   Sidebar,
   SidebarContent,
@@ -23,6 +23,7 @@ const menuItems = [
   { title: "Users", url: "/users", icon: Users },
   { title: "Education", url: "/education", icon: GraduationCap },
   { title: "Baskets", url: "/baskets", icon: Package },
+  { title: "Funds", url: "/funds", icon: TrendingUp },
 ];
 
 export function AppSidebar() {

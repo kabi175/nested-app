@@ -9,6 +9,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
@@ -125,6 +127,59 @@ public class FundController {
           .body(Map.<String, Object>of("error", e.getMessage()));
     } catch (Exception e) {
       log.error("Error retrieving fund with ID {}: {}", id, e.getMessage(), e);
+      return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+    }
+  }
+
+  /**
+   * Updates the label (display name) of a fund
+   * 
+   * @param id The ID of the fund
+   * @param request Request body containing the new label
+   * @return ResponseEntity containing updated fund details
+   */
+  @PutMapping("/{id}/label")
+  @AdminOnly
+  @Operation(
+      summary = "Update fund label (Admin only)",
+      description = "Updates the display name (label) of a specific fund")
+  @ApiResponses(
+      value = {
+        @ApiResponse(
+            responseCode = "200",
+            description = "Fund label updated successfully",
+            content =
+                @Content(
+                    mediaType = "application/json",
+                    schema = @Schema(implementation = Map.class))),
+        @ApiResponse(responseCode = "400", description = "Invalid input data"),
+        @ApiResponse(responseCode = "403", description = "Access denied - Admin role required"),
+        @ApiResponse(responseCode = "404", description = "Fund not found"),
+        @ApiResponse(responseCode = "500", description = "Internal server error")
+      })
+  public ResponseEntity<?> updateFundLabel(
+      @Parameter(description = "Fund ID", required = true) @PathVariable Long id,
+      @RequestBody Map<String, String> request) {
+
+    log.info("PUT /api/v1/funds/{}/label - Updating fund label", id);
+
+    try {
+      String label = request.get("label");
+      if (label == null || label.trim().isEmpty()) {
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+            .body(Map.<String, Object>of("error", "Label is required and cannot be empty"));
+      }
+
+      FundDTO updatedFund = fundService.updateFundLabel(id, label);
+      log.info("Successfully updated fund label for ID: {}", id);
+      return ResponseEntity.ok(Entity.of(List.of(updatedFund)));
+      
+    } catch (IllegalArgumentException e) {
+      log.warn("Validation error updating fund label: {}", e.getMessage());
+      return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+          .body(Map.<String, Object>of("error", e.getMessage()));
+    } catch (Exception e) {
+      log.error("Error updating fund label for ID {}: {}", id, e.getMessage(), e);
       return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
     }
   }

@@ -3,3 +3,4 @@
 mobile-app/.env
 /admin-client/node_modules
 /admin-client/.next
+.venv

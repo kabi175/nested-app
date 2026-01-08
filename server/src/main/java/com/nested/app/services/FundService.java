@@ -37,5 +37,14 @@ public interface FundService {
    * @return Fund details
    */
   FundDTO getFundById(Long id);
+
+  /**
+   * Updates the label (display name) of a fund
+   *
+   * @param id Fund ID
+   * @param label New label value
+   * @return Updated fund details
+   */
+  FundDTO updateFundLabel(Long id, String label);
 }
 

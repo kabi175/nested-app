@@ -79,3 +79,27 @@ export async function getActiveFunds(): Promise<Fund[]> {
   }
 }
 
+
+/**
+ * Update fund label (display name)
+ * @param id - Fund ID
+ * @param label - New label value
+ * @returns Promise with updated fund
+ */
+export async function updateFundLabel(id: string, label: string): Promise<FundDTO> {
+  try {
+    const response = await apiClient.put<ApiResponse<FundDTO>>(
+      `/funds/${id}/label`,
+      { label }
+    );
+    
+    if (!response.data || response.data.length === 0) {
+      throw new Error('No fund data returned from server');
+    }
+    
+    return response.data[0];
+  } catch (error) {
+    console.error('Error updating fund label:', error);
+    throw error;
+  }
+}
