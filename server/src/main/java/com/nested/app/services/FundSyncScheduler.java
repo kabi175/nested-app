@@ -8,6 +8,7 @@ import com.nested.app.repository.FundRepository;
 import java.sql.Timestamp;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -25,27 +26,47 @@ public class FundSyncScheduler {
     var pageable = org.springframework.data.domain.PageRequest.of(0, 100);
     var hasMore = true;
     while (hasMore) {
-      SchemeResponse response = fundAPIClient.fetchFundsList(pageable).block();
+      log.info("Fetching funds from External provider");
+      SchemeResponse response;
+      try {
+        Thread.sleep(1000);
+        response = fundAPIClient.fetchFundsList(pageable).block();
+      } catch (Exception e) {
+        log.error("Error while fetching funds from External provider");
+        response = null;
+      }
       hasMore = response != null && response.hasNext();
       pageable = pageable.next();
 
+      log.info(
+          "Fetched funds from External provider response {}",
+          response == null ? "null" : "present");
+
+      var funds = new ArrayList<Fund>();
       if (response != null && response.getResults() != null) {
+        log.info(
+            "Fetched funds from External provider result count {}", response.getResults().size());
         for (FundDTO dto : response.getResults()) {
           try {
             Fund fund = fundRepository.findFundByIsinCode(dto.getIsin()).orElse(new Fund());
             mapToFund(dto, fund);
-            fundRepository.save(fund);
+            funds.add(fund);
           } catch (Exception e) {
             // Log and continue
             log.error("Error processing fund DTO: {}, error: {}", dto, e.getMessage());
           }
         }
       }
+      try {
+        fundRepository.saveAllAndFlush(funds);
+      } catch (Exception e) {
+        log.error("Error while saving funds to DB");
+      }
     }
   }
 
   private void mapToFund(FundDTO dto, Fund fund) {
-
+    log.info("Fund {}", dto.getSchemeName());
     fund.setLabel(dto.getSchemeName());
     fund.setName(dto.getSchemeName());
 
