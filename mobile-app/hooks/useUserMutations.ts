@@ -1,5 +1,6 @@
 import {
   updateUser,
+  updateEmail,
   uploadUserSignature,
   fetchAadhaarUploadRedirectUrl,
   fetchEsignUploadRedirectUrl,
@@ -62,6 +63,19 @@ export function useFetchEsignUploadRedirectUrl() {
 
   return useMutation({
     mutationFn: (user: User) => fetchEsignUploadRedirectUrl(api, user),
+  });
+}
+
+export function useUpdateEmail() {
+  const api = useAuthAxios();
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ userId, email }: { userId: string; email: string }) =>
+      updateEmail(api, userId, email),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.user] });
+    },
   });
 }
 

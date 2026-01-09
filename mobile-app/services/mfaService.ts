@@ -12,7 +12,7 @@ export type MfaAction =
   | "NOMINEE_UPDATE"
   | "EMAIL_UPDATE";
 
-export type MfaChannel = "SMS" | "WHATSAPP";
+export type MfaChannel = "SMS" | "WHATSAPP" | "EMAIL";
 
 export interface StartMfaSessionResponse {
   mfaSessionId: string;
@@ -25,24 +25,39 @@ export interface VerifyOtpResponse {
 }
 
 /**
- * Start an MFA session by sending OTP to user's phone
+ * Start an MFA session by sending OTP to user's phone or email
  * @param action - The action type that requires MFA
- * @param channel - The channel to send OTP (SMS or WHATSAPP)
+ * @param channel - The channel to send OTP (SMS, WHATSAPP, or EMAIL)
+ * @param api - The axios instance
+ * @param email - Optional email address (required for EMAIL_UPDATE action with EMAIL channel)
  * @returns Promise with session ID and message
  */
 export async function startMfaSession(
   action: MfaAction,
   channel: MfaChannel = "SMS",
-  api: AxiosInstance
+  api: AxiosInstance,
+  email?: string
 ): Promise<StartMfaSessionResponse> {
   try {
+    // Build request body
+    const requestBody: {
+      action: MfaAction;
+      channel: MfaChannel;
+      email?: string;
+    } = {
+      action,
+      channel,
+    };
+
+    // Include email for EMAIL_UPDATE action with EMAIL channel
+    if (action === "EMAIL_UPDATE" && channel === "EMAIL" && email) {
+      requestBody.email = email;
+    }
+
     // Call backend API to start MFA session
     const response = await api.post<StartMfaSessionResponse>(
       "/auth/mfa/start",
-      {
-        action,
-        channel,
-      }
+      requestBody
     );
 
     const { mfaSessionId, message } = response.data;

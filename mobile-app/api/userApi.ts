@@ -198,3 +198,13 @@ export const fetchEsignUploadRedirectUrl = async (
 export const createInvestor = async (api: AxiosInstance, user: User): Promise<void> => {
   await api.post(`/users/${user.id}/actions/create_investor`);
 };
+
+export const updateEmail = async (
+  api: AxiosInstance,
+  userId: string,
+  email: string
+): Promise<void> => {
+  await api.post(`/users/${userId}/actions/update_email`, {
+    email,
+  });
+};
