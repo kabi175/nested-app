@@ -17,11 +17,4 @@ public class EmailUpdateRequest {
   @Email(message = "Invalid email format")
   @Schema(description = "New email address", example = "user@example.com", required = true)
   private String email;
-
-  @NotBlank(message = "MFA token is required")
-  @Schema(
-      description = "MFA token obtained after OTP verification",
-      example = "userId.EMAIL_UPDATE.sessionId.signature",
-      required = true)
-  private String mfaToken;
 }

@@ -19,6 +19,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -94,11 +95,15 @@ public class MfaController {
    *
    * @return Firebase UID
    */
-  private String getCurrentUserId() {
+  public static String getCurrentUserId() {
     Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
     if (authentication == null || authentication.getPrincipal() == null) {
       throw new RuntimeException("User not authenticated");
     }
-    return authentication.getPrincipal().toString();
+    var principal = authentication.getPrincipal();
+    if (principal instanceof Jwt jwt) {
+      return jwt.getSubject();
+    }
+    throw new RuntimeException("Authentication failed");
   }
 }

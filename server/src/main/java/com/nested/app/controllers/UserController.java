@@ -30,8 +30,6 @@ import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -349,25 +347,11 @@ public class UserController {
       @RequestHeader(value = "X-MFA-Token", required = false) String headerMfaToken,
       HttpServletRequest httpRequest) {
     // Get current user's Firebase UID
-    Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-    if (authentication == null || authentication.getPrincipal() == null) {
-      throw new RuntimeException("User not authenticated");
-    }
-    String firebaseUid = authentication.getPrincipal().toString();
-
-    // Use MFA token from header if available (for filter compatibility), otherwise use body token
-    String mfaToken =
-        headerMfaToken != null && !headerMfaToken.isEmpty()
-            ? headerMfaToken
-            : request.getMfaToken();
-
-    if (mfaToken == null || mfaToken.isEmpty()) {
-      throw new IllegalArgumentException("MFA token is required");
-    }
+    String firebaseUid = MfaController.getCurrentUserId();
 
     log.info("Updating email for user: {}, new email: {}", firebaseUid, request.getEmail());
 
-    UserDTO updatedUser = userService.updateEmail(firebaseUid, request.getEmail(), mfaToken);
+    UserDTO updatedUser = userService.updateEmail(firebaseUid, request.getEmail());
 
     EmailUpdateResponse response =
         new EmailUpdateResponse("Email updated successfully", updatedUser.getEmail());

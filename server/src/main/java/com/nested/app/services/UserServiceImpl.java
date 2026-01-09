@@ -13,7 +13,6 @@ import com.nested.app.entity.Address;
 import com.nested.app.entity.User;
 import com.nested.app.events.UserUpdateEvent;
 import com.nested.app.exception.ExternalServiceException;
-import com.nested.app.exception.MfaException;
 import com.nested.app.mapper.BankAccountTypeMapper;
 import com.nested.app.repository.AddressRepository;
 import com.nested.app.repository.BankDetailRepository;
@@ -378,11 +377,7 @@ public class UserServiceImpl implements UserService {
   }
 
   @Override
-  public UserDTO updateEmail(String userId, String newEmail, String mfaToken) {
-    // Validate MFA token
-    if (!mfaService.validateMfaToken(mfaToken, "EMAIL_UPDATE")) {
-      throw new MfaException("Invalid or expired MFA token");
-    }
+  public UserDTO updateEmail(String userId, String newEmail) {
 
     // Find user by Firebase UID
     User user =
@@ -394,15 +389,9 @@ public class UserServiceImpl implements UserService {
                         "User with Firebase UID " + userId + " not found"));
 
     // Check if email is already in use by another user
-    final Long userIdLong = user.getId();
-    userRepository
-        .findByEmail(newEmail)
-        .ifPresent(
-            existingUser -> {
-              if (!existingUser.getId().equals(userIdLong)) {
-                throw new IllegalArgumentException("Email address is already in use");
-              }
-            });
+    if (userRepository.existsByEmail(newEmail)) {
+      throw new IllegalArgumentException("Email address is already in use");
+    }
 
     // Store original user for event
     User originalUser = user;

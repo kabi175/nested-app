@@ -31,7 +31,7 @@ public interface UserService {
 
   UserActionRequest createEsignUploadRequest(Long userId);
 
-  UserDTO updateEmail(String userId, String newEmail, String mfaToken);
+  UserDTO updateEmail(String userId, String newEmail);
 
   enum Type {
     CURRENT_USER,
