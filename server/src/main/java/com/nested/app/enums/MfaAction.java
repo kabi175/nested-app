@@ -10,7 +10,8 @@ public enum MfaAction {
   MF_SELL("MF_SELL"),
   BANK_CHANGE("BANK_CHANGE"),
   WITHDRAWAL("WITHDRAWAL"),
-  PROFILE_UPDATE("PROFILE_UPDATE");
+  PROFILE_UPDATE("PROFILE_UPDATE"),
+  EMAIL_UPDATE("EMAIL_UPDATE");
 
   @JsonValue @Getter private final String value;
 }

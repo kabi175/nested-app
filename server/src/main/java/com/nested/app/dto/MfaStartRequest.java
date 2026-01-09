@@ -2,6 +2,7 @@ package com.nested.app.dto;
 
 import com.nested.app.enums.MfaChannel;
 import io.swagger.v3.oas.annotations.media.Schema;
+import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
@@ -21,4 +22,10 @@ public class MfaStartRequest {
   @NotNull(message = "Channel is required")
   @Schema(description = "OTP delivery channel", example = "SMS")
   private MfaChannel channel;
+
+  @Email(message = "Invalid email format")
+  @Schema(
+      description = "Email address (required for EMAIL_UPDATE action with EMAIL channel)",
+      example = "user@example.com")
+  private String email;
 }

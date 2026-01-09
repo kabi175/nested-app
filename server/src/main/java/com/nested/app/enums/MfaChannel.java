@@ -8,7 +8,8 @@ import lombok.RequiredArgsConstructor;
 public enum MfaChannel {
   SMS("SMS"),
   WHATSAPP("WHATSAPP"),
-  TOTP("TOTP");
+  TOTP("TOTP"),
+  EMAIL("EMAIL");
 
   @JsonValue @Getter private final String value;
 }

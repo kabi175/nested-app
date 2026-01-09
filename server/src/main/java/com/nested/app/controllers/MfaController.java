@@ -56,7 +56,8 @@ public class MfaController {
         request.getChannel());
 
     UUID sessionId =
-        mfaService.startMfaSession(userId, request.getAction(), request.getChannel(), httpRequest);
+        mfaService.startMfaSession(
+            userId, request.getAction(), request.getChannel(), httpRequest, request.getEmail());
 
     MfaStartResponse response = new MfaStartResponse(sessionId, "OTP sent successfully");
     return ResponseEntity.ok(response);

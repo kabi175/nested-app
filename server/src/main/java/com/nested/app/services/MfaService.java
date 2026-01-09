@@ -55,21 +55,33 @@ public class MfaService {
    *
    * @param userId Firebase user ID
    * @param action Action requiring MFA (e.g., "MF_BUY")
-   * @param channel SMS or WHATSAPP
+   * @param channel SMS, WHATSAPP, or EMAIL
    * @param request HTTP request for IP and user-agent
+   * @param email Optional email address (required for EMAIL_UPDATE action with EMAIL channel)
    * @return MFA session ID
    */
   @Transactional
   public UUID startMfaSession(
-      String userId, String action, MfaChannel channel, HttpServletRequest request) {
-    // Get user phone number
-    Optional<User> userOpt = userRepository.findByFirebaseUid(userId);
-    if (userOpt.isEmpty() || userOpt.get().getPhoneNumber() == null) {
-      throw new MfaException("User phone number not found");
-    }
+      String userId, String action, MfaChannel channel, HttpServletRequest request, String email) {
+    String destination;
+    String maskedDestination;
 
-    String phoneNumber = userOpt.get().getPhoneNumber();
-    String maskedDestination = maskPhoneNumber(phoneNumber);
+    // For EMAIL_UPDATE action with EMAIL channel, use provided email
+    if ("EMAIL_UPDATE".equals(action) && channel == MfaChannel.EMAIL) {
+      if (email == null || email.isEmpty()) {
+        throw new MfaException("Email address is required for EMAIL_UPDATE action");
+      }
+      destination = email;
+      maskedDestination = maskEmail(email);
+    } else {
+      // For other actions, use phone number
+      Optional<User> userOpt = userRepository.findByFirebaseUid(userId);
+      if (userOpt.isEmpty() || userOpt.get().getPhoneNumber() == null) {
+        throw new MfaException("User phone number not found");
+      }
+      destination = userOpt.get().getPhoneNumber();
+      maskedDestination = maskPhoneNumber(destination);
+    }
 
     // Generate OTP (use mock OTP if mock mode is enabled)
     String otp;
@@ -114,7 +126,7 @@ public class MfaService {
           channel);
     } else {
       try {
-        twilioService.sendOtp(phoneNumber, otp, channel);
+        twilioService.sendOtp(destination, otp, channel);
         log.info(
             "MFA session started: sessionId={}, userId={}, action={}, channel={}",
             session.getId(),
@@ -358,5 +370,27 @@ public class MfaService {
       return "****";
     }
     return "****" + phoneNumber.substring(phoneNumber.length() - 4);
+  }
+
+  /**
+   * Masks email address for logging (shows only first 2 chars and domain)
+   *
+   * @param email Email address
+   * @return Masked email address
+   */
+  private String maskEmail(String email) {
+    if (email == null || email.isEmpty()) {
+      return "****";
+    }
+    int atIndex = email.indexOf('@');
+    if (atIndex <= 0 || atIndex >= email.length() - 1) {
+      return "****";
+    }
+    String localPart = email.substring(0, atIndex);
+    String domain = email.substring(atIndex + 1);
+    if (localPart.length() <= 2) {
+      return "**@" + domain;
+    }
+    return localPart.substring(0, 2) + "***@" + domain;
   }
 }

@@ -1,7 +1,10 @@
 package com.nested.app.controllers;
 
+import com.nested.app.annotation.RequiresMfa;
 import com.nested.app.contect.UserContext;
 import com.nested.app.dto.BankAccountDto;
+import com.nested.app.dto.EmailUpdateRequest;
+import com.nested.app.dto.EmailUpdateResponse;
 import com.nested.app.dto.Entity;
 import com.nested.app.dto.MinifiedUserDTO;
 import com.nested.app.dto.UserActionRequest;
@@ -17,6 +20,8 @@ import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.validation.Valid;
 import java.util.Map;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -25,12 +30,16 @@ import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
@@ -306,5 +315,62 @@ public class UserController {
   public RedirectView getSignature(@PathVariable("user_id") Long userID) {
     var url = userService.fetchUserSignature(userID);
     return new RedirectView(url);
+  }
+
+  @RequiresMfa(action = "EMAIL_UPDATE")
+  @PostMapping(
+      value = "/{user_id}/actions/update_email",
+      consumes = MediaType.APPLICATION_JSON_VALUE,
+      produces = MediaType.APPLICATION_JSON_VALUE)
+  @Operation(
+      tags = "user",
+      summary = "Update user email address",
+      description =
+          "Updates the user's email address. Requires MFA verification via OTP sent to the new email address.")
+  @ApiResponses(
+      value = {
+        @ApiResponse(
+            responseCode = "200",
+            description = "Email updated successfully",
+            content =
+                @Content(
+                    mediaType = "application/json",
+                    schema = @Schema(implementation = EmailUpdateResponse.class))),
+        @ApiResponse(
+            responseCode = "400",
+            description = "Invalid input data, email already in use, or invalid MFA token"),
+        @ApiResponse(responseCode = "403", description = "MFA verification required or failed"),
+        @ApiResponse(responseCode = "404", description = "User not found"),
+        @ApiResponse(responseCode = "500", description = "Internal server error")
+      })
+  public ResponseEntity<EmailUpdateResponse> updateEmail(
+      @Parameter(description = "User ID", required = true) @PathVariable("user_id") Long userId,
+      @Valid @RequestBody EmailUpdateRequest request,
+      @RequestHeader(value = "X-MFA-Token", required = false) String headerMfaToken,
+      HttpServletRequest httpRequest) {
+    // Get current user's Firebase UID
+    Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+    if (authentication == null || authentication.getPrincipal() == null) {
+      throw new RuntimeException("User not authenticated");
+    }
+    String firebaseUid = authentication.getPrincipal().toString();
+
+    // Use MFA token from header if available (for filter compatibility), otherwise use body token
+    String mfaToken =
+        headerMfaToken != null && !headerMfaToken.isEmpty()
+            ? headerMfaToken
+            : request.getMfaToken();
+
+    if (mfaToken == null || mfaToken.isEmpty()) {
+      throw new IllegalArgumentException("MFA token is required");
+    }
+
+    log.info("Updating email for user: {}, new email: {}", firebaseUid, request.getEmail());
+
+    UserDTO updatedUser = userService.updateEmail(firebaseUid, request.getEmail(), mfaToken);
+
+    EmailUpdateResponse response =
+        new EmailUpdateResponse("Email updated successfully", updatedUser.getEmail());
+    return ResponseEntity.ok(response);
   }
 }
