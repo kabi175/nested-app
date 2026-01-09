@@ -13,7 +13,8 @@ export interface FundDTO {
   description?: string;
   minAmount?: number;
   nav: number;
-  isActive: boolean;
+  isActive?: boolean;
+  active?: boolean; // Jackson may serialize isActive as "active"
 }
 
 export interface Fund {
@@ -43,21 +44,26 @@ export async function getFunds(
       if (pagination.sort) params.sort = pagination.sort;
     }
     
-    const response = await apiClient.get<ApiResponse<FundDTO>>('/funds', params);
+    const response = await apiClient.get<{ data: FundDTO[]; count?: number }>('/funds', params);
     
     // Map backend response to frontend Fund interface
-    const funds = response.data.map(fund => ({
+    // With @JsonProperty("isActive"), it should serialize as "isActive"
+    // But handle both cases for safety
+    const funds = response.data.map((fund: any) => ({
       id: fund.id,
       name: fund.name,
       displayName: fund.displayName,
       description: fund.description,
       nav: fund.nav,
-      isActive: fund.isActive,
+      isActive: fund.isActive !== undefined ? fund.isActive : (fund.active !== undefined ? fund.active : true), // Default to true if not specified
     }));
     
+    // Backend Entity class doesn't include pagination info (totalElements, totalPages)
+    // Only returns count which is the size of current page data
+    // PageInfo will be calculated in the component using stats
     return {
       funds,
-      pageInfo: response.page,
+      pageInfo: undefined, // Backend doesn't provide pagination metadata
     };
   } catch (error) {
     console.error('Error fetching funds:', error);

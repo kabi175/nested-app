@@ -56,32 +56,83 @@ export default function FundsPage() {
   const [pageInfo, setPageInfo] = useState<PageInfo | null>(null);
   const [activeOnlyFilter, setActiveOnlyFilter] = useState<boolean | 'all'>('all');
   
+  // Stats state
+  const [stats, setStats] = useState({
+    total: 0,
+    active: 0,
+    inactive: 0,
+  });
+  const [loadingStats, setLoadingStats] = useState(false);
+  
   // Edit state
   const [editingFundId, setEditingFundId] = useState<string | null>(null);
   const [editingLabel, setEditingLabel] = useState('');
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
 
-  // Fetch funds from API
+  // Fetch stats separately (all funds for accurate counts)
   useEffect(() => {
-    fetchFunds();
+    fetchStats();
+  }, []);
+
+  // Fetch funds from API - wait for stats to be loaded first
+  useEffect(() => {
+    if (!loadingStats) {
+      fetchFunds();
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [currentPage, pageSize, activeOnlyFilter]);
+  }, [currentPage, pageSize, activeOnlyFilter, loadingStats]);
+
+  const fetchStats = async () => {
+    setLoadingStats(true);
+    try {
+      // Fetch all funds to get accurate stats
+      const allFundsResponse = await getFunds({ size: 10000 }, false);
+      const allFunds = allFundsResponse.funds;
+      
+      setStats({
+        total: allFunds.length,
+        active: allFunds.filter(f => f.isActive).length,
+        inactive: allFunds.filter(f => !f.isActive).length,
+      });
+    } catch (err) {
+      console.error('Error fetching fund stats:', err);
+    } finally {
+      setLoadingStats(false);
+    }
+  };
 
   const fetchFunds = async () => {
     setLoading(true);
     setError(null);
     try {
+      // Convert filter to boolean: 'all' -> false, true -> true, false -> false
+      const activeOnly = activeOnlyFilter === true;
+      
       const response = await getFunds(
         {
           page: currentPage,
           size: pageSize,
           sort: 'id',
         },
-        activeOnlyFilter === true
+        activeOnly
       );
       setFunds(response.funds);
-      setPageInfo(response.pageInfo || null);
+      
+      // Calculate pagination info from stats (backend doesn't return proper pagination)
+      const total = activeOnlyFilter === true 
+        ? stats.active 
+        : activeOnlyFilter === false 
+        ? stats.inactive 
+        : stats.total;
+      
+      const calculatedPageInfo: PageInfo = {
+        page: currentPage,
+        size: pageSize,
+        totalElements: total,
+        totalPages: Math.max(1, Math.ceil(total / pageSize)),
+      };
+      setPageInfo(calculatedPageInfo);
     } catch (err) {
       console.error('Error fetching funds:', err);
       setError(err instanceof Error ? err.message : 'Failed to fetch funds');
@@ -123,6 +174,9 @@ export default function FundsPage() {
           : fund
       ));
 
+      // Refresh stats after update
+      fetchStats();
+
       toast({
         title: 'Success',
         description: 'Fund label updated successfully',
@@ -149,28 +203,38 @@ export default function FundsPage() {
     setEditingLabel('');
   };
 
-  const handleExport = () => {
-    const exportData = filteredFunds.map(fund => ({
-      ID: fund.id,
-      'Display Name': fund.displayName || fund.name,
-      Name: fund.name,
-      Description: fund.description || '',
-      NAV: fund.nav,
-      'Min Amount': '',
-      Active: fund.isActive ? 'Yes' : 'No',
-    }));
-    
-    exportToCSV(exportData, 'funds');
-    toast({
-      title: 'Success',
-      description: 'Funds exported successfully',
-    });
-  };
-
-  const stats = {
-    total: pageInfo?.totalElements || funds.length,
-    active: funds.filter(f => f.isActive).length,
-    inactive: funds.filter(f => !f.isActive).length,
+  const handleExport = async () => {
+    try {
+      // Fetch all funds for export
+      const allFundsResponse = await getFunds({ size: 10000 }, activeOnlyFilter === true ? true : activeOnlyFilter === false ? false : false);
+      const fundsToExport = allFundsResponse.funds.filter(fund =>
+        (fund.displayName || fund.name).toLowerCase().includes(search.toLowerCase()) ||
+        fund.id.toLowerCase().includes(search.toLowerCase()) ||
+        (fund.description || '').toLowerCase().includes(search.toLowerCase())
+      );
+      
+      const exportData = fundsToExport.map(fund => ({
+        ID: fund.id,
+        'Display Name': fund.displayName || fund.name,
+        Name: fund.name,
+        Description: fund.description || '',
+        NAV: fund.nav,
+        'Min Amount': '',
+        Active: fund.isActive ? 'Yes' : 'No',
+      }));
+      
+      exportToCSV(exportData, 'funds');
+      toast({
+        title: 'Success',
+        description: 'Funds exported successfully',
+      });
+    } catch (err) {
+      toast({
+        title: 'Error',
+        description: 'Failed to export funds',
+        variant: 'destructive',
+      });
+    }
   };
 
   const LoadingSkeleton = () => (
@@ -242,8 +306,14 @@ export default function FundsPage() {
                 </div>
               </CardHeader>
               <CardContent className="relative z-10 space-y-3 min-h-[88px]">
-                <div className="text-3xl lg:text-4xl font-bold text-slate-900 dark:text-slate-100">{stats.total}</div>
-                <p className="text-slate-500 dark:text-slate-400 text-xs">All funds</p>
+                {loadingStats ? (
+                  <Skeleton className="h-10 w-20" />
+                ) : (
+                  <>
+                    <div className="text-3xl lg:text-4xl font-bold text-slate-900 dark:text-slate-100">{stats.total}</div>
+                    <p className="text-slate-500 dark:text-slate-400 text-xs">All funds</p>
+                  </>
+                )}
               </CardContent>
             </Card>
           </motion.div>
@@ -260,8 +330,14 @@ export default function FundsPage() {
                 <Badge className="bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800">Active</Badge>
               </CardHeader>
               <CardContent className="relative z-10 space-y-3 min-h-[88px]">
-                <div className="text-3xl lg:text-4xl font-bold text-slate-900 dark:text-slate-100">{stats.active}</div>
-                <p className="text-slate-500 dark:text-slate-400 text-xs">Active funds</p>
+                {loadingStats ? (
+                  <Skeleton className="h-10 w-20" />
+                ) : (
+                  <>
+                    <div className="text-3xl lg:text-4xl font-bold text-slate-900 dark:text-slate-100">{stats.active}</div>
+                    <p className="text-slate-500 dark:text-slate-400 text-xs">Active funds</p>
+                  </>
+                )}
               </CardContent>
             </Card>
           </motion.div>
@@ -278,8 +354,14 @@ export default function FundsPage() {
                 <Badge className="bg-slate-100 dark:bg-slate-900/30 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-800">Inactive</Badge>
               </CardHeader>
               <CardContent className="relative z-10 space-y-3 min-h-[88px]">
-                <div className="text-3xl lg:text-4xl font-bold text-slate-900 dark:text-slate-100">{stats.inactive}</div>
-                <p className="text-slate-500 dark:text-slate-400 text-xs">Inactive funds</p>
+                {loadingStats ? (
+                  <Skeleton className="h-10 w-20" />
+                ) : (
+                  <>
+                    <div className="text-3xl lg:text-4xl font-bold text-slate-900 dark:text-slate-100">{stats.inactive}</div>
+                    <p className="text-slate-500 dark:text-slate-400 text-xs">Inactive funds</p>
+                  </>
+                )}
               </CardContent>
             </Card>
           </motion.div>
@@ -331,7 +413,14 @@ export default function FundsPage() {
           <Card className="border-0 shadow-xl rounded-2xl backdrop-blur-sm bg-white/80 dark:bg-slate-900/80 border-slate-200/50 dark:border-slate-700/50">
             <CardHeader>
               <CardTitle className="text-xl font-bold text-slate-900 dark:text-slate-100">
-                Funds ({filteredFunds.length})
+                Funds ({(() => {
+                  const total = activeOnlyFilter === true 
+                    ? stats.active 
+                    : activeOnlyFilter === false 
+                    ? stats.inactive 
+                    : stats.total;
+                  return total;
+                })()} total{pageInfo && pageInfo.totalPages > 1 ? `, showing ${filteredFunds.length} on page ${currentPage + 1} of ${pageInfo.totalPages}` : ''})
               </CardTitle>
             </CardHeader>
             <CardContent>
@@ -430,7 +519,11 @@ export default function FundsPage() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ duration: 0.6, delay: 0.7 }}
+            className="flex items-center justify-between"
           >
+            <div className="text-sm text-slate-600 dark:text-slate-400">
+              Showing {currentPage * pageSize + 1} to {Math.min((currentPage + 1) * pageSize, pageInfo.totalElements)} of {pageInfo.totalElements} funds
+            </div>
             <Pagination>
               <PaginationContent>
                 <PaginationItem>
@@ -440,7 +533,7 @@ export default function FundsPage() {
                       e.preventDefault();
                       if (currentPage > 0) setCurrentPage(currentPage - 1);
                     }}
-                    className={currentPage === 0 ? 'pointer-events-none opacity-50' : ''}
+                    className={currentPage === 0 ? 'pointer-events-none opacity-50' : 'cursor-pointer'}
                   />
                 </PaginationItem>
                 
@@ -465,6 +558,7 @@ export default function FundsPage() {
                           setCurrentPage(pageNum);
                         }}
                         isActive={currentPage === pageNum}
+                        className="cursor-pointer"
                       >
                         {pageNum + 1}
                       </PaginationLink>
@@ -479,12 +573,19 @@ export default function FundsPage() {
                       e.preventDefault();
                       if (currentPage < pageInfo.totalPages - 1) setCurrentPage(currentPage + 1);
                     }}
-                    className={currentPage >= pageInfo.totalPages - 1 ? 'pointer-events-none opacity-50' : ''}
+                    className={currentPage >= pageInfo.totalPages - 1 ? 'pointer-events-none opacity-50' : 'cursor-pointer'}
                   />
                 </PaginationItem>
               </PaginationContent>
             </Pagination>
           </motion.div>
+        )}
+        
+        {/* Show message if no pagination needed but there are funds */}
+        {pageInfo && pageInfo.totalPages <= 1 && pageInfo.totalElements > 0 && (
+          <div className="text-sm text-slate-600 dark:text-slate-400 text-center">
+            Showing all {pageInfo.totalElements} funds
+          </div>
         )}
 
         {/* Edit Dialog */}
