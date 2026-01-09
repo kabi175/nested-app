@@ -36,6 +36,7 @@ dependencies {
     implementation("org.springframework.boot:spring-boot-starter-quartz")
 
     implementation("org.springframework.boot:spring-boot-starter-thymeleaf")
+    implementation("com.sendgrid:sendgrid-java:4.10.1")
 	implementation("org.apache.commons:commons-text:1.12.0")
 
     // Resilience4j dependencies for fault tolerance (Circuit Breaker)
