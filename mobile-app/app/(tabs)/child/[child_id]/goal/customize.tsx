@@ -27,6 +27,18 @@ const MAX_SIP_AMOUNT = 1_00_000; // 1 lakh
 const MAX_LUMPSUM_AMOUNT = 5_00_000; // 5 lakh
 const MAX_STEPUP_AMOUNT = 10_000; // 10 thousand
 
+const getSipStartDate = (today = new Date()): Date => {
+  const d = new Date(today);
+
+  if (d.getDate() > 28) {
+    // Move to 1st of next month
+    d.setDate(1);
+    d.setMonth(d.getMonth() + 1);
+  }
+
+  return d;
+};
+
 export default function CustomizeInvestmentScreen() {
   const goalsForCustomize = useAtomValue(goalsForCustomizeAtom);
   const minInvestment = goalsForCustomize
@@ -82,8 +94,13 @@ export default function CustomizeInvestmentScreen() {
   const [sipAmountAnim] = useState(new Animated.Value(1));
   const setCart = useSetAtom(cartAtom);
 
+  const minDate = React.useMemo(() => getSipStartDate(), []);
+  const maxDate = React.useMemo(
+    () => new Date(Date.now() + 31 * 24 * 60 * 60 * 1000),
+    []
+  );
   // SIP Date state
-  const [sipDate, setSipDate] = useState(new Date());
+  const [sipDate, setSipDate] = useState(() => getSipStartDate());
 
   // React Query mutation for creating orders
   const createOrdersMutation = useCreateOrders();
@@ -197,7 +214,15 @@ export default function CustomizeInvestmentScreen() {
   };
 
   const handleDateChange = (selectedDate: Date) => {
-    setSipDate(selectedDate);
+    const d = new Date(selectedDate);
+
+    // If user selects 29, 30, or 31
+    if (d.getDate() > 28) {
+      d.setDate(1);
+      d.setMonth(d.getMonth() + 1);
+    }
+
+    setSipDate(d);
   };
 
   return (
@@ -282,7 +307,8 @@ export default function CustomizeInvestmentScreen() {
               <Datepicker
                 date={sipDate}
                 onSelect={handleDateChange}
-                min={new Date()}
+                min={minDate}
+                max={maxDate}
                 accessoryRight={() => (
                   <Ionicons name="calendar-outline" size={20} color="#3B82F6" />
                 )}
