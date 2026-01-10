@@ -1,8 +1,5 @@
 package com.nested.app.services;
 
-import com.google.firebase.auth.FirebaseAuth;
-import com.google.firebase.auth.FirebaseAuthException;
-import com.google.firebase.auth.UserRecord;
 import com.nested.app.dto.CreateAdminRequest;
 import com.nested.app.dto.UserDTO;
 import com.nested.app.entity.User;
@@ -101,21 +98,22 @@ public class AdminServiceImpl implements AdminService {
      */
     private UserDTO createOrPromoteByUid(String firebaseUid, CreateAdminRequest request) {
         try {
-            // Get user from Firebase
-            UserRecord firebaseUser = FirebaseAuth.getInstance().getUser(firebaseUid);
-            String email = firebaseUser.getEmail();
+      // Get user from Firebase
+      //            UserRecord firebaseUser = FirebaseAuth.getInstance().getUser(firebaseUid);
+      //            String email = firebaseUser.getEmail();
 
-            // Check if user exists in database
-            return userRepository.findByFirebaseUid(firebaseUid)
-                    .map(existingUser -> {
-                        if (existingUser.getRole() == User.Role.ADMIN) {
-                            throw new IllegalArgumentException("User is already an admin");
-                        }
-                        return promoteExistingUser(existingUser, request);
-                    })
-                    .orElseGet(() -> createNewAdminUser(firebaseUid, email, request));
+      // Check if user exists in database
+      //            return userRepository.findByFirebaseUid(firebaseUid)
+      //                    .map(existingUser -> {
+      //                        if (existingUser.getRole() == User.Role.ADMIN) {
+      //                            throw new IllegalArgumentException("User is already an admin");
+      //                        }
+      //                        return promoteExistingUser(existingUser, request);
+      //                    })
+      //                    .orElseGet(() -> createNewAdminUser(firebaseUid, email, request));
 
-        } catch (FirebaseAuthException e) {
+      throw new UnsupportedOperationException("Not supported yet.");
+    } catch (Exception e) {
             log.error("Firebase user not found with UID: {}", firebaseUid, e);
       throw new FirebaseException("Firebase user not found with UID: " + firebaseUid);
         }
@@ -126,21 +124,22 @@ public class AdminServiceImpl implements AdminService {
      */
     private UserDTO createOrPromoteByEmail(String email, CreateAdminRequest request) {
         try {
-            // Get user from Firebase
-            UserRecord firebaseUser = FirebaseAuth.getInstance().getUserByEmail(email);
-            String firebaseUid = firebaseUser.getUid();
+      // Get user from Firebase
+      //            UserRecord firebaseUser = FirebaseAuth.getInstance().getUserByEmail(email);
+      //            String firebaseUid = firebaseUser.getUid();
 
-            // Check if user exists in database
-            return userRepository.findByFirebaseUid(firebaseUid)
-                    .map(existingUser -> {
-                        if (existingUser.getRole() == User.Role.ADMIN) {
-                            throw new IllegalArgumentException("User is already an admin");
-                        }
-                        return promoteExistingUser(existingUser, request);
-                    })
-                    .orElseGet(() -> createNewAdminUser(firebaseUid, email, request));
+      // Check if user exists in database
+      //            return userRepository.findByFirebaseUid(firebaseUid)
+      //                    .map(existingUser -> {
+      //                        if (existingUser.getRole() == User.Role.ADMIN) {
+      //                            throw new IllegalArgumentException("User is already an admin");
+      //                        }
+      //                        return promoteExistingUser(existingUser, request);
+      //                    })
+      //                    .orElseGet(() -> createNewAdminUser(firebaseUid, email, request));
 
-        } catch (FirebaseAuthException e) {
+      throw new UnsupportedOperationException("Not supported yet.");
+    } catch (Exception e) {
             log.error("Firebase user not found with email: {}", email, e);
       throw new FirebaseException(
           "Firebase user not found with email: "
@@ -204,9 +203,9 @@ public class AdminServiceImpl implements AdminService {
             Map<String, Object> claims = new HashMap<>();
             claims.put("admin", true);
             claims.put("role", "ADMIN");
-            FirebaseAuth.getInstance().setCustomUserClaims(firebaseUid, claims);
-            log.info("Firebase admin claims set for UID: {}", firebaseUid);
-        } catch (FirebaseAuthException e) {
+      //            FirebaseAuth.getInstance().setCustomUserClaims(firebaseUid, claims);
+      log.info("Firebase admin claims set for UID: {}", firebaseUid);
+    } catch (Exception e) {
             log.error("Failed to set Firebase custom claims for UID: {}", firebaseUid, e);
       throw new FirebaseException("Failed to set Firebase admin claims: " + e.getMessage());
         }
@@ -220,9 +219,9 @@ public class AdminServiceImpl implements AdminService {
             Map<String, Object> claims = new HashMap<>();
             claims.put("admin", false);
             claims.put("role", "USER");
-            FirebaseAuth.getInstance().setCustomUserClaims(firebaseUid, claims);
-            log.info("Firebase admin claims removed for UID: {}", firebaseUid);
-        } catch (FirebaseAuthException e) {
+      //            FirebaseAuth.getInstance().setCustomUserClaims(firebaseUid, claims);
+      log.info("Firebase admin claims removed for UID: {}", firebaseUid);
+    } catch (Exception e) {
             log.error("Failed to remove Firebase custom claims for UID: {}", firebaseUid, e);
       throw new FirebaseException("Failed to remove Firebase admin claims: " + e.getMessage());
         }

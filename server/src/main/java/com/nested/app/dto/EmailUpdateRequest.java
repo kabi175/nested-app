@@ -15,6 +15,6 @@ public class EmailUpdateRequest {
 
   @NotBlank(message = "Email is required")
   @Email(message = "Invalid email format")
-  @Schema(description = "New email address", example = "user@example.com", required = true)
+  @Schema(description = "New email address", example = "user@example.com")
   private String email;
 }
