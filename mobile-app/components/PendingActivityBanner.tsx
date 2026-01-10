@@ -1,5 +1,6 @@
 import { getPendingOrdersByGoalId } from "@/api/paymentAPI";
 import { cartAtom } from "@/atoms/cart";
+import { goalsForCustomizeAtom } from "@/atoms/goals";
 import { Colors } from "@/constants/Colors";
 import { QUERY_KEYS } from "@/constants/queryKeys";
 import { useAuthAxios } from "@/hooks/useAuthAxios";
@@ -30,6 +31,7 @@ export function PendingActivityBanner({ onPress }: PendingActivityBannerProps) {
   const { data: activities, isLoading } = usePendingActivities();
   const router = useRouter();
   const setCart = useSetAtom(cartAtom);
+  const setGoalsForCustomize = useSetAtom(goalsForCustomizeAtom);
 
   if (isLoading || !activities || activities.length === 0) {
     return null;
@@ -75,8 +77,16 @@ export function PendingActivityBanner({ onPress }: PendingActivityBannerProps) {
         });
         if (orders && orders.length > 0) {
           setCart(orders);
+          router.push("/payment");
+        } else {
+          setGoalsForCustomize([goal]);
+          router.push({
+            pathname: `/child/${goal.childId}/goal/customize`,
+            params: {
+              goal_id: goal.id,
+            },
+          });
         }
-        router.push("/payment");
         break;
       case "nominee_configuration_pending":
         router.push("/nominees");
