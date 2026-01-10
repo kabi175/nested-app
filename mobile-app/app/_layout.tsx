@@ -4,7 +4,7 @@ import {
   ThemeProvider,
 } from "@react-navigation/native";
 import { useFonts } from "expo-font";
-import { Stack, usePathname, useSegments } from "expo-router";
+import { Stack } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import "react-native-reanimated";
 
@@ -12,7 +12,7 @@ import { useColorScheme } from "@/hooks/useColorScheme";
 import { QueryProvider } from "@/providers/QueryProvider";
 import * as eva from "@eva-design/eva";
 import { ApplicationProvider } from "@ui-kitten/components";
-import React, { useEffect } from "react";
+import React from "react";
 import { ActivityIndicator, View } from "react-native";
 import { Auth0Provider, useAuth0 } from "react-native-auth0";
 import { SafeAreaProvider } from "react-native-safe-area-context";
@@ -23,13 +23,13 @@ export default function RootLayout() {
     SpaceMono: require("../assets/fonts/SpaceMono-Regular.ttf"),
   });
 
-  const pathname = usePathname();
-  const segments = useSegments();
+  // const pathname = usePathname();
+  // const segments = useSegments();
 
-  useEffect(() => {
-    console.log("Current route:", pathname);
-    console.log("Segments:", segments);
-  }, [pathname, segments]);
+  // useEffect(() => {
+  //   console.log("Current route:", pathname);
+  //   console.log("Segments:", segments);
+  // }, [pathname, segments]);
 
   if (!loaded) {
     // Async font loading only occurs in development.
