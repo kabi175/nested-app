@@ -39,6 +39,10 @@ export function useAddBankAccount() {
       queryClient.invalidateQueries({
         queryKey: [QUERY_KEYS.bankAccounts, user?.id],
       });
+
+      queryClient.invalidateQueries({
+        queryKey: [QUERY_KEYS.pendingActivities],
+      });
     },
   });
 }
