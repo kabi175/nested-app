@@ -9,7 +9,6 @@ import { useQueryClient } from "@tanstack/react-query";
 import Constants from "expo-constants";
 import { router } from "expo-router";
 import { useSetAtom } from "jotai";
-import { SquarePen } from "lucide-react-native";
 import React from "react";
 import {
   Alert,
@@ -185,14 +184,15 @@ export default function AccountScreen() {
               )}
             </View>
 
+            {/** TODO: add edit profile */}
             {/* Edit Icon */}
-            <TouchableOpacity
+            {/* <TouchableOpacity
               style={styles.editButton}
               onPress={() => router.push("/user")}
               activeOpacity={0.7}
             >
               <SquarePen size={20} color="#6B7280" />
-            </TouchableOpacity>
+            </TouchableOpacity> */}
           </View>
         </View>
 
