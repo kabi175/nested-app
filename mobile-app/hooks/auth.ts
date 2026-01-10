@@ -22,12 +22,3 @@ export function useSignOut() {
       await clearSession({ returnToUrl: "nested://sign-in" }),
   };
 }
-
-export function useReloadAuth() {
-  const { getCredentials } = useAuth0();
-  return {
-    reloadAuth: async () => {
-      await getCredentials(undefined, undefined, undefined, true);
-    },
-  };
-}
