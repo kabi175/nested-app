@@ -11,7 +11,6 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import { OtpInput } from "@/components/ui/OtpInput";
-import { useAuth } from "@/hooks/auth";
 import { useAuthAxios } from "@/hooks/useAuthAxios";
 import { useVerifyRedeemOrder } from "@/hooks/useRedeem";
 import {
@@ -29,7 +28,6 @@ export default function RedeemVerificationScreen() {
     fundId?: string;
     goalId?: string;
   }>();
-  const auth = useAuth();
   const api = useAuthAxios();
   const verifyRedeemOrderMutation = useVerifyRedeemOrder();
   const [mfaSessionId, setMfaSessionId] = useState<string | null>(null);
@@ -44,26 +42,13 @@ export default function RedeemVerificationScreen() {
 
   // Auto-send OTP when component mounts
   useEffect(() => {
-    if (auth.isLoaded && auth.user && !mfaSessionId && !isLoading) {
+    if (!mfaSessionId && !isLoading) {
       sendOTP();
-    } else if (!auth.user && auth.isLoaded) {
-      Alert.alert("Error", "Please sign in to continue.", [
-        {
-          text: "OK",
-          onPress: () => router.back(),
-        },
-      ]);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [auth.isLoaded, auth.user]);
+  }, []);
 
   const sendOTP = async () => {
-    if (!auth.user) {
-      Alert.alert("Error", "Please sign in to continue.");
-      router.back();
-      return;
-    }
-
     try {
       setIsLoading(true);
       // Set action for redeem verification
