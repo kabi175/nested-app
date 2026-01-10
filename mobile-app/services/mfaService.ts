@@ -60,13 +60,22 @@ export async function startMfaSession(
       requestBody
     );
 
-    const { mfaSessionId, message } = response.data;
+    // Handle different possible response formats
+    const sessionId =
+      response.data?.mfaSessionId || (response.data as any)?.data?.mfaSessionId;
+
+    const message = response.data?.message || "OTP sent successfully";
+
+    if (!sessionId) {
+      console.error("MFA session ID not found in response:", response.data);
+      throw new Error("Invalid response: session ID not found");
+    }
 
     // Store session ID temporarily (will be cleared after verification)
-    await SecureStore.setItemAsync(MFA_SESSION_ID_KEY, mfaSessionId);
+    await SecureStore.setItemAsync(MFA_SESSION_ID_KEY, sessionId);
     await SecureStore.setItemAsync(MFA_ACTION_KEY, action);
 
-    return { mfaSessionId, message };
+    return { mfaSessionId: sessionId, message };
   } catch (error: any) {
     console.error("Error starting MFA session:", error);
     if (error.response) {

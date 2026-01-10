@@ -92,6 +92,16 @@ export function GoalCard({ goal }: GoalCardProps) {
         router.push({
           pathname: `/payment`,
         });
+      } else {
+        setGoalsForCustomize([goal]);
+        router.push({
+          pathname: `/child/${goal.childId}/goal/customize`,
+          params: {
+            goal_id: goal.id,
+            target_amount: goal.targetAmount.toString(),
+            target_date: goal.targetDate.toISOString(),
+          },
+        });
       }
     } else {
       router.push({
