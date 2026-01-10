@@ -1,6 +1,7 @@
 import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
-import { useAuth } from "@/hooks/auth";
+import { useUser } from "@/hooks/useUser";
+import { useUpdateUser } from "@/hooks/useUserMutations";
 import { Button } from "@ui-kitten/components";
 import { Redirect, router } from "expo-router";
 import React, { useState } from "react";
@@ -8,11 +9,12 @@ import { Alert, StyleSheet, TextInput, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function NameInputScreen() {
-  const auth = useAuth();
-  const [name, setName] = useState(auth.user?.displayName || "");
-  const [isLoading, setIsLoading] = useState(false);
+  const { mutateAsync: updateUser, isPending: isUpdatingUser } =
+    useUpdateUser();
+  const { data: user, isLoading: isUserLoading } = useUser();
+  const [name, setName] = useState("");
 
-  if (auth.isLoaded && auth.user?.displayName) {
+  if (isUserLoading || user?.firstName !== user?.phone_number) {
     return <Redirect href="/" />;
   }
 
@@ -27,19 +29,20 @@ export default function NameInputScreen() {
       return;
     }
 
-    setIsLoading(true);
-
     try {
-      if (!auth.user) return;
-      // await updateProfile(auth.user, { displayName: name.trim() });
-      //TODO: Update user profile
+      if (!user) return;
 
       // Navigate back or to next screen
+      await updateUser({
+        id: user.id,
+        payload: {
+          firstName: name.trim(),
+        },
+      });
       router.replace("/child");
     } catch (error) {
       console.log("Error saving name", error);
     } finally {
-      setIsLoading(false);
     }
   };
 
@@ -66,7 +69,7 @@ export default function NameInputScreen() {
               autoCorrect={false}
               returnKeyType="done"
               onSubmitEditing={handleSubmit}
-              editable={!isLoading}
+              editable={!isUpdatingUser}
               placeholderTextColor="#9CA3AF"
             />
           </View>
@@ -81,14 +84,14 @@ export default function NameInputScreen() {
           <Button
             style={[
               styles.submitButton,
-              (!name.trim() || isLoading) && styles.submitButtonDisabled,
+              (!name.trim() || isUpdatingUser) && styles.submitButtonDisabled,
             ]}
             onPress={handleSubmit}
-            disabled={!name.trim() || isLoading}
+            disabled={!name.trim() || isUpdatingUser}
             size="large"
             status="primary"
           >
-            {isLoading ? "Saving..." : "Continue"}
+            {isUpdatingUser ? "Saving..." : "Continue"}
           </Button>
         </View>
       </ThemedView>

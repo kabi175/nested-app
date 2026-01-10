@@ -32,10 +32,9 @@ export default function Home() {
     );
   }
 
-  //TODO: handle name input
-  // if (authUser?.displayName === null) {
-  //   return <Redirect href="/name-input" />;
-  // }
+  if (!isLoading && user?.firstName === user?.phone_number) {
+    return <Redirect href="/name-input" />;
+  }
 
   if (isSignedIn) {
     return <Redirect href="/(tabs)" />;

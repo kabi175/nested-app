@@ -10,8 +10,17 @@ export function useAuthAxios() {
   useEffect(() => {
     const interceptor = api.interceptors.request.use(async (config) => {
       try {
-        let token = await getCredentials();
-        config.headers.Authorization = `Bearer ${token?.idToken}`;
+        let credential = await getCredentials();
+        if (credential.expiresAt >= Date.now()) {
+          console.log("credential expired, refreshing");
+          credential = await getCredentials(
+            credential.scope,
+            1 * 24 * 60 * 60, // min ttl is 1 day
+            undefined,
+            true
+          );
+        }
+        config.headers.Authorization = `Bearer ${credential?.idToken}`;
       } catch (error) {
         if (error instanceof CredentialsManagerError) {
           router.replace("/sign-in");
