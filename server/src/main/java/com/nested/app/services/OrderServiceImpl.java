@@ -40,7 +40,7 @@ public class OrderServiceImpl implements OrderService {
 
   @Override
   public List<OrderDTO> getPendingOrders(Long goalId, User user) {
-    List<Order> orders = orderRepository.findByGoalIdAndIsPlaced(goalId, false);
+    List<Order> orders = orderRepository.findByGoalIdAndIsPlacedAndPaymentIsNull(goalId, false);
 
     return orders.stream().map(this::convertToDTO).collect(Collectors.toList());
   }

@@ -127,21 +127,29 @@ public class PaymentServiceImpl implements PaymentService {
 
       orders.forEach(order -> order.setPayment(payment));
 
-      if (payment.getSipStatus() == Payment.PaymentStatus.PENDING) {
+      // Save payment and orders first to avoid TransientObjectException when querying in external
+      // API calls
+      orderRepository.saveAll(payment.getOrders());
+      Payment savedPayment = paymentRepository.saveAndFlush(payment);
+
+      if (savedPayment.getSipStatus() == Payment.PaymentStatus.PENDING) {
         // create mandate for SIP orders
-        createMandateWithExternalAPI(payment);
+        createMandateWithExternalAPI(savedPayment);
       }
 
-      if (payment.getBuyStatus() == Payment.PaymentStatus.PENDING) {
+      if (savedPayment.getBuyStatus() == Payment.PaymentStatus.PENDING) {
         // place buy orders in the external system
-        placeOrderWithExternalAPI(payment);
+        placeOrderWithExternalAPI(savedPayment);
 
-        payment.getOrders().stream()
+        savedPayment.getOrders().stream()
             .filter(BuyOrder.class::isInstance)
             .forEach(buyOrder -> buyOrder.setPlaced(true));
       }
-      // Save payment and orders
-      Payment savedPayment = paymentRepository.save(payment);
+
+      // Save again to persist any updates from external API calls (e.g., mandate ID, order items
+      // refs)
+      orderRepository.saveAll(savedPayment.getOrders());
+      savedPayment = paymentRepository.save(savedPayment);
 
       // Convert to DTO
       PlaceOrderDTO placeOrderDTO = convertPaymentToPlaceOrderDTO(savedPayment);
@@ -149,6 +157,8 @@ public class PaymentServiceImpl implements PaymentService {
       log.info("Successfully created payment with {} orders ", orders.size());
       return placeOrderDTO;
 
+    } catch (IllegalArgumentException e) {
+      throw e;
     } catch (WebClientResponseException e) {
       log.error(
           " Error from MF provider while creating payment with orders: {}",

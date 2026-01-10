@@ -22,7 +22,7 @@ public interface OrderRepository extends JpaRepository<Order, Long> {
    */
   List<Order> findByGoalId(Long goalId);
 
-  List<Order> findByGoalIdAndIsPlaced(Long goalId, boolean isPlaced);
+  List<Order> findByGoalIdAndIsPlacedAndPaymentIsNull(Long goalId, boolean isPlaced);
 
   List<Order> findByPaymentId(Long paymentId);
 
