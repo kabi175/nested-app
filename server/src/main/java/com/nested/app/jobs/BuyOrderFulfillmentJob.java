@@ -6,6 +6,7 @@ import com.nested.app.entity.Folio;
 import com.nested.app.entity.OrderItems;
 import com.nested.app.entity.Transaction;
 import com.nested.app.enums.TransactionType;
+import com.nested.app.mapper.OrderStateMapper;
 import com.nested.app.repository.FolioRepository;
 import com.nested.app.repository.OrderItemsRepository;
 import com.nested.app.repository.TransactionRepository;
@@ -14,6 +15,8 @@ import java.math.RoundingMode;
 import java.sql.Timestamp;
 import java.time.Instant;
 import java.util.List;
+import java.util.Objects;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.quartz.DisallowConcurrentExecution;
 import org.quartz.Job;
@@ -22,7 +25,6 @@ import org.quartz.JobExecutionContext;
 import org.quartz.JobExecutionException;
 import org.quartz.Scheduler;
 import org.quartz.SchedulerException;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 /**
@@ -34,17 +36,18 @@ import org.springframework.stereotype.Component;
  */
 @Slf4j
 @Component
+@RequiredArgsConstructor
 @DisallowConcurrentExecution
 public class BuyOrderFulfillmentJob implements Job {
 
   private static final int DECIMAL_SCALE = 4;
   private static final int CALCULATION_SCALE = 8;
 
-  @Autowired private BuyOrderApiClient buyOrderAPIClient;
-  @Autowired private OrderItemsRepository orderItemsRepository;
-  @Autowired private Scheduler scheduler;
-  @Autowired private TransactionRepository transactionRepository;
-  @Autowired private FolioRepository folioRepository;
+  private final BuyOrderApiClient buyOrderAPIClient;
+  private final OrderItemsRepository orderItemsRepository;
+  private final Scheduler scheduler;
+  private final TransactionRepository transactionRepository;
+  private final FolioRepository folioRepository;
 
   @Override
   public void execute(JobExecutionContext context) throws JobExecutionException {
@@ -57,9 +60,7 @@ public class BuyOrderFulfillmentJob implements Job {
       return;
     }
 
-    if (OrderData.OrderState.SUCCESSFUL.equals(order.getState())) {
-      processSuccessfulOrder(orderId, order);
-    }
+    processSuccessfulOrder(orderId, order);
 
     if (isOrderInTerminalState(order.getState())) {
       deleteJob(context);
@@ -98,6 +99,8 @@ public class BuyOrderFulfillmentJob implements Job {
       List<OrderItems> orderItems, OrderData order, String orderId) {
     distributeUnits(orderItems, order.getAllottedUnits(), orderId);
     updateUnitPrice(orderItems, order.getPurchasedPrice(), orderId);
+    orderItems.forEach(
+        orderItem -> orderItem.setStatus(OrderStateMapper.toTransactionStatus(order.getState())));
   }
 
   private void distributeUnits(
@@ -204,18 +207,21 @@ public class BuyOrderFulfillmentJob implements Job {
       if (transactionRepository.existsBySourceOrderItemId(item.getId())) {
         continue; // idempotent skip
       }
-      var txn = new Transaction();
+      var txn =
+          transactionRepository.findBySourceOrderItemId(item.getId()).orElseGet(Transaction::new);
       txn.setUser(item.getUser());
       txn.setGoal(item.getOrder() != null ? item.getOrder().getGoal() : null);
       txn.setFund(item.getFund());
       txn.setFolio(folio); // associate with folio
-      txn.setType(TransactionType.BUY); // SELL/SIP handled elsewhere
-      txn.setUnits(item.getUnits());
-      txn.setUnitPrice(item.getUnitPrice());
-      txn.setAmount(Math.abs(item.getUnits() * item.getUnitPrice()));
+      txn.setType(TransactionType.BUY);
+      txn.setUnits(Objects.requireNonNullElse(item.getUnits(), 0d));
+      txn.setUnitPrice(Objects.requireNonNullElse(item.getUnitPrice(), 0d));
+      txn.setAmount(Math.abs(txn.getUnits() * txn.getUnitPrice()));
       txn.setExternalRef(item.getRef());
       txn.setSourceOrderItemId(item.getId());
+      // TODO: fix executedAt handling
       txn.setExecutedAt(Timestamp.from(Instant.now()));
+      txn.setStatus(OrderStateMapper.toTransactionStatus(order.getState()));
       transactionRepository.save(txn);
       created++;
     }

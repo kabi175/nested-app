@@ -1,6 +1,5 @@
 import type { User } from "@/types/auth";
-import type { AxiosError } from "axios";
-import { api } from "./client";
+import type { AxiosError, AxiosInstance } from "axios";
 
 type UploadableFile = {
   uri: string;
@@ -8,7 +7,7 @@ type UploadableFile = {
   type?: string;
 };
 
-export const getUser = async (): Promise<User | null> => {
+export const getUser = async (api: AxiosInstance): Promise<User | null> => {
   try {
     const { data } = await api.get(`/users?type=CURRENT_USER`);
     const user = data.data?.[0];
@@ -54,10 +53,10 @@ export const getUser = async (): Promise<User | null> => {
 };
 
 export const updateUser = async (
+  api: AxiosInstance,
   id: string,
   payload: Partial<User>
 ): Promise<User> => {
-  console.log("payload", payload);
   const userDTO = {
     first_name: payload.firstName,
     last_name: payload.lastName,
@@ -84,6 +83,7 @@ export const updateUser = async (
 };
 
 export const uploadUserSignature = async (
+  api: AxiosInstance,
   id: string,
   file: UploadableFile
 ): Promise<void> => {
@@ -123,7 +123,10 @@ export const uploadUserSignature = async (
     },
   });
 };
-export const getUserSignature = async (id: string): Promise<string | null> => {
+export const getUserSignature = async (
+  api: AxiosInstance,
+  id: string
+): Promise<string | null> => {
   try {
     const response = await api.get(`/users/${id}/signature`, {
       responseType: "arraybuffer",
@@ -174,11 +177,15 @@ export const getUserSignature = async (id: string): Promise<string | null> => {
   }
 };
 
-export const initKyc = async (user: User): Promise<void> => {
+export const initKyc = async (
+  api: AxiosInstance,
+  user: User
+): Promise<void> => {
   await api.post(`/users/${user.id}/actions/init_kyc`);
 };
 
 export const fetchAadhaarUploadRedirectUrl = async (
+  api: AxiosInstance,
   user: User
 ): Promise<string | null> => {
   const { data } = await api.post(`/users/${user.id}/actions/aadhaar_upload`);
@@ -186,12 +193,26 @@ export const fetchAadhaarUploadRedirectUrl = async (
 };
 
 export const fetchEsignUploadRedirectUrl = async (
+  api: AxiosInstance,
   user: User
 ): Promise<string | null> => {
   const { data } = await api.post(`/users/${user.id}/actions/esign_upload`);
   return data.redirect_url;
 };
 
-export const createInvestor = async (user: User): Promise<void> => {
+export const createInvestor = async (
+  api: AxiosInstance,
+  user: User
+): Promise<void> => {
   await api.post(`/users/${user.id}/actions/create_investor`);
+};
+
+export const updateEmail = async (
+  api: AxiosInstance,
+  userId: string,
+  email: string
+): Promise<void> => {
+  await api.post(`/users/${userId}/actions/update_email`, {
+    email,
+  });
 };

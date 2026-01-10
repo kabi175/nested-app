@@ -1,4 +1,4 @@
-import { api } from "./client";
+import type { AxiosInstance } from "axios";
 
 export type Transaction = {
   fund: string;
@@ -23,6 +23,7 @@ export type Holding = {
 };
 
 export const getTranscationsForGoal = async (
+  api: AxiosInstance,
   goalId: string,
   page: number
 ): Promise<Transaction[]> => {
@@ -44,6 +45,7 @@ export const getTranscationsForGoal = async (
 };
 
 export const getHoldingsForGoal = async (
+  api: AxiosInstance,
   goalId: string
 ): Promise<Holding[]> => {
   const { data } = await api.get(`/portfolio/goals/${goalId}/holdings`);

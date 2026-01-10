@@ -1,11 +1,8 @@
 package com.nested.app.entity;
 
-import com.fasterxml.jackson.annotation.JsonValue;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
-import jakarta.persistence.EnumType;
-import jakarta.persistence.Enumerated;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -17,8 +14,6 @@ import jakarta.persistence.Table;
 import java.sql.Timestamp;
 import java.util.List;
 import lombok.Data;
-import lombok.Getter;
-import lombok.RequiredArgsConstructor;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.Filter;
 import org.hibernate.annotations.UpdateTimestamp;
@@ -38,9 +33,8 @@ public class Order {
 
   private Double amount;
 
-  @Enumerated(EnumType.STRING)
   @Column(nullable = false)
-  private OrderStatus status = OrderStatus.NOT_PLACED;
+  private boolean isPlaced = false;
 
   @ManyToOne(optional = false)
   @JoinColumn(name = "user_id")
@@ -66,15 +60,4 @@ public class Order {
   @JoinColumn(name = "investor_id")
   private Investor investor;
 
-  @RequiredArgsConstructor
-  public enum OrderStatus {
-    NOT_PLACED("not_placed"),
-    PLACED("placed"),
-    COMPLETED("completed"),
-    FAILED("failed"),
-    CANCELLED("cancelled"),
-    REVERSED("reversed");
-
-    @JsonValue @Getter private final String value;
-  }
 }

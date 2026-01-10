@@ -2,6 +2,7 @@ import { updateUser } from "@/api/userApi";
 import { InfoTooltip } from "@/components/ui/InfoTooltip";
 import { StepProgress } from "@/components/ui/StepProgress";
 import { QUERY_KEYS } from "@/constants/queryKeys";
+import { useAuthAxios } from "@/hooks/useAuthAxios";
 import { useUser } from "@/hooks/useUser";
 import { useKyc } from "@/providers/KycProvider";
 import { useQueryClient } from "@tanstack/react-query";
@@ -26,7 +27,7 @@ export default function IdentityScreen() {
   const [hasPrefilled, setHasPrefilled] = useState(false);
   const totalSteps = 6;
   const currentStep = 2;
-
+  const api = useAuthAxios();
   useEffect(() => {
     if (hasPrefilled || !user) {
       return;
@@ -71,7 +72,7 @@ export default function IdentityScreen() {
 
     try {
       setIsSubmitting(true);
-      await updateUser(user.id, {
+      await updateUser(api, user.id, {
         panNumber: data.identity.pan,
         aadhaar: data.identity.aadhaarLast4,
       });

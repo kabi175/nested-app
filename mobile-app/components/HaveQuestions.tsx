@@ -1,9 +1,9 @@
+import { openWhatsApp } from "@/utils/whtsapp";
 import { Layout, Text } from "@ui-kitten/components";
 import { router } from "expo-router";
 import { HelpCircle, MessageCircle } from "lucide-react-native";
 import React from "react";
 import { Pressable, StyleSheet, View } from "react-native";
-import { openWhatsApp } from "@/utils/whtsapp";
 
 export default function HaveQuestions() {
   const handleFAQPress = () => {
@@ -11,7 +11,7 @@ export default function HaveQuestions() {
   };
 
   const handleWhatsAppPress = () => {
-    openWhatsApp("916382751431", "Hello 👋");
+    openWhatsApp("916305209273", "Hello 👋");
   };
 
   return (
@@ -20,10 +20,7 @@ export default function HaveQuestions() {
         {/* FAQ Row */}
         <Pressable
           onPress={handleFAQPress}
-          style={({ pressed }) => [
-            styles.row,
-            pressed && styles.rowPressed,
-          ]}
+          style={({ pressed }) => [styles.row, pressed && styles.rowPressed]}
         >
           <View style={styles.iconContainer}>
             <HelpCircle size={24} color="#9CA3AF" strokeWidth={2} />
@@ -39,10 +36,7 @@ export default function HaveQuestions() {
         {/* WhatsApp Row */}
         <Pressable
           onPress={handleWhatsAppPress}
-          style={({ pressed }) => [
-            styles.row,
-            pressed && styles.rowPressed,
-          ]}
+          style={({ pressed }) => [styles.row, pressed && styles.rowPressed]}
         >
           <View style={styles.iconContainer}>
             <MessageCircle size={24} color="#9CA3AF" strokeWidth={2} />
@@ -104,4 +98,3 @@ const styles = StyleSheet.create({
     marginHorizontal: 36,
   },
 });
-

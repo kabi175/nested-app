@@ -92,6 +92,8 @@ public record UserPreFillHandler(
     // generate unique reference
     prefilRequest.setReference("ref-" + generateRefId());
 
+    try {
+
     // Call Prefill API
     PrefillResponse response = prefilClient.fetchFullDetailsForTheUser(prefilRequest).block();
 
@@ -127,6 +129,9 @@ public record UserPreFillHandler(
           response.getMessage());
       User.PrefillStatus status = mapPrefillFailureStatus(response);
       userRepository.save(user.withPrefillStatus(status));
+    }
+    } catch (Exception e) {
+      log.error("Prefill failed for userId={}", user.getId(), e);
     }
   }
 

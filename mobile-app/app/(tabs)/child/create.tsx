@@ -1,6 +1,6 @@
-import { createChild } from "@/api/childApi";
 import { ChildForm } from "@/components/child/ChildForm";
 import { FormHeader } from "@/components/child/FormHeader";
+import { useCreateChild } from "@/hooks/useChildMutations";
 import { useFormAnimation } from "@/hooks/useFormAnimation";
 import { Child } from "@/types/child";
 import {
@@ -25,6 +25,7 @@ export default function CreateChild() {
   const [values, setValues] = useState<Child>(defaultChildFormValues);
   const [errors, setErrors] = useState(defaultChildFormErrors);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const { mutateAsync: createChildMutation } = useCreateChild();
 
   const {
     animations,
@@ -71,7 +72,7 @@ export default function CreateChild() {
       setIsSubmitting(true);
 
       try {
-        const child = await createChild(values);
+        const child = await createChildMutation(values);
         animateSuccess(() => router.push(`/child/${child.id}/goal/create`));
       } catch (error: any) {
         console.error("Error creating child:", error);

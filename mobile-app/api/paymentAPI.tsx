@@ -1,5 +1,6 @@
 import { Order } from "@/types";
-import { api, redirectClient } from "./client";
+import type { AxiosInstance } from "axios";
+import { redirectClient } from "./client";
 
 export type CreateOrderRequest = {
   type: "buy" | "sip";
@@ -10,6 +11,7 @@ export type CreateOrderRequest = {
 };
 
 export const createOrders = async (
+  api: AxiosInstance,
   orders: CreateOrderRequest[]
 ): Promise<Order[]> => {
   const buyOrders = orders
@@ -46,13 +48,14 @@ export const createOrders = async (
 };
 
 export const getPendingOrdersByGoalId = async (
+  api: AxiosInstance,
   goalId: string
 ): Promise<Order[]> => {
   const { data } = await api.get(`/goals/${goalId}/orders/pending`);
   return data.data as Order[];
 };
 
-type PaymentOption = {
+export type PaymentOption = {
   payment_method: "upi" | "net_banking";
   bank_id: string;
 };
@@ -75,6 +78,7 @@ export type Payment = {
 };
 
 export const createPayment = async (
+  api: AxiosInstance,
   orders: Order[],
   paymentOption: PaymentOption
 ): Promise<Payment> => {
@@ -90,6 +94,7 @@ export const createPayment = async (
 };
 
 export const fetchLumpsumPaymentUrl = async (
+  api: AxiosInstance,
   paymentId: string
 ): Promise<string | null> => {
   const { data } = await api.post(
@@ -101,7 +106,10 @@ export const fetchLumpsumPaymentUrl = async (
   return data.redirect_url;
 };
 
-export const verifyPayment = async (paymentId: string): Promise<void> => {
+export const verifyPayment = async (
+  api: AxiosInstance,
+  paymentId: string
+): Promise<void> => {
   await api.post(`/payments/${paymentId}/actions/verify`, {
     id: paymentId,
     verification_code: "123456",
@@ -109,6 +117,7 @@ export const verifyPayment = async (paymentId: string): Promise<void> => {
 };
 
 export const fetchMandatePaymentUrl = async (
+  api: AxiosInstance,
   paymentId: string
 ): Promise<string | null> => {
   const { data } = await api.post(
@@ -120,7 +129,10 @@ export const fetchMandatePaymentUrl = async (
   return data.redirect_url;
 };
 
-export const fetchPayment = async (paymentId: string): Promise<Payment> => {
+export const fetchPayment = async (
+  api: AxiosInstance,
+  paymentId: string
+): Promise<Payment> => {
   const { data } = await api.get(`/payments/${paymentId}`);
   // Handle both possible response structures: data.data or data
   const payment = data.data ?? data;

@@ -1,11 +1,4 @@
 import { Ionicons } from "@expo/vector-icons";
-import {
-  FirebaseAuthTypes,
-  getAuth,
-  onAuthStateChanged,
-  signInWithPhoneNumber,
-  verifyBeforeUpdateEmail,
-} from "@react-native-firebase/auth";
 import { LinearGradient } from "expo-linear-gradient";
 import { router } from "expo-router";
 import { useEffect, useState } from "react";
@@ -23,28 +16,34 @@ import { SafeAreaView } from "react-native-safe-area-context";
 
 import { OtpInput } from "@/components/ui/OtpInput";
 import { useAuth } from "@/hooks/auth";
+import { useAuthAxios } from "@/hooks/useAuthAxios";
+import { useUser } from "@/hooks/useUser";
+import { useUpdateEmail } from "@/hooks/useUserMutations";
+import {
+  setCurrentAction,
+  startMfaSession,
+  verifyOtp,
+  type MfaAction,
+} from "@/services/mfaService";
 import { Input, Spinner, Text } from "@ui-kitten/components";
 
-type Step = "email" | "mfa" | "sending" | "success";
+type Step = "email" | "mfa" | "success";
 
 export default function EmailUpdateScreen() {
-  const auth = useAuth();
+  const { isSignedIn } = useAuth();
+  const { data: user } = useUser();
+  const api = useAuthAxios();
+  const updateEmailMutation = useUpdateEmail();
   const [step, setStep] = useState<Step>("email");
   const [newEmail, setNewEmail] = useState("");
   const [emailError, setEmailError] = useState<string | null>(null);
-  const [confirm, setConfirm] =
-    useState<FirebaseAuthTypes.ConfirmationResult | null>(null);
+  const [mfaSessionId, setMfaSessionId] = useState<string | null>(null);
   const [otpCode, setOtpCode] = useState("");
   const [resendTimer, setResendTimer] = useState(0);
   const [isLoading, setIsLoading] = useState(false);
   const [isVerifying, setIsVerifying] = useState(false);
-  const [isSendingEmail, setIsSendingEmail] = useState(false);
   const [fadeAnim] = useState(new Animated.Value(0));
   const [scaleAnim] = useState(new Animated.Value(0.9));
-
-  // Get user's phone number from auth
-  const userPhoneNumber =
-    auth.user?.phoneNumber || getAuth().currentUser?.phoneNumber || "";
 
   // Animation on mount
   useEffect(() => {
@@ -75,33 +74,6 @@ export default function EmailUpdateScreen() {
     return () => clearInterval(interval);
   }, [resendTimer]);
 
-  // Monitor auth state changes (session expiration after email verification)
-  useEffect(() => {
-    if (step !== "success") return;
-
-    const unsubscribe = onAuthStateChanged(getAuth(), (user) => {
-      if (!user) {
-        // Session expired after email verification, redirect to login
-        Alert.alert(
-          "Email Updated",
-          "Your email has been successfully updated. Please sign in again with your new email address.",
-          [
-            {
-              text: "OK",
-              onPress: () => {
-                router.replace("/sign-in");
-              },
-            },
-          ]
-        );
-      } else {
-        router.replace("/sign-in");
-      }
-    });
-
-    return () => unsubscribe();
-  }, [step]);
-
   const validateEmail = (email: string): boolean => {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     return emailRegex.test(email);
@@ -120,7 +92,7 @@ export default function EmailUpdateScreen() {
       return;
     }
 
-    if (auth.user?.email && trimmedEmail === auth.user.email.toLowerCase()) {
+    if (user?.email && trimmedEmail === user.email.toLowerCase()) {
       setEmailError("This is already your current email address");
       return;
     }
@@ -133,31 +105,39 @@ export default function EmailUpdateScreen() {
   };
 
   const sendOTP = async () => {
-    if (!userPhoneNumber) {
-      Alert.alert(
-        "Error",
-        "Phone number not found. Please ensure you're signed in with a phone number.",
-        [
-          {
-            text: "OK",
-            onPress: () => router.back(),
-          },
-        ]
-      );
+    if (!isSignedIn) {
+      Alert.alert("Error", "Please sign in to continue.", [
+        {
+          text: "OK",
+          onPress: () => router.back(),
+        },
+      ]);
       return;
     }
 
+    const trimmedEmail = newEmail.trim().toLowerCase();
+
     try {
       setIsLoading(true);
-      const confirmation = await signInWithPhoneNumber(
-        getAuth(),
-        userPhoneNumber
+      // Set action for email update
+      const action: MfaAction = "EMAIL_UPDATE";
+      await setCurrentAction(action);
+
+      // Start MFA session with EMAIL channel and new email
+      const response = await startMfaSession(
+        action,
+        "EMAIL",
+        api,
+        trimmedEmail
       );
-      setConfirm(confirmation);
+      setMfaSessionId(response.mfaSessionId);
       setResendTimer(30);
     } catch (error: any) {
       console.log("Error sending OTP", error);
-      Alert.alert("Error", "Failed to send OTP. Please try again.");
+      Alert.alert(
+        "Error",
+        error.message || "Failed to send OTP. Please try again."
+      );
       setStep("email");
     } finally {
       setIsLoading(false);
@@ -190,69 +170,64 @@ export default function EmailUpdateScreen() {
   };
 
   const handleVerifyAndUpdateEmail = async () => {
-    if (!confirm || !newEmail.trim()) {
+    if (!mfaSessionId || !newEmail.trim()) {
       Alert.alert("Error", "Missing verification data. Please try again.");
+      return;
+    }
+
+    if (!user?.id) {
+      Alert.alert(
+        "Error",
+        "User information not available. Please sign in again."
+      );
+      return;
+    }
+
+    if (otpCode.length !== 6) {
+      Alert.alert("Error", "Please enter a valid 6-digit OTP.");
       return;
     }
 
     try {
       setIsVerifying(true);
-      // Reauthenticate with Firebase SMS MFA
-      await confirm.confirm(otpCode);
 
-      // After Firebase reauth, send verification email
-      setIsSendingEmail(true);
-      setStep("sending");
+      // Verify OTP to get MFA token
+      await verifyOtp(mfaSessionId, otpCode, api);
 
-      const currentUser = getAuth().currentUser;
-      if (!currentUser) {
-        throw new Error("User not authenticated");
-      }
-
-      // Call verifyBeforeUpdateEmail
-      // This sends a verification email to the new address
-      // The email will only be updated after the user clicks the verification link
-      await verifyBeforeUpdateEmail(currentUser, newEmail.trim());
+      // Update email with MFA token (automatically included via interceptor)
+      const trimmedEmail = newEmail.trim().toLowerCase();
+      await updateEmailMutation.mutateAsync({
+        userId: user.id,
+        email: trimmedEmail,
+      });
 
       setStep("success");
-      Alert.alert(
-        "Verification Email Sent",
-        `We've sent a verification email to ${newEmail.trim()}. Please check your inbox and click the verification link. Your session will expire once you verify the email, and you'll need to sign in again with your new email address.`,
-        [
-          {
-            text: "OK",
-            onPress: () => {
-              // The session will expire when user verifies email
-              // onAuthStateChanged will handle the redirect
-            },
-          },
-        ]
-      );
     } catch (error: any) {
       console.error("Verification error", error);
       setStep("mfa");
-      if (error.code === "auth/invalid-verification-code") {
-        Alert.alert("Error", "Invalid verification code. Please try again.");
-      } else if (error.code === "auth/email-already-in-use") {
+
+      const errorMessage =
+        error.message || "Failed to update email. Please try again.";
+
+      if (error.response?.status === 400) {
+        Alert.alert("Error", error.response.data?.message || errorMessage);
+      } else if (error.response?.status === 409) {
         Alert.alert(
           "Error",
           "This email is already in use by another account."
         );
-      } else if (error.code === "auth/invalid-email") {
-        Alert.alert("Error", "Please enter a valid email address.");
       } else {
-        Alert.alert("Error", "Failed to update email. Please try again.");
+        Alert.alert("Error", errorMessage);
       }
     } finally {
       setIsVerifying(false);
-      setIsSendingEmail(false);
     }
   };
 
   const handleBack = () => {
-    if (step === "mfa" || step === "sending") {
+    if (step === "mfa") {
       setStep("email");
-      setConfirm(null);
+      setMfaSessionId(null);
       setOtpCode("");
       setResendTimer(0);
     } else {
@@ -317,8 +292,8 @@ export default function EmailUpdateScreen() {
                     Enter New Email
                   </Text>
                   <Text category="s1" style={styles.subtitle}>
-                    We&apos;ll send a verification email to your new address.
-                    After verification, you&apos;ll need to sign in again.
+                    We&apos;ll send a verification code to your new email
+                    address to confirm the change.
                   </Text>
 
                   <View style={styles.inputContainer}>
@@ -365,21 +340,19 @@ export default function EmailUpdateScreen() {
               )}
 
               {/* MFA Verification Step */}
-              {(step === "mfa" || step === "sending") && (
+              {step === "mfa" && (
                 <>
                   <Text category="h6" style={styles.stepTitle}>
-                    {step === "sending"
-                      ? "Sending Verification Email"
-                      : "Verify Your Identity"}
+                    Verify Your Email
                   </Text>
                   <Text category="s1" style={styles.subtitle}>
-                    {step === "sending"
-                      ? "Please wait while we send the verification email..."
-                      : "We've sent a 6-digit code to your registered mobile number."}
+                    We&apos;ve sent a 6-digit verification code to{" "}
+                    <Text style={styles.emailHighlight}>{newEmail.trim()}</Text>
+                    . Please enter it below.
                   </Text>
 
                   {/* Loading state while sending OTP */}
-                  {!confirm && isLoading && (
+                  {!mfaSessionId && isLoading && (
                     <View style={styles.loadingContainer}>
                       <View style={styles.loadingSpinnerWrapper}>
                         <Spinner size="small" status="primary" />
@@ -390,15 +363,15 @@ export default function EmailUpdateScreen() {
                     </View>
                   )}
 
-                  {/* OTP Input - shown when confirmed and not sending email */}
-                  {confirm && step === "mfa" && !isLoading && (
+                  {/* OTP Input - shown when session is created and not sending email */}
+                  {mfaSessionId && step === "mfa" && !isLoading && (
                     <>
                       <View style={styles.otpContainer}>
                         <OtpInput
                           length={6}
                           onComplete={handleOtpComplete}
                           onChange={handleOtpChange}
-                          disabled={isVerifying || isSendingEmail}
+                          disabled={isVerifying}
                         />
                       </View>
 
@@ -406,25 +379,17 @@ export default function EmailUpdateScreen() {
                       <View style={styles.buttonContainer}>
                         <TouchableOpacity
                           onPress={handleVerifyAndUpdateEmail}
-                          disabled={
-                            otpCode.length !== 6 ||
-                            isVerifying ||
-                            isSendingEmail
-                          }
+                          disabled={otpCode.length !== 6 || isVerifying}
                           style={[
                             styles.verifyButton,
-                            (otpCode.length !== 6 ||
-                              isVerifying ||
-                              isSendingEmail) &&
+                            (otpCode.length !== 6 || isVerifying) &&
                               styles.verifyButtonDisabled,
                           ]}
                           activeOpacity={0.8}
                         >
                           <LinearGradient
                             colors={
-                              otpCode.length === 6 &&
-                              !isVerifying &&
-                              !isSendingEmail
+                              otpCode.length === 6 && !isVerifying
                                 ? ["#2563EB", "#1D4ED8"]
                                 : ["#D1D5DB", "#9CA3AF"]
                             }
@@ -432,7 +397,7 @@ export default function EmailUpdateScreen() {
                             end={{ x: 1, y: 0 }}
                             style={styles.verifyButtonGradient}
                           >
-                            {!isVerifying && !isSendingEmail && (
+                            {!isVerifying && (
                               <View style={styles.checkmarkCircle}>
                                 <Ionicons
                                   name="checkmark"
@@ -441,13 +406,11 @@ export default function EmailUpdateScreen() {
                                 />
                               </View>
                             )}
-                            {(isVerifying || isSendingEmail) && (
+                            {isVerifying && (
                               <Spinner size="small" status="control" />
                             )}
                             <Text style={styles.verifyButtonText}>
-                              {isSendingEmail
-                                ? "Sending Email..."
-                                : isVerifying
+                              {isVerifying
                                 ? "Verifying..."
                                 : "Verify & Update Email"}
                             </Text>
@@ -492,18 +455,6 @@ export default function EmailUpdateScreen() {
                       </View>
                     </>
                   )}
-
-                  {/* Sending email state */}
-                  {step === "sending" && isSendingEmail && (
-                    <View style={styles.loadingContainer}>
-                      <View style={styles.loadingSpinnerWrapper}>
-                        <Spinner size="small" status="primary" />
-                      </View>
-                      <Text category="s1" style={styles.loadingText}>
-                        Sending verification email...
-                      </Text>
-                    </View>
-                  )}
                 </>
               )}
 
@@ -519,19 +470,18 @@ export default function EmailUpdateScreen() {
                       />
                     </View>
                     <Text category="h6" style={styles.successTitle}>
-                      Verification Email Sent
+                      Email Updated Successfully
                     </Text>
                     <Text category="s1" style={styles.successMessage}>
-                      We&apos;ve sent a verification email to{" "}
+                      Your email address has been successfully updated to{" "}
                       <Text style={styles.emailHighlight}>
                         {newEmail.trim()}
                       </Text>
-                      . Please check your inbox and click the verification link.
+                      .
                     </Text>
                     <Text category="s2" style={styles.successNote}>
-                      Note: Your session will expire once you verify the email,
-                      and you&apos;ll need to sign in again with your new email
-                      address.
+                      You can now use your new email address for future logins
+                      and account communications.
                     </Text>
                   </View>
 

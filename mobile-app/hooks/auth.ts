@@ -1,41 +1,24 @@
-import {
-  FirebaseAuthTypes,
-  getAuth,
-  reload,
-  signOut,
-} from "@react-native-firebase/auth";
-import { createContext, useContext } from "react";
-
-export const defaultAuthState: AuthState = {
-  isLoaded: false,
-  isSignedIn: undefined,
-  user: undefined,
-};
-
-export const FirebaseAuthContext = createContext<AuthState>(defaultAuthState);
+import { useAuth0, User } from "react-native-auth0";
 
 export interface AuthState {
   isSignedIn: boolean | undefined;
   isLoaded: boolean;
-  user: FirebaseAuthTypes.User | null | undefined;
+  user: User | null | undefined;
 }
 
 export function useAuth(): AuthState {
-  const auth = useContext(FirebaseAuthContext);
-  return auth;
+  const { isLoading, user } = useAuth0();
+  return {
+    isLoaded: isLoading,
+    isSignedIn: !!user,
+    user: user,
+  };
 }
 
 export function useSignOut() {
-  return { signOut: async () => await signOut(getAuth()) };
-}
-
-export function useReloadAuth() {
+  const { clearSession } = useAuth0();
   return {
-    reloadAuth: async () => {
-      const user = getAuth().currentUser;
-      if (user) {
-        await reload(user);
-      }
-    },
+    signOut: async () =>
+      await clearSession({ returnToUrl: "nested://sign-in" }),
   };
 }

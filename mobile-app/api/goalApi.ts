@@ -1,12 +1,15 @@
 import type { Goal } from "@/types/investment";
-import { api } from "./client";
+import type { AxiosInstance } from "axios";
 
-export const getGoals = async (): Promise<Goal[]> => {
+export const getGoals = async (api: AxiosInstance): Promise<Goal[]> => {
   const { data } = await api.get("/goals");
   return (data.data ?? []).map((goal: GoalDTO): Goal => mapGoalToGoal(goal));
 };
 
-export const getGoal = async (id: string): Promise<Goal> => {
+export const getGoal = async (
+  api: AxiosInstance,
+  id: string
+): Promise<Goal> => {
   const { data } = await api.get(`/goals/${id}`);
   const goals = (data.data ?? []).map(
     (goal: GoalDTO): Goal => mapGoalToGoal(goal)
@@ -19,19 +22,20 @@ export const getGoal = async (id: string): Promise<Goal> => {
 
 export type CreateGoalRequest = {
   childId?: string;
-  basketId: string;
+  basketId?: string;
   educationId: string;
   title: string;
   targetAmount: number;
   targetDate: Date;
 };
 export const createGoal = async (
+  api: AxiosInstance,
   goals: CreateGoalRequest[]
 ): Promise<Goal[]> => {
   const payload = goals.map((goal) => {
     const payloadItem: any = {
       child: goal.childId ? { id: goal.childId } : undefined,
-      basket: { id: goal.basketId },
+      basket: goal.basketId ? { id: goal.basketId } : undefined,
       target_amount: goal.targetAmount,
       target_date: goal.targetDate.toLocaleDateString("en-CA"),
       title: goal.title,

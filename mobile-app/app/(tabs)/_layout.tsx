@@ -1,4 +1,4 @@
-import { Tabs } from "expo-router";
+import { Redirect, Tabs } from "expo-router";
 import React from "react";
 import { Platform } from "react-native";
 
@@ -7,9 +7,16 @@ import TabBarBackground from "@/components/ui/TabBarBackground";
 import { Colors } from "@/constants/Colors";
 import { useColorScheme } from "@/hooks/useColorScheme";
 import { Goal, House, UserCog } from "lucide-react-native";
+import { useAuth0 } from "react-native-auth0";
 
 export default function TabLayout() {
   const colorScheme = useColorScheme();
+  const { user } = useAuth0();
+
+  if (!user) {
+    console.log("Redirecting to sign-in");
+    return <Redirect href="/sign-in" />;
+  }
 
   return (
     <Tabs

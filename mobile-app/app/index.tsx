@@ -1,23 +1,25 @@
 import { userAtom } from "@/atoms/user";
-import { useAuth } from "@/hooks/auth";
 import { useUser } from "@/hooks/useUser";
 import { Redirect } from "expo-router";
 import { useSetAtom } from "jotai";
 import { useEffect } from "react";
 import { Image, StyleSheet, View } from "react-native";
+import { useAuth0 } from "react-native-auth0";
 
 export default function Home() {
-  const { isSignedIn, isLoaded, user: authUser } = useAuth();
+  const { isLoading: isAuthLoading, user: authUser } = useAuth0();
   const { data: user, isLoading } = useUser();
   const setUser = useSetAtom(userAtom);
+
+  const isSignedIn = !!authUser;
 
   useEffect(() => {
     if (user) {
       setUser(user);
     }
-  }, [user]);
+  }, [user, setUser]);
 
-  if (!isLoaded || isLoading) {
+  if (isAuthLoading || isLoading) {
     // show logo
     return (
       <View style={styles.container}>
@@ -30,7 +32,7 @@ export default function Home() {
     );
   }
 
-  if (authUser?.displayName === null) {
+  if (!isLoading && user?.firstName === user?.phone_number) {
     return <Redirect href="/name-input" />;
   }
 

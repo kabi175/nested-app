@@ -1,6 +1,7 @@
 package com.nested.app.entity;
 
 import com.fasterxml.jackson.annotation.JsonValue;
+import com.nested.app.enums.TransactionStatus;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
@@ -60,7 +61,7 @@ public class OrderItems {
 
   // Optional processing state to represent internal lifecycle
   @Enumerated(EnumType.STRING)
-  private ProcessingState processingState = ProcessingState.PENDING;
+  private TransactionStatus status = TransactionStatus.PENDING;
 
   @RequiredArgsConstructor
   public enum ProcessingState {

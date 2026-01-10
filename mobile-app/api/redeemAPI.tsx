@@ -1,4 +1,4 @@
-import { api } from "./client";
+import type { AxiosInstance } from "axios";
 
 export type SellOrder = {
   id: string;
@@ -9,6 +9,7 @@ export type SellOrder = {
 };
 
 export const redeemFund = async (
+  api: AxiosInstance,
   goalId: string,
   fundId: string,
   amount: number | null,
@@ -25,6 +26,6 @@ export const redeemFund = async (
   }));
 };
 
-export const verifyRedeemOrder = async (orderIds: string[]): Promise<void> => {
+export const verifyRedeemOrder = async (api: AxiosInstance, orderIds: string[]): Promise<void> => {
   await api.post(`/sell-orders/verify`, { order_ids: orderIds });
 };

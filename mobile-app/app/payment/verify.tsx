@@ -1,36 +1,31 @@
 import { Ionicons } from "@expo/vector-icons";
-import {
-  FirebaseAuthTypes,
-  getAuth,
-  signInWithPhoneNumber,
-} from "@react-native-firebase/auth";
 import { LinearGradient } from "expo-linear-gradient";
 import { router, useLocalSearchParams } from "expo-router";
 import { useEffect, useState } from "react";
-import {
-  Alert,
-  Animated,
-  ScrollView,
-  StyleSheet,
-  TouchableOpacity,
-  View,
-} from "react-native";
+import { Alert, Animated, ScrollView, StyleSheet, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
-import { verifyPayment } from "@/api/paymentAPI";
 import { OtpInput } from "@/components/ui/OtpInput";
-import { useAuth } from "@/hooks/auth";
+import { useAuthAxios } from "@/hooks/useAuthAxios";
 import { usePayment } from "@/hooks/usePayment";
-import { Spinner, Text } from "@ui-kitten/components";
+import { useVerifyPayment } from "@/hooks/usePaymentMutations";
+import {
+  getStoredSessionId,
+  setCurrentAction,
+  startMfaSession,
+  verifyOtp,
+  type MfaAction,
+} from "@/services/mfaService";
+import { Button, Spinner, Text } from "@ui-kitten/components";
 
 export default function PaymentVerificationScreen() {
   const { paymentId, bankName = "Bank" } = useLocalSearchParams<{
     paymentId: string;
     bankName?: string;
   }>();
-  const auth = useAuth();
-  const [confirm, setConfirm] =
-    useState<FirebaseAuthTypes.ConfirmationResult | null>(null);
+  const api = useAuthAxios();
+  const verifyPaymentMutation = useVerifyPayment();
+  const [mfaSessionId, setMfaSessionId] = useState<string | null>(null);
   const [otpCode, setOtpCode] = useState("");
   const [resendTimer, setResendTimer] = useState(0);
   const [isLoading, setIsLoading] = useState(false);
@@ -42,28 +37,26 @@ export default function PaymentVerificationScreen() {
 
   const paymentMethod = payment?.payment_method;
 
-  // Get user's phone number from auth
-  const userPhoneNumber =
-    auth.user?.phoneNumber || getAuth().currentUser?.phoneNumber || "";
-
   // Auto-send OTP when component mounts
   useEffect(() => {
-    if (userPhoneNumber && !confirm && !isLoading) {
-      sendOTP();
-    } else if (!userPhoneNumber && auth.isLoaded) {
-      Alert.alert(
-        "Error",
-        "Phone number not found. Please ensure you're signed in with a phone number.",
-        [
-          {
-            text: "OK",
-            onPress: () => router.back(),
-          },
-        ]
-      );
-    }
+    const initializeSession = async () => {
+      console.log("Initializing session", mfaSessionId, isLoading);
+      if (!mfaSessionId && !isLoading) {
+        // Check if there's a stored session ID first
+        const storedSessionId = await getStoredSessionId();
+        console.log("Stored session ID:", storedSessionId);
+        if (storedSessionId) {
+          console.log("Found stored session ID:", storedSessionId);
+          setMfaSessionId(storedSessionId);
+        } else {
+          sendOTP();
+        }
+      }
+    };
+
+    initializeSession();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [userPhoneNumber, auth.isLoaded]);
+  }, []);
 
   // Animation on mount
   useEffect(() => {
@@ -84,23 +77,46 @@ export default function PaymentVerificationScreen() {
   }, []);
 
   const sendOTP = async () => {
-    if (!userPhoneNumber) {
-      Alert.alert("Error", "Phone number not found. Please sign in again.");
-      router.back();
-      return;
-    }
-
     try {
       setIsLoading(true);
-      const confirmation = await signInWithPhoneNumber(
-        getAuth(),
-        userPhoneNumber
+      // Set action for payment verification (using MF_BUY for payment-related actions)
+      const action: MfaAction = "MF_BUY";
+      await setCurrentAction(action);
+
+      // Start MFA session
+      const response = await startMfaSession(action, "SMS", api);
+      console.log("MFA session response:", response);
+
+      if (response.mfaSessionId) {
+        setMfaSessionId(response.mfaSessionId);
+        setResendTimer(30);
+      } else {
+        // Try to get from SecureStore as fallback
+        const storedSessionId = await getStoredSessionId();
+        if (storedSessionId) {
+          console.log("Using stored session ID:", storedSessionId);
+          setMfaSessionId(storedSessionId);
+          setResendTimer(30);
+        } else {
+          throw new Error("Session ID not found in response");
+        }
+      }
+    } catch (error: any) {
+      console.error("Error sending OTP", error);
+      Alert.alert(
+        "Error",
+        error.message || "Failed to send OTP. Please try again."
       );
-      setConfirm(confirmation);
-      setResendTimer(30);
-    } catch (error) {
-      console.log("Error sending OTP", error);
-      Alert.alert("Error", "Failed to send OTP. Please try again.");
+      // Try to get stored session ID as last resort
+      try {
+        const storedSessionId = await getStoredSessionId();
+        if (storedSessionId) {
+          console.log("Fallback: Using stored session ID:", storedSessionId);
+          setMfaSessionId(storedSessionId);
+        }
+      } catch (fallbackError) {
+        console.error("Fallback error:", fallbackError);
+      }
     } finally {
       setIsLoading(false);
     }
@@ -132,19 +148,25 @@ export default function PaymentVerificationScreen() {
   };
 
   const handleVerifyAndContinue = async () => {
-    if (!confirm || !paymentId) {
+    if (!mfaSessionId || !paymentId) {
       Alert.alert("Error", "Missing verification data. Please try again.");
+      return;
+    }
+
+    if (otpCode.length !== 6) {
+      Alert.alert("Error", "Please enter a valid 6-digit OTP.");
       return;
     }
 
     try {
       setIsVerifying(true);
-      // Reauthenticate with Firebase SMS MFA
-      await confirm.confirm(otpCode);
+      // Verify OTP with custom MFA service
+      await verifyOtp(mfaSessionId, otpCode, api);
 
-      // After Firebase reauth, verify payment
+      console.log("MFA verification successful");
+      // After MFA verification, verify payment
       setIsProcessingPayment(true);
-      await verifyPayment(paymentId);
+      await verifyPaymentMutation.mutateAsync(paymentId);
 
       router.replace({
         pathname: "/payment/processing",
@@ -154,15 +176,11 @@ export default function PaymentVerificationScreen() {
           bankName,
         },
       });
-
-      // Then initiate payment and redirect
     } catch (error: any) {
       console.error("Verification error", error);
-      if (error.code === "auth/invalid-verification-code") {
-        Alert.alert("Error", "Invalid verification code. Please try again.");
-      } else {
-        Alert.alert("Error", "Failed to verify. Please try again.");
-      }
+      const errorMessage =
+        error.message || "Failed to verify. Please try again.";
+      Alert.alert("Error", errorMessage);
     } finally {
       setIsVerifying(false);
       setIsProcessingPayment(false);
@@ -222,7 +240,7 @@ export default function PaymentVerificationScreen() {
             </Text>
 
             {/* Loading state while sending OTP */}
-            {!confirm && isLoading && (
+            {!mfaSessionId && isLoading && (
               <View style={styles.loadingContainer}>
                 <View style={styles.loadingSpinnerWrapper}>
                   <Spinner size="small" status="primary" />
@@ -233,104 +251,80 @@ export default function PaymentVerificationScreen() {
               </View>
             )}
 
-            {/* OTP Input - shown when confirmed */}
-            {confirm && !isLoading && (
-              <>
-                <View style={styles.otpContainer}>
-                  <OtpInput
-                    length={6}
-                    onComplete={handleOtpComplete}
-                    onChange={handleOtpChange}
-                    disabled={isVerifying || isProcessingPayment}
-                  />
-                </View>
+            {/* OTP Input - Always visible, only disabled during verification/processing */}
+            <View style={styles.otpContainer}>
+              <OtpInput
+                length={6}
+                onComplete={handleOtpComplete}
+                onChange={handleOtpChange}
+                disabled={isVerifying || isProcessingPayment}
+              />
+            </View>
 
-                {/* Verify Button */}
-                <View style={styles.buttonContainer}>
-                  <TouchableOpacity
-                    onPress={handleVerifyAndContinue}
-                    disabled={
-                      otpCode.length !== 6 || isVerifying || isProcessingPayment
+            {/* Button Container - Always visible */}
+            <View style={styles.buttonContainer}>
+              {/* Submit/Verify Button - Always visible */}
+              <Button
+                onPress={handleVerifyAndContinue}
+                disabled={
+                  otpCode.length !== 6 ||
+                  isVerifying ||
+                  isProcessingPayment ||
+                  isLoading
+                }
+                status="primary"
+                size="large"
+                style={styles.verifyButton}
+                accessoryLeft={() =>
+                  !isVerifying && !isProcessingPayment ? (
+                    <Ionicons name="checkmark" size={16} color="#FFFFFF" />
+                  ) : (
+                    <></>
+                  )
+                }
+                accessoryRight={() =>
+                  isVerifying || isProcessingPayment ? (
+                    <Spinner size="small" status="control" />
+                  ) : (
+                    <></>
+                  )
+                }
+              >
+                {isProcessingPayment
+                  ? "Processing Payment..."
+                  : isVerifying
+                  ? "Verifying..."
+                  : isLoading
+                  ? "Sending OTP..."
+                  : "Verify & Continue"}
+              </Button>
+
+              {/* Resend Button - Always visible */}
+              <Button
+                onPress={handleResendOtp}
+                disabled={resendTimer > 0 || isLoading || !mfaSessionId}
+                appearance="ghost"
+                status="primary"
+                size="medium"
+                style={styles.resendButton}
+                accessoryLeft={() => (
+                  <Ionicons
+                    name="refresh"
+                    size={16}
+                    color={
+                      resendTimer > 0 || isLoading || !mfaSessionId
+                        ? "#9CA3AF"
+                        : "#2563EB"
                     }
-                    style={[
-                      styles.verifyButton,
-                      (otpCode.length !== 6 ||
-                        isVerifying ||
-                        isProcessingPayment) &&
-                        styles.verifyButtonDisabled,
-                    ]}
-                    activeOpacity={0.8}
-                  >
-                    <LinearGradient
-                      colors={
-                        otpCode.length === 6 &&
-                        !isVerifying &&
-                        !isProcessingPayment
-                          ? ["#2563EB", "#1D4ED8"]
-                          : ["#D1D5DB", "#9CA3AF"]
-                      }
-                      start={{ x: 0, y: 0 }}
-                      end={{ x: 1, y: 0 }}
-                      style={styles.verifyButtonGradient}
-                    >
-                      {!isVerifying && !isProcessingPayment && (
-                        <View style={styles.checkmarkCircle}>
-                          <Ionicons
-                            name="checkmark"
-                            size={16}
-                            color="#FFFFFF"
-                          />
-                        </View>
-                      )}
-                      {(isVerifying || isProcessingPayment) && (
-                        <Spinner size="small" status="control" />
-                      )}
-                      <Text style={styles.verifyButtonText}>
-                        {isProcessingPayment
-                          ? "Processing Payment..."
-                          : isVerifying
-                          ? "Verifying..."
-                          : "Verify & Continue"}
-                      </Text>
-                    </LinearGradient>
-                  </TouchableOpacity>
-
-                  <TouchableOpacity
-                    onPress={handleResendOtp}
-                    disabled={resendTimer > 0 || isLoading}
-                    style={[
-                      styles.resendButton,
-                      (resendTimer > 0 || isLoading) &&
-                        styles.resendButtonDisabled,
-                    ]}
-                    activeOpacity={0.7}
-                  >
-                    <Ionicons
-                      name="refresh"
-                      size={16}
-                      color={
-                        resendTimer > 0 || isLoading ? "#9CA3AF" : "#2563EB"
-                      }
-                      style={styles.resendIcon}
-                    />
-                    <Text
-                      style={[
-                        styles.resendButtonText,
-                        (resendTimer > 0 || isLoading) &&
-                          styles.resendButtonTextDisabled,
-                      ]}
-                    >
-                      Resend OTP{" "}
-                      {resendTimer > 0 && (
-                        <Text style={styles.resendTimerText}>
-                          ({resendTimer}s)
-                        </Text>
-                      )}
-                    </Text>
-                  </TouchableOpacity>
-                </View>
-              </>
-            )}
+                  />
+                )}
+              >
+                Resend OTP{" "}
+                {resendTimer > 0 && (
+                  <Text style={styles.resendTimerText}>({resendTimer}s)</Text>
+                )}
+              </Button>
+            </View>
 
             {/* Security Message - Always at bottom */}
             <View style={styles.securityContainer}>
@@ -434,6 +428,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 4,
     alignItems: "center",
     justifyContent: "center",
+    width: "100%",
   },
   loadingContainer: {
     alignItems: "center",
@@ -456,63 +451,8 @@ const styles = StyleSheet.create({
   },
   verifyButton: {
     borderRadius: 16,
-    overflow: "hidden",
-    shadowColor: "#2563EB",
-    shadowOffset: {
-      width: 0,
-      height: 4,
-    },
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
-    elevation: 6,
   },
-  verifyButtonDisabled: {
-    shadowOpacity: 0,
-    elevation: 0,
-  },
-  verifyButtonGradient: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    paddingVertical: 18,
-    paddingHorizontal: 24,
-    gap: 10,
-  },
-  checkmarkCircle: {
-    width: 22,
-    height: 22,
-    borderRadius: 11,
-    backgroundColor: "rgba(255, 255, 255, 0.25)",
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  verifyButtonText: {
-    color: "#FFFFFF",
-    fontSize: 17,
-    fontWeight: "600",
-    letterSpacing: 0.3,
-  },
-  resendButton: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    paddingVertical: 12,
-    gap: 6,
-  },
-  resendButtonDisabled: {
-    opacity: 0.5,
-  },
-  resendIcon: {
-    marginRight: 2,
-  },
-  resendButtonText: {
-    color: "#2563EB",
-    fontSize: 15,
-    fontWeight: "600",
-  },
-  resendButtonTextDisabled: {
-    color: "#9CA3AF",
-  },
+  resendButton: {},
   resendTimerText: {
     color: "#6B7280",
     fontWeight: "500",

@@ -14,8 +14,10 @@ import {
   ScrollView,
   View,
 } from "react-native";
+import { useAuthAxios } from "@/hooks/useAuthAxios";
 
 export default function WaitingForApprovalScreen() {
+  const api = useAuthAxios();
   const router = useRouter();
   const queryClient = useQueryClient();
   const [user, setUser] = useAtom(userAtom);
@@ -24,7 +26,7 @@ export default function WaitingForApprovalScreen() {
   // Poll for user updates every 5 seconds, but stop if we have a final status
   const { data: currentUser, isLoading } = useQuery({
     queryKey: [QUERY_KEYS.user],
-    queryFn: () => getUser(),
+    queryFn: () => getUser(api),
     refetchInterval: shouldPoll ? 5000 : false, // Poll every 5 seconds, stop if final status
     refetchIntervalInBackground: false, // Only poll when app is in foreground
   });

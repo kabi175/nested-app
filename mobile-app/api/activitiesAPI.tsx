@@ -1,5 +1,5 @@
 import { Goal, User } from "@/types";
-import { api } from "./client";
+import type { AxiosInstance } from "axios";
 
 type Activity = {
   id: string;
@@ -19,6 +19,7 @@ type Activity = {
 };
 
 export const fetchPendingActivities = async (
+  api: AxiosInstance,
   user_id: string
 ): Promise<Activity[]> => {
   const { data } = await api.get(`/users/${user_id}/pending-activities`);

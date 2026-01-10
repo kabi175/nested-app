@@ -1,6 +1,4 @@
 import {
-  fetchLumpsumPaymentUrl,
-  fetchMandatePaymentUrl,
   lumsumPostPayment,
   mandatePostPayment,
 } from "@/api/paymentAPI";
@@ -8,6 +6,10 @@ import { ThemedText } from "@/components/ThemedText";
 import { OneTimePurchaseCard } from "@/components/payment/OneTimePurchaseCard";
 import { SIPAutoDebitCard } from "@/components/payment/SIPAutoDebitCard";
 import { usePayment } from "@/hooks/usePayment";
+import {
+  useFetchLumpsumPaymentUrl,
+  useFetchMandatePaymentUrl,
+} from "@/hooks/usePaymentMutations";
 import { Ionicons } from "@expo/vector-icons";
 import * as Linking from "expo-linking";
 import { router, useLocalSearchParams } from "expo-router";
@@ -26,9 +28,11 @@ export default function PaymentProcessingScreen() {
     paymentId: string;
   }>();
   const { data: payment, refetch } = usePayment(paymentId);
+  const fetchLumpsumUrl = useFetchLumpsumPaymentUrl();
+  const fetchMandateUrl = useFetchMandatePaymentUrl();
 
   const handleLumpsumPayment = async () => {
-    const redirectUrl = await fetchLumpsumPaymentUrl(paymentId as string);
+    const redirectUrl = await fetchLumpsumUrl.mutateAsync(paymentId as string);
     if (redirectUrl) {
       const returnUrl = Linking.createURL(
         `/payment/${paymentId}/success?type=buy`
@@ -42,7 +46,7 @@ export default function PaymentProcessingScreen() {
   };
 
   const handleMandatePayment = async () => {
-    const redirectUrl = await fetchMandatePaymentUrl(paymentId as string);
+    const redirectUrl = await fetchMandateUrl.mutateAsync(paymentId as string);
     if (redirectUrl) {
       const returnUrl = Linking.createURL(
         `/payment/${paymentId}/success?type=sip`

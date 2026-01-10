@@ -1,9 +1,6 @@
 package com.nested.app.services;
 
 import com.google.common.base.Strings;
-import com.google.firebase.auth.FirebaseAuth;
-import com.google.firebase.auth.FirebaseAuthException;
-import com.google.firebase.auth.UserRecord;
 import com.nested.app.client.meta.BankApiClient;
 import com.nested.app.client.mf.InvestorAPIClient;
 import com.nested.app.client.mf.KycAPIClient;
@@ -16,7 +13,6 @@ import com.nested.app.entity.Address;
 import com.nested.app.entity.User;
 import com.nested.app.events.UserUpdateEvent;
 import com.nested.app.exception.ExternalServiceException;
-import com.nested.app.exception.FirebaseException;
 import com.nested.app.mapper.BankAccountTypeMapper;
 import com.nested.app.repository.AddressRepository;
 import com.nested.app.repository.BankDetailRepository;
@@ -45,6 +41,7 @@ public class UserServiceImpl implements UserService {
   private final ApplicationEventPublisher publisher;
   private final KycRedirectService kycRedirectService;
   private final BankApiClient bankApiClient;
+  private final MfaService mfaService;
 
   @Override
   public List<UserDTO> findAllUsers(Type type, Pageable pageable, User user) {
@@ -83,17 +80,6 @@ public class UserServiceImpl implements UserService {
                     new OpenApiResourceNotFoundException("User with id " + userId + " not found"));
 
     User updatedUser = originalUser;
-    UserRecord userRecord;
-    try {
-      userRecord = FirebaseAuth.getInstance().getUser(originalUser.getFirebaseUid());
-    } catch (FirebaseAuthException e) {
-      throw new OpenApiResourceNotFoundException("User with id " + userId + " not found");
-    }
-
-    if (userRecord.getEmail() != null) {
-      // always update the email from firebase
-      userDTO.setEmail(userRecord.getEmail());
-    }
 
     if (!Strings.isNullOrEmpty(userDTO.getFirstName())
         && !Objects.equals(userDTO.getFirstName(), originalUser.getFirstName())) {
@@ -194,15 +180,6 @@ public class UserServiceImpl implements UserService {
     }
     User updated = userRepository.save(updatedUser);
 
-    // sync user full name to firebase
-    if (!Objects.equals(updatedUser.getFullName(), originalUser.getFullName())) {
-      try {
-        FirebaseAuth.getInstance()
-            .updateUser(userRecord.updateRequest().setDisplayName(updatedUser.getFullName()));
-      } catch (FirebaseAuthException e) {
-        throw new FirebaseException(e.getMessage());
-      }
-    }
     // publish event after successful update
     publisher.publishEvent(new UserUpdateEvent(originalUser, updatedUser));
     return UserDTO.fromEntity(updated);
@@ -397,6 +374,37 @@ public class UserServiceImpl implements UserService {
         .type("esign_upload")
         .redirectUrl(actionRequired.getRedirectUrl())
         .build();
+  }
+
+  @Override
+  public UserDTO updateEmail(String userId, String newEmail) {
+
+    // Find user by Firebase UID
+    User user =
+        userRepository
+            .findByFirebaseUid(userId)
+            .orElseThrow(
+                () ->
+                    new OpenApiResourceNotFoundException(
+                        "User with Firebase UID " + userId + " not found"));
+
+    // Check if email is already in use by another user
+    if (userRepository.existsByEmail(newEmail)) {
+      throw new IllegalArgumentException("Email address is already in use");
+    }
+
+    // Store original user for event
+    User originalUser = user;
+
+    // Update email in database
+    user = user.withEmail(newEmail);
+    user = userRepository.save(user);
+
+    // Publish event after successful update
+    publisher.publishEvent(new UserUpdateEvent(originalUser, user));
+
+    log.info("Email updated successfully for user: {}, new email: {}", userId, newEmail);
+    return UserDTO.fromEntity(user);
   }
 
   private void updateAddressFields(Address address, AddressDto addressDto) {

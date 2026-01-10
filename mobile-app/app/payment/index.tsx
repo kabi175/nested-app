@@ -1,7 +1,7 @@
-import { createPayment } from "@/api/paymentAPI";
 import { cartAtom } from "@/atoms/cart";
 import { ThemedText } from "@/components/ThemedText";
 import { useBankAccounts } from "@/hooks/useBankAccount";
+import { useCreatePayment } from "@/hooks/usePaymentMutations";
 import { BankAccount } from "@/types/bank";
 import { formatCurrency } from "@/utils/formatters";
 import { Ionicons } from "@expo/vector-icons";
@@ -25,6 +25,7 @@ export default function PaymentMethodScreen() {
   const cart = useAtomValue(cartAtom);
   const { data: bankAccountsData, isLoading: isLoadingBanks } =
     useBankAccounts();
+  const createPaymentMutation = useCreatePayment();
   // Ensure bankAccounts is always an array
   const bankAccounts = useMemo(
     () => (Array.isArray(bankAccountsData) ? bankAccountsData : []),
@@ -148,9 +149,12 @@ export default function PaymentMethodScreen() {
       const paymentMethod =
         selectedMethod === "netbanking" ? "net_banking" : "upi";
 
-      const payment = await createPayment(cart, {
-        payment_method: paymentMethod,
-        bank_id: selectedBank.id,
+      const payment = await createPaymentMutation.mutateAsync({
+        orders: cart,
+        paymentOption: {
+          payment_method: paymentMethod,
+          bank_id: selectedBank.id,
+        },
       });
 
       // Redirect to verification screen
@@ -163,9 +167,31 @@ export default function PaymentMethodScreen() {
           buyOrdersAmount: buyOrdersAmount.toString(),
         },
       });
-    } catch (error) {
+    } catch (error: any) {
       console.error("Failed to create payment", error);
-      Alert.alert("Error", "Failed to process payment. Please try again.");
+
+      // Extract error message from server response
+      let errorMessage = "Failed to process payment. Please try again.";
+
+      if (error?.response?.data?.message) {
+        errorMessage = error.response.data.message;
+      } else if (error?.response?.data?.error) {
+        errorMessage = error.response.data.error;
+      } else if (error?.message) {
+        errorMessage = error.message;
+      } else if (error?.response?.status === 400) {
+        errorMessage = "Invalid payment details. Please check and try again.";
+      } else if (error?.response?.status === 401) {
+        errorMessage = "Please log in to continue.";
+      } else if (error?.response?.status === 403) {
+        errorMessage = "You don't have permission to perform this action.";
+      } else if (error?.response?.status === 404) {
+        errorMessage = "Payment service not found. Please try again later.";
+      } else if (error?.response?.status >= 500) {
+        errorMessage = "Server error. Please try again later.";
+      }
+
+      Alert.alert("Error", errorMessage, [{ text: "OK", style: "cancel" }]);
     } finally {
       setIsProcessing(false);
     }

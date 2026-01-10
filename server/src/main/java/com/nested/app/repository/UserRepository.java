@@ -13,6 +13,10 @@ import org.springframework.stereotype.Repository;
 public interface UserRepository extends JpaRepository<User, Long> {
   Optional<User> findByFirebaseUid(String firebaseUid);
 
+  Optional<User> findByEmail(String email);
+
+  boolean existsByEmail(String email);
+
   Page<User> findByIsActive(boolean isActive, Pageable pageable);
 
   @Query("SELECT u FROM User u WHERE u.investor.kycRequestRef = :kycRequestRef")

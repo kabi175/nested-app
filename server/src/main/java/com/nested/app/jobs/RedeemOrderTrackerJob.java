@@ -2,8 +2,6 @@ package com.nested.app.jobs;
 
 import com.nested.app.client.mf.SellOrderApiClient;
 import com.nested.app.client.mf.dto.OrderData;
-import com.nested.app.entity.Order;
-import com.nested.app.entity.OrderItems;
 import com.nested.app.entity.Transaction;
 import com.nested.app.enums.TransactionStatus;
 import com.nested.app.enums.TransactionType;
@@ -148,22 +146,24 @@ public class RedeemOrderTrackerJob implements Job {
           orderData.getState());
       var orderItems = orderItemsRepository.findByRef(orderData.getRef());
 
-      var orders = orderItems.stream().map(OrderItems::getOrder).distinct().toList();
-
-      orders.forEach(
-          order -> {
+      orderItems.forEach(
+          orderItem -> {
             switch (orderData.getState()) {
-              case CREATED, PENDING, UNDER_REVIEW, CONFIRMED, SUBMITTED:
-                order.setStatus(Order.OrderStatus.PLACED);
+              case CREATED, PENDING, UNDER_REVIEW:
+                orderItem.setStatus(TransactionStatus.VERIFICATION_PENDING);
+                break;
+              case CONFIRMED, SUBMITTED:
+                orderItem.setStatus(TransactionStatus.SUBMITTED);
                 break;
               case SUCCESSFUL:
-                order.setStatus(Order.OrderStatus.COMPLETED);
+                orderItem.setStatus(TransactionStatus.COMPLETED);
                 break;
               case FAILED, CANCELLED:
-                order.setStatus(Order.OrderStatus.FAILED);
+                orderItem.setStatus(TransactionStatus.FAILED);
                 break;
               case REVERSED:
-                order.setStatus(Order.OrderStatus.REVERSED);
+                orderItem.setStatus(TransactionStatus.REFUNDED);
+                break;
             }
           });
 

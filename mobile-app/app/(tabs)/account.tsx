@@ -1,6 +1,7 @@
 import { userAtom } from "@/atoms/user";
 import { ThemedText } from "@/components/ThemedText";
-import { useAuth, useSignOut } from "@/hooks/auth";
+import { useSignOut } from "@/hooks/auth";
+import { useUser } from "@/hooks/useUser";
 import { clearNomineeAtoms } from "@/utils/nominee";
 import { openWhatsApp } from "@/utils/whtsapp";
 import { Ionicons } from "@expo/vector-icons";
@@ -8,7 +9,6 @@ import { useQueryClient } from "@tanstack/react-query";
 import Constants from "expo-constants";
 import { router } from "expo-router";
 import { useSetAtom } from "jotai";
-import { SquarePen } from "lucide-react-native";
 import React from "react";
 import {
   Alert,
@@ -30,7 +30,7 @@ interface MenuItem {
 }
 
 export default function AccountScreen() {
-  const auth = useAuth();
+  const { data: user } = useUser();
   const { signOut } = useSignOut();
   const queryClient = useQueryClient();
   const setUser = useSetAtom(userAtom);
@@ -57,6 +57,7 @@ export default function AccountScreen() {
           style: "destructive",
           onPress: async () => {
             await signOut();
+            console.log("Signed out successfully");
             queryClient.clear();
             setUser(null);
             clearNomineeAtoms();
@@ -123,7 +124,7 @@ export default function AccountScreen() {
       icon: "chatbubble-outline",
       iconColor: "#3B82F6",
       borderColor: "#3B82F6",
-      onPress: () => openWhatsApp("916382751431", "Hello 👋"),
+      onPress: () => openWhatsApp("916305209273", "Hello 👋"),
     },
     {
       id: "support",
@@ -131,7 +132,7 @@ export default function AccountScreen() {
       icon: "help-circle-outline",
       iconColor: "#10B981",
       borderColor: "#10B981",
-      onPress: () => openWhatsApp("916382751431", "Hello 👋"),
+      onPress: () => openWhatsApp("916305209273", "Hello 👋"),
     },
     {
       id: "logout",
@@ -163,7 +164,7 @@ export default function AccountScreen() {
             <View style={styles.avatarContainer}>
               <View style={styles.avatar}>
                 <Text style={styles.avatarText}>
-                  {getInitials(auth.user?.displayName || "User")}
+                  {getInitials(user?.firstName || "User")}
                 </Text>
               </View>
             </View>
@@ -171,28 +172,27 @@ export default function AccountScreen() {
             {/* User Details */}
             <View style={styles.userDetails}>
               <ThemedText style={styles.userName}>
-                {auth.user?.displayName || "User"}
+                {user?.firstName || "User"}
               </ThemedText>
-              {auth.user?.email && (
-                <ThemedText style={styles.userEmail}>
-                  {auth.user?.email}
-                </ThemedText>
+              {user?.email && (
+                <ThemedText style={styles.userEmail}>{user?.email}</ThemedText>
               )}
-              {auth.user?.phoneNumber && (
+              {user?.phone_number && (
                 <ThemedText style={styles.userPhone}>
-                  {auth.user?.phoneNumber}
+                  {user?.phone_number}
                 </ThemedText>
               )}
             </View>
 
+            {/** TODO: add edit profile */}
             {/* Edit Icon */}
-            <TouchableOpacity
+            {/* <TouchableOpacity
               style={styles.editButton}
               onPress={() => router.push("/user")}
               activeOpacity={0.7}
             >
               <SquarePen size={20} color="#6B7280" />
-            </TouchableOpacity>
+            </TouchableOpacity> */}
           </View>
         </View>
 

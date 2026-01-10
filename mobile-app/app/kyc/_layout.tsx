@@ -1,15 +1,22 @@
 import { KycProvider } from "@/providers/KycProvider";
 import { Text } from "@ui-kitten/components";
 import { Stack } from "expo-router";
+import { StatusBar as ExpoStatusBar } from "expo-status-bar";
 import React from "react";
+import { Platform, StatusBar as RNStatusBar } from "react-native";
 
 export default function KYCRootLayout() {
   return (
     <KycProvider>
+      <ExpoStatusBar style="dark" />
+      {Platform.OS === "android" && (
+        <RNStatusBar translucent={false} barStyle="dark-content" />
+      )}
       <Stack
         screenOptions={{
           headerTitleAlign: "center",
           headerTitle: (props) => <Text category="s1">{props.children}</Text>,
+          headerShown: true,
         }}
       >
         <Stack.Screen name="index" options={{ title: "KYC • Get Started" }} />
@@ -50,10 +57,7 @@ export default function KYCRootLayout() {
           name="waiting-for-approval"
           options={{ title: "KYC • Waiting for Approval" }}
         />
-        <Stack.Screen
-          name="kyc-success"
-          options={{ title: "KYC • Success" }}
-        />
+        <Stack.Screen name="kyc-success" options={{ title: "KYC • Success" }} />
       </Stack>
     </KycProvider>
   );

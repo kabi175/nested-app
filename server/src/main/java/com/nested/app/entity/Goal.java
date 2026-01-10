@@ -72,7 +72,7 @@ public class Goal {
   private Timestamp updatedAt;
 
   public boolean canInvest() {
-    return this.status == Status.ACTIVE || this.status == Status.DRAFT;
+    return this.status == Status.ACTIVE || this.status == Status.DRAFT || this.status == Status.PAYMENT_PENDING;
   }
 
   public enum Status {

@@ -2,10 +2,8 @@ package com.nested.app.services;
 
 import com.nested.app.client.mf.BuyOrderApiClient;
 import com.nested.app.client.mf.MandateApiClient;
-import com.nested.app.client.mf.dto.BulkOrderOtpRequest;
 import com.nested.app.client.mf.dto.MandateDto;
 import com.nested.app.client.mf.dto.OrderDetail;
-import com.nested.app.client.mf.dto.OtpRequest;
 import com.nested.app.client.mf.dto.SipOrderDetail;
 import com.nested.app.dto.MinifiedOrderDTO;
 import com.nested.app.dto.OrderDTO;
@@ -13,11 +11,7 @@ import com.nested.app.dto.PaymentDTO;
 import com.nested.app.dto.PlaceOrderDTO;
 import com.nested.app.dto.PlaceOrderPostDTO;
 import com.nested.app.entity.BankDetail;
-import com.nested.app.entity.Basket;
-import com.nested.app.entity.BasketFund;
 import com.nested.app.entity.BuyOrder;
-import com.nested.app.entity.Fund;
-import com.nested.app.entity.Goal;
 import com.nested.app.entity.Investor;
 import com.nested.app.entity.Order;
 import com.nested.app.entity.Payment;
@@ -96,6 +90,16 @@ public class PaymentServiceImpl implements PaymentService {
         throw new IllegalArgumentException("All orders must belong to the same investor");
       }
 
+      // If any of the order is in placed or any of the order has
+      // a payment, then throw an exception
+      var isOrdersAlreadyPlaced =
+          orders.stream().anyMatch(Order::isPlaced)
+              || orders.stream().map(Order::getPayment).anyMatch(Objects::nonNull);
+
+      if (isOrdersAlreadyPlaced) {
+        throw new IllegalArgumentException("Orders already placed");
+      }
+
       var investor = orders.getFirst().getInvestor();
 
       // Create payment entity
@@ -113,23 +117,6 @@ public class PaymentServiceImpl implements PaymentService {
       bankDetail.setId(placeOrderRequest.getBankID());
       payment.setBank(bankDetail);
 
-      var otpDetails =
-          orders.stream()
-              .map(Order::getGoal)
-              .map(Goal::getBasket)
-              .map(Basket::getBasketFunds)
-              .flatMap(List::stream)
-              .map(BasketFund::getFund)
-              .map(Fund::getId)
-              .distinct()
-              .mapToInt(Long::intValue)
-              .mapToObj(Long::toString)
-              .map(BulkOrderOtpRequest::getDetail)
-              .toList();
-
-      OtpRequest otpRequest =
-          BulkOrderOtpRequest.getInstance(payment.getInvestor().getRef(), otpDetails);
-
       payment.setOrders(orders);
       if (orders.stream().anyMatch(BuyOrder.class::isInstance)) {
         payment.setBuyStatus(Payment.PaymentStatus.PENDING);
@@ -140,18 +127,29 @@ public class PaymentServiceImpl implements PaymentService {
 
       orders.forEach(order -> order.setPayment(payment));
 
-      if (payment.getSipStatus() == Payment.PaymentStatus.PENDING) {
+      // Save payment and orders first to avoid TransientObjectException when querying in external
+      // API calls
+      orderRepository.saveAll(payment.getOrders());
+      Payment savedPayment = paymentRepository.saveAndFlush(payment);
+
+      if (savedPayment.getSipStatus() == Payment.PaymentStatus.PENDING) {
         // create mandate for SIP orders
-        createMandateWithExternalAPI(payment);
+        createMandateWithExternalAPI(savedPayment);
       }
 
-      // Save payment and orders
-      Payment savedPayment = paymentRepository.save(payment);
-
-      if (payment.getBuyStatus() == Payment.PaymentStatus.PENDING) {
+      if (savedPayment.getBuyStatus() == Payment.PaymentStatus.PENDING) {
         // place buy orders in the external system
         placeOrderWithExternalAPI(savedPayment);
+
+        savedPayment.getOrders().stream()
+            .filter(BuyOrder.class::isInstance)
+            .forEach(buyOrder -> buyOrder.setPlaced(true));
       }
+
+      // Save again to persist any updates from external API calls (e.g., mandate ID, order items
+      // refs)
+      orderRepository.saveAll(savedPayment.getOrders());
+      savedPayment = paymentRepository.save(savedPayment);
 
       // Convert to DTO
       PlaceOrderDTO placeOrderDTO = convertPaymentToPlaceOrderDTO(savedPayment);
@@ -159,6 +157,8 @@ public class PaymentServiceImpl implements PaymentService {
       log.info("Successfully created payment with {} orders ", orders.size());
       return placeOrderDTO;
 
+    } catch (IllegalArgumentException e) {
+      throw e;
     } catch (WebClientResponseException e) {
       log.error(
           " Error from MF provider while creating payment with orders: {}",

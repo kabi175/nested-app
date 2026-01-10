@@ -1,4 +1,4 @@
-import { api } from "./client";
+import type { AxiosInstance } from "axios";
 
 export type Basket = {
   id: string;
@@ -14,7 +14,7 @@ export type BasketFund = {
   allocationPercentage: number;
 };
 
-export const getBasketByName = async (name: string): Promise<Basket> => {
+export const getBasketByName = async (api: AxiosInstance, name: string): Promise<Basket> => {
   const { data } = await api.get(`/bucket/name/${name}`);
   console.log(data);
   return data;

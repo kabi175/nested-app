@@ -1,9 +1,13 @@
 import { getPendingOrdersByGoalId } from "@/api/paymentAPI";
 import { cartAtom } from "@/atoms/cart";
+import { goalsForCustomizeAtom } from "@/atoms/goals";
 import { Colors } from "@/constants/Colors";
+import { QUERY_KEYS } from "@/constants/queryKeys";
+import { useAuthAxios } from "@/hooks/useAuthAxios";
 import { useColorScheme } from "@/hooks/useColorScheme";
 import { usePendingActivities } from "@/hooks/usePendingActivities";
 import { Goal } from "@/types";
+import { useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "expo-router";
 import { useSetAtom } from "jotai";
 import { Banknote, IdCard, Landmark, UserCog } from "lucide-react-native";
@@ -21,10 +25,13 @@ type PendingActivityBannerProps = {
 };
 
 export function PendingActivityBanner({ onPress }: PendingActivityBannerProps) {
+  const api = useAuthAxios();
+  const queryClient = useQueryClient();
   const colorScheme = useColorScheme();
   const { data: activities, isLoading } = usePendingActivities();
   const router = useRouter();
   const setCart = useSetAtom(cartAtom);
+  const setGoalsForCustomize = useSetAtom(goalsForCustomizeAtom);
 
   if (isLoading || !activities || activities.length === 0) {
     return null;
@@ -64,11 +71,22 @@ export function PendingActivityBanner({ onPress }: PendingActivityBannerProps) {
         break;
       case "goal_payment_pending":
         const goal = firstActivity.metadata as Goal;
-        const orders = await getPendingOrdersByGoalId(goal.id);
-        if (orders.length > 0) {
+        const orders = await queryClient.fetchQuery({
+          queryKey: [QUERY_KEYS.pendingOrders, goal.id],
+          queryFn: () => getPendingOrdersByGoalId(api, goal.id),
+        });
+        if (orders && orders.length > 0) {
           setCart(orders);
+          router.push("/payment");
+        } else {
+          setGoalsForCustomize([goal]);
+          router.push({
+            pathname: `/child/${goal.childId}/goal/customize`,
+            params: {
+              goal_id: goal.id,
+            },
+          });
         }
-        router.push("/payment");
         break;
       case "nominee_configuration_pending":
         router.push("/nominees");

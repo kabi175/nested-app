@@ -70,11 +70,17 @@ public class OrderData {
   @JsonProperty("scheme")
   private String fundId;
 
+  /**
+   * flow: under_review-> (after few seconds) -> pending -> confirmed -> submitted -> (wait T1+1
+   * business day) -> successful -> reversed
+   *
+   * <p>failure is possible in any state
+   */
   @RequiredArgsConstructor
   public enum OrderState {
     CREATED("created"),
-    PENDING("pending"),
     UNDER_REVIEW("under_review"),
+    PENDING("pending"),
     CONFIRMED("confirmed"),
     SUBMITTED("submitted"),
     SUCCESSFUL("successful"),

@@ -8,7 +8,7 @@ export default function Layout() {
   const createInvestorMutation = useCreateInvestor();
 
   useEffect(() => {
-    if (user && !user.is_ready_to_invest) {
+    if (user && user.kycStatus === "completed" && !user.is_ready_to_invest) {
       createInvestorMutation.mutate(user, {
         onError: (error) => {
           console.error("Failed to create investor:", error);
@@ -25,7 +25,7 @@ export default function Layout() {
     user &&
     user.kycStatus === "completed" &&
     user.is_ready_to_invest &&
-    user.nominee_status !== "completed"
+    user.nominee_status === "unknown"
   ) {
     return <Redirect href="/nominees" />;
   }

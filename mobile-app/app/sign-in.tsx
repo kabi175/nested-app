@@ -1,9 +1,4 @@
 import { Ionicons } from "@expo/vector-icons";
-import {
-  FirebaseAuthTypes,
-  getAuth,
-  signInWithPhoneNumber,
-} from "@react-native-firebase/auth";
 import { Link, router } from "expo-router";
 
 import LoginCarousel from "@/components/auth/LoginCarousel";
@@ -20,6 +15,7 @@ import {
 } from "@ui-kitten/components";
 import { useEffect, useState } from "react";
 import { Alert, ImageProps, ScrollView, StyleSheet, View } from "react-native";
+import { useAuth0 } from "react-native-auth0";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 const LoadingIndicator = (props: ImageProps) => (
@@ -33,10 +29,10 @@ const LoadingIndicator = (props: ImageProps) => (
 export default function SignIn() {
   const [phoneNumber, setPhoneNumber] = useState("");
   const [countryCode, setCountryCode] = useState("+91");
+  const { sendSMSCode, authorizeWithSMS } = useAuth0();
 
   // If null, no SMS has been sent
-  const [confirm, setConfirm] =
-    useState<FirebaseAuthTypes.ConfirmationResult | null>(null);
+  const [confirm, setConfirm] = useState<boolean>(false);
 
   const [otpCode, setOtpCode] = useState("");
   const [resendTimer, setResendTimer] = useState(0);
@@ -58,11 +54,10 @@ export default function SignIn() {
       }
       setIsLoading(true);
       const fullPhoneNumber = `${countryCode}${phoneNumber}`;
-      const confirmation = await signInWithPhoneNumber(
-        getAuth(),
-        fullPhoneNumber
-      );
-      setConfirm(confirmation);
+      await sendSMSCode({
+        phoneNumber: fullPhoneNumber,
+      });
+      setConfirm(true);
       setResendTimer(30);
     } catch (error) {
       console.log("Error", error);
@@ -76,7 +71,13 @@ export default function SignIn() {
   // Handle confirm code button press
   async function confirmCode() {
     try {
-      await confirm?.confirm(otpCode);
+      const fullPhoneNumber = `${countryCode}${phoneNumber}`;
+      await authorizeWithSMS({
+        phoneNumber: fullPhoneNumber,
+        code: otpCode,
+        scope: "offline_access",
+      });
+      console.log("Authorization successful");
       router.replace("/name-input");
     } catch (error: any) {
       if (error.code === "auth/invalid-verification-code") {
@@ -84,6 +85,7 @@ export default function SignIn() {
       } else {
         Alert.alert("Error", "Failed to verify code. Please try again.");
       }
+      console.log("Error", error);
     }
   }
 
@@ -108,11 +110,10 @@ export default function SignIn() {
 
       // Resend OTP
       const fullPhoneNumber = `${countryCode}${phoneNumber}`;
-      const confirmation = await signInWithPhoneNumber(
-        getAuth(),
-        fullPhoneNumber
-      );
-      setConfirm(confirmation);
+      await sendSMSCode({
+        phoneNumber: fullPhoneNumber,
+      });
+      setConfirm(true);
 
       // Start timer for resend button (30 seconds)
       setResendTimer(30);
@@ -207,7 +208,6 @@ export default function SignIn() {
                     placeholder="Enter 10-digit mobile number"
                     value={phoneNumber}
                     onChangeText={setPhoneNumber}
-                    keyboardType="phone-pad"
                     maxLength={10}
                   />
                 </Layout>

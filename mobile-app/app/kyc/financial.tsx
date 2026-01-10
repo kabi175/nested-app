@@ -8,6 +8,7 @@ import {
   occupationOptions,
 } from "@/constants/kycFinancialOptions";
 import { QUERY_KEYS } from "@/constants/queryKeys";
+import { useAuthAxios } from "@/hooks/useAuthAxios";
 import { useInitKyc } from "@/hooks/useInitKyc";
 import { useUser } from "@/hooks/useUser";
 import { useKyc } from "@/providers/KycProvider";
@@ -27,6 +28,7 @@ export default function FinancialScreen() {
   const hasPrefilledRef = useRef(false);
   const totalSteps = 6;
   const currentStep = 5;
+  const api = useAuthAxios();
 
   useEffect(() => {
     if (!user || hasPrefilledRef.current) {
@@ -64,7 +66,7 @@ export default function FinancialScreen() {
           Pick<User, "occupation" | "income_source" | "income_slab" | "pep">
         >;
       }) => {
-        return updateUser(userId, financialData);
+        return updateUser(api, userId, financialData);
       },
       onSuccess: () => {
         queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.user] });

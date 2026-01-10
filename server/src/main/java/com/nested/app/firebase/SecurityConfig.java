@@ -1,28 +1,19 @@
 package com.nested.app.firebase;
 
-import com.nested.app.filter.FirebaseAuthFilter;
-import com.nested.app.utils.AppEnvironment;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.web.SecurityFilterChain;
-import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.web.cors.CorsConfigurationSource;
 
 @Configuration
 public class SecurityConfig {
 
-  private final FirebaseAuthFilter firebaseAuthFilter;
-  private final AppEnvironment appEnvironment;
   private final CorsConfigurationSource corsConfigurationSource;
 
-  public SecurityConfig(
-      FirebaseAuthFilter firebaseAuthFilter,
-      AppEnvironment appEnvironment,
-      CorsConfigurationSource corsConfigurationSource) {
-    this.firebaseAuthFilter = firebaseAuthFilter;
-    this.appEnvironment = appEnvironment;
+  public SecurityConfig(CorsConfigurationSource corsConfigurationSource) {
     this.corsConfigurationSource = corsConfigurationSource;
   }
 
@@ -39,8 +30,7 @@ public class SecurityConfig {
                     .anyRequest()
                     .authenticated() // everything else requires auth
             )
-        // add Firebase filter before Spring's own UsernamePasswordAuthenticationFilter
-        .addFilterBefore(firebaseAuthFilter, UsernamePasswordAuthenticationFilter.class);
+        .oauth2ResourceServer(oauth -> oauth.jwt(Customizer.withDefaults()));
 
     return http.build();
   }
