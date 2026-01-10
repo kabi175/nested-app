@@ -2,11 +2,11 @@ import {
   createPayment,
   fetchLumpsumPaymentUrl,
   fetchMandatePaymentUrl,
-  verifyPayment,
   PaymentOption,
-  Order,
+  verifyPayment,
 } from "@/api/paymentAPI";
 import { QUERY_KEYS } from "@/constants/queryKeys";
+import { Order } from "@/types";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useAuthAxios } from "./useAuthAxios";
 
@@ -36,7 +36,9 @@ export function useVerifyPayment() {
   return useMutation({
     mutationFn: (paymentId: string) => verifyPayment(api, paymentId),
     onSuccess: (_, paymentId) => {
-      queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.payment, paymentId] });
+      queryClient.invalidateQueries({
+        queryKey: [QUERY_KEYS.payment, paymentId],
+      });
     },
   });
 }
@@ -56,7 +58,3 @@ export function useFetchMandatePaymentUrl() {
     mutationFn: (paymentId: string) => fetchMandatePaymentUrl(api, paymentId),
   });
 }
-
-
-
-

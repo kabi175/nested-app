@@ -6,6 +6,7 @@ import { FundDetailHeader } from "@/components/goal/fund/FundDetailHeader";
 import { MoreOptionsMenu } from "@/components/goal/fund/MoreOptionsMenu";
 import { RedeemModal } from "@/components/goal/fund/RedeemModal";
 import { ThemedText } from "@/components/ThemedText";
+import { useAuthAxios } from "@/hooks/useAuthAxios";
 import { useFundData } from "@/hooks/useFundData";
 import { useGoal } from "@/hooks/useGoal";
 import {
@@ -37,7 +38,7 @@ export default function FundDetailScreen() {
   const { data: transactions, isLoading: transactionsLoading } =
     usePortfolioTransactions(goal_id, 0);
   const setGoalsForCustomize = useSetAtom(goalsForCustomizeAtom);
-
+  const api = useAuthAxios();
   const fundData = useFundData(holdings, transactions, fund_id);
 
   const [showMenu, setShowMenu] = useState(false);
@@ -113,7 +114,7 @@ export default function FundDetailScreen() {
         units = maxUnits;
       }
 
-      const orders = await redeemFund(goal_id, fund_id, amount, units);
+      const orders = await redeemFund(api, goal_id, fund_id, amount, units);
 
       if (orders && orders.length > 0) {
         const orderIds = orders.map((order) => order.id);

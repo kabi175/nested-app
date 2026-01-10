@@ -3,6 +3,7 @@ import { userAtom } from "@/atoms/user";
 import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
 import { QUERY_KEYS } from "@/constants/queryKeys";
+import { useAuthAxios } from "@/hooks/useAuthAxios";
 import { Ionicons } from "@expo/vector-icons";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import {
@@ -34,7 +35,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 export default function UserScreen() {
   const user = useAtomValue(userAtom);
   const queryClient = useQueryClient();
-
+  const api = useAuthAxios();
   const [formData, setFormData] = useState({
     firstName: user?.firstName || "",
     lastName: user?.lastName || "",
@@ -81,7 +82,7 @@ export default function UserScreen() {
       if (!user?.id) {
         throw new Error("User ID not found");
       }
-      return await updateUser(user.id, {
+      return await updateUser(api, user.id, {
         firstName: formData.firstName,
         lastName: formData.lastName,
         email: formData.email,

@@ -4,6 +4,7 @@ import {
 } from "@/api/bankAcountsAPI";
 import { userAtom } from "@/atoms/user";
 import UPIButton from "@/components/buttons/UPIButton";
+import { useAuthAxios } from "@/hooks/useAuthAxios";
 import { formatCurrency } from "@/utils/formatters";
 import { Button, Layout, Text } from "@ui-kitten/components";
 import { LinearGradient } from "expo-linear-gradient";
@@ -23,9 +24,10 @@ import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function BankAccountsScreen() {
   const currentUser = useAtomValue(userAtom);
+  const api = useAuthAxios();
   const handleContinue = async () => {
     if (!currentUser?.id) return;
-    const { redirect_url, id } = await linkBankAccount(currentUser?.id);
+    const { redirect_url, id } = await linkBankAccount(api, currentUser?.id);
     const supported = await Linking.canOpenURL(redirect_url);
     if (!supported) {
       Alert.alert(
@@ -35,7 +37,7 @@ export default function BankAccountsScreen() {
       return;
     }
     await Linking.openURL(redirect_url);
-    const status = await getLinkBankAccountStatus(currentUser?.id, id);
+    const status = await getLinkBankAccountStatus(api, currentUser?.id, id);
     if (status === "completed") {
       router.push("/bank-accounts/success");
     } else if (status === "failed") {

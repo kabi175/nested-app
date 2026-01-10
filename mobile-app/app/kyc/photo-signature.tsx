@@ -1,8 +1,8 @@
-import { api } from "@/api/client";
 import { getUserSignature, uploadUserSignature } from "@/api/userApi";
 import { InfoTooltip } from "@/components/ui/InfoTooltip";
 import { StepProgress } from "@/components/ui/StepProgress";
 import { QUERY_KEYS } from "@/constants/queryKeys";
+import { useAuthAxios } from "@/hooks/useAuthAxios";
 import { useUser } from "@/hooks/useUser";
 import { useKyc } from "@/providers/KycProvider";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
@@ -28,7 +28,7 @@ export default function PhotoSignatureScreen() {
   const [hasSignatureChanged, setHasSignatureChanged] = useState(false);
   const totalSteps = 6;
   const currentStep = 4;
-
+  const api = useAuthAxios();
   const normalizeSignatureUri = (uri: string | null | undefined) => {
     if (!uri) {
       return null;
@@ -61,7 +61,7 @@ export default function PhotoSignatureScreen() {
       if (!user?.id) {
         return Promise.resolve(null);
       }
-      return getUserSignature(user.id);
+      return getUserSignature(api, user.id);
     },
     enabled: !!user?.id,
     staleTime: 5 * 60 * 1000,
@@ -116,7 +116,7 @@ export default function PhotoSignatureScreen() {
       if (!user?.id) {
         throw new Error("User unavailable");
       }
-      await uploadUserSignature(user.id, { uri: fileUri });
+      await uploadUserSignature(api, user.id, { uri: fileUri });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.user] });

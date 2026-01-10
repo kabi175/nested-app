@@ -1,5 +1,6 @@
 import { fetchEsignUploadRedirectUrl } from "@/api/userApi";
 import { StepProgress } from "@/components/ui/StepProgress";
+import { useAuthAxios } from "@/hooks/useAuthAxios";
 import { useUser } from "@/hooks/useUser";
 import { Button, Layout, Spinner, Text } from "@ui-kitten/components";
 import { Redirect, useRouter } from "expo-router";
@@ -14,6 +15,7 @@ export default function EsignUploadScreen() {
   const [error, setError] = useState<string | null>(null);
   const totalSteps = 6;
   const currentStep = 6;
+  const api = useAuthAxios();
 
   const startEsign = useCallback(async () => {
     if (!user) {
@@ -24,7 +26,7 @@ export default function EsignUploadScreen() {
     setIsLaunching(true);
     setError(null);
     try {
-      const redirectUrl = await fetchEsignUploadRedirectUrl(user);
+      const redirectUrl = await fetchEsignUploadRedirectUrl(api, user);
       if (redirectUrl) {
         await WebBrowser.openBrowserAsync(redirectUrl, {
           toolbarColor: "#0A84FF",

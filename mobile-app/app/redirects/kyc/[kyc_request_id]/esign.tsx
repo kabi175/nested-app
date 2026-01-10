@@ -1,11 +1,12 @@
 import { getUser } from "@/api/userApi";
 import { userAtom } from "@/atoms/user";
 import { QUERY_KEYS } from "@/constants/queryKeys";
+import { useAuthAxios } from "@/hooks/useAuthAxios";
 import type { User } from "@/types/auth";
-import { useLocalSearchParams, useRouter } from "expo-router";
-import * as WebBrowser from "expo-web-browser";
 import { useQueryClient } from "@tanstack/react-query";
 import { Button, Layout, Spinner, Text } from "@ui-kitten/components";
+import { useLocalSearchParams, useRouter } from "expo-router";
+import * as WebBrowser from "expo-web-browser";
 import { useSetAtom } from "jotai";
 import React, { useEffect, useMemo, useState } from "react";
 import { SafeAreaView, View } from "react-native";
@@ -20,7 +21,7 @@ export default function EsignRedirectSuccessScreen() {
   const [loading, setLoading] = useState(true);
   const [status, setStatus] = useState<User["kycStatus"] | null>(null);
   const [error, setError] = useState<string | null>(null);
-
+  const api = useAuthAxios();
   useEffect(() => {
     WebBrowser.dismissBrowser();
   }, []);
@@ -31,7 +32,7 @@ export default function EsignRedirectSuccessScreen() {
       try {
         setLoading(true);
         setError(null);
-        const latestUser = await getUser();
+        const latestUser = await getUser(api);
         if (!active) {
           return;
         }
@@ -143,4 +144,3 @@ export default function EsignRedirectSuccessScreen() {
     </SafeAreaView>
   );
 }
-

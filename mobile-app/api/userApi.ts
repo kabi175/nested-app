@@ -57,7 +57,6 @@ export const updateUser = async (
   id: string,
   payload: Partial<User>
 ): Promise<User> => {
-  console.log("payload", payload);
   const userDTO = {
     first_name: payload.firstName,
     last_name: payload.lastName,
@@ -124,7 +123,10 @@ export const uploadUserSignature = async (
     },
   });
 };
-export const getUserSignature = async (api: AxiosInstance, id: string): Promise<string | null> => {
+export const getUserSignature = async (
+  api: AxiosInstance,
+  id: string
+): Promise<string | null> => {
   try {
     const response = await api.get(`/users/${id}/signature`, {
       responseType: "arraybuffer",
@@ -175,7 +177,10 @@ export const getUserSignature = async (api: AxiosInstance, id: string): Promise<
   }
 };
 
-export const initKyc = async (api: AxiosInstance, user: User): Promise<void> => {
+export const initKyc = async (
+  api: AxiosInstance,
+  user: User
+): Promise<void> => {
   await api.post(`/users/${user.id}/actions/init_kyc`);
 };
 
@@ -195,7 +200,10 @@ export const fetchEsignUploadRedirectUrl = async (
   return data.redirect_url;
 };
 
-export const createInvestor = async (api: AxiosInstance, user: User): Promise<void> => {
+export const createInvestor = async (
+  api: AxiosInstance,
+  user: User
+): Promise<void> => {
   await api.post(`/users/${user.id}/actions/create_investor`);
 };
 

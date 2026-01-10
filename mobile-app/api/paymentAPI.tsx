@@ -55,7 +55,7 @@ export const getPendingOrdersByGoalId = async (
   return data.data as Order[];
 };
 
-type PaymentOption = {
+export type PaymentOption = {
   payment_method: "upi" | "net_banking";
   bank_id: string;
 };
@@ -106,7 +106,10 @@ export const fetchLumpsumPaymentUrl = async (
   return data.redirect_url;
 };
 
-export const verifyPayment = async (api: AxiosInstance, paymentId: string): Promise<void> => {
+export const verifyPayment = async (
+  api: AxiosInstance,
+  paymentId: string
+): Promise<void> => {
   await api.post(`/payments/${paymentId}/actions/verify`, {
     id: paymentId,
     verification_code: "123456",
@@ -126,7 +129,10 @@ export const fetchMandatePaymentUrl = async (
   return data.redirect_url;
 };
 
-export const fetchPayment = async (api: AxiosInstance, paymentId: string): Promise<Payment> => {
+export const fetchPayment = async (
+  api: AxiosInstance,
+  paymentId: string
+): Promise<Payment> => {
   const { data } = await api.get(`/payments/${paymentId}`);
   // Handle both possible response structures: data.data or data
   const payment = data.data ?? data;
