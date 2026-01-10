@@ -1,11 +1,13 @@
 import { ThemedText } from "@/components/ThemedText";
 import { Education } from "@/types/education";
-import { ChevronDown } from "lucide-react-native";
-import React from "react";
+import { ChevronDown, Search, X } from "lucide-react-native";
+import React, { useEffect, useRef, useState } from "react";
 import {
   ActivityIndicator,
   Animated,
+  ScrollView,
   StyleSheet,
+  TextInput,
   TouchableOpacity,
   View,
 } from "react-native";
@@ -31,6 +33,37 @@ export function EducationDropdown({
   onSelect,
   goalId,
 }: EducationDropdownProps) {
+  const [searchQuery, setSearchQuery] = useState("");
+  const searchInputRef = useRef<TextInput>(null);
+
+  // Filter options based on search query
+  const filteredOptions = React.useMemo(() => {
+    if (!searchQuery.trim()) {
+      return options;
+    }
+    const query = searchQuery.toLowerCase().trim();
+    return options.filter((option) =>
+      option.name.toLowerCase().includes(query)
+    );
+  }, [options, searchQuery]);
+
+  // Clear search when dropdown is closed
+  useEffect(() => {
+    if (!isExpanded) {
+      setSearchQuery("");
+    }
+  }, [isExpanded]);
+
+  // Focus search input when dropdown expands
+  useEffect(() => {
+    if (isExpanded && !isLoading && searchInputRef.current) {
+      // Small delay to ensure the input is rendered
+      setTimeout(() => {
+        searchInputRef.current?.focus();
+      }, 100);
+    }
+  }, [isExpanded, isLoading]);
+
   return (
     <>
       <ThemedText style={styles.inputLabel}>{label}</ThemedText>
@@ -61,31 +94,58 @@ export function EducationDropdown({
               </ThemedText>
             </View>
           ) : (
-            options.map((option) => (
-              <Animated.View
-                key={option.id}
-                style={{
-                  opacity: isExpanded ? 1 : 0,
-                  transform: [
-                    {
-                      translateX: isExpanded ? 0 : -20,
-                    },
-                  ],
-                }}
-              >
-                <TouchableOpacity
-                  style={styles.dropdownOption}
-                  onPress={() => {
-                    onSelect(option);
-                    onToggle();
-                  }}
+            <>
+              {/* Search Input */}
+              <View style={styles.searchContainer}>
+                <Search size={18} color="#9CA3AF" />
+                <TextInput
+                  ref={searchInputRef}
+                  style={styles.searchInput}
+                  placeholder="Search options..."
+                  placeholderTextColor="#9CA3AF"
+                  value={searchQuery}
+                  onChangeText={setSearchQuery}
+                />
+                {searchQuery.length > 0 && (
+                  <TouchableOpacity onPress={() => setSearchQuery("")}>
+                    <X size={18} color="#9CA3AF" />
+                  </TouchableOpacity>
+                )}
+              </View>
+
+              {/* Options List */}
+              {filteredOptions.length > 0 ? (
+                <ScrollView
+                  nestedScrollEnabled
+                  style={styles.optionsList}
+                  contentContainerStyle={styles.optionsListContent}
+                  keyboardShouldPersistTaps="handled"
                 >
-                  <ThemedText style={styles.dropdownOptionText}>
-                    {option.name}
+                  {filteredOptions.map((item) => (
+                    <TouchableOpacity
+                      key={item.id}
+                      style={styles.dropdownOption}
+                      onPress={() => {
+                        onSelect(item);
+                        onToggle();
+                        setSearchQuery("");
+                      }}
+                      activeOpacity={0.7}
+                    >
+                      <ThemedText style={styles.dropdownOptionText}>
+                        {item.name}
+                      </ThemedText>
+                    </TouchableOpacity>
+                  ))}
+                </ScrollView>
+              ) : (
+                <View style={styles.emptyContainer}>
+                  <ThemedText style={styles.emptyText}>
+                    No options found
                   </ThemedText>
-                </TouchableOpacity>
-              </Animated.View>
-            ))
+                </View>
+              )}
+            </>
           )}
         </Animated.View>
       )}
@@ -124,6 +184,28 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.1,
     shadowRadius: 8,
     elevation: 4,
+    maxHeight: 300,
+  },
+  searchContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: "#F3F4F6",
+    gap: 8,
+  },
+  searchInput: {
+    flex: 1,
+    fontSize: 16,
+    color: "#1F2937",
+    paddingVertical: 0,
+  },
+  optionsList: {
+    maxHeight: 240,
+  },
+  optionsListContent: {
+    paddingBottom: 0,
   },
   dropdownOption: {
     padding: 16,
@@ -144,5 +226,14 @@ const styles = StyleSheet.create({
   loadingText: {
     fontSize: 14,
     color: "#6B7280",
+  },
+  emptyContainer: {
+    padding: 24,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  emptyText: {
+    fontSize: 14,
+    color: "#9CA3AF",
   },
 });
