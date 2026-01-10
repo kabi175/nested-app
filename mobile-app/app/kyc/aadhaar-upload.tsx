@@ -39,8 +39,12 @@ export default function AadhaarUploadScreen() {
           dismissButtonStyle: "done",
           readerMode: false,
         });
-        await refetch();
+      }
+      await refetch();
+      if (user?.kycStatus === "esign_pending") {
         router.push("/kyc/esign-upload");
+      } else if (user?.kycStatus === "submitted") {
+        router.push("/kyc/waiting-for-approval");
       }
     } catch (err) {
       console.error("Failed to start Aadhaar upload flow", err);
