@@ -79,7 +79,7 @@ function RootNavigator() {
         <Stack.Screen name="payment" />
         <Stack.Screen name="bank-accounts" />
         <Stack.Screen name="+not-found" />
-        {/* <Stack.Screen name="name-input" options={{ headerShown: false }} /> */}
+        <Stack.Screen name="name-input" options={{ headerShown: false }} />
       </Stack.Protected>
 
       <Stack.Protected guard={!user}>

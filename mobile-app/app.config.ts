@@ -6,9 +6,7 @@ module.exports = () => ({
     icon: "./assets/images/icon.png",
     scheme: "nested",
     android: {
-      googleServicesFile:
-        process.env.GOOGLE_SERVICES_JSON ?? "./google-services.json",
-      package: "com.nexted.app",
+      package: "com.nested.app",
       intentFilters: {
         action: "VIEW",
         category: ["BROWSABLE", "DEFAULT"],
@@ -20,8 +18,7 @@ module.exports = () => ({
       },
     },
     ios: {
-      googleServicesFile: "./GoogleService-Info.plist",
-      bundleIdentifier: "com.nexted.app",
+      bundleIdentifier: "com.nested.app",
       infoPlist: {
         LSApplicationQueriesSchemes: ["whatsapp"],
       },
