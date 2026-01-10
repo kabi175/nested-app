@@ -48,7 +48,7 @@ export default function AddManualScreen() {
           Alert.alert("Success", "Bank account added successfully", [
             {
               text: "OK",
-              onPress: () => router.replace("/bank-accounts/list"),
+              onPress: () => router.back(),
             },
           ]);
         },
