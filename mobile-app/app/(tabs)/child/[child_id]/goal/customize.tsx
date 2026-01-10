@@ -204,7 +204,7 @@ export default function CustomizeInvestmentScreen() {
 
     setCart(orderResponse);
 
-    router.push("/child/1/goal/loading");
+    router.replace("/child/1/goal/loading");
   };
 
   const formatDateForSchedule = (date: Date) => {
