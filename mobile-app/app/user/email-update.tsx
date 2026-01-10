@@ -14,10 +14,10 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
-import { userAtom } from "@/atoms/user";
 import { OtpInput } from "@/components/ui/OtpInput";
 import { useAuth } from "@/hooks/auth";
 import { useAuthAxios } from "@/hooks/useAuthAxios";
+import { useUser } from "@/hooks/useUser";
 import { useUpdateEmail } from "@/hooks/useUserMutations";
 import {
   setCurrentAction,
@@ -26,13 +26,12 @@ import {
   type MfaAction,
 } from "@/services/mfaService";
 import { Input, Spinner, Text } from "@ui-kitten/components";
-import { useAtomValue } from "jotai";
 
 type Step = "email" | "mfa" | "success";
 
 export default function EmailUpdateScreen() {
-  const auth = useAuth();
-  const user = useAtomValue(userAtom);
+  const { isSignedIn } = useAuth();
+  const { data: user } = useUser();
   const api = useAuthAxios();
   const updateEmailMutation = useUpdateEmail();
   const [step, setStep] = useState<Step>("email");
@@ -93,7 +92,7 @@ export default function EmailUpdateScreen() {
       return;
     }
 
-    if (auth.user?.email && trimmedEmail === auth.user.email.toLowerCase()) {
+    if (user?.email && trimmedEmail === user.email.toLowerCase()) {
       setEmailError("This is already your current email address");
       return;
     }
@@ -106,7 +105,7 @@ export default function EmailUpdateScreen() {
   };
 
   const sendOTP = async () => {
-    if (!auth.user) {
+    if (!isSignedIn) {
       Alert.alert("Error", "Please sign in to continue.", [
         {
           text: "OK",
