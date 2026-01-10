@@ -18,8 +18,6 @@ export default function TabLayout() {
     return <Redirect href="/sign-in" />;
   }
 
-  console.log("User:", user);
-
   return (
     <Tabs
       screenOptions={{
