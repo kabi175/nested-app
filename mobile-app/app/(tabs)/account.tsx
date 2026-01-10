@@ -1,6 +1,7 @@
 import { userAtom } from "@/atoms/user";
 import { ThemedText } from "@/components/ThemedText";
-import { useAuth, useSignOut } from "@/hooks/auth";
+import { useSignOut } from "@/hooks/auth";
+import { useUser } from "@/hooks/useUser";
 import { clearNomineeAtoms } from "@/utils/nominee";
 import { openWhatsApp } from "@/utils/whtsapp";
 import { Ionicons } from "@expo/vector-icons";
@@ -30,7 +31,7 @@ interface MenuItem {
 }
 
 export default function AccountScreen() {
-  const auth = useAuth();
+  const { data: user } = useUser();
   const { signOut } = useSignOut();
   const queryClient = useQueryClient();
   const setUser = useSetAtom(userAtom);
@@ -164,7 +165,7 @@ export default function AccountScreen() {
             <View style={styles.avatarContainer}>
               <View style={styles.avatar}>
                 <Text style={styles.avatarText}>
-                  {getInitials(auth.user?.displayName || "User")}
+                  {getInitials(user?.firstName || "User")}
                 </Text>
               </View>
             </View>
@@ -172,16 +173,14 @@ export default function AccountScreen() {
             {/* User Details */}
             <View style={styles.userDetails}>
               <ThemedText style={styles.userName}>
-                {auth.user?.displayName || "User"}
+                {user?.firstName || "User"}
               </ThemedText>
-              {auth.user?.email && (
-                <ThemedText style={styles.userEmail}>
-                  {auth.user?.email}
-                </ThemedText>
+              {user?.email && (
+                <ThemedText style={styles.userEmail}>{user?.email}</ThemedText>
               )}
-              {auth.user?.phoneNumber && (
+              {user?.phone_number && (
                 <ThemedText style={styles.userPhone}>
-                  {auth.user?.phoneNumber}
+                  {user?.phone_number}
                 </ThemedText>
               )}
             </View>
