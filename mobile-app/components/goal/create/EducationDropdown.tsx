@@ -54,8 +54,11 @@ export function EducationDropdown({
           ]}
         >
           {isLoading ? (
-            <View style={styles.dropdownOption}>
+            <View style={styles.loadingContainer}>
               <ActivityIndicator size="small" color="#2563EB" />
+              <ThemedText style={styles.loadingText}>
+                Loading options...
+              </ThemedText>
             </View>
           ) : (
             options.map((option) => (
@@ -131,5 +134,15 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: "#1F2937",
   },
+  loadingContainer: {
+    padding: 24,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 12,
+  },
+  loadingText: {
+    fontSize: 14,
+    color: "#6B7280",
+  },
 });
-
