@@ -6,7 +6,7 @@ import ShareApp from "@/components/ShareApp";
 import SuperFDList from "@/components/SuperFDList";
 import WhatParentsSay from "@/components/WhatParentsSay";
 import WhyParentTrustUs from "@/components/WhyParentTrustUs";
-import { useAuth } from "@/hooks/auth";
+import { useUser } from "@/hooks/useUser";
 import { Divider, Layout, Text } from "@ui-kitten/components";
 import { router } from "expo-router";
 import { StatusBar } from "expo-status-bar";
@@ -16,7 +16,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import EducationCostEstimator from "./EducationCostEstimator";
 
 export default function NestedIntro() {
-  const auth = useAuth();
+  const { data: user } = useUser();
   const scrollViewRef = useRef<ScrollView>(null);
   const superFDListYPosition = useRef<number>(0);
   const layoutYPosition = useRef<number>(0);
@@ -45,7 +45,7 @@ export default function NestedIntro() {
           showsVerticalScrollIndicator={false}
           contentContainerStyle={styles.scrollContent}
         >
-          <Text category="h6"> Hello, {auth.user?.displayName} </Text>
+          <Text category="h6"> Hello, {user?.firstName} </Text>
           <EducationCostEstimator onInvestNowPress={handleScrollToSuperFD} />
           <Layout
             style={styles.content}
