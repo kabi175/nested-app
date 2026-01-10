@@ -18,7 +18,6 @@ import {
   pendingNomineeIdAtom,
 } from "@/atoms/nominee";
 import { OtpInput } from "@/components/ui/OtpInput";
-import { useAuth } from "@/hooks/auth";
 import { useAuthAxios } from "@/hooks/useAuthAxios";
 import { useOptOutNominee } from "@/hooks/useOptOutNominee";
 import { useUpsertNominees } from "@/hooks/useUpsertNominees";
@@ -33,11 +32,10 @@ import { Spinner, Text } from "@ui-kitten/components";
 import { useAtom, useAtomValue, useSetAtom } from "jotai";
 
 export default function NomineeVerificationScreen() {
-  const auth = useAuth();
   const api = useAuthAxios();
   const [nomineeList, setNomineeList] = useAtom(nomineeListAtom);
   const pendingAction = useAtomValue(pendingActionAtom);
-  const [pendingNomineeId, setPendingNomineeId] = useAtom(pendingNomineeIdAtom);
+  const setPendingNomineeId = useSetAtom(pendingNomineeIdAtom);
   const setPendingAction = useSetAtom(pendingActionAtom);
   const optOutNomineeMutation = useOptOutNominee();
   const upsertNomineesMutation = useUpsertNominees();
@@ -61,18 +59,11 @@ export default function NomineeVerificationScreen() {
 
   // Auto-send OTP when component mounts
   useEffect(() => {
-    if (auth.isLoaded && auth.user && !mfaSessionId && !isLoading) {
+    if (!mfaSessionId && !isLoading) {
       sendOTP();
-    } else if (!auth.user && auth.isLoaded) {
-      Alert.alert("Error", "Please sign in to continue.", [
-        {
-          text: "OK",
-          onPress: () => router.back(),
-        },
-      ]);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [auth.isLoaded, auth.user]);
+  }, []);
 
   // Animation on mount
   useEffect(() => {
@@ -93,12 +84,6 @@ export default function NomineeVerificationScreen() {
   }, []);
 
   const sendOTP = async () => {
-    if (!auth.user) {
-      Alert.alert("Error", "Please sign in to continue.");
-      router.back();
-      return;
-    }
-
     try {
       setIsLoading(true);
       // Set action for nominee verification
