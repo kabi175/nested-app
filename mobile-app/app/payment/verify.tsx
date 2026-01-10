@@ -123,12 +123,10 @@ export default function PaymentVerificationScreen() {
   };
 
   const handleOtpChange = (otp: string) => {
-    console.log("OTP change", otp, mfaSessionId);
     setOtpCode(otp);
   };
 
   const handleOtpComplete = (otp: string) => {
-    console.log("OTP complete", otp);
     setOtpCode(otp);
   };
 
