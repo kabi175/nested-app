@@ -8,7 +8,7 @@ export default function NestedFooter() {
   };
 
   const handlePhonePress = () => {
-    Linking.openURL("tel:+919876543210");
+    Linking.openURL("tel:+916305209273");
   };
 
   const handleTermsPress = () => {
