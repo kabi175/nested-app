@@ -1,14 +1,19 @@
-import { getUser, updateUser } from "@/api/userApi";
 import { GenericSelect } from "@/components/ui/GenericSelect";
 import { InfoTooltip } from "@/components/ui/InfoTooltip";
 import { StepProgress } from "@/components/ui/StepProgress";
-import { useAuth } from "@/hooks/auth";
-import { useAuthAxios } from "@/hooks/useAuthAxios";
+import { useUser } from "@/hooks/useUser";
+import { useUpdateUser } from "@/hooks/useUserMutations";
 import { useKyc } from "@/providers/KycProvider";
 import { Button, Datepicker, Input, Text } from "@ui-kitten/components";
 import { useRouter } from "expo-router";
-import React, { useEffect, useRef, useState } from "react";
-import { KeyboardAvoidingView, Platform, ScrollView, View } from "react-native";
+import React, { useEffect, useState } from "react";
+import {
+  Alert,
+  KeyboardAvoidingView,
+  Platform,
+  ScrollView,
+  View,
+} from "react-native";
 
 const genderOptions = [
   { label: "Male", value: "male" },
@@ -23,13 +28,15 @@ const maritalStatusOptions = [
 ];
 
 export default function BasicDetailsScreen() {
-  const { user } = useAuth();
-  const api = useAuthAxios();
   const { data, update, validateBasic } = useKyc();
+  const { data: apiUser } = useUser();
+  const {
+    mutateAsync: updateUser,
+    isPending: isUpdatePending,
+    isError,
+  } = useUpdateUser();
   const router = useRouter();
   const [errors, setErrors] = useState<Record<string, string>>({});
-  const [loading, setLoading] = useState<boolean>(false);
-  const userIdRef = useRef<string | null>(null);
   const totalSteps = 6;
   const currentStep = 1;
   const maxDate = new Date();
@@ -38,10 +45,7 @@ export default function BasicDetailsScreen() {
   useEffect(() => {
     let mounted = true;
     (async () => {
-      setLoading(true);
-      const apiUser = await getUser(api);
       if (mounted && apiUser) {
-        userIdRef.current = apiUser.id;
         // Map API user to form values
         const fullName = [apiUser.firstName, apiUser.lastName]
           .filter(Boolean)
@@ -51,51 +55,52 @@ export default function BasicDetailsScreen() {
           fullName: fullName,
           dateOfBirth: apiUser.dob || null,
           gender: apiUser.gender || "",
-          email: user?.email || "",
+          email: apiUser.email || "",
           mobile: apiUser.phone_number || "",
           father_name: apiUser.father_name || "",
           marital_status: apiUser.marital_status || "",
         });
       }
-      if (mounted) setLoading(false);
     })();
     return () => {
       mounted = false;
     };
-  }, [update, user]);
+  }, [update, apiUser]);
 
   const onContinue = () => {
     const v = validateBasic();
     setErrors(v.errors);
     if (!v.isValid) return;
     (async () => {
-      try {
-        setLoading(true);
-        const id = userIdRef.current;
-        // Split full name
-        const parts = (data.basic.fullName || "").trim().split(/\s+/);
-        const firstName = parts[0] || "";
-        const lastName = parts.slice(1).join(" ");
-        // Map gender to API
-        const genderLower = data.basic.gender;
-        if (id) {
-          await updateUser(api, id, {
-            firstName,
-            lastName,
-            email: user?.email || data.basic.email,
-            phone_number: data.basic.mobile,
-            dob: data.basic.dateOfBirth || null,
-            gender: (genderLower as any) || undefined,
-            father_name: data.basic.father_name || undefined,
-            marital_status: (data.basic.marital_status as any) || undefined,
-          });
-        }
-        router.push("/kyc/identity");
-      } catch {
-        // Could add a toast/snackbar; for now, keep inline status via caption
-      } finally {
-        setLoading(false);
+      // Split full name
+      const parts = (data.basic.fullName || "").trim().split(/\s+/);
+      const firstName = parts[0] || "";
+      const lastName = parts.slice(1).join(" ");
+      // Map gender to API
+      const genderLower = data.basic.gender;
+      if (!apiUser) {
+        return;
       }
+      await updateUser({
+        id: apiUser.id,
+        payload: {
+          firstName,
+          lastName,
+          email: data.basic.email,
+          phone_number: data.basic.mobile,
+          dob: data.basic.dateOfBirth || null,
+          gender: (genderLower as any) || undefined,
+          father_name: data.basic.father_name || undefined,
+          marital_status: (data.basic.marital_status as any) || undefined,
+        },
+      });
+
+      if (isError) {
+        Alert.alert("Error", "Failed to update user. Please try again.");
+        return;
+      }
+
+      router.push("/kyc/identity");
     })();
   };
 
@@ -224,7 +229,7 @@ export default function BasicDetailsScreen() {
             <InfoTooltip content="We'll send verification and KYC status updates to this email." />
           </View>
           <Input
-            value={user?.email || ""}
+            value={apiUser?.email || ""}
             onChangeText={(v) =>
               update("basic", { email: v, emailOtpVerified: false })
             }
@@ -269,7 +274,11 @@ export default function BasicDetailsScreen() {
           >
             Back
           </Button>
-          <Button style={{ flex: 1 }} disabled={loading} onPress={onContinue}>
+          <Button
+            style={{ flex: 1 }}
+            disabled={isUpdatePending}
+            onPress={onContinue}
+          >
             Continue
           </Button>
         </View>
