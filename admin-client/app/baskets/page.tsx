@@ -183,8 +183,9 @@ export default function BasketsPage() {
     setIsSubmitting(true);
     try {
       // Create payload according to BasketDTO structure
+      // Backend expects "id" not "fundId" (see @JsonProperty("id") in BasketFundDTO)
       const fundsPayload = selectedFunds.map(sf => ({
-        fundId: parseInt(sf.fundId),
+        id: parseInt(sf.fundId),
         allocationPercentage: sf.percentage,
       }));
 
@@ -261,8 +262,9 @@ export default function BasketsPage() {
 
     setIsSubmitting(true);
     try {
+      // Backend expects "id" not "fundId" (see @JsonProperty("id") in BasketFundDTO)
       const fundsPayload = selectedFunds.map(sf => ({
-        fundId: parseInt(sf.fundId),
+        id: parseInt(sf.fundId),
         allocationPercentage: sf.percentage,
       }));
 

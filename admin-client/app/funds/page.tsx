@@ -48,6 +48,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 export default function FundsPage() {
   const { toast } = useToast();
   const [funds, setFunds] = useState<Fund[]>([]);
+  const [allFunds, setAllFunds] = useState<Fund[]>([]); // All funds for search across all pages
   const [search, setSearch] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -75,30 +76,53 @@ export default function FundsPage() {
     fetchStats();
   }, []);
 
-  // Fetch funds from API - wait for stats to be loaded first
+  // Fetch all funds for search when filter changes
   useEffect(() => {
-    if (!loadingStats) {
+    fetchAllFundsForSearch();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeOnlyFilter]);
+
+  // Reset page when search changes
+  useEffect(() => {
+    setCurrentPage(0);
+  }, [search]);
+
+  // Fetch paginated funds from API - wait for stats to be loaded first
+  useEffect(() => {
+    if (!loadingStats && !search.trim()) {
+      // Only fetch paginated funds if not searching (search uses allFunds)
       fetchFunds();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [currentPage, pageSize, activeOnlyFilter, loadingStats]);
+  }, [currentPage, pageSize, activeOnlyFilter, loadingStats, search]);
 
   const fetchStats = async () => {
     setLoadingStats(true);
     try {
       // Fetch all funds to get accurate stats
       const allFundsResponse = await getFunds({ size: 10000 }, false);
-      const allFunds = allFundsResponse.funds;
+      const allFundsData = allFundsResponse.funds;
       
       setStats({
-        total: allFunds.length,
-        active: allFunds.filter(f => f.isActive).length,
-        inactive: allFunds.filter(f => !f.isActive).length,
+        total: allFundsData.length,
+        active: allFundsData.filter(f => f.isActive).length,
+        inactive: allFundsData.filter(f => !f.isActive).length,
       });
     } catch (err) {
       console.error('Error fetching fund stats:', err);
     } finally {
       setLoadingStats(false);
+    }
+  };
+
+  const fetchAllFundsForSearch = async () => {
+    try {
+      // Fetch all funds for search functionality
+      const activeOnly = activeOnlyFilter === true;
+      const allFundsResponse = await getFunds({ size: 10000 }, activeOnly);
+      setAllFunds(allFundsResponse.funds);
+    } catch (err) {
+      console.error('Error fetching all funds for search:', err);
     }
   };
 
@@ -141,11 +165,21 @@ export default function FundsPage() {
     }
   };
 
-  const filteredFunds = funds.filter(fund =>
-    (fund.displayName || fund.name).toLowerCase().includes(search.toLowerCase()) ||
-    fund.id.toLowerCase().includes(search.toLowerCase()) ||
-    (fund.description || '').toLowerCase().includes(search.toLowerCase())
-  );
+  // Filter all funds based on search, then paginate
+  const filteredAllFunds = search.trim()
+    ? allFunds.filter(fund =>
+        (fund.displayName || fund.name).toLowerCase().includes(search.toLowerCase()) ||
+        fund.id.toLowerCase().includes(search.toLowerCase()) ||
+        (fund.description || '').toLowerCase().includes(search.toLowerCase())
+      )
+    : []; // Will use funds from pagination if no search
+
+  // Paginate the filtered results when searching, or use current page funds when not searching
+  const startIndex = currentPage * pageSize;
+  const endIndex = startIndex + pageSize;
+  const filteredFunds = search.trim()
+    ? filteredAllFunds.slice(startIndex, endIndex)
+    : funds; // If no search, show current page funds
 
   const handleEdit = (fund: Fund) => {
     setEditingFundId(fund.id);
@@ -522,7 +556,11 @@ export default function FundsPage() {
             className="flex items-center justify-between"
           >
             <div className="text-sm text-slate-600 dark:text-slate-400">
-              Showing {currentPage * pageSize + 1} to {Math.min((currentPage + 1) * pageSize, pageInfo.totalElements)} of {pageInfo.totalElements} funds
+              {search.trim() ? (
+                <>Showing {startIndex + 1} to {Math.min(endIndex, filteredAllFunds.length)} of {filteredAllFunds.length} funds {filteredAllFunds.length !== (activeOnlyFilter === true ? stats.active : activeOnlyFilter === false ? stats.inactive : stats.total) && '(filtered)'}</>
+              ) : (
+                <>Showing {currentPage * pageSize + 1} to {Math.min((currentPage + 1) * pageSize, pageInfo?.totalElements || 0)} of {pageInfo?.totalElements || 0} funds</>
+              )}
             </div>
             <Pagination>
               <PaginationContent>
@@ -537,56 +575,84 @@ export default function FundsPage() {
                   />
                 </PaginationItem>
                 
-                {Array.from({ length: Math.min(5, pageInfo.totalPages) }, (_, i) => {
-                  let pageNum;
-                  if (pageInfo.totalPages <= 5) {
-                    pageNum = i;
-                  } else if (currentPage < 3) {
-                    pageNum = i;
-                  } else if (currentPage > pageInfo.totalPages - 4) {
-                    pageNum = pageInfo.totalPages - 5 + i;
-                  } else {
-                    pageNum = currentPage - 2 + i;
-                  }
+                {(() => {
+                  const totalPages = search.trim() 
+                    ? Math.ceil(filteredAllFunds.length / pageSize)
+                    : (pageInfo?.totalPages || 1);
                   
                   return (
-                    <PaginationItem key={pageNum}>
-                      <PaginationLink
-                        href="#"
-                        onClick={(e) => {
-                          e.preventDefault();
-                          setCurrentPage(pageNum);
-                        }}
-                        isActive={currentPage === pageNum}
-                        className="cursor-pointer"
-                      >
-                        {pageNum + 1}
-                      </PaginationLink>
-                    </PaginationItem>
+                    <>
+                      {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                        let pageNum;
+                        if (totalPages <= 5) {
+                          pageNum = i;
+                        } else if (currentPage < 3) {
+                          pageNum = i;
+                        } else if (currentPage > totalPages - 4) {
+                          pageNum = totalPages - 5 + i;
+                        } else {
+                          pageNum = currentPage - 2 + i;
+                        }
+                        
+                        return (
+                          <PaginationItem key={pageNum}>
+                            <PaginationLink
+                              href="#"
+                              onClick={(e) => {
+                                e.preventDefault();
+                                setCurrentPage(pageNum);
+                              }}
+                              isActive={currentPage === pageNum}
+                              className="cursor-pointer"
+                            >
+                              {pageNum + 1}
+                            </PaginationLink>
+                          </PaginationItem>
+                        );
+                      })}
+                      
+                      <PaginationItem>
+                        <PaginationNext 
+                          href="#"
+                          onClick={(e) => {
+                            e.preventDefault();
+                            const totalPages = search.trim() 
+                              ? Math.ceil(filteredAllFunds.length / pageSize)
+                              : (pageInfo?.totalPages || 1);
+                            if (currentPage < totalPages - 1) setCurrentPage(currentPage + 1);
+                          }}
+                          className={(() => {
+                            const totalPages = search.trim() 
+                              ? Math.ceil(filteredAllFunds.length / pageSize)
+                              : (pageInfo?.totalPages || 1);
+                            return currentPage >= totalPages - 1 ? 'pointer-events-none opacity-50' : 'cursor-pointer';
+                          })()}
+                        />
+                      </PaginationItem>
+                    </>
                   );
-                })}
-                
-                <PaginationItem>
-                  <PaginationNext 
-                    href="#"
-                    onClick={(e) => {
-                      e.preventDefault();
-                      if (currentPage < pageInfo.totalPages - 1) setCurrentPage(currentPage + 1);
-                    }}
-                    className={currentPage >= pageInfo.totalPages - 1 ? 'pointer-events-none opacity-50' : 'cursor-pointer'}
-                  />
-                </PaginationItem>
+                })()}
               </PaginationContent>
             </Pagination>
           </motion.div>
         )}
         
         {/* Show message if no pagination needed but there are funds */}
-        {pageInfo && pageInfo.totalPages <= 1 && pageInfo.totalElements > 0 && (
-          <div className="text-sm text-slate-600 dark:text-slate-400 text-center">
-            Showing all {pageInfo.totalElements} funds
-          </div>
-        )}
+        {(() => {
+          const totalPages = search.trim() 
+            ? Math.ceil(filteredAllFunds.length / pageSize)
+            : (pageInfo?.totalPages || 1);
+          const totalElements = search.trim()
+            ? filteredAllFunds.length
+            : (pageInfo?.totalElements || 0);
+          
+          return totalPages <= 1 && totalElements > 0 && (
+            <div className="text-sm text-slate-600 dark:text-slate-400 text-center">
+              Showing all {totalElements} funds
+            </div>
+          );
+        })()}
+        
 
         {/* Edit Dialog */}
         <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>

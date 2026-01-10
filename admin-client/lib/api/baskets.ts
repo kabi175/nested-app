@@ -6,7 +6,9 @@
 import { apiClient, ApiResponse, PaginationParams, PageInfo } from '../api-client';
 
 export interface BasketFund {
-  fundId?: number;
+  id?: number; // Backend sends "id" (via @JsonProperty("id") on fundId)
+  fundId?: number; // Legacy support
+  name?: string; // Backend sends name directly (fund label)
   fund?: {
     id: string;
     code?: string;
@@ -31,7 +33,7 @@ export interface CreateBasketDTO {
   title: string;
   years?: number;
   funds: {
-    fundId: number;
+    id: number; // Backend expects "id" (see @JsonProperty("id") in BasketFundDTO)
     allocationPercentage: number;
   }[];
 }
@@ -41,7 +43,7 @@ export interface UpdateBasketDTO {
   title: string;
   years?: number;
   funds: {
-    fundId: number;
+    id: number; // Backend expects "id" (see @JsonProperty("id") in BasketFundDTO)
     allocationPercentage: number;
   }[];
 }
@@ -87,9 +89,10 @@ export async function getBaskets(
       .filter(basket => basket && basket.id && basket.title) // Filter out invalid baskets
       .map(basket => {
         const funds = basket.funds?.map(f => {
-          // Handle both new structure (fundId) and old structure (fund.id)
-          const id = f.fund?.id || (f.fundId ? String(f.fundId) : '');
-          const name = f.fund?.displayName || f.fund?.name || 'Unknown Fund';
+          // Backend sends: { id: number, name: string, allocationPercentage: number }
+          // id is fundId serialized as "id" due to @JsonProperty("id")
+          const id = f.id ? String(f.id) : (f.fund?.id || (f.fundId ? String(f.fundId) : ''));
+          const name = f.name || f.fund?.displayName || f.fund?.name || 'Unknown Fund';
           const percentage = f.allocationPercentage || 0;
           
           return {
@@ -136,9 +139,10 @@ export async function getBasketById(id: string): Promise<Basket> {
     }
     
     const funds = basket.funds?.map(f => {
-      // Handle both new structure (fundId) and old structure (fund.id)
-      const fundId = f.fund?.id || (f.fundId ? String(f.fundId) : '');
-      const fundName = f.fund?.displayName || f.fund?.name || 'Unknown Fund';
+      // Backend sends: { id: number, name: string, allocationPercentage: number }
+      // id is fundId serialized as "id" due to @JsonProperty("id")
+      const fundId = f.id ? String(f.id) : (f.fund?.id || (f.fundId ? String(f.fundId) : ''));
+      const fundName = f.name || f.fund?.displayName || f.fund?.name || 'Unknown Fund';
       const percentage = f.allocationPercentage || 0;
       
       return {
