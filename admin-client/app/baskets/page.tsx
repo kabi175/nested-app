@@ -23,7 +23,7 @@ import {
   Download,
   X
 } from 'lucide-react';
-import { getBaskets, createBasket, updateBasket, deleteBasket, Basket, getActiveFunds, Fund } from '@/lib/api';
+import { getBaskets, createBasket, updateBasket, deleteBasket, Basket, getFunds, Fund } from '@/lib/api';
 import { useToast } from '@/hooks/use-toast';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -107,9 +107,10 @@ export default function BasketsPage() {
   const fetchFunds = async () => {
     setLoadingFunds(true);
     try {
-      const funds = await getActiveFunds();
+      // Fetch all funds for admin to select from (not just active)
+      const response = await getFunds({ size: 5000 }, false);
       // Sort funds alphabetically by displayName or name
-      const sortedFunds = funds.sort((a, b) => {
+      const sortedFunds = response.funds.sort((a, b) => {
         const nameA = (a.displayName || a.name).toLowerCase();
         const nameB = (b.displayName || b.name).toLowerCase();
         return nameA.localeCompare(nameB);

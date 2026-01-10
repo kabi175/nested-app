@@ -14,6 +14,7 @@ dist-ssr
 # next.js
 /.next/
 /out/
+.env
 
 # Editor directories and files
 .vscode/*
