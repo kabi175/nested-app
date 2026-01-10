@@ -1,15 +1,27 @@
+import { useCreateInvestor } from "@/hooks/useCreateInvestor";
 import { useUser } from "@/hooks/useUser";
 import { Button, Layout, Text } from "@ui-kitten/components";
 import { useRouter } from "expo-router";
-import React from "react";
+import React, { useEffect } from "react";
 import { Alert, StyleSheet, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function KycIntroScreen() {
   const router = useRouter();
   const { data: user, isLoading: isUserLoading } = useUser();
+  const createInvestorMutation = useCreateInvestor();
 
   const isButtonDisabled = isUserLoading;
+
+  useEffect(() => {
+    if (user && user.kycStatus === "completed" && !user.is_ready_to_invest) {
+      createInvestorMutation.mutate(user, {
+        onError: (error) => {
+          console.error("Failed to create investor:", error);
+        },
+      });
+    }
+  }, [user, createInvestorMutation]);
 
   const handleContinue = async () => {
     if (!user?.email) {

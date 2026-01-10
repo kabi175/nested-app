@@ -5,10 +5,11 @@ import {
 import { userAtom } from "@/atoms/user";
 import UPIButton from "@/components/buttons/UPIButton";
 import { useAuthAxios } from "@/hooks/useAuthAxios";
+import { useUser } from "@/hooks/useUser";
 import { formatCurrency } from "@/utils/formatters";
 import { Button, Layout, Text } from "@ui-kitten/components";
 import { LinearGradient } from "expo-linear-gradient";
-import { Link, router } from "expo-router";
+import { Link, Redirect, router } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import { useAtomValue } from "jotai";
 import { ArrowRight, CreditCard, Lock, Sparkles } from "lucide-react-native";
@@ -23,6 +24,7 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function BankAccountsScreen() {
+  const { data: user, isLoading: isUserLoading } = useUser();
   const currentUser = useAtomValue(userAtom);
   const api = useAuthAxios();
   const handleContinue = async () => {
@@ -48,6 +50,9 @@ export default function BankAccountsScreen() {
       Alert.alert("Error", "Failed to link bank account. Please try again.");
     }
   };
+  if (!isUserLoading && user?.is_ready_to_invest !== true) {
+    return <Redirect href="/kyc" />;
+  }
   return (
     <SafeAreaView style={styles.safeArea} edges={["top"]}>
       <StatusBar style="auto" backgroundColor="#fff" />
