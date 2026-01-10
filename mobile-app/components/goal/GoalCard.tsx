@@ -1,5 +1,6 @@
 import { getPendingOrdersByGoalId } from "@/api/paymentAPI";
 import { cartAtom } from "@/atoms/cart";
+import { goalsForCustomizeAtom } from "@/atoms/goals";
 import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
 import { QUERY_KEYS } from "@/constants/queryKeys";
@@ -67,11 +68,13 @@ export function GoalCard({ goal }: GoalCardProps) {
     typeof goal.monthlySip === "number" &&
     goal.monthlySip !== null &&
     goal.monthlySip > 0;
+  const setGoalsForCustomize = useSetAtom(goalsForCustomizeAtom);
 
   const handleGoalPress = async () => {
     if (goal.status === "draft") {
+      setGoalsForCustomize([goal]);
       router.push({
-        pathname: `/child/${goal.childId}/goal/${goal.id}/customize`,
+        pathname: `/child/${goal.childId}/goal/customize`,
         params: {
           goal_id: goal.id,
           target_amount: goal.targetAmount.toString(),
