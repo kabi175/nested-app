@@ -257,7 +257,7 @@ export default function NomineeVerificationScreen() {
             </Text>
 
             {/* Loading state while sending OTP */}
-            {!mfaSessionId && isLoading && (
+            {isLoading && (
               <View style={styles.loadingContainer}>
                 <View style={styles.loadingSpinnerWrapper}>
                   <Spinner size="small" status="primary" />
@@ -268,15 +268,17 @@ export default function NomineeVerificationScreen() {
               </View>
             )}
 
-            {/* OTP Input - shown when session is created */}
-            {mfaSessionId && !isLoading && (
+            {/* OTP Input - shown after loading completes */}
+            {!isLoading && (
               <>
                 <View style={styles.otpContainer}>
                   <OtpInput
                     length={6}
                     onComplete={handleOtpComplete}
                     onChange={handleOtpChange}
-                    disabled={isVerifying || isProcessingNominees}
+                    disabled={
+                      !mfaSessionId || isVerifying || isProcessingNominees
+                    }
                   />
                 </View>
 
@@ -285,13 +287,15 @@ export default function NomineeVerificationScreen() {
                   <TouchableOpacity
                     onPress={handleVerifyAndContinue}
                     disabled={
+                      !mfaSessionId ||
                       otpCode.length !== 6 ||
                       isVerifying ||
                       isProcessingNominees
                     }
                     style={[
                       styles.verifyButton,
-                      (otpCode.length !== 6 ||
+                      (!mfaSessionId ||
+                        otpCode.length !== 6 ||
                         isVerifying ||
                         isProcessingNominees) &&
                         styles.verifyButtonDisabled,
@@ -300,6 +304,7 @@ export default function NomineeVerificationScreen() {
                   >
                     <LinearGradient
                       colors={
+                        mfaSessionId &&
                         otpCode.length === 6 &&
                         !isVerifying &&
                         !isProcessingNominees
