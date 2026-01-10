@@ -1,8 +1,8 @@
 package com.nested.app.utils;
 
+import jakarta.annotation.Nullable;
 import java.util.HashMap;
 import java.util.Map;
-import javax.annotation.Nullable;
 import lombok.experimental.UtilityClass;
 
 @UtilityClass

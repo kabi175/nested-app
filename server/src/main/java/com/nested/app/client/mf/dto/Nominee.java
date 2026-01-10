@@ -8,9 +8,9 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonSetter;
 import com.nested.app.enums.RelationshipType;
 import com.nested.app.utils.FormatterUtil;
+import jakarta.annotation.Nullable;
 import java.util.Date;
 import java.util.Map;
-import javax.annotation.Nullable;
 import lombok.Data;
 
 @Data

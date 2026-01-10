@@ -20,7 +20,6 @@ import java.util.List;
 import lombok.Data;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
-import org.checkerframework.common.aliasing.qual.Unique;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.Filter;
 import org.hibernate.annotations.UpdateTimestamp;
@@ -86,9 +85,9 @@ public class Payment {
   @OneToMany(mappedBy = "payment", cascade = CascadeType.ALL, fetch = FetchType.EAGER)
   private List<Order> orders;
 
-  @Unique private String orderRef;
+  private String orderRef;
 
-  @Unique private String ref;
+  private String ref;
 
   @CreationTimestamp
   @Column(nullable = false, updatable = false)

@@ -1,6 +1,5 @@
 package com.nested.app.services;
 
-import com.google.common.collect.Streams;
 import com.nested.app.dto.MinifiedGoalDTO;
 import com.nested.app.dto.OrderDTO;
 import com.nested.app.dto.OrderRequestDTO;
@@ -17,6 +16,7 @@ import java.time.LocalDate;
 import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -78,7 +78,7 @@ public class OrderServiceImpl implements OrderService {
   public List<OrderDTO> placeOrder(OrderRequestDTO orderRequest, User user) {
 
     var goalIds =
-        Streams.concat(
+        Stream.concat(
                 orderRequest.getSipOrder().stream().map(OrderRequestDTO.SipOrderDTO::getGoal),
                 orderRequest.getBuyOrder().stream().map(OrderRequestDTO.BuyOrderDTO::getGoal))
             .filter(Objects::nonNull)
@@ -138,7 +138,7 @@ public class OrderServiceImpl implements OrderService {
                   return order;
                 });
 
-    var orderForCreate = Streams.concat(buyOrders, sipOrders).toList();
+    var orderForCreate = Stream.concat(buyOrders, sipOrders).toList();
 
     orderForCreate.stream().filter(Objects::nonNull).forEach(this::populateOrderItems);
 

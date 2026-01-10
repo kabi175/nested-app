@@ -290,7 +290,10 @@ export default function SignIn() {
                   style={styles.disclaimerText}
                 >
                   You agree to{" "}
-                  <Link href="https://expo.dev" style={styles.linkText}>
+                  <Link
+                    href="https://nested.money/privacy-policy"
+                    style={styles.linkText}
+                  >
                     TnC and Privacy Policy
                   </Link>{" "}
                   by proceeding.

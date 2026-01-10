@@ -1,6 +1,5 @@
 package com.nested.app.listeners;
 
-import com.google.common.base.Strings;
 import com.nested.app.client.bulkpe.PrefilClient;
 import com.nested.app.client.bulkpe.dto.PrefilRequest;
 import com.nested.app.client.bulkpe.dto.PrefillResponse;
@@ -69,7 +68,7 @@ public record UserPreFillHandler(
   }
 
   void preFillUserData(User user) {
-    if (Strings.isNullOrEmpty(user.getFirstName())) {
+    if (user.getFirstName() == null || user.getFirstName().isEmpty()) {
       log.warn("User name is empty for userId={}, skipping prefill", user.getId());
       return;
     }

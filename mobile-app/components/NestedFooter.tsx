@@ -8,17 +8,15 @@ export default function NestedFooter() {
   };
 
   const handlePhonePress = () => {
-    Linking.openURL("tel:+919876543210");
+    Linking.openURL("tel:+916305209273");
   };
 
   const handleTermsPress = () => {
-    // TODO: Navigate to terms & conditions page
-    console.log("Terms & Conditions pressed");
+    Linking.openURL("https://nested.money/terms-and-conditions");
   };
 
   const handlePrivacyPress = () => {
-    // TODO: Navigate to privacy policy page
-    console.log("Privacy Policy pressed");
+    Linking.openURL("https://nested.money/privacy-policy");
   };
 
   return (

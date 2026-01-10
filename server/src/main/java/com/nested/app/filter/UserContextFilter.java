@@ -1,7 +1,5 @@
 package com.nested.app.filter;
 
-import com.auth0.exception.Auth0Exception;
-import com.google.firebase.auth.FirebaseAuthException;
 import com.nested.app.contect.UserContext;
 import com.nested.app.entity.Investor;
 import com.nested.app.entity.User;
@@ -47,11 +45,7 @@ public class UserContextFilter extends OncePerRequestFilter {
           var user = userRepository.findByFirebaseUid(userIdentifier);
           user.ifPresent(userContext::setUser);
           if (user.isEmpty()) {
-            try {
             userContext.setUser(createUser(jwt));
-            } catch (FirebaseAuthException e) {
-              throw new RuntimeException(e);
-            }
           }
       }
     }
@@ -59,7 +53,7 @@ public class UserContextFilter extends OncePerRequestFilter {
     filterChain.doFilter(request, response);
   }
 
-  public User createUser(Jwt jwt) throws FirebaseAuthException, Auth0Exception {
+  public User createUser(Jwt jwt) {
     var firebaseUid = jwt.getSubject();
     log.info("Starting user creation for firebaseUid={}", firebaseUid);
 

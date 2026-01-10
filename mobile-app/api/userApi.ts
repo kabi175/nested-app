@@ -8,48 +8,44 @@ type UploadableFile = {
 };
 
 export const getUser = async (api: AxiosInstance): Promise<User | null> => {
-  try {
-    const { data } = await api.get(`/users?type=CURRENT_USER`);
-    const user = data.data?.[0];
-    if (!user) {
-      return null;
-    }
-
-    return {
-      id: user.id,
-      firstName: user.first_name,
-      lastName: user.last_name,
-      email: user.email,
-      phone_number: user.phone_number,
-      role: user.role,
-      panNumber: user.pan_number,
-      status: user.status,
-      aadhaar: user.aadhaar_last4,
-      dob: new Date(user.date_of_birth),
-      gender: user.gender,
-      created_at: user.created_at,
-      updated_at: user.updated_at,
-      address: user.address,
-      father_name: user.father_name,
-      marital_status: user.marital_status,
-      income_source: user.income_source,
-      income_slab: user.income_slab,
-      occupation: user.occupation,
-      kycStatus: user.kyc_status,
-      nominee_status: user.nominee_status,
-      is_ready_to_invest: user.is_ready_to_invest,
-      pep:
-        typeof user.pep === "boolean"
-          ? user.pep
-          : typeof user.pep_status === "boolean"
-          ? user.pep_status
-          : typeof user.pepStatus === "boolean"
-          ? user.pepStatus
-          : null,
-    };
-  } catch {
+  const { data } = await api.get(`/users?type=CURRENT_USER`);
+  const user = data.data?.[0];
+  if (!user) {
     return null;
   }
+
+  return {
+    id: user.id,
+    firstName: user.first_name,
+    lastName: user.last_name,
+    email: user.email,
+    phone_number: user.phone_number,
+    role: user.role,
+    panNumber: user.pan_number,
+    status: user.status,
+    aadhaar: user.aadhaar_last4,
+    dob: new Date(user.date_of_birth),
+    gender: user.gender,
+    created_at: user.created_at,
+    updated_at: user.updated_at,
+    address: user.address,
+    father_name: user.father_name,
+    marital_status: user.marital_status,
+    income_source: user.income_source,
+    income_slab: user.income_slab,
+    occupation: user.occupation,
+    kycStatus: user.kyc_status,
+    nominee_status: user.nominee_status,
+    is_ready_to_invest: user.is_ready_to_invest,
+    pep:
+      typeof user.pep === "boolean"
+        ? user.pep
+        : typeof user.pep_status === "boolean"
+        ? user.pep_status
+        : typeof user.pepStatus === "boolean"
+        ? user.pepStatus
+        : null,
+  };
 };
 
 export const updateUser = async (

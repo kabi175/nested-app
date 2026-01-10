@@ -35,7 +35,8 @@ CREATE TABLE IF NOT EXISTS mfa_sessions
     CONSTRAINT chk_mfa_sessions_status CHECK (status IN
                                               ('PENDING', 'VERIFIED', 'EXPIRED',
                                                'FAILED')),
-    CONSTRAINT chk_mfa_sessions_channel CHECK (channel IN ('SMS', 'WHATSAPP', 'TOTP'))
+    CONSTRAINT chk_mfa_sessions_channel CHECK (channel IN ('SMS', 'WHATSAPP',
+                                                           'TOTP', 'EMAIL'))
 );
 
 -- Create the mfa_attempts table

@@ -27,7 +27,6 @@ repositories {
 dependencies {
     implementation("org.springframework.boot:spring-boot-starter-security")
     implementation("org.springframework.boot:spring-boot-starter-oauth2-resource-server")
-    implementation("com.google.firebase:firebase-admin:9.3.0")
 	implementation("org.springframework.boot:spring-boot-starter-actuator")
 	implementation("org.springframework.boot:spring-boot-starter-data-jpa")
 	implementation("org.springframework.boot:spring-boot-starter-web")
@@ -36,8 +35,8 @@ dependencies {
     implementation("org.springframework.boot:spring-boot-starter-quartz")
 
     implementation("org.springframework.boot:spring-boot-starter-thymeleaf")
-    implementation("com.sendgrid:sendgrid-java:4.10.1")
 	implementation("org.apache.commons:commons-text:1.12.0")
+    implementation("jakarta.annotation:jakarta.annotation-api:2.1.1")
 
     // Resilience4j dependencies for fault tolerance (Circuit Breaker)
     implementation("io.github.resilience4j:resilience4j-spring-boot3:2.2.0")
@@ -57,6 +56,7 @@ dependencies {
 	implementation("org.flywaydb:flyway-database-postgresql")
     implementation("com.twilio.sdk:twilio:11.3.0")
     implementation("com.auth0:auth0:2.26.0")
+    implementation("com.sendgrid:sendgrid-java:4.10.1")
 
 
 //	runtimeOnly("io.netty:netty-resolver-dns-native-macos:4.1.94.Final:osx-aarch_64");

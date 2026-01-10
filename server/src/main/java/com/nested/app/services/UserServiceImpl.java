@@ -1,6 +1,5 @@
 package com.nested.app.services;
 
-import com.google.common.base.Strings;
 import com.nested.app.client.meta.BankApiClient;
 import com.nested.app.client.mf.InvestorAPIClient;
 import com.nested.app.client.mf.KycAPIClient;
@@ -17,6 +16,7 @@ import com.nested.app.mapper.BankAccountTypeMapper;
 import com.nested.app.repository.AddressRepository;
 import com.nested.app.repository.BankDetailRepository;
 import com.nested.app.repository.UserRepository;
+import io.micrometer.common.util.StringUtils;
 import java.util.List;
 import java.util.Objects;
 import java.util.stream.Stream;
@@ -81,17 +81,17 @@ public class UserServiceImpl implements UserService {
 
     User updatedUser = originalUser;
 
-    if (!Strings.isNullOrEmpty(userDTO.getFirstName())
+    if (!StringUtils.isBlank(userDTO.getFirstName())
         && !Objects.equals(userDTO.getFirstName(), originalUser.getFirstName())) {
       updatedUser = originalUser.withFirstName(userDTO.getFirstName());
     }
 
-    if (!Strings.isNullOrEmpty(userDTO.getLastName())
+    if (!StringUtils.isBlank(userDTO.getLastName())
         && !Objects.equals(userDTO.getLastName(), originalUser.getLastName())) {
       updatedUser = originalUser.withLastName(userDTO.getLastName());
     }
 
-    if (!Strings.isNullOrEmpty(userDTO.getEmail())
+    if (!StringUtils.isBlank(userDTO.getEmail())
         && !Objects.equals(userDTO.getEmail(), originalUser.getEmail())) {
       updatedUser = originalUser.withEmail(userDTO.getEmail());
     }
@@ -130,22 +130,22 @@ public class UserServiceImpl implements UserService {
       updatedUser = updatedUser.withGender(userDTO.getGender());
     }
 
-    if (!Strings.isNullOrEmpty(userDTO.getPanNumber())
+    if (!StringUtils.isBlank(userDTO.getPanNumber())
         && !Objects.equals(userDTO.getPanNumber(), originalUser.getPanNumber())) {
       updatedUser = updatedUser.withPanNumber(userDTO.getPanNumber());
     }
 
-    if (!Strings.isNullOrEmpty(userDTO.getAadhaarLast4())
+    if (!StringUtils.isBlank(userDTO.getAadhaarLast4())
         && !Objects.equals(userDTO.getAadhaarLast4(), originalUser.getAadhaarLast4())) {
       updatedUser = updatedUser.withAadhaarLast4(userDTO.getAadhaarLast4());
     }
 
-    if (!Strings.isNullOrEmpty(userDTO.getFatherName())
+    if (!StringUtils.isBlank(userDTO.getFatherName())
         && !Objects.equals(userDTO.getFatherName(), originalUser.getFatherName())) {
       updatedUser = updatedUser.withFatherName(userDTO.getFatherName());
     }
 
-    if (!Strings.isNullOrEmpty(userDTO.getBirthPlace())
+    if (!StringUtils.isBlank(userDTO.getBirthPlace())
         && !Objects.equals(userDTO.getBirthPlace(), originalUser.getBirthPlace())) {
       updatedUser = updatedUser.withBirthPlace(userDTO.getBirthPlace());
     }
