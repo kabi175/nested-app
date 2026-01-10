@@ -6,6 +6,7 @@ module.exports = () => ({
     icon: "./assets/images/icon.png",
     scheme: "nested",
     android: {
+      supportsTablet: false,
       package: "com.nested.app",
       intentFilters: {
         action: "VIEW",
