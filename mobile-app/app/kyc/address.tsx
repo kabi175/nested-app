@@ -2,10 +2,10 @@ import { updateUser } from "@/api/userApi";
 import { InfoTooltip } from "@/components/ui/InfoTooltip";
 import { StepProgress } from "@/components/ui/StepProgress";
 import { QUERY_KEYS } from "@/constants/queryKeys";
+import { useAuthAxios } from "@/hooks/useAuthAxios";
 import { useUser } from "@/hooks/useUser";
 import { useKyc } from "@/providers/KycProvider";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { useAuthAxios } from "@/hooks/useAuthAxios";
 import {
   Button,
   IndexPath,
@@ -138,15 +138,15 @@ export default function AddressScreen() {
     },
   });
 
-  const useCurrentLocation = () => {
-    // Mock filling address using GPS - integrate with expo-location if needed
-    update("address", {
-      addressLine1: data.address.addressLine1 || "221B Baker Street",
-      city: data.address.city || "Mumbai",
-      state: data.address.state || "Maharashtra",
-      pin_code: data.address.pin_code || "400001",
-    });
-  };
+  // const useCurrentLocation = () => {
+  //   // Mock filling address using GPS - integrate with expo-location if needed
+  //   update("address", {
+  //     addressLine1: data.address.addressLine1 || "221B Baker Street",
+  //     city: data.address.city || "Mumbai",
+  //     state: data.address.state || "Maharashtra",
+  //     pin_code: data.address.pin_code || "400001",
+  //   });
+  // };
 
   const onContinue = async () => {
     const v = validateAddress();
@@ -272,9 +272,10 @@ export default function AddressScreen() {
           />
         </View>
 
-        <Button appearance="outline" onPress={useCurrentLocation}>
+        {/** TODO: auto fill address from location service */}
+        {/* <Button appearance="outline" onPress={useCurrentLocation}>
           Use Current Location
-        </Button>
+        </Button> */}
 
         <View
           style={{
