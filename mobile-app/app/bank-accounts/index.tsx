@@ -121,7 +121,7 @@ export default function BankAccountsScreen() {
           </View>
 
           {/* Manual Link Option */}
-          <Link href="/bank-accounts/add-manual" asChild>
+          <Link replace href="/bank-accounts/add-manual" asChild>
             <TouchableOpacity style={styles.manualLinkCard}>
               <View style={styles.manualLinkContent}>
                 <Text category="h6" style={styles.manualLinkTitle}>
