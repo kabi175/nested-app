@@ -3,10 +3,8 @@ import { LinearGradient } from "expo-linear-gradient";
 import { router } from "expo-router";
 import { Clock, Target, TrendingUp } from "lucide-react-native";
 import React, { useEffect, useState } from "react";
-import { Animated, Dimensions, Easing, StyleSheet, View } from "react-native";
+import { Animated, Easing, StyleSheet, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-
-const { width, height } = Dimensions.get("window");
 
 const SUPPORTIVE_MESSAGES = [
   "Analyzing market trends...",

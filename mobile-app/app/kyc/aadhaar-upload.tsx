@@ -1,6 +1,7 @@
 import { fetchAadhaarUploadRedirectUrl } from "@/api/userApi";
 import { userAtom } from "@/atoms/user";
 import { StepProgress } from "@/components/ui/StepProgress";
+import { useAuthAxios } from "@/hooks/useAuthAxios";
 import { useUser } from "@/hooks/useUser";
 import { Button, Layout, Text } from "@ui-kitten/components";
 import { useRouter } from "expo-router";
@@ -11,6 +12,7 @@ import { KeyboardAvoidingView, Platform, ScrollView, View } from "react-native";
 
 export default function AadhaarUploadScreen() {
   const user = useAtomValue(userAtom);
+  const api = useAuthAxios();
   const router = useRouter();
   const [isLaunching, setIsLaunching] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -27,7 +29,7 @@ export default function AadhaarUploadScreen() {
     setIsLaunching(true);
     setError(null);
     try {
-      const redirectUrl = await fetchAadhaarUploadRedirectUrl(user);
+      const redirectUrl = await fetchAadhaarUploadRedirectUrl(api, user);
       if (redirectUrl) {
         await WebBrowser.openBrowserAsync(redirectUrl, {
           toolbarColor: "#0A84FF",
@@ -48,7 +50,7 @@ export default function AadhaarUploadScreen() {
     } finally {
       setIsLaunching(false);
     }
-  }, [user]);
+  }, [user, api, refetch, router]);
 
   return (
     <KeyboardAvoidingView
