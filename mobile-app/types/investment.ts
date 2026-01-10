@@ -23,7 +23,7 @@ export type Order = {
   amount: number;
   yearly_setup?: number;
   start_date?: Date;
-  status: "not_placed" | "placed" | "completed" | "failed" | "cancelled";
+  is_placed: boolean;
   goal: { id: string };
   updated_at: Date;
   created_at: Date;
