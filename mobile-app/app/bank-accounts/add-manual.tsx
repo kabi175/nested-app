@@ -23,7 +23,7 @@ export default function AddManualScreen() {
   const [accountNumber, setAccountNumber] = useState("");
   const [reAccountNumber, setReAccountNumber] = useState("");
   const [ifscCode, setIfscCode] = useState("");
-  const [accountType, setAccountType] = useState<string | null>(null);
+  const [accountType, setAccountType] = useState<number>(0);
 
   const { mutate: addBank, isPending } = useAddBankAccount();
 
@@ -31,7 +31,6 @@ export default function AddManualScreen() {
     accountNumber.trim() &&
     reAccountNumber.trim() &&
     ifscCode.trim() &&
-    accountType &&
     accountNumber === reAccountNumber;
 
   const handleContinue = () => {
@@ -41,7 +40,7 @@ export default function AddManualScreen() {
       {
         accountNumber: accountNumber.trim(),
         ifscCode: ifscCode.trim(),
-        type: accountType as "savings" | "current",
+        type: accountTypes[accountType].value as "savings" | "current",
         isPrimary: false,
       },
       {
@@ -144,19 +143,12 @@ export default function AddManualScreen() {
             </View>
 
             <RadioGroup
-              selectedIndex={
-                accountType
-                  ? accountTypes.findIndex((type) => type.value === accountType)
-                  : undefined
-              }
-              onChange={(index) => {
-                const selectedIndex = typeof index === "number" ? index : 0;
-                setAccountType(accountTypes[selectedIndex].value);
-              }}
+              selectedIndex={accountType}
+              onChange={(index) => setAccountType(index)}
               style={styles.radioGroup}
             >
-              {accountTypes.map((type) => (
-                <Radio key={type.value} style={styles.radio}>
+              {accountTypes.map((type, index) => (
+                <Radio key={index} style={styles.radio}>
                   {type.label}
                 </Radio>
               ))}
