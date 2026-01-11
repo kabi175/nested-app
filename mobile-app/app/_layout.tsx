@@ -87,6 +87,10 @@ function RootNavigator() {
           name="sign-in"
           options={{ headerShown: false, presentation: "card" }}
         />
+        <Stack.Screen
+          name="test-sign"
+          options={{ headerShown: false, presentation: "card" }}
+        />
       </Stack.Protected>
     </Stack>
   );

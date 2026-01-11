@@ -7,7 +7,7 @@ module.exports = () => ({
     scheme: "nested",
     android: {
       supportsTablet: false,
-      package: "com.nested.app",
+      package: "com.nexted.app",
       intentFilters: {
         action: "VIEW",
         category: ["BROWSABLE", "DEFAULT"],
@@ -15,11 +15,15 @@ module.exports = () => ({
           {
             scheme: "upi",
           },
+          {
+            scheme: "nested",
+            host: "account",
+          },
         ],
       },
     },
     ios: {
-      bundleIdentifier: "com.nested.app",
+      bundleIdentifier: "com.nexted.app",
       infoPlist: {
         LSApplicationQueriesSchemes: ["whatsapp"],
       },
@@ -55,6 +59,7 @@ module.exports = () => ({
         "react-native-auth0",
         {
           domain: "dev-yscagulfy0qamarm.us.auth0.com",
+          customScheme: "nested",
         },
       ],
     ],

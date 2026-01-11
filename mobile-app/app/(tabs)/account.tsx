@@ -56,12 +56,17 @@ export default function AccountScreen() {
           text: "Logout",
           style: "destructive",
           onPress: async () => {
-            await signOut();
-            console.log("Signed out successfully");
-            queryClient.clear();
-            setUser(null);
-            clearNomineeAtoms();
-            router.replace("/sign-in");
+            try {
+              await signOut();
+              console.log("Signed out successfully");
+              queryClient.clear();
+              setUser(null);
+              clearNomineeAtoms();
+              router.replace("/sign-in");
+            } catch (error) {
+              console.log("Error", error);
+              Alert.alert("Error", "Failed to logout. Please try again.");
+            }
           },
         },
       ],

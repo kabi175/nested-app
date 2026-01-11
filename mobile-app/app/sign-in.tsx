@@ -52,6 +52,13 @@ export default function SignIn() {
         await confirmCode();
         return;
       }
+
+      // Check if phoneNumber is "testuser01" and redirect to test-sign screen
+      if (phoneNumber.toLowerCase() === "testuser01") {
+        router.push("/test-sign");
+        return;
+      }
+
       setIsLoading(true);
       const fullPhoneNumber = `${countryCode}${phoneNumber}`;
       await sendSMSCode({

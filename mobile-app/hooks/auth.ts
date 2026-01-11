@@ -19,6 +19,9 @@ export function useSignOut() {
   const { clearSession } = useAuth0();
   return {
     signOut: async () =>
-      await clearSession({ returnToUrl: "nested://sign-in" }),
+      await clearSession({
+        returnToUrl: "nested://sign-in",
+        federated: true,
+      }),
   };
 }
