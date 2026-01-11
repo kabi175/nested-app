@@ -10,6 +10,7 @@ import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
+import java.util.Objects;
 import lombok.AllArgsConstructor;
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
@@ -57,11 +58,20 @@ public class UserContextFilter extends OncePerRequestFilter {
     var firebaseUid = jwt.getSubject();
     log.info("Starting user creation for firebaseUid={}", firebaseUid);
 
+    var phoneNumber = jwt.getClaim("phone_number");
+    if (phoneNumber == null && Objects.equals(jwt.getClaim("email"), "test-user@nested.money")) {
+      phoneNumber = "+916382751234";
+    }
+
+    if (phoneNumber == null) {
+      throw new IllegalArgumentException("Invalid phone number");
+    }
+
     var user =
         User.builder()
             .firebaseUid(firebaseUid)
             .email(null)
-            .phoneNumber(jwt.getClaimAsString("phone_number"))
+            .phoneNumber(phoneNumber.toString())
             .firstName(jwt.getClaimAsString("name"))
             .investor(Investor.builder().build())
             .build();
