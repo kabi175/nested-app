@@ -13,7 +13,6 @@ import com.nested.app.entity.User;
 import com.nested.app.services.InvestorService;
 import com.nested.app.services.KycService;
 import com.nested.app.services.UserService;
-import com.nested.app.utils.AppEnvironment;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -55,7 +54,6 @@ public class UserController {
   private final InvestorService investorService;
   private final KycService kycService;
   private final UserContext userContext;
-  private final AppEnvironment appEnvironment;
 
   @GetMapping(produces = MediaType.APPLICATION_JSON_VALUE)
   @Operation(
@@ -78,10 +76,9 @@ public class UserController {
 
     // Check if user is trying to access ALL users without admin role
     // Skip check in development mode
-    if (!appEnvironment.isDevelopment()
-        && (type == UserService.Type.ALL
-            || type == UserService.Type.ACTIVE
-            || type == UserService.Type.INACTIVE)) {
+    if ((type == UserService.Type.ALL
+        || type == UserService.Type.ACTIVE
+        || type == UserService.Type.INACTIVE)) {
       if (currentUser == null || !User.Role.ADMIN.equals(currentUser.getRole())) {
         log.warn("Non-admin user attempted to access all users");
         return ResponseEntity.status(HttpStatus.FORBIDDEN)
