@@ -23,9 +23,11 @@ public class FinPrimitivesAPI {
   private final String baseUrl;
   private final CircuitBreaker circuitBreaker;
   private final RateLimiterRegistry rateLimiterRegistry;
+  private final String tenant;
 
   public FinPrimitivesAPI(
       @Value("${finprimitives.api.base-url}") String baseUrl,
+      @Value("${finprimitives.api.tenant}") String tenant,
       FinPrimitivesTokenProvider tokenProvider,
       CircuitBreakerRegistry registry,
       RateLimiterRegistry rateLimiterRegistry) {
@@ -33,6 +35,7 @@ public class FinPrimitivesAPI {
     this.tokenProvider = tokenProvider;
     this.circuitBreaker = registry.circuitBreaker(SERVICE_NAME);
     this.rateLimiterRegistry = rateLimiterRegistry;
+    this.tenant = tenant;
   }
 
   public WebClient withAuth() {
@@ -42,6 +45,7 @@ public class FinPrimitivesAPI {
     return WebClient.builder()
         .baseUrl(baseUrl)
         .defaultHeader(HttpHeaders.AUTHORIZATION, authToken)
+        .defaultHeader("x-tenant-id", tenant)
         .filter(logRequestBodyFilter())
         .filter(
             (request, next) ->
