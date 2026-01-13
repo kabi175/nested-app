@@ -25,7 +25,7 @@ export default function KycIntroScreen() {
 
   const handleContinue = async () => {
     if (!user?.email) {
-      router.replace("/user/email-update");
+      router.replace("/user/email-update?redirectUrl=/kyc");
       return;
     }
 

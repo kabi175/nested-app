@@ -1,6 +1,6 @@
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
-import { router } from "expo-router";
+import { router, useLocalSearchParams } from "expo-router";
 import { useEffect, useState } from "react";
 import {
   Alert,
@@ -30,6 +30,10 @@ import { Input, Spinner, Text } from "@ui-kitten/components";
 type Step = "email" | "mfa" | "success";
 
 export default function EmailUpdateScreen() {
+  const { redirectUrl } = useLocalSearchParams<{
+    redirectUrl?: string;
+  }>();
+
   const { isSignedIn } = useAuth();
   const { data: user } = useUser();
   const api = useAuthAxios();
@@ -202,6 +206,11 @@ export default function EmailUpdateScreen() {
       });
 
       setStep("success");
+      if (redirectUrl) {
+        router.replace(redirectUrl);
+      } else {
+        router.replace("/(tabs)/child");
+      }
     } catch (error: any) {
       console.error("Verification error", error);
       setStep("mfa");
