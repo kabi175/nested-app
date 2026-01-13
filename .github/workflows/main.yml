@@ -41,7 +41,7 @@ jobs:
           host: ${{ secrets.DO_HOST }}
           username: ${{ secrets.DO_USER }}
           key: ${{ secrets.DO_SSH_KEY }}
-          source: "server/build/libs/*.jar"
+          source: "server/build/libs/nested-app-0.0.1-SNAPSHOT.jar"
           target: "/root/app.jar"
 
       # 5️⃣ Restart app
