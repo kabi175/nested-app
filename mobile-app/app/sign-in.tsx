@@ -41,8 +41,8 @@ export default function SignIn() {
 
   const countryCodes = [
     { title: "🇮🇳 +91", value: "+91" },
-    { title: "🇺🇸 +1", value: "+1" },
-    { title: "🇬🇧 +44", value: "+44" },
+    // { title: "🇺🇸 +1", value: "+1" },
+    // { title: "🇬🇧 +44", value: "+44" },
   ];
 
   async function handlePhoneNumberVerification() {
@@ -229,6 +229,19 @@ export default function SignIn() {
                     onChange={handleOtpChange}
                     disabled={isVerifying}
                   />
+                  <Button
+                    onPress={() => {
+                      setConfirm(false);
+                      setOtpCode("");
+                      setResendTimer(0);
+                    }}
+                    appearance="ghost"
+                    status="basic"
+                    style={styles.editPhoneButton}
+                    size="small"
+                  >
+                    Edit Phone Number
+                  </Button>
                 </Layout>
               )}
 
@@ -425,5 +438,9 @@ const styles = StyleSheet.create({
   otpContainer: {
     marginBottom: 24,
     backgroundColor: "transparent",
+  },
+  editPhoneButton: {
+    marginTop: 12,
+    alignSelf: "center",
   },
 });
