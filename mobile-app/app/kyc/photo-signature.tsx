@@ -174,7 +174,7 @@ export default function PhotoSignatureScreen() {
       <ScrollView contentContainerStyle={{ padding: 16, gap: 16 }}>
         <View style={{ gap: 8 }}>
           <View style={{ flexDirection: "row", alignItems: "center" }}>
-            <Text category="label">Upload / Draw Signature</Text>
+            <Text category="label">Draw Signature</Text>
             <InfoTooltip content="Your signature is needed for eSign and document verification." />
           </View>
           <Button
