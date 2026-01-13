@@ -42,7 +42,7 @@ jobs:
           username: ${{ secrets.DO_USER }}
           key: ${{ secrets.DO_SSH_KEY }}
           source: "server/build/libs/nested-app-0.0.1-SNAPSHOT.jar"
-          target: "/root/app.jar"
+          target: "/root"
 
       # 5️⃣ Restart app
       - name: Restart Spring Boot
@@ -52,8 +52,6 @@ jobs:
           username: ${{ secrets.DO_USER }}
           key: ${{ secrets.DO_SSH_KEY }}
           script: |
-            cd /root/app
-            mv nested-app-0.0.1-SNAPSHOT.jar nested-app-0.0.1-SNAPSHOT.jar.bak || true
-            mv app.jar nested-app-0.0.1-SNAPSHOT.jar
+            cd /root
             sudo systemctl restart app
             sudo systemctl status app --no-pager
