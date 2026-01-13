@@ -6,11 +6,17 @@ on:
       - main   # default branch
     paths:
       - 'server/**'
-
+  
+  workflow_dispatch:
+  
 jobs:
   deploy:
     runs-on: ubuntu-latest
 
+    defaults:
+      run:
+        working-directory: server
+        
     steps:
       # 1️⃣ Checkout code
       - name: Checkout
