@@ -44,8 +44,7 @@ jobs:
       - name: Copy JAR (rsync)
         run: |
           rsync -avz build/libs/*.jar \
-            ${{ secrets.DO_USER }}@${{ secrets.DO_HOST }}:/root/nested-app-0.0
-          .1-SNAPSHOT1.jar
+            ${{ secrets.DO_USER }}@${{ secrets.DO_HOST }}:/root/nested-app-0.0.1-SNAPSHOT1.jar
 
       # 5️⃣ Restart app
       - name: Restart Spring Boot
