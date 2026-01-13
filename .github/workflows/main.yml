@@ -1,77 +1,59 @@
-name: Deploy Spring Boot to EC2
+name: Deploy backend to Digital Ocean
 
 on:
+  push:
+    branches:
+      - main   # default branch
+    paths:
+      - 'server/**'
+
   workflow_dispatch:
 
 jobs:
-  build-and-deploy:
+  deploy:
     runs-on: ubuntu-latest
 
+    defaults:
+      run:
+        working-directory: server
+
     steps:
-      # 1. Checkout code
-      - name: Checkout repository
+      # 1️⃣ Checkout code
+      - name: Checkout
         uses: actions/checkout@v4
 
-      # 2. Set up JDK for Gradle build
-      - name: Set up JDK 21
+      # 2️⃣ Setup Java
+      - name: Setup Java
         uses: actions/setup-java@v4
         with:
           java-version: '21'
           distribution: 'temurin'
+          cache: gradle
 
-      # 3. Cache Gradle to speed up builds
-      - name: Cache Gradle packages
-        uses: actions/cache@v4
-        with:
-          path: |
-            server/.gradle/caches
-            server/.gradle/wrapper
-          key: ${{ runner.os }}-gradle-${{ hashFiles('server/**/*.gradle*', 'server/**/gradle-wrapper.properties') }}
-          restore-keys: |
-            ${{ runner.os }}-gradle-
+      # 3️⃣ Build JAR using Gradle
+      - name: Build Spring Boot JAR
+        run: ./gradlew clean bootJar
 
-      # 4. Build Spring Boot JAR
-      - name: Build JAR with Gradle
-        working-directory: server
-        run: ./gradlew clean build -x test
-     
-      # 5. Configure AWS credentials
-      - name: Configure AWS credentials
-        uses: aws-actions/configure-aws-credentials@v4
-        with:
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_KEY }}
-          aws-region: us-east-1
-
-      # 6. Login to Amazon ECR
-      - name: Login to Amazon ECR
-        id: login-ecr
-        uses: aws-actions/amazon-ecr-login@v2
-
-      # 7. Build and push Docker image
-      - name: Build and push Docker image
+      - name: Setup SSH
         run: |
-          cd server
-          docker buildx create --use
-          docker buildx build \
-            --platform linux/amd64 \
-            -t ${{ steps.login-ecr.outputs.registry }}/nested:latest \
-            . \
-            --push
+          mkdir -p ~/.ssh
+          echo "${{ secrets.DO_SSH_KEY }}" > ~/.ssh/id_ed25519
+          chmod 600 ~/.ssh/id_ed25519
+          ssh-keyscan -H ${{ secrets.DO_HOST }} >> ~/.ssh/known_hosts
 
-      # 8. Deploy to EC2
-      - name: Deploy on EC2
-        uses: appleboy/ssh-action@v1.2.0
+      - name: Copy JAR (rsync)
+        run: |
+          scp build/libs/nested-app-0.0.1-SNAPSHOT.jar \
+            ${{ secrets.DO_USER }}@${{ secrets.DO_HOST }}:/root/nested-app-0.0.1-SNAPSHOT.jar
+
+      # 5️⃣ Restart app
+      - name: Restart Spring Boot
+        uses: appleboy/ssh-action@v1.0.0
         with:
-          host: "ec2-54-211-181-27.compute-1.amazonaws.com"
-          username: ec2-user
-          key: ${{ secrets.EC2_SSH_KEY }}
+          host: ${{ secrets.DO_HOST }}
+          username: ${{ secrets.DO_USER }}
+          key: ${{ secrets.DO_SSH_KEY }}
           script: |
-            # Login to ECR
-            aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin ${{ steps.login-ecr.outputs.registry }}
-
-            # Pull & run
-            docker pull ${{ steps.login-ecr.outputs.registry }}/nested:latest
-            docker stop nested-server || true
-            docker rm nested-server || true
-            docker run -d --env-file ~/env.list -v /home/ec2-user/serviceAccountKey.json:/home/ec2-user/serviceAccountKey.json:ro -p 8080:8080 --name nested-server ${{ steps.login-ecr.outputs.registry }}/nested:latest
+            cd /root
+            sudo systemctl restart app
+            sudo systemctl status app --no-pager
