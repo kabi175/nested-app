@@ -289,7 +289,7 @@ public class GoalServiceImpl implements GoalService {
 
     if (goalDTO.getBasket() != null) {
       var basket = new Basket();
-      basket.setId(goalDTO.getId());
+      basket.setId(goalDTO.getBasket().getId());
       goal.setBasket(basket);
     }
 
