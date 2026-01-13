@@ -721,7 +721,7 @@ function FundCard({ fund, index, IconComponent }: FundCardProps) {
         </View>
         <View style={styles.fundInfo}>
           <ThemedText style={styles.fundName}>{fund.name}</ThemedText>
-          <View style={styles.fundDetails}>
+          {/* <View style={styles.fundDetails}>
             <ThemedText style={styles.fundCagr}>
               3Y CAGR: {fund.cagr}
             </ThemedText>
@@ -729,7 +729,7 @@ function FundCard({ fund, index, IconComponent }: FundCardProps) {
             <ThemedText style={styles.fundExpRatio}>
               Exp Ratio Variance: {fund.expRatio}
             </ThemedText>
-          </View>
+          </View> */}
         </View>
         <View style={styles.fundAllocation}>
           <ThemedText
