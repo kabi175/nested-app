@@ -47,7 +47,10 @@ public interface BasketRepository extends JpaRepository<Basket, Long> {
    * @return Basket with returns closest to expectedFee
    */
   @org.springframework.data.jpa.repository.Query(
-      "SELECT b FROM Basket b ORDER BY ABS(b.returns - :expectedFee) ASC LIMIT 1")
+      "SELECT b "
+          + "FROM Basket b "
+          + "where b.returns IS NOT null "
+          + "ORDER BY ABS(b.returns- :expectedFee) ASC LIMIT 1")
   Optional<Basket> findClosestByReturns(
       @org.springframework.data.repository.query.Param("expectedFee") Double expectedFee);
 
