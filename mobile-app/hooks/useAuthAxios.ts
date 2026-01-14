@@ -11,7 +11,9 @@ export function useAuthAxios() {
     const interceptor = api.interceptors.request.use(async (config) => {
       try {
         let credential = await getCredentials();
-        if (credential.expiresAt >= Date.now()) {
+        let expiresAt = credential.expiresAt + 19800000;
+        const now = Math.floor(Date.now() / 1000);
+        if (expiresAt >= now) {
           console.log("credential expired, refreshing");
           credential = await getCredentials(
             credential.scope,
@@ -21,7 +23,9 @@ export function useAuthAxios() {
           );
         }
         config.headers.Authorization = `Bearer ${credential?.idToken}`;
+        console.log("credential", credential);
       } catch (error) {
+        console.log("error during credential refresh", error);
         if (error instanceof CredentialsManagerError) {
           router.replace("/sign-in");
         }
