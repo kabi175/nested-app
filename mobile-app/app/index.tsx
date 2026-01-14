@@ -49,7 +49,7 @@ export default function Home() {
 
     // For authentication errors, redirect to sign-in
     if (error.response?.status === 401 || error.response?.status === 403) {
-      console.log("redirecting to sign-in");
+      console.log("redirecting to sign-in due to authentication errors");
       return <Redirect href="/sign-in" />;
     }
   }
