@@ -1,9 +1,8 @@
 /**
  * API Client Configuration
  * Provides a centralized HTTP client for making API requests to the backend
+ * Uses Auth0 for authentication
  */
-
-import { auth } from './firebase';
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080/api/v1';
 
@@ -29,6 +28,48 @@ export interface ApiError {
   error: string;
 }
 
+// Cache the access token
+let cachedToken: string | null = null;
+let tokenExpiry: number = 0;
+
+/**
+ * Get access token from session
+ */
+async function getAccessToken(): Promise<string | null> {
+  // Return cached token if still valid
+  if (cachedToken && Date.now() < tokenExpiry) {
+    return cachedToken;
+  }
+
+  try {
+    const response = await fetch('/api/auth/session', {
+      method: 'GET',
+      credentials: 'include',
+    });
+
+    if (response.ok) {
+      const data = await response.json();
+      cachedToken = data.accessToken;
+      // Cache for 5 minutes
+      tokenExpiry = Date.now() + 5 * 60 * 1000;
+      return cachedToken;
+    }
+  } catch (error) {
+    console.error('Error getting access token:', error);
+  }
+
+  cachedToken = null;
+  return null;
+}
+
+/**
+ * Clear cached token (call on logout)
+ */
+export function clearTokenCache() {
+  cachedToken = null;
+  tokenExpiry = 0;
+}
+
 class ApiClient {
   private baseURL: string;
 
@@ -42,17 +83,8 @@ class ApiClient {
   ): Promise<T> {
     const url = `${this.baseURL}${endpoint}`;
     
-    // Get Firebase auth token
-    const user = auth.currentUser;
-    let token: string | null = null;
-    
-    if (user) {
-      try {
-        token = await user.getIdToken();
-      } catch (error) {
-        console.error('Error getting Firebase token:', error);
-      }
-    }
+    // Get Auth0 access token
+    const token = await getAccessToken();
     
     const headers: HeadersInit = {
       'Content-Type': 'application/json',
@@ -69,6 +101,15 @@ class ApiClient {
       const response = await fetch(url, config);
 
       if (!response.ok) {
+        // Handle 401 Unauthorized - redirect to login
+        if (response.status === 401) {
+          clearTokenCache();
+          if (typeof window !== 'undefined') {
+            window.location.href = '/login';
+          }
+          throw new Error('Session expired. Please log in again.');
+        }
+
         const errorData = await response.json().catch(() => ({ error: 'An error occurred' }));
         throw new Error(errorData.error || `HTTP error! status: ${response.status}`);
       }
@@ -132,5 +173,3 @@ class ApiClient {
 }
 
 export const apiClient = new ApiClient(API_BASE_URL);
-
-

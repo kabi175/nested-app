@@ -1,100 +1,136 @@
 'use client';
 
-import { createContext, useContext, useEffect, useState, ReactNode } from 'react';
-import { 
-  User, 
-  signInWithEmailAndPassword, 
-  signOut,
-  onAuthStateChanged 
-} from 'firebase/auth';
-import { auth } from '@/lib/firebase';
-import { useRouter } from 'next/navigation';
+import { createContext, useContext, useEffect, useState, ReactNode, useCallback } from 'react';
+import { useRouter, usePathname } from 'next/navigation';
+
+interface User {
+  sub: string;
+  email: string;
+  name: string;
+  picture?: string;
+  isAdmin: boolean;
+}
 
 interface AuthContextType {
   user: User | null;
   loading: boolean;
   isAdmin: boolean;
+  accessToken: string | null;
   login: (email: string, password: string) => Promise<void>;
   logout: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
+// Public routes that don't require authentication
+const PUBLIC_ROUTES = ['/login', '/unauthorized'];
+
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
+  const [accessToken, setAccessToken] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [isAdmin, setIsAdmin] = useState(false);
   const router = useRouter();
+  const pathname = usePathname();
 
-  useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
-      setUser(firebaseUser);
-      
-      if (firebaseUser) {
-        // Get token result to check custom claims
-        try {
-          const tokenResult = await firebaseUser.getIdTokenResult();
-          const adminClaim = tokenResult.claims.admin === true || tokenResult.claims.role === 'ADMIN';
-          setIsAdmin(adminClaim);
-          
-          // If user is not admin and not on login/unauthorized page, redirect
-          const currentPath = window.location.pathname;
-          if (!adminClaim && currentPath !== '/login' && currentPath !== '/unauthorized') {
-            router.push('/unauthorized');
-          }
-        } catch (error) {
-          console.error('Error checking admin status:', error);
-          setIsAdmin(false);
+  // Check session on mount
+  const checkSession = useCallback(async () => {
+    try {
+      const response = await fetch('/api/auth/session', {
+        method: 'GET',
+        credentials: 'include',
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        setUser(data.user);
+        setAccessToken(data.accessToken);
+        setIsAdmin(data.user?.isAdmin || false);
+
+        // If user is on login page and authenticated, redirect to home
+        if (pathname === '/login') {
+          router.push('/');
         }
       } else {
+        setUser(null);
+        setAccessToken(null);
         setIsAdmin(false);
-        // If not authenticated and not on login page, redirect to login
-        const currentPath = window.location.pathname;
-        if (currentPath !== '/login') {
+
+        // Redirect to login if not on a public route
+        if (!PUBLIC_ROUTES.includes(pathname)) {
           router.push('/login');
         }
       }
-      
-      setLoading(false);
-    });
+    } catch (error) {
+      console.error('Session check error:', error);
+      setUser(null);
+      setAccessToken(null);
+      setIsAdmin(false);
 
-    return () => unsubscribe();
-  }, [router]);
+      if (!PUBLIC_ROUTES.includes(pathname)) {
+        router.push('/login');
+      }
+    } finally {
+      setLoading(false);
+    }
+  }, [pathname, router]);
+
+  useEffect(() => {
+    checkSession();
+  }, [checkSession]);
 
   const login = async (email: string, password: string) => {
-    try {
-      const result = await signInWithEmailAndPassword(auth, email, password);
-      console.log(result);
-      // Check if user has admin privileges
-      const tokenResult = await result.user.getIdTokenResult();
-      console.log('tokenResult', tokenResult);
-      console.log('tokenResult.claims', tokenResult.claims);
-      const adminClaim = tokenResult.claims.admin === true || tokenResult.claims.role === 'ADMIN';
-      
-      if (!adminClaim) {
-        await signOut(auth);
-        throw new Error('Access denied: Admin privileges required');
-      }
-      
-      router.push('/');
-    } catch (error) {
-      console.error('Login error:', error);
-      throw error;
+    const response = await fetch('/api/auth/login-password', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      credentials: 'include',
+      body: JSON.stringify({ email, password }),
+    });
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      throw new Error(data.error || 'Login failed');
     }
+
+    setUser(data.user);
+    setIsAdmin(data.user?.isAdmin || false);
+    
+    // Refresh session to get access token
+    await checkSession();
+    
+    router.push('/');
   };
 
   const logout = async () => {
     try {
-      await signOut(auth);
-      router.push('/login');
+      await fetch('/api/auth/logout-session', {
+        method: 'POST',
+        credentials: 'include',
+      });
     } catch (error) {
       console.error('Logout error:', error);
-      throw error;
     }
+    
+    setUser(null);
+    setAccessToken(null);
+    setIsAdmin(false);
+    router.push('/login');
   };
 
   return (
-    <AuthContext.Provider value={{ user, loading, isAdmin, login, logout }}>
+    <AuthContext.Provider 
+      value={{ 
+        user, 
+        loading, 
+        isAdmin, 
+        accessToken,
+        login, 
+        logout,
+      }}
+    >
       {children}
     </AuthContext.Provider>
   );
@@ -107,4 +143,3 @@ export const useAuth = () => {
   }
   return context;
 };
-
