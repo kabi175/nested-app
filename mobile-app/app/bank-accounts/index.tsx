@@ -2,7 +2,6 @@ import {
   getLinkBankAccountStatus,
   linkBankAccount,
 } from "@/api/bankAcountsAPI";
-import { userAtom } from "@/atoms/user";
 import UPIButton from "@/components/buttons/UPIButton";
 import { useAuthAxios } from "@/hooks/useAuthAxios";
 import { useUser } from "@/hooks/useUser";
@@ -11,7 +10,6 @@ import { Button, Layout, Text } from "@ui-kitten/components";
 import { LinearGradient } from "expo-linear-gradient";
 import { Link, Redirect, router } from "expo-router";
 import { StatusBar } from "expo-status-bar";
-import { useAtomValue } from "jotai";
 import { ArrowRight, CreditCard, Lock, Sparkles } from "lucide-react-native";
 import {
   Alert,
@@ -25,11 +23,10 @@ import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function BankAccountsScreen() {
   const { data: user, isLoading: isUserLoading } = useUser();
-  const currentUser = useAtomValue(userAtom);
   const api = useAuthAxios();
   const handleContinue = async () => {
-    if (!currentUser?.id) return;
-    const { redirect_url, id } = await linkBankAccount(api, currentUser?.id);
+    if (!user?.id) return;
+    const { redirect_url, id } = await linkBankAccount(api, user?.id);
     const supported = await Linking.canOpenURL(redirect_url);
     if (!supported) {
       Alert.alert(
@@ -39,7 +36,7 @@ export default function BankAccountsScreen() {
       return;
     }
     await Linking.openURL(redirect_url);
-    const status = await getLinkBankAccountStatus(api, currentUser?.id, id);
+    const status = await getLinkBankAccountStatus(api, user?.id, id);
     if (status === "completed") {
       router.push("/bank-accounts/success");
     } else if (status === "failed") {

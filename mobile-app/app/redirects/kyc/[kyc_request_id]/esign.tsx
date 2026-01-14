@@ -1,5 +1,4 @@
 import { getUser } from "@/api/userApi";
-import { userAtom } from "@/atoms/user";
 import { QUERY_KEYS } from "@/constants/queryKeys";
 import { useAuthAxios } from "@/hooks/useAuthAxios";
 import type { User } from "@/types/auth";
@@ -7,7 +6,6 @@ import { useQueryClient } from "@tanstack/react-query";
 import { Button, Layout, Spinner, Text } from "@ui-kitten/components";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import * as WebBrowser from "expo-web-browser";
-import { useSetAtom } from "jotai";
 import React, { useEffect, useMemo, useState } from "react";
 import { SafeAreaView, View } from "react-native";
 
@@ -17,7 +15,6 @@ export default function EsignRedirectSuccessScreen() {
   }>();
   const router = useRouter();
   const queryClient = useQueryClient();
-  const setUser = useSetAtom(userAtom);
   const [loading, setLoading] = useState(true);
   const [status, setStatus] = useState<User["kycStatus"] | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -37,7 +34,6 @@ export default function EsignRedirectSuccessScreen() {
           return;
         }
         if (latestUser) {
-          setUser(latestUser);
           queryClient.setQueryData([QUERY_KEYS.user], latestUser);
           setStatus(latestUser.kycStatus);
         } else {
@@ -60,7 +56,7 @@ export default function EsignRedirectSuccessScreen() {
     return () => {
       active = false;
     };
-  }, [queryClient, setUser]);
+  }, [queryClient, api]);
 
   const nextActionLabel = useMemo(() => {
     if (status === "submitted" || status === "completed") {

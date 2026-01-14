@@ -3,15 +3,14 @@ import {
   deleteBankAccount,
   getBankAccounts,
 } from "@/api/bankAcountsAPI";
-import { userAtom } from "@/atoms/user";
 import { QUERY_KEYS } from "@/constants/queryKeys";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useAtomValue } from "jotai";
 import { useAuthAxios } from "./useAuthAxios";
+import { useUser } from "./useUser";
 
 export function useBankAccounts() {
   const api = useAuthAxios();
-  const user = useAtomValue(userAtom);
+  const { data: user } = useUser();
 
   return useQuery({
     queryKey: [QUERY_KEYS.bankAccounts, user?.id],
@@ -22,7 +21,7 @@ export function useBankAccounts() {
 
 export function useAddBankAccount() {
   const api = useAuthAxios();
-  const user = useAtomValue(userAtom);
+  const { data: user } = useUser();
   const queryClient = useQueryClient();
 
   return useMutation({
@@ -49,7 +48,7 @@ export function useAddBankAccount() {
 
 export function useDeleteBankAccount() {
   const api = useAuthAxios();
-  const user = useAtomValue(userAtom);
+  const { data: user } = useUser();
   const queryClient = useQueryClient();
 
   return useMutation({

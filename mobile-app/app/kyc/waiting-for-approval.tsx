@@ -1,11 +1,10 @@
 import { getUser } from "@/api/userApi";
-import { userAtom } from "@/atoms/user";
 import { StepProgress } from "@/components/ui/StepProgress";
 import { QUERY_KEYS } from "@/constants/queryKeys";
+import { useUser } from "@/hooks/useUser";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Button, Layout, Text } from "@ui-kitten/components";
 import { Redirect, useRouter } from "expo-router";
-import { useAtom } from "jotai";
 import React, { useEffect, useState } from "react";
 import {
   ActivityIndicator,
@@ -20,7 +19,7 @@ export default function WaitingForApprovalScreen() {
   const api = useAuthAxios();
   const router = useRouter();
   const queryClient = useQueryClient();
-  const [user, setUser] = useAtom(userAtom);
+  const { data: user } = useUser();
   const [shouldPoll, setShouldPoll] = useState(true);
 
   // Poll for user updates every 5 seconds, but stop if we have a final status
@@ -31,10 +30,10 @@ export default function WaitingForApprovalScreen() {
     refetchIntervalInBackground: false, // Only poll when app is in foreground
   });
 
-  // Update user atom on each refetch
+  // Update query cache on each refetch and stop polling if we reach a final status
   useEffect(() => {
     if (currentUser !== undefined) {
-      setUser(currentUser);
+      queryClient.setQueryData([QUERY_KEYS.user], currentUser);
 
       // Stop polling if we reach a final status
       const status = currentUser?.kycStatus;
@@ -42,7 +41,7 @@ export default function WaitingForApprovalScreen() {
         setShouldPoll(false);
       }
     }
-  }, [currentUser, setUser]);
+  }, [currentUser, queryClient]);
 
   // Check for status changes and navigate accordingly
   useEffect(() => {

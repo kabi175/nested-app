@@ -1,9 +1,9 @@
 import { updateUser } from "@/api/userApi";
-import { userAtom } from "@/atoms/user";
 import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
 import { QUERY_KEYS } from "@/constants/queryKeys";
 import { useAuthAxios } from "@/hooks/useAuthAxios";
+import { useUser } from "@/hooks/useUser";
 import { Ionicons } from "@expo/vector-icons";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import {
@@ -18,7 +18,6 @@ import {
 import * as Haptics from "expo-haptics";
 import { router } from "expo-router";
 import { StatusBar } from "expo-status-bar";
-import { useAtomValue } from "jotai";
 import { CalendarDays } from "lucide-react-native";
 import { useEffect, useState } from "react";
 import {
@@ -33,7 +32,7 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function UserScreen() {
-  const user = useAtomValue(userAtom);
+  const { data: user } = useUser();
   const queryClient = useQueryClient();
   const api = useAuthAxios();
   const [formData, setFormData] = useState({

@@ -1,24 +1,21 @@
 import { fetchAadhaarUploadRedirectUrl } from "@/api/userApi";
-import { userAtom } from "@/atoms/user";
 import { StepProgress } from "@/components/ui/StepProgress";
 import { useAuthAxios } from "@/hooks/useAuthAxios";
 import { useUser } from "@/hooks/useUser";
 import { Button, Layout, Text } from "@ui-kitten/components";
 import { useRouter } from "expo-router";
 import * as WebBrowser from "expo-web-browser";
-import { useAtomValue } from "jotai";
 import React, { useCallback, useState } from "react";
 import { KeyboardAvoidingView, Platform, ScrollView, View } from "react-native";
 
 export default function AadhaarUploadScreen() {
-  const user = useAtomValue(userAtom);
+  const { data: user, refetch } = useUser();
   const api = useAuthAxios();
   const router = useRouter();
   const [isLaunching, setIsLaunching] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const totalSteps = 6;
   const currentStep = 6;
-  const { refetch } = useUser();
 
   const startAadhaarUpload = useCallback(async () => {
     if (!user) {

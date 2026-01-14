@@ -1,4 +1,3 @@
-import { userAtom } from "@/atoms/user";
 import { ThemedText } from "@/components/ThemedText";
 import { useSignOut } from "@/hooks/auth";
 import { useUser } from "@/hooks/useUser";
@@ -8,7 +7,6 @@ import { Ionicons } from "@expo/vector-icons";
 import { useQueryClient } from "@tanstack/react-query";
 import Constants from "expo-constants";
 import { router } from "expo-router";
-import { useSetAtom } from "jotai";
 import React from "react";
 import {
   Alert,
@@ -33,7 +31,6 @@ export default function AccountScreen() {
   const { data: user } = useUser();
   const { signOut } = useSignOut();
   const queryClient = useQueryClient();
-  const setUser = useSetAtom(userAtom);
   const getInitials = (name: string) => {
     return name
       .split(" ")
@@ -60,11 +57,10 @@ export default function AccountScreen() {
               await signOut();
               console.log("Signed out successfully");
               queryClient.clear();
-              setUser(null);
               clearNomineeAtoms();
               router.replace("/sign-in");
             } catch (error) {
-              console.log("Error", error);
+              console.log("Error during logout", error);
               Alert.alert("Error", "Failed to logout. Please try again.");
             }
           },

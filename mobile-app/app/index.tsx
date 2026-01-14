@@ -1,25 +1,15 @@
-import { userAtom } from "@/atoms/user";
 import { NetworkErrorScreen } from "@/components/NetworkErrorScreen";
 import { useUser } from "@/hooks/useUser";
 import { AxiosError } from "axios";
 import { Redirect } from "expo-router";
-import { useSetAtom } from "jotai";
-import { useEffect } from "react";
 import { Image, StyleSheet, View } from "react-native";
 import { useAuth0 } from "react-native-auth0";
 
 export default function Home() {
   const { isLoading: isAuthLoading, user: authUser } = useAuth0();
   const { data: user, isLoading, isError, error, refetch } = useUser();
-  const setUser = useSetAtom(userAtom);
 
   const isSignedIn = !!authUser;
-
-  useEffect(() => {
-    if (user) {
-      setUser(user);
-    }
-  }, [user, setUser]);
 
   if (isAuthLoading || isLoading) {
     // show logo
@@ -59,18 +49,22 @@ export default function Home() {
 
     // For authentication errors, redirect to sign-in
     if (error.response?.status === 401 || error.response?.status === 403) {
+      console.log("redirecting to sign-in");
       return <Redirect href="/sign-in" />;
     }
   }
 
   if (!isLoading && user?.firstName === user?.phone_number) {
+    console.log("redirecting to name-input");
     return <Redirect href="/name-input" />;
   }
 
   if (isSignedIn) {
+    console.log("redirecting to (tabs)");
     return <Redirect href="/(tabs)" />;
   }
 
+  console.log("redirecting to sign-in");
   return <Redirect href="/sign-in" />;
 }
 

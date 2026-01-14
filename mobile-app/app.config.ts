@@ -6,7 +6,6 @@ module.exports = () => ({
     icon: "./assets/images/icon.png",
     scheme: "nested",
     android: {
-      supportsTablet: false,
       package: "com.nexted.app",
       intentFilters: {
         action: "VIEW",
@@ -14,10 +13,6 @@ module.exports = () => ({
         data: [
           {
             scheme: "upi",
-          },
-          {
-            scheme: "nested",
-            host: "account",
           },
         ],
       },
