@@ -29,6 +29,7 @@ interface MenuItem {
 
 export default function AccountScreen() {
   const { data: user } = useUser();
+  //TODO: replace clearSession usage with useSignOut
   const { clearCredentials } = useAuth0();
   const queryClient = useQueryClient();
   const getInitials = (name: string) => {
