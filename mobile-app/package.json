@@ -9,7 +9,8 @@
     "ios": "expo run:ios",
     "web": "expo start --web",
     "lint": "expo lint",
-    "preview:android": "eas build --profile preview --platform android"
+    "preview:android": "eas build --profile preview --platform android",
+    "production:android": "eas build --profile production --platform android"
   },
   "dependencies": {
     "@eva-design/eva": "^2.2.0",
