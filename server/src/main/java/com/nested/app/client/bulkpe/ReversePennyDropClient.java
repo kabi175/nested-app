@@ -62,10 +62,12 @@ public class ReversePennyDropClient {
         .doOnSuccess(
             response ->
                 log.info(
-                    "Reverse Penny Drop success for referenceId={}, transactionId={}, status={}",
+                    "Reverse Penny Drop success for referenceId={}, "
+                        + "transactionId={}, status={} message={}",
                     request.getReferenceId(),
                     response.getData() != null ? response.getData().getMessage() : "N/A",
-                    response.getData() != null ? response.getData().getStatus() : "N/A"))
+                    response.getData() != null ? response.getData().getStatus() : "N/A",
+                    response.getMessage()))
         .doOnError(
             error ->
                 log.error(
