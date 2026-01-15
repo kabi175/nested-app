@@ -27,24 +27,32 @@ export default function BankAccountsScreen() {
   const handleContinue = async () => {
     if (!user?.id) return;
     const { redirect_url, id } = await linkBankAccount(api, user?.id);
-    const supported = await Linking.canOpenURL(redirect_url);
-    if (!supported) {
+    try {
+      await Linking.openURL(redirect_url);
+    } catch (error: unknown) {
+      console.log("error during opening bank link url", error);
       Alert.alert(
         "Error",
         "UPI app not installed. Please install a UPI app like Google Pay or PhonePe."
       );
       return;
     }
-    await Linking.openURL(redirect_url);
-    const status = await getLinkBankAccountStatus(api, user?.id, id);
-    if (status === "completed") {
-      router.push("/bank-accounts/success");
-    } else if (status === "failed") {
-      router.push("/bank-accounts/failure");
-    } else if (status === "cancelled") {
-      router.push("/bank-accounts/cancelled");
-    } else {
+    try {
+      const status = await getLinkBankAccountStatus(api, user?.id, id);
+      console.log("status of bank account link", id, status);
+      if (status === "completed") {
+        router.push("/bank-accounts/success");
+      } else if (status === "failed") {
+        router.push("/bank-accounts/failure");
+      } else if (status === "cancelled") {
+        router.push("/bank-accounts/cancelled");
+      } else {
+        Alert.alert("Error", "Failed to link bank account. Please try again.");
+      }
+    } catch (error: unknown) {
+      console.log("error during getting bank account link status", error);
       Alert.alert("Error", "Failed to link bank account. Please try again.");
+      return;
     }
   };
   if (!isUserLoading && user?.is_ready_to_invest !== true) {
