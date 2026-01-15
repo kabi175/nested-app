@@ -18,10 +18,10 @@ export function useAuth(): AuthState {
 export function useSignOut() {
   const { clearSession } = useAuth0();
   return {
-    signOut: async () =>
+    signOut: async function () {
       await clearSession({
         returnToUrl: "nested://sign-in",
-        federated: true,
-      }),
+      });
+    },
   };
 }

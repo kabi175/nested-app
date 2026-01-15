@@ -1,5 +1,4 @@
 import { ThemedText } from "@/components/ThemedText";
-import { useSignOut } from "@/hooks/auth";
 import { useUser } from "@/hooks/useUser";
 import { clearNomineeAtoms } from "@/utils/nominee";
 import { openWhatsApp } from "@/utils/whtsapp";
@@ -16,6 +15,7 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
+import { useAuth0 } from "react-native-auth0";
 import { SafeAreaView } from "react-native-safe-area-context";
 interface MenuItem {
   id: string;
@@ -29,7 +29,7 @@ interface MenuItem {
 
 export default function AccountScreen() {
   const { data: user } = useUser();
-  const { signOut } = useSignOut();
+  const { clearCredentials } = useAuth0();
   const queryClient = useQueryClient();
   const getInitials = (name: string) => {
     return name
@@ -54,7 +54,7 @@ export default function AccountScreen() {
           style: "destructive",
           onPress: async () => {
             try {
-              await signOut();
+              await clearCredentials();
               console.log("Signed out successfully");
               queryClient.clear();
               clearNomineeAtoms();
