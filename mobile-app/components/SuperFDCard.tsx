@@ -299,7 +299,7 @@ const styles = StyleSheet.create({
     paddingRight: 16,
   },
   title: {
-    fontSize: 24,
+    fontSize: 22,
     fontWeight: "bold",
     color: "#FFFFFF",
     marginBottom: 10,
@@ -313,7 +313,7 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   description: {
-    fontSize: 14,
+    fontSize: 12,
     color: "rgba(255, 255, 255, 0.9)",
     lineHeight: 20,
     marginBottom: 2,
