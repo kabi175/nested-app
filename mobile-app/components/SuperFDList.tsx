@@ -16,7 +16,7 @@ const superFDBaskets: BasketCardData[] = [
     subtitle: "Earn from precious metals",
     icon: <Coins size={28} color="#F97316" strokeWidth={2} />,
     iconBgColor: "#FEF3C7",
-    returns: "11%",
+    returns: "α",
     risk: "Medium",
     lockIn: "None",
     features: [

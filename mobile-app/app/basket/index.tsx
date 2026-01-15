@@ -287,7 +287,8 @@ const basketFaqs = [
   },
   {
     question: "Will TDS be deducted?",
-    answer: "No TDS at all.",
+    answer:
+      "Debt funds: Gains taxed at your income slab on redemption; no TDS.\n\nGold & Silver funds: 12.5% LTCG if held > 24 months.\n\nEquity funds: 12.5% LTCG if held > 12 months \n\nClick [Here](https://nested.money/#/taxation) for fund-wise taxation",
   },
   {
     question: "What is Nested's fee?",

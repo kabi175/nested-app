@@ -2,7 +2,6 @@ import { useEducation } from "@/hooks/useEducation";
 import { Education } from "@/types/education";
 import { expectedFee } from "@/utils/education";
 import { formatCurrency } from "@/utils/formatters";
-import { Ionicons } from "@expo/vector-icons";
 import React, { useRef, useState } from "react";
 import { PanResponder, ScrollView, StyleSheet, Text, View } from "react-native";
 import SuperFDCard from "./SuperFDCard";
@@ -196,19 +195,6 @@ export default function EducationCostEstimator({
             </View>
           </View>
 
-          {/* Bottom Icon */}
-          <View style={styles.bottomIconContainer}>
-            <View style={styles.bottomIcon}>
-              <Ionicons name="arrow-up" size={16} color="#60A5FA" />
-              <Ionicons
-                name="arrow-forward"
-                size={16}
-                color="#60A5FA"
-                style={styles.bottomIconArrow}
-              />
-            </View>
-          </View>
-
           {/* Cost Projection Display */}
           {(selectedCourse || selectedCollege) && (
             <EstimatedCostCard
@@ -236,12 +222,6 @@ const EstimatedCostCard = ({
 
   return (
     <View style={styles.costProjectionCard}>
-      <View style={styles.chartIconContainer}>
-        <Ionicons name="trending-up" size={24} color="#2563EB" />
-      </View>
-      <Text style={styles.chartDescription}>
-        Interactive cost projection chart
-      </Text>
       <View style={styles.estimatedCostContainer}>
         <Text style={styles.estimatedCostText}>
           {formatCurrency(estimatedCost)} in {timeline} years

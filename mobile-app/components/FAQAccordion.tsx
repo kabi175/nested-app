@@ -3,6 +3,7 @@ import React, { useEffect, useRef, useState } from "react";
 import {
   Animated,
   LayoutChangeEvent,
+  Linking,
   StyleSheet,
   Text,
   TouchableOpacity,
@@ -19,6 +20,59 @@ export function FAQAccordion({ question, answer }: FAQAccordionProps) {
   const [contentHeight, setContentHeight] = useState(0);
   const rotateAnim = useRef(new Animated.Value(0)).current;
   const heightAnim = useRef(new Animated.Value(0)).current;
+
+  const renderAnswer = (text: string) => {
+    // Supports simple markdown-style links: [label](https://example.com)
+    const linkRegex = /\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)/g;
+
+    const nodes: React.ReactNode[] = [];
+    let lastIndex = 0;
+    let match: RegExpExecArray | null;
+    let key = 0;
+
+    // eslint-disable-next-line no-cond-assign
+    while ((match = linkRegex.exec(text)) !== null) {
+      const matchIndex = match.index;
+      const [fullMatch, label, url] = match;
+
+      if (matchIndex > lastIndex) {
+        nodes.push(
+          <Text key={`t-${key++}`} style={styles.answerText}>
+            {text.slice(lastIndex, matchIndex)}
+          </Text>
+        );
+      }
+
+      nodes.push(
+        <Text
+          key={`l-${key++}`}
+          style={[styles.answerText, styles.linkText]}
+          onPress={() => Linking.openURL(url)}
+          suppressHighlighting
+        >
+          {label}
+        </Text>
+      );
+
+      lastIndex = matchIndex + fullMatch.length;
+    }
+
+    if (lastIndex < text.length) {
+      nodes.push(
+        <Text key={`t-${key++}`} style={styles.answerText}>
+          {text.slice(lastIndex)}
+        </Text>
+      );
+    }
+
+    // If no links were found, render the original string as-is.
+    if (nodes.length === 0) {
+      return <Text style={styles.answerText}>{text}</Text>;
+    }
+
+    // Render inline segments within a single parent <Text> to preserve wrapping.
+    return <Text style={styles.answerText}>{nodes}</Text>;
+  };
 
   useEffect(() => {
     Animated.parallel([
@@ -81,9 +135,10 @@ export function FAQAccordion({ question, answer }: FAQAccordionProps) {
         style={styles.measurementView}
         onLayout={handleContentLayout}
         collapsable={false}
+        pointerEvents="none"
       >
         <View style={styles.answerCard}>
-          <Text style={styles.answerText}>{answer}</Text>
+          {renderAnswer(answer)}
         </View>
       </View>
 
@@ -95,9 +150,9 @@ export function FAQAccordion({ question, answer }: FAQAccordionProps) {
           },
         ]}
       >
-        <View style={styles.answerContent} pointerEvents="none">
+        <View style={styles.answerContent}>
           <View style={styles.answerCard}>
-            <Text style={styles.answerText}>{answer}</Text>
+            {renderAnswer(answer)}
           </View>
         </View>
       </Animated.View>
@@ -150,5 +205,10 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: "#1F2937",
     lineHeight: 22,
+  },
+  linkText: {
+    color: "#2563EB",
+    textDecorationLine: "underline",
+    fontWeight: "600",
   },
 });
