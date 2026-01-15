@@ -1,7 +1,7 @@
 import { useEducation } from "@/hooks/useEducation";
 import { Education } from "@/types/education";
-import { expectedFee } from "@/utils/education";
 import { formatCurrency } from "@/utils/formatters";
+import { calculateFutureCost } from "@/utils/goalForm";
 import React, { useRef, useState } from "react";
 import { PanResponder, ScrollView, StyleSheet, Text, View } from "react-native";
 import SuperFDCard from "./SuperFDCard";
@@ -215,10 +215,8 @@ const EstimatedCostCard = ({
   education: Education;
   timeline: number;
 }) => {
-  const estimatedCost = expectedFee(
-    new Date(new Date().getFullYear() + timeline),
-    education
-  );
+  const targetYear = new Date().getFullYear() + timeline;
+  const estimatedCost = calculateFutureCost(education, targetYear);
 
   return (
     <View style={styles.costProjectionCard}>
