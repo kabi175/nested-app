@@ -11,7 +11,9 @@ import { LinearGradient } from "expo-linear-gradient";
 import { Link, Redirect, router } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import { ArrowRight, CreditCard, Lock, Sparkles } from "lucide-react-native";
+import { useEffect, useRef, useState } from "react";
 import {
+  ActivityIndicator,
   Alert,
   Linking,
   ScrollView,
@@ -21,9 +23,72 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
+const POLL_INTERVAL_MS = 2000;
+const MAX_POLL_ATTEMPTS = 60; // ~2 minutes
+
+function sleep(ms: number) {
+  return new Promise<void>((resolve) => setTimeout(resolve, ms));
+}
+
 export default function BankAccountsScreen() {
   const { data: user, isLoading: isUserLoading } = useUser();
   const api = useAuthAxios();
+
+  const [isPendingStatus, setIsPendingStatus] = useState(false);
+  const [pendingAction, setPendingAction] = useState<{
+    userID: string;
+    actionID: string;
+  } | null>(null);
+  const abortPollRef = useRef(false);
+
+  const routeByStatus = (
+    status: "pending" | "completed" | "failed" | "cancelled"
+  ) => {
+    if (status === "completed") router.push("/bank-accounts/success");
+    else if (status === "failed") router.push("/bank-accounts/failure");
+    else if (status === "cancelled") router.push("/bank-accounts/cancelled");
+  };
+
+  useEffect(() => {
+    if (!isPendingStatus || !pendingAction) return;
+
+    abortPollRef.current = false;
+    const { userID, actionID } = pendingAction;
+
+    const poll = async () => {
+      for (let attempt = 0; attempt < MAX_POLL_ATTEMPTS; attempt++) {
+        if (abortPollRef.current) return;
+        try {
+          const status = await getLinkBankAccountStatus(api, userID, actionID);
+          if (status === "pending") {
+            await sleep(POLL_INTERVAL_MS);
+            continue;
+          }
+          setIsPendingStatus(false);
+          setPendingAction(null);
+          routeByStatus(status);
+          return;
+        } catch {
+          // transient failures -> keep polling
+          await sleep(POLL_INTERVAL_MS);
+        }
+      }
+
+      if (abortPollRef.current) return;
+      setIsPendingStatus(false);
+      setPendingAction(null);
+      Alert.alert(
+        "Still processing",
+        "Bank verification is taking longer than usual. Please wait a moment and try again."
+      );
+    };
+
+    poll();
+    return () => {
+      abortPollRef.current = true;
+    };
+  }, [api, isPendingStatus, pendingAction]);
+
   const handleContinue = async () => {
     if (!user?.id) return;
     const { redirect_url, id } = await linkBankAccount(api, user?.id);
@@ -40,15 +105,13 @@ export default function BankAccountsScreen() {
     try {
       const status = await getLinkBankAccountStatus(api, user?.id, id);
       console.log("status of bank account link", id, status);
-      if (status === "completed") {
-        router.push("/bank-accounts/success");
-      } else if (status === "failed") {
-        router.push("/bank-accounts/failure");
-      } else if (status === "cancelled") {
-        router.push("/bank-accounts/cancelled");
-      } else {
-        Alert.alert("Error", "Failed to link bank account. Please try again.");
+      if (status === "pending") {
+        setPendingAction({ userID: user.id, actionID: id });
+        setIsPendingStatus(true);
+        return;
       }
+
+      routeByStatus(status);
     } catch (error: unknown) {
       console.log("error during getting bank account link status", error);
       Alert.alert("Error", "Failed to link bank account. Please try again.");
@@ -62,6 +125,23 @@ export default function BankAccountsScreen() {
     <SafeAreaView style={styles.safeArea} edges={["top"]}>
       <StatusBar style="auto" backgroundColor="#fff" />
       <Layout style={styles.container} level="1">
+        {isPendingStatus ? (
+          <View style={styles.pendingOverlay} pointerEvents="auto">
+            <View style={styles.pendingCard}>
+              <ActivityIndicator size="large" color="#2563EB" />
+              <Text category="s1" style={styles.pendingTitle}>
+                Waiting for bank verification…
+              </Text>
+              <Text
+                category="c1"
+                appearance="hint"
+                style={styles.pendingSubtitle}
+              >
+                This can take a few seconds. Please keep this screen open.
+              </Text>
+            </View>
+          </View>
+        ) : null}
         <ScrollView
           style={styles.scrollView}
           contentContainerStyle={styles.scrollContent}
@@ -163,6 +243,7 @@ export default function BankAccountsScreen() {
             style={styles.continueButton}
             size="large"
             onPress={handleContinue}
+            disabled={isPendingStatus}
           >
             Continue
           </Button>
@@ -349,5 +430,39 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
+  },
+  pendingOverlay: {
+    position: "absolute",
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: "rgba(15, 23, 42, 0.25)",
+    zIndex: 999,
+    justifyContent: "center",
+    alignItems: "center",
+    padding: 20,
+  },
+  pendingCard: {
+    width: "100%",
+    maxWidth: 420,
+    backgroundColor: "#FFFFFF",
+    borderRadius: 16,
+    paddingVertical: 18,
+    paddingHorizontal: 16,
+    alignItems: "center",
+    borderWidth: 1,
+    borderColor: "#E2E8F0",
+  },
+  pendingTitle: {
+    marginTop: 12,
+    fontWeight: "600",
+    color: "#0F172A",
+    textAlign: "center",
+  },
+  pendingSubtitle: {
+    marginTop: 6,
+    textAlign: "center",
+    lineHeight: 18,
   },
 });
