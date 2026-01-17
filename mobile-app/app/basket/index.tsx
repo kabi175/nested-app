@@ -587,20 +587,6 @@ export default function BasketInvestingScreen() {
           )}
         </View>
 
-        {/* FAQ Section */}
-        <View style={styles.faqSection}>
-          <ThemedText style={styles.sectionTitle}>
-            Frequently Asked Questions
-          </ThemedText>
-          {basketFaqs.map((faq, index) => (
-            <FAQAccordion
-              key={index}
-              question={faq.question}
-              answer={faq.answer}
-            />
-          ))}
-        </View>
-
         {/* Invest Button */}
         <TouchableOpacity
           style={[
@@ -625,6 +611,20 @@ export default function BasketInvestingScreen() {
             <ThemedText style={styles.investButtonText}>Invest</ThemedText>
           )}
         </TouchableOpacity>
+
+        {/* FAQ Section */}
+        <View style={styles.faqSection}>
+          <ThemedText style={styles.sectionTitle}>
+            Frequently Asked Questions
+          </ThemedText>
+          {basketFaqs.map((faq, index) => (
+            <FAQAccordion
+              key={index}
+              question={faq.question}
+              answer={faq.answer}
+            />
+          ))}
+        </View>
       </ScrollView>
     </SafeAreaView>
   );
@@ -891,7 +891,7 @@ const styles = StyleSheet.create({
     marginBottom: 24,
   },
   faqSection: {
-    marginBottom: 24,
+    marginTop: 24,
   },
   fundCard: {
     borderRadius: 12,
@@ -961,7 +961,7 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     paddingVertical: 16,
     alignItems: "center",
-    marginTop: 8,
+    marginBottom: 8,
   },
   investButtonDisabled: {
     opacity: 0.6,
