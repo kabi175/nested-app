@@ -117,7 +117,7 @@ const styles = StyleSheet.create({
   },
   legalContainer: {
     width: "100%",
-    alignItems: "flex-start",
+    alignItems: "center",
   },
   copyrightText: {
     fontSize: 14,
