@@ -14,7 +14,7 @@ export function useAuthAxios() {
     const interceptor = api.interceptors.request.use(async (config) => {
       try {
         let credential = await getCredentials();
-        let expiresAt = credential.expiresAt + 19800;
+        let expiresAt = credential.expiresAt;
         const now = Math.floor(Date.now() / 1000);
         if (now >= expiresAt) {
           console.log("credential expired, refreshing", expiresAt, now);
