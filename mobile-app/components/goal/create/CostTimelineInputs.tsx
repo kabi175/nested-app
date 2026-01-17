@@ -16,6 +16,15 @@ export function CostTimelineInputs({
   onCurrentCostChange,
   onTargetYearChange,
 }: CostTimelineInputsProps) {
+  const currentYear = new Date().getFullYear();
+  const minTargetYear = currentYear + 1;
+  const maxTargetYear = currentYear + 30;
+
+  const clampTargetYear = (year: number) =>
+    Math.min(maxTargetYear, Math.max(minTargetYear, year));
+
+  const clampedTargetYear = clampTargetYear(targetYear);
+
   return (
     <View style={styles.costTimelineContainer}>
       <View style={styles.inputGroup}>
@@ -42,26 +51,48 @@ export function CostTimelineInputs({
         <View style={styles.yearInputContainer}>
           <TextInput
             style={styles.yearInput}
-            value={targetYear.toString()}
+            value={clampedTargetYear.toString()}
             onChangeText={(text) => {
-              const value =
-                parseInt(text) || new Date().getFullYear();
-              onTargetYearChange(value);
+              const parsed = parseInt(text, 10);
+              const nextYear = Number.isFinite(parsed) ? parsed : minTargetYear;
+              onTargetYearChange(clampTargetYear(nextYear));
             }}
             keyboardType="numeric"
           />
           <View style={styles.yearControls}>
             <TouchableOpacity
-              style={styles.yearButton}
-              onPress={() => onTargetYearChange(targetYear + 1)}
+              style={[
+                styles.yearButton,
+                clampedTargetYear >= maxTargetYear && styles.yearButtonDisabled,
+              ]}
+              disabled={clampedTargetYear >= maxTargetYear}
+              onPress={() =>
+                onTargetYearChange(clampTargetYear(clampedTargetYear + 1))
+              }
             >
-              <ChevronUp size={16} color="#6B7280" />
+              <ChevronUp
+                size={16}
+                color={
+                  clampedTargetYear >= maxTargetYear ? "#9CA3AF" : "#6B7280"
+                }
+              />
             </TouchableOpacity>
             <TouchableOpacity
-              style={styles.yearButton}
-              onPress={() => onTargetYearChange(targetYear - 1)}
+              style={[
+                styles.yearButton,
+                clampedTargetYear <= minTargetYear && styles.yearButtonDisabled,
+              ]}
+              disabled={clampedTargetYear <= minTargetYear}
+              onPress={() =>
+                onTargetYearChange(clampTargetYear(clampedTargetYear - 1))
+              }
             >
-              <ChevronDown size={16} color="#6B7280" />
+              <ChevronDown
+                size={16}
+                color={
+                  clampedTargetYear <= minTargetYear ? "#9CA3AF" : "#6B7280"
+                }
+              />
             </TouchableOpacity>
           </View>
         </View>
@@ -125,5 +156,7 @@ const styles = StyleSheet.create({
   yearButton: {
     padding: 4,
   },
+  yearButtonDisabled: {
+    opacity: 0.6,
+  },
 });
-
