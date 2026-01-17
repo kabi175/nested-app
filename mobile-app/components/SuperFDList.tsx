@@ -35,7 +35,7 @@ const superFDBaskets: BasketCardData[] = [
   {
     id: "secure-money",
     title: "Secure Money",
-    subtitle: "Stable returns guaranteed",
+    subtitle: "Designed for stable returns",
     icon: <Shield size={28} color="#3B82F6" strokeWidth={2} />,
     iconBgColor: "#DBEAFE",
     returns: "7.50%",
