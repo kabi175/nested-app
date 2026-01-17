@@ -456,6 +456,20 @@ export default function PaymentMethodScreen() {
                 <ThemedText type="subtitle" style={styles.sectionTitle}>
                   Payment Steps
                 </ThemedText>
+                {/* Securi`ty Message */}
+                <View style={styles.securityBox}>
+                  <Ionicons
+                    name="shield-checkmark"
+                    size={20}
+                    color="#1E40AF"
+                    style={styles.securityIcon}
+                  />
+                  <ThemedText style={styles.securityText}>
+                    You&apos;ll be redirected to complete payment each step
+                    securely
+                  </ThemedText>
+                </View>
+
                 <ThemedText style={styles.stepsDescription}>
                   {buyOrdersAmount > 0 && sipOrdersAmount > 0
                     ? "Complete both steps to finish your investment"
@@ -530,20 +544,6 @@ export default function PaymentMethodScreen() {
                       </View>
                     </View>
                   )}
-                </View>
-
-                {/* Security Message */}
-                <View style={styles.securityBox}>
-                  <Ionicons
-                    name="shield-checkmark"
-                    size={20}
-                    color="#1E40AF"
-                    style={styles.securityIcon}
-                  />
-                  <ThemedText style={styles.securityText}>
-                    You&apos;ll be redirected to complete payment each step
-                    securely
-                  </ThemedText>
                 </View>
               </View>
             )}
@@ -869,7 +869,7 @@ const styles = StyleSheet.create({
     backgroundColor: "#EFF6FF",
     borderRadius: 14,
     padding: 16,
-    marginTop: 12,
+    marginBottom: 12,
     flexDirection: "row",
     alignItems: "center",
     borderWidth: 1,
