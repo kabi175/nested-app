@@ -35,7 +35,13 @@ export default function Slider({
     const pressPercentage = Math.max(0, Math.min(1, locationX / trackWidth));
     const rawValue = min + pressPercentage * (max - min);
     const newValue = Math.round(rawValue / step) * step;
-    onValueChange(newValue);
+    if (newValue > max) {
+      onValueChange(max);
+    } else if (newValue < min) {
+      onValueChange(min);
+    } else {
+      onValueChange(newValue);
+    }
   };
 
   const defaultFormatValue = (val: number) => {
