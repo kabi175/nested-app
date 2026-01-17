@@ -394,7 +394,7 @@ export default function BasketInvestingScreen() {
         });
         setCart(orderResponse);
 
-        router.push("/child/1/goal/loading");
+        router.push("/payment");
       } else {
         router.push("/");
       }
