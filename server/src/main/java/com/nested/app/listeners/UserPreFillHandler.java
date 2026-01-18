@@ -154,9 +154,10 @@ public record UserPreFillHandler(
     if (savedUser.getFirstName() == null || savedUser.getFirstName().isEmpty()) {
       savedUser.setFirstName(data.getName()); // you may want to split name
     }
-    if (savedUser.getEmail() == null) {
-      savedUser.setEmail(data.getEmailInfo().getFirst().getEmailAddress().toLowerCase());
-    }
+    // Email should be verified before adding, so it should be done from the UI
+    //    if (savedUser.getEmail() == null) {
+    //      savedUser.setEmail(data.getEmailInfo().getFirst().getEmailAddress().toLowerCase());
+    //    }
     savedUser.setClientCode(data.getReference());
     if (savedUser.getPanNumber() == null) {
       savedUser.setPanNumber(
