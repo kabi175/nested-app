@@ -7,7 +7,6 @@ const SUCCESS_ERROR_CODES = ["kyc_unavailable", "kyc_incomplete", "unknown"];
 export const getValidationStatus = (
   data: PreVerificationData[] | undefined
 ): ValidationStatus => {
-  console.log("getValidationStatus", data);
   if (!data || data.length === 0) return "in_progress";
 
   const isPending = data.some((item) => item.is_pending);
