@@ -180,6 +180,32 @@ export const initKyc = async (
   await api.post(`/users/${user.id}/actions/init_kyc`);
 };
 
+export type PreVerificationData = {
+  entity:  "ready_to_invest"  | "name" | "pan" | "date_of_birth"
+  value: string;
+  is_valid: boolean;
+  is_pending: boolean;
+  error_code: "kyc_unavailable" // KYC records is not available in the system, so do a fresh KYC; consider this a success.
+  | "kyc_incomplete" // KYC records is available in the system, but some details are missing, so do a fresh KYC; consider this a success.
+  | "unknown" // user can't be verified, & investment can't be made. Our team will manually contact the user.
+  | "mismatch" // name mismatch with PAN
+  | "invalid" // PAN is invalid
+  | "aadhaar_not_linked" // Aadhaar is not linked to the user PAN
+  | "upstream_error"; // Error with KYC serice partner; Retry after some time.
+}
+
+export const fetchPreVerification = async (
+  api: AxiosInstance,
+  user: User
+): Promise<PreVerificationData[]> => {
+  const { data } = await api.post(`/users/${user.id}/actions/pre_verification`);
+  if (!data.data) {
+    return [];
+  }
+  console.log("data.data", data.data);
+  return data.data as PreVerificationData[];
+};
+
 export const fetchAadhaarUploadRedirectUrl = async (
   api: AxiosInstance,
   user: User

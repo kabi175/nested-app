@@ -53,6 +53,18 @@ export default function KYCRootLayout() {
           name="waiting-for-approval"
           options={{ title: "KYC • Waiting for Approval" }}
         />
+        <Stack.Screen
+          name="validation-in-progress"
+          options={{ title: "KYC • Verification" }}
+        />
+        <Stack.Screen
+          name="validation-success"
+          options={{ title: "KYC • Success" }}
+        />
+        <Stack.Screen
+          name="validation-failure"
+          options={{ title: "KYC • Failure" }}
+        />
         <Stack.Screen name="kyc-success" options={{ title: "KYC • Success" }} />
       </Stack>
     </KycProvider>

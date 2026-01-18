@@ -14,4 +14,5 @@ export const QUERY_KEYS = {
   fundAllocations: "fundAllocations",
   basket: "basket",
   nominees: "nominees",
+  preVerification: "preVerification",
 };

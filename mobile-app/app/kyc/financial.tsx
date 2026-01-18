@@ -9,7 +9,6 @@ import {
 } from "@/constants/kycFinancialOptions";
 import { QUERY_KEYS } from "@/constants/queryKeys";
 import { useAuthAxios } from "@/hooks/useAuthAxios";
-import { useInitKyc } from "@/hooks/useInitKyc";
 import { useUser } from "@/hooks/useUser";
 import { useKyc } from "@/providers/KycProvider";
 import type { User } from "@/types/auth";
@@ -53,8 +52,6 @@ export default function FinancialScreen() {
     hasPrefilledRef.current = true;
   }, [user, data.financial, update]);
 
-  const { mutateAsync: initKyc } = useInitKyc();
-
   const { mutateAsync: updateFinancialData, isPending: isUpdatingFinancial } =
     useMutation({
       mutationFn: async ({
@@ -72,31 +69,6 @@ export default function FinancialScreen() {
         queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.user] });
       },
     });
-
-  const routeToNextStep = (status: string | undefined) => {
-    switch (status) {
-      case "aadhaar_pending":
-        router.push("/kyc/aadhaar-upload");
-        break;
-      case "esign_pending":
-        router.push("/kyc/esign-upload");
-        break;
-      case "approved":
-        router.push("/bank-accounts");
-        break;
-      case "rejected":
-        router.push("/kyc/failure");
-        break;
-      case "cancelled":
-        router.push("/kyc/cancelled");
-        break;
-      case "submitted":
-        router.push("/kyc/waiting-for-approval");
-        break;
-      default:
-        throw new Error(`Invalid KYC status: ${status}`);
-    }
-  };
 
   const onContinue = async () => {
     const validation = validateFinancial();
@@ -125,31 +97,7 @@ export default function FinancialScreen() {
         },
       });
 
-      // Wait for query to refetch after invalidation
-      await queryClient.refetchQueries({ queryKey: [QUERY_KEYS.user] });
-      const latestUser = queryClient.getQueryData<typeof user>([
-        QUERY_KEYS.user,
-      ]);
-      let kycStatus = latestUser?.kycStatus ?? user?.kycStatus;
-
-      // Initialize KYC if status is unknown, pending, or undefined
-      const needsKycInit =
-        kycStatus === "unknown" ||
-        kycStatus === "pending" ||
-        kycStatus === "failed" ||
-        kycStatus === undefined;
-
-      if (needsKycInit && latestUser) {
-        await initKyc(latestUser);
-        await queryClient.refetchQueries({ queryKey: [QUERY_KEYS.user] });
-        const updatedUser = queryClient.getQueryData<typeof user>([
-          QUERY_KEYS.user,
-        ]);
-        kycStatus = updatedUser?.kycStatus ?? kycStatus;
-      }
-
-      // Route to next step based on KYC status
-      routeToNextStep(kycStatus);
+      router.push("/kyc/validation-in-progress");
     } catch (error) {
       // TODO: surface error to user (toast/snackbar) if needed
       console.error("Error saving financial information:", error);
