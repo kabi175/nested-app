@@ -128,10 +128,10 @@ export default function BasicDetailsScreen() {
             }}
           >
             <Text category="label">Full Name</Text>
-            <InfoTooltip content="Your name helps us verify your identity as per your PAN/Aadhaar." />
+            <InfoTooltip content="Your name helps us verify your identity as per your PAN." />
           </View>
           <Input
-            placeholder="As per PAN/Aadhaar"
+            placeholder="As per PAN"
             value={data.basic.fullName}
             onChangeText={(v) => update("basic", { fullName: v })}
             status={errors.fullName ? "danger" : "basic"}
