@@ -16,6 +16,5 @@ export type BasketFund = {
 
 export const getBasketByName = async (api: AxiosInstance, name: string): Promise<Basket> => {
   const { data } = await api.get(`/bucket/name/${name}`);
-  console.log(data);
   return data;
 };
