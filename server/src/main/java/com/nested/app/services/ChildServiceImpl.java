@@ -254,13 +254,13 @@ public class ChildServiceImpl implements ChildService {
       throw new IllegalArgumentException("Date of birth cannot be in the future");
     }
 
-//    // Validate that the child is a minor (under 18 years old)
-//    LocalDate eighteenYearsAgo = LocalDate.now().minusYears(18);
-//    LocalDate birthDate = childDTO.getDateOfBirth().toLocalDate();
-//
-//    if (!birthDate.isAfter(eighteenYearsAgo)) {
-//      throw new IllegalArgumentException("Child must be under 18 years old");
-//    }
+    //    // Validate that the child is a minor (under 18 years old)
+    //    LocalDate eighteenYearsAgo = LocalDate.now().minusYears(18);
+    //    LocalDate birthDate = childDTO.getDateOfBirth().toLocalDate();
+    //
+    //    if (!birthDate.isAfter(eighteenYearsAgo)) {
+    //      throw new IllegalArgumentException("Child must be under 18 years old");
+    //    }
   }
 
   /**
