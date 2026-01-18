@@ -285,4 +285,49 @@ public class GoalController {
     return ResponseEntity.status(HttpStatus.CREATED).body(Map.of("data", fetchedOrders));
   }
 
+  /**
+   * Retrieves goals by basket name
+   *
+   * @param basketName The exact name of the basket to search for
+   * @return ResponseEntity containing list of goals for the basket, or 204 No Content if no goals
+   *     found
+   */
+  @GetMapping("/by-basket/{basketName}")
+  @Operation(
+      summary = "Get goals by basket name",
+      description = "Retrieves all goals associated with a specific basket using exact name match")
+  @ApiResponses(
+      value = {
+        @ApiResponse(
+            responseCode = "200",
+            description = "Successfully retrieved goals",
+            content =
+                @Content(
+                    mediaType = "application/json",
+                    schema = @Schema(implementation = Map.class))),
+        @ApiResponse(responseCode = "204", description = "No goals found for the specified basket"),
+        @ApiResponse(responseCode = "500", description = "Internal server error")
+      })
+  public ResponseEntity<Map<String, List<GoalDTO>>> getGoalsByBasketName(
+      @Parameter(description = "Exact basket name", required = true) @PathVariable
+          String basketName) {
+
+    log.info("GET /api/v1/goals/by-basket/{} - Retrieving goals for basket", basketName);
+
+    try {
+      List<GoalDTO> goals = goalService.getGoalsByBasketName(basketName, userContext.getUser());
+      log.info("Successfully retrieved {} goals for basket: {}", goals.size(), basketName);
+
+      if (goals.isEmpty()) {
+        log.info("No goals found for basket name: {}", basketName);
+        return ResponseEntity.noContent().build();
+      }
+
+      return ResponseEntity.ok(Map.of("data", goals));
+
+    } catch (Exception e) {
+      log.error("Error retrieving goals for basket {}: {}", basketName, e.getMessage(), e);
+      return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+    }
+  }
 }

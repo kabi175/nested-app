@@ -50,4 +50,13 @@ public interface GoalService {
    * @return List of updated goals
    */
   List<GoalDTO> updateGoals(List<GoalDTO> goals, User user);
+
+  /**
+   * Retrieves goals by basket name
+   *
+   * @param basketName The exact name of the basket to search for
+   * @param user Current user context
+   * @return List of goals associated with the specified basket
+   */
+  List<GoalDTO> getGoalsByBasketName(String basketName, User user);
 }

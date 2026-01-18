@@ -178,25 +178,26 @@ public class GoalServiceImpl implements GoalService {
   /**
    * Updates multiple goals
    *
-   * @param goals List of goal data to update
+   * @param goalDtos List of goal data to update
    * @param user Current user context
    * @return List of updated goals
    */
   @Override
-  public List<GoalDTO> updateGoals(List<GoalDTO> goals, User user) {
-    log.info("Updating {} goals for user ID: {}", goals.size(), user.getId());
+  @Transactional
+  public List<GoalDTO> updateGoals(List<GoalDTO> goalDtos, User user) {
+    log.info("Updating {} goals for user ID: {}", goalDtos.size(), user.getId());
 
     try {
       List<GoalDTO> updatedGoals =
-          goals.stream()
+          goalDtos.stream()
               .map(
-                  goal -> {
+                  goalDTO -> {
                     try {
-                      return updateGoal(goal, user);
+                      return updateGoal(goalDTO, user);
                     } catch (Exception e) {
-                      log.error("Error updating goal with ID {}: {}", goal.getId(), e.getMessage());
-                      throw new ExternalServiceException(
-                          "Failed to update goal with ID: " + goal.getId(), e);
+                      log.error(
+                          "Error updating goal with ID {}: {}", goalDTO.getId(), e.getMessage(), e);
+                      throw new ExternalServiceException("Failed to update goal", e);
                     }
                   })
               .collect(Collectors.toList());
@@ -207,6 +208,31 @@ public class GoalServiceImpl implements GoalService {
     } catch (Exception e) {
       log.error("Error updating goals: {}", e.getMessage(), e);
       throw new ExternalServiceException("Failed to update goals", e);
+    }
+  }
+
+  /**
+   * Retrieves goals by basket name with exact match filtering
+   *
+   * @param basketName The exact name of the basket to search for
+   * @param user Current user context
+   * @return List of goals associated with the specified basket
+   */
+  @Override
+  @Transactional(readOnly = true)
+  public List<GoalDTO> getGoalsByBasketName(String basketName, User user) {
+    log.info("Retrieving goals for basket name: {} for user ID: {}", basketName, user.getId());
+
+    try {
+      List<Goal> goals = goalRepository.findByBasketTitle(basketName, user);
+      List<GoalDTO> goalDTOs = goals.stream().map(this::convertToDTO).collect(Collectors.toList());
+
+      log.info("Successfully retrieved {} goals for basket name: {}", goalDTOs.size(), basketName);
+      return goalDTOs;
+
+    } catch (Exception e) {
+      log.error("Error retrieving goals for basket name {}: {}", basketName, e.getMessage(), e);
+      throw new ExternalServiceException("Failed to retrieve goals by basket name", e);
     }
   }
 

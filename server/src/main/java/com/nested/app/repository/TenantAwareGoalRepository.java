@@ -73,6 +73,21 @@ public class TenantAwareGoalRepository extends SimpleJpaRepository<Goal, Long> {
   }
 
   /**
+   * Find goals by basket title with tenant filtering
+   *
+   * @param basketTitle Exact basket title to search for
+   * @param user Current user context
+   * @return List of goals associated with the basket having the specified title
+   */
+  public List<Goal> findByBasketTitle(String basketTitle, User user) {
+    enableUserFilter(user);
+    return entityManager
+        .createQuery("SELECT g FROM Goal g WHERE g.basket.title = :basketTitle", Goal.class)
+        .setParameter("basketTitle", basketTitle)
+        .getResultList();
+  }
+
+  /**
    * Enables the user filter for tenant isolation Admin users bypass the filter and can see all
    * goals
    *
