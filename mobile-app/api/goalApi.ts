@@ -6,6 +6,11 @@ export const getGoals = async (api: AxiosInstance): Promise<Goal[]> => {
   return (data.data ?? []).map((goal: GoalDTO): Goal => mapGoalToGoal(goal));
 };
 
+export const getGoalsByBasketName = async (api: AxiosInstance, basketName: string): Promise<Goal[]> => {
+  const { data } = await api.get(`/goals/by-basket/${basketName}`);
+  return (data.data ?? []).map((goal: GoalDTO): Goal => mapGoalToGoal(goal));
+};
+
 export const getGoal = async (
   api: AxiosInstance,
   id: string

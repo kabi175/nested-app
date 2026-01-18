@@ -1,3 +1,5 @@
+import { getGoalsByBasketName } from "@/api/goalApi";
+import { useAuthAxios } from "@/hooks/useAuthAxios";
 import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
 import React from "react";
@@ -60,8 +62,14 @@ const wealthBaskets: WealthBasket[] = [
 export default function PopularWealthBaskets({
   onExplore,
 }: PopularWealthBasketsProps) {
-  const handleExplore = (basketId: string) => {
-    router.push(`/basket?type=${basketId}`);
+  const api = useAuthAxios();
+  const handleExplore = async(basketId: string) => {
+    const goals = await getGoalsByBasketName(api, basketId);
+    if(goals.length > 0) {
+      router.push(`/goal/${goals[0].id}/holdings`);
+    } else {
+      router.push(`/basket?type=${basketId}`);
+    }
   };
 
   return (
