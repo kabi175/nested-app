@@ -81,7 +81,7 @@ export default function WaitingForApprovalScreen() {
       behavior={Platform.select({ ios: "padding", android: undefined })}
       style={{ flex: 1 }}
     >
-      <StepProgress current={6} total={6} />
+      <StepProgress current={5} total={5} />
       <ScrollView contentContainerStyle={{ padding: 16, gap: 16 }}>
         <Layout
           level="1"

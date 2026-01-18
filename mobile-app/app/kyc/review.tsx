@@ -16,8 +16,8 @@ export default function ReviewScreen() {
   const router = useRouter();
   const [checked, setChecked] = useState(false);
   const [error, setError] = useState<string>("");
-  const totalSteps = 6;
-  const currentStep = 6;
+  const totalSteps = 5;
+  const currentStep = 5;
 
   const summary = useMemo(
     () => ({

@@ -24,10 +24,6 @@ export default function KYCRootLayout() {
           name="basic-details"
           options={{ title: "KYC • Basic Details" }}
         />
-        <Stack.Screen
-          name="identity"
-          options={{ title: "KYC • Identity Proof" }}
-        />
         <Stack.Screen name="address" options={{ title: "KYC • Address" }} />
         <Stack.Screen
           name="photo-signature"

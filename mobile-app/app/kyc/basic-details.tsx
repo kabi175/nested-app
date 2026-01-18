@@ -28,16 +28,13 @@ const maritalStatusOptions = [
 ];
 
 export default function BasicDetailsScreen() {
-  const { data, update, validateBasic } = useKyc();
+  const { data, update, validateBasic, validateIdentity } = useKyc();
   const { data: apiUser } = useUser();
-  const {
-    mutateAsync: updateUser,
-    isPending: isUpdatePending,
-    isError,
-  } = useUpdateUser();
+  const { mutateAsync: updateUser, isPending: isUpdatePending } =
+    useUpdateUser();
   const router = useRouter();
   const [errors, setErrors] = useState<Record<string, string>>({});
-  const totalSteps = 6;
+  const totalSteps = 5;
   const currentStep = 1;
   const maxDate = new Date();
   maxDate.setFullYear(maxDate.getFullYear() - 18);
@@ -60,6 +57,23 @@ export default function BasicDetailsScreen() {
           father_name: apiUser.father_name || "",
           marital_status: apiUser.marital_status || "",
         });
+
+        // Map identity data
+        const hasExistingIdentityValues = Boolean(
+          data.identity.pan || data.identity.aadhaarLast4
+        );
+
+        if (!hasExistingIdentityValues) {
+          const panNumber = apiUser.panNumber?.trim();
+          const aadhaarLast4 = apiUser.aadhaar?.trim();
+
+          if (panNumber || aadhaarLast4) {
+            update("identity", {
+              pan: panNumber ? panNumber.toUpperCase() : data.identity.pan,
+              aadhaarLast4: aadhaarLast4 ?? data.identity.aadhaarLast4,
+            });
+          }
+        }
       }
     })();
     return () => {
@@ -67,11 +81,15 @@ export default function BasicDetailsScreen() {
     };
   }, [update, apiUser]);
 
-  const onContinue = () => {
-    const v = validateBasic();
-    setErrors(v.errors);
-    if (!v.isValid) return;
-    (async () => {
+  const onContinue = async () => {
+    const vBasic = validateBasic();
+    const vIdentity = validateIdentity();
+    const combinedErrors = { ...vBasic.errors, ...vIdentity.errors };
+    setErrors(combinedErrors);
+
+    if (!vBasic.isValid || !vIdentity.isValid) return;
+
+    try {
       // Split full name
       const parts = (data.basic.fullName || "").trim().split(/\s+/);
       const firstName = parts[0] || "";
@@ -92,16 +110,15 @@ export default function BasicDetailsScreen() {
           gender: (genderLower as any) || undefined,
           father_name: data.basic.father_name || undefined,
           marital_status: (data.basic.marital_status as any) || undefined,
+          panNumber: data.identity.pan,
+          aadhaar: data.identity.aadhaarLast4,
         },
       });
 
-      if (isError) {
-        Alert.alert("Error", "Failed to update user. Please try again.");
-        return;
-      }
-
-      router.push("/kyc/identity");
-    })();
+      router.push("/kyc/address");
+    } catch (error) {
+      Alert.alert("Error", "Failed to update user. Please try again.");
+    }
   };
 
   return (
@@ -220,6 +237,52 @@ export default function BasicDetailsScreen() {
             status={errors.marital_status ? "danger" : "basic"}
             caption={errors.marital_status}
             placeholder="Select"
+          />
+        </View>
+
+        <View>
+          <View
+            style={{
+              flexDirection: "row",
+              alignItems: "center",
+              marginBottom: 6,
+            }}
+          >
+            <Text category="label">PAN Number</Text>
+            <InfoTooltip content="Your PAN is required to verify your tax identity with government databases." />
+          </View>
+          <Input
+            autoCapitalize="characters"
+            placeholder="ABCDE1234F"
+            value={data.identity.pan}
+            onChangeText={(v) => update("identity", { pan: v.toUpperCase() })}
+            status={errors.pan ? "danger" : "basic"}
+            caption={errors.pan}
+          />
+        </View>
+
+        <View>
+          <View
+            style={{
+              flexDirection: "row",
+              alignItems: "center",
+              marginBottom: 6,
+            }}
+          >
+            <Text category="label">Aadhaar (last 4 digits)</Text>
+            <InfoTooltip content="Your Aadhaar last 4 digit helps verify your address and identity." />
+          </View>
+          <Input
+            placeholder="1234"
+            value={data.identity.aadhaarLast4}
+            onChangeText={(v) =>
+              update("identity", { aadhaarLast4: v.replace(/[^0-9]/g, "") })
+            }
+            keyboardType="number-pad"
+            maxLength={4}
+            secureTextEntry
+            status={errors.aadhaarLast4 ? "danger" : "basic"}
+            caption={errors.aadhaarLast4}
           />
         </View>
 

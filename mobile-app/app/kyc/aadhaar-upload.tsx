@@ -14,8 +14,8 @@ export default function AadhaarUploadScreen() {
   const router = useRouter();
   const [isLaunching, setIsLaunching] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const totalSteps = 6;
-  const currentStep = 6;
+  const totalSteps = 5;
+  const currentStep = 5;
 
   const startAadhaarUpload = useCallback(async () => {
     if (!user) {

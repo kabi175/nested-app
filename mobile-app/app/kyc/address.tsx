@@ -32,8 +32,8 @@ export default function AddressScreen() {
   const { data: user } = useUser();
   const queryClient = useQueryClient();
   const [hasPrefilled, setHasPrefilled] = useState(false);
-  const totalSteps = 6;
-  const currentStep = 3;
+  const totalSteps = 5;
+  const currentStep = 2;
 
   const states = useMemo(
     () => [

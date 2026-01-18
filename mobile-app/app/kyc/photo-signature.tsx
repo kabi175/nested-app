@@ -26,8 +26,8 @@ export default function PhotoSignatureScreen() {
   const router = useRouter();
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [hasSignatureChanged, setHasSignatureChanged] = useState(false);
-  const totalSteps = 6;
-  const currentStep = 4;
+  const totalSteps = 5;
+  const currentStep = 3;
   const api = useAuthAxios();
   const normalizeSignatureUri = (uri: string | null | undefined) => {
     if (!uri) {

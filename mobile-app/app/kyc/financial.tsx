@@ -26,8 +26,8 @@ export default function FinancialScreen() {
   const { data: user, isLoading: isLoadingUser } = useUser();
   const [errors, setErrors] = useState<Record<string, string>>({});
   const hasPrefilledRef = useRef(false);
-  const totalSteps = 6;
-  const currentStep = 5;
+  const totalSteps = 5;
+  const currentStep = 4;
   const api = useAuthAxios();
 
   useEffect(() => {
