@@ -7,11 +7,13 @@ import com.nested.app.dto.EmailUpdateRequest;
 import com.nested.app.dto.EmailUpdateResponse;
 import com.nested.app.dto.Entity;
 import com.nested.app.dto.MinifiedUserDTO;
+import com.nested.app.dto.PreVerificationData;
 import com.nested.app.dto.UserActionRequest;
 import com.nested.app.dto.UserDTO;
 import com.nested.app.entity.User;
 import com.nested.app.services.InvestorService;
 import com.nested.app.services.KycService;
+import com.nested.app.services.PreVerificationService;
 import com.nested.app.services.UserService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -24,6 +26,7 @@ import jakarta.validation.Valid;
 import java.util.Map;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.http.auth.AuthenticationException;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
@@ -53,6 +56,7 @@ public class UserController {
   private final UserService userService;
   private final InvestorService investorService;
   private final KycService kycService;
+  private final PreVerificationService preVerificationService;
   private final UserContext userContext;
 
   @GetMapping(produces = MediaType.APPLICATION_JSON_VALUE)
@@ -353,5 +357,20 @@ public class UserController {
     EmailUpdateResponse response =
         new EmailUpdateResponse("Email updated successfully", updatedUser.getEmail());
     return ResponseEntity.ok(response);
+  }
+
+  @PostMapping(
+      value = "/{user_id}/actions/pre_verification",
+      produces = MediaType.APPLICATION_JSON_VALUE)
+  public ResponseEntity<Entity<PreVerificationData>> fetchPreVerificationData(
+      @PathVariable("user_id") Long userID) throws AuthenticationException {
+    if (!userContext.getUser().getId().equals(userID)) {
+      throw new AuthenticationException("action not allowed");
+    }
+    var data = preVerificationService.getVerification(userContext, userID);
+    if (data == null) {
+      return ResponseEntity.noContent().build();
+    }
+    return ResponseEntity.ok(Entity.of(data));
   }
 }

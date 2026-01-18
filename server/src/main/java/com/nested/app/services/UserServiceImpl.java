@@ -16,6 +16,7 @@ import com.nested.app.mapper.BankAccountTypeMapper;
 import com.nested.app.repository.AddressRepository;
 import com.nested.app.repository.BankDetailRepository;
 import com.nested.app.repository.UserRepository;
+import com.nested.app.repository.UserVerificationRepository;
 import io.micrometer.common.util.StringUtils;
 import java.util.List;
 import java.util.Objects;
@@ -26,6 +27,7 @@ import org.springdoc.api.OpenApiResourceNotFoundException;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 @Slf4j
@@ -41,7 +43,7 @@ public class UserServiceImpl implements UserService {
   private final ApplicationEventPublisher publisher;
   private final KycRedirectService kycRedirectService;
   private final BankApiClient bankApiClient;
-  private final MfaService mfaService;
+  private final UserVerificationRepository userVerificationRepository;
 
   @Override
   public List<UserDTO> findAllUsers(Type type, Pageable pageable, User user) {
@@ -64,6 +66,7 @@ public class UserServiceImpl implements UserService {
     return UserDTO.fromEntity(savedUser);
   }
 
+  @Transactional
   @Override
   public UserDTO updateUser(UserDTO userDTO, User user) {
     Long userId = userDTO.getId();
@@ -80,15 +83,18 @@ public class UserServiceImpl implements UserService {
                     new OpenApiResourceNotFoundException("User with id " + userId + " not found"));
 
     User updatedUser = originalUser;
+    var flushValidationData = false;
 
     if (!StringUtils.isBlank(userDTO.getFirstName())
         && !Objects.equals(userDTO.getFirstName(), originalUser.getFirstName())) {
       updatedUser = originalUser.withFirstName(userDTO.getFirstName());
+      flushValidationData = true;
     }
 
     if (!StringUtils.isBlank(userDTO.getLastName())
         && !Objects.equals(userDTO.getLastName(), originalUser.getLastName())) {
       updatedUser = originalUser.withLastName(userDTO.getLastName());
+      flushValidationData = true;
     }
 
     if (!StringUtils.isBlank(userDTO.getEmail())
@@ -123,6 +129,7 @@ public class UserServiceImpl implements UserService {
     if (userDTO.getDateOfBirth() != null
         && !Objects.equals(userDTO.getDateOfBirth(), originalUser.getDateOfBirth())) {
       updatedUser = updatedUser.withDateOfBirth(userDTO.getDateOfBirth());
+      flushValidationData = true;
     }
 
     if (userDTO.getGender() != null
@@ -133,6 +140,7 @@ public class UserServiceImpl implements UserService {
     if (!StringUtils.isBlank(userDTO.getPanNumber())
         && !Objects.equals(userDTO.getPanNumber(), originalUser.getPanNumber())) {
       updatedUser = updatedUser.withPanNumber(userDTO.getPanNumber());
+      flushValidationData = true;
     }
 
     if (!StringUtils.isBlank(userDTO.getAadhaarLast4())
@@ -179,6 +187,9 @@ public class UserServiceImpl implements UserService {
       return UserDTO.fromEntity(originalUser);
     }
     User updated = userRepository.save(updatedUser);
+    if (flushValidationData) {
+      userVerificationRepository.deleteByUser(originalUser);
+    }
 
     // publish event after successful update
     publisher.publishEvent(new UserUpdateEvent(originalUser, updatedUser));
