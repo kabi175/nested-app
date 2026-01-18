@@ -6,7 +6,6 @@ import com.nested.app.entity.User;
 import com.nested.app.exception.ExternalServiceException;
 import com.nested.app.repository.TenantAwareChildRepository;
 import com.nested.app.repository.UserRepository;
-import java.time.LocalDate;
 import java.util.Date;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
@@ -255,18 +254,13 @@ public class ChildServiceImpl implements ChildService {
       throw new IllegalArgumentException("Date of birth cannot be in the future");
     }
 
-    // Validate that the child is a minor (under 18 years old)
-    LocalDate eighteenYearsAgo = LocalDate.now().minusYears(18);
-    LocalDate birthDate = childDTO.getDateOfBirth().toLocalDate();
-
-    if (!birthDate.isAfter(eighteenYearsAgo)) {
-      throw new IllegalArgumentException("Child must be under 18 years old");
-    }
-
-    // Validate that is the date of birth is not future
-    if (childDTO.getDateOfBirth().after(new Date())) {
-      throw new IllegalArgumentException("Date of birth cannot be in the future");
-    }
+//    // Validate that the child is a minor (under 18 years old)
+//    LocalDate eighteenYearsAgo = LocalDate.now().minusYears(18);
+//    LocalDate birthDate = childDTO.getDateOfBirth().toLocalDate();
+//
+//    if (!birthDate.isAfter(eighteenYearsAgo)) {
+//      throw new IllegalArgumentException("Child must be under 18 years old");
+//    }
   }
 
   /**
