@@ -35,7 +35,6 @@ public class KycAPIClient implements com.nested.app.client.mf.KycAPIClient {
   @Value("${app.url}")
   private String APP_URL;
 
-  @Override
   public Mono<KycCheck> isKycRecordAvailable(@NotEmpty String pan, @NotNull Date dob) {
     return api.withAuth()
         .get()
