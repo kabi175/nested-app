@@ -181,7 +181,6 @@ public class SellOrderServiceImpl implements SellOrderService {
       orderItem.setAmount(sellOrderItem.getAmount() != null ? sellOrderItem.getAmount() : 0.0);
       orderItem.setUser(user);
       orderItem.setStatus(TransactionStatus.VERIFICATION_PENDING);
-      // TODO: handle the  processing state properly
 
       orderItemsRepository.save(orderItem);
 
@@ -258,6 +257,16 @@ public class SellOrderServiceImpl implements SellOrderService {
           if (!order.getUser().equals(user)) {
             throw new IllegalArgumentException("Order does not belong to current user");
           }
+
+          order
+              .getItems()
+              .forEach(
+                  item -> {
+                    if (!item.getStatus().equals(TransactionStatus.VERIFICATION_PENDING)) {
+                      throw new IllegalArgumentException("Order already processed");
+                    }
+                    item.setStatus(TransactionStatus.SUBMITTED);
+                  });
         });
 
     // Collect order refs for consent and confirmation
@@ -298,6 +307,7 @@ public class SellOrderServiceImpl implements SellOrderService {
 
       log.info("Confirmed {} sell orders", orderRefs.size());
 
+      orderRepository.saveAll(orders);
       // Schedule fulfillment jobs for order tracking
       //      sellOrderSchedulerService.scheduleSellOrderStatusJobs(orderRefs);
       log.info("Scheduled fulfillment jobs for {} sell orders", orderRefs.size());
