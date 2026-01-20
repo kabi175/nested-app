@@ -67,7 +67,9 @@ public class FundSyncScheduler {
 
   private void mapToFund(FundDTO dto, Fund fund) {
     log.info("Fund {}", dto.getSchemeName());
-    fund.setLabel(dto.getSchemeName());
+    if(fund.getLabel() == null){
+        fund.setLabel(dto.getSchemeName());
+    }
     fund.setName(dto.getSchemeName());
 
     fund.setMimPurchaseAmount(Math.max(dto.getMinAmountBuy(), 100));
