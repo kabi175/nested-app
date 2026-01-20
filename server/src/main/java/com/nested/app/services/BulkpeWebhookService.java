@@ -1,23 +1,19 @@
 package com.nested.app.services;
 
-import java.util.Optional;
-
-import com.nested.app.entity.Investor;
+import com.nested.app.client.bulkpe.dto.BulkpeWebhookRequest;
+import com.nested.app.entity.BankDetail;
 import com.nested.app.entity.ReversePennyDrop;
 import com.nested.app.entity.User;
+import com.nested.app.repository.BankDetailRepository;
 import com.nested.app.repository.InvestorRepository;
 import com.nested.app.repository.ReversePennyDropRepository;
 import com.nested.app.repository.UserRepository;
+import java.util.Optional;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.text.similarity.LevenshteinDistance;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
-import com.nested.app.client.bulkpe.dto.BulkpeWebhookRequest;
-import com.nested.app.entity.BankDetail;
-import com.nested.app.repository.BankDetailRepository;
-
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 
 /** Service to handle Bulkpe webhook requests for reverse penny drop */
 @Slf4j
@@ -118,28 +114,24 @@ public class BulkpeWebhookService {
     Optional<BankDetail> existingBankDetail =
         bankDetailRepository.findByAccountNumberAndIfscCode(accountNumber, ifscCode);
 
-    BankDetail bankDetail;
     if (existingBankDetail.isPresent()) {
-      // Update existing bank detail
-      bankDetail = existingBankDetail.get();
-      log.info(
-          "Updating existing bank detail with ID: {} for user: {}",
-          bankDetail.getId(),
-          user.getId());
-      updateBankDetailFromWebhook(bankDetail, data);
-    } else {
-      // Create new bank detail for the user
-      log.info("Creating new bank detail for user: {}", user.getId());
-      bankDetail = createBankDetailFromWebhook(user, data);
+      log.warn(
+          "Bank already added existing_bank_id {} transactionID {}",
+          existingBankDetail.get().getId(),
+          transactionID);
+      reversePennyDrop.setStatus(ReversePennyDrop.ReversePennyDropStatus.FAILED);
+      reversePennyDropRepository.save(reversePennyDrop);
+      return false;
     }
-
+    // Create new bank detail for the user
+    log.info("Creating new bank detail for user: {}", user.getId());
+    var bankDetail = createBankDetailFromWebhook(user, data);
     bankDetailRepository.save(bankDetail);
     log.info(
         "Successfully processed webhook for userId={}, accountNumber={}, bankDetailId={}",
         referenceId,
         accountNumber,
         bankDetail.getId());
-
     reversePennyDrop.setStatus(ReversePennyDrop.ReversePennyDropStatus.COMPLETED);
 
     reversePennyDropRepository.save(reversePennyDrop);
