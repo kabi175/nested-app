@@ -16,7 +16,7 @@ export default function NestedFooter() {
   };
 
   const handlePrivacyPress = () => {
-    Linking.openURL("https://nested.money/privacy-policy");
+    Linking.openURL("https://nested.money/#/privacy-policy");
   };
 
   return (

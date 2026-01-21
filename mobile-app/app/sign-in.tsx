@@ -311,7 +311,7 @@ export default function SignIn() {
                 >
                   You agree to{" "}
                   <Link
-                    href="https://nested.money/privacy-policy"
+                    href="https://nested.money/#/privacy-policy"
                     style={styles.linkText}
                   >
                     TnC and Privacy Policy
