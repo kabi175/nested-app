@@ -114,15 +114,11 @@ public class LumpSumPaymentCompletedListener {
         List<Order> orders =
             payment.getOrders().stream().filter(BuyOrder.class::isInstance).toList();
 
-        // TODO: remove this & replace client with portfolio api
         orders.forEach(
             order -> {
               var goal = goalRepository.findById(order.getGoal().getId()).orElseThrow();
               if (goal.getStatus() == Goal.Status.PAYMENT_PENDING) {
                 goal.setStatus(Goal.Status.ACTIVE);
-              }
-              if (order instanceof BuyOrder) {
-                goal.setCurrentAmount(goal.getCurrentAmount() + order.getAmount());
               }
               goalRepository.save(goal);
             });
