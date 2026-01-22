@@ -3,7 +3,7 @@ package com.nested.app.services;
 import com.nested.app.client.mf.KycVerificationAPIClient;
 import com.nested.app.client.mf.dto.KycVerificationRequest;
 import com.nested.app.client.mf.dto.KycVerificationResponse;
-import com.nested.app.contect.UserContext;
+import com.nested.app.context.UserContext;
 import com.nested.app.dto.PreVerificationData;
 import com.nested.app.entity.User;
 import com.nested.app.entity.UserVerification;

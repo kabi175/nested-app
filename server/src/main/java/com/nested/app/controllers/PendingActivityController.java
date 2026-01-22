@@ -1,6 +1,6 @@
 package com.nested.app.controllers;
 
-import com.nested.app.contect.UserContext;
+import com.nested.app.context.UserContext;
 import com.nested.app.dto.PendingActivityResponseDTO;
 import com.nested.app.entity.User;
 import com.nested.app.enums.ActivityPriority;

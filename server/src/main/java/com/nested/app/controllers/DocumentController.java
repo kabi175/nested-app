@@ -11,6 +11,9 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import java.net.URI;
+import java.util.List;
+import java.util.Objects;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -19,10 +22,6 @@ import org.springframework.util.StringUtils;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
-
-import java.net.URI;
-import java.util.List;
-import java.util.Objects;
 
 @RestController
 @RequestMapping("/api/documents")
@@ -33,7 +32,7 @@ import java.util.Objects;
 public class DocumentController {
 
     private final DocumentService documentService;
-    private final com.nested.app.contect.UserContext userContext;
+  private final com.nested.app.context.UserContext userContext;
     private final com.nested.app.utils.AuthorizationUtils authorizationUtils;
 
     @Operation(summary = "Upload a document", description = "Upload a document to S3 and store metadata in database")

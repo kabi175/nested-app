@@ -1,12 +1,11 @@
 package com.nested.app.annotation;
 
-import com.nested.app.contect.UserContext;
+import com.nested.app.context.UserContext;
 import com.nested.app.entity.User;
 import jakarta.validation.Constraint;
 import jakarta.validation.ConstraintValidator;
 import jakarta.validation.ConstraintValidatorContext;
 import jakarta.validation.Payload;
-
 import java.lang.annotation.Documented;
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;

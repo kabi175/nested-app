@@ -1,6 +1,6 @@
 package com.nested.app.controllers;
 
-import com.nested.app.contect.UserContext;
+import com.nested.app.context.UserContext;
 import com.nested.app.dto.Entity;
 import com.nested.app.dto.TransactionDTO;
 import com.nested.app.services.TransactionService;

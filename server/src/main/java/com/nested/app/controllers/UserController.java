@@ -1,7 +1,7 @@
 package com.nested.app.controllers;
 
 import com.nested.app.annotation.RequiresMfa;
-import com.nested.app.contect.UserContext;
+import com.nested.app.context.UserContext;
 import com.nested.app.dto.BankAccountDto;
 import com.nested.app.dto.EmailUpdateRequest;
 import com.nested.app.dto.EmailUpdateResponse;

@@ -1,6 +1,6 @@
 package com.nested.app.services;
 
-import com.nested.app.contect.UserContext;
+import com.nested.app.context.UserContext;
 import com.nested.app.dto.PreVerificationData;
 import java.util.List;
 

@@ -1,4 +1,4 @@
-package com.nested.app.contect;
+package com.nested.app.context;
 
 import com.nested.app.entity.User;
 import lombok.Data;

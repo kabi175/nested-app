@@ -1,6 +1,6 @@
 package com.nested.app.filter;
 
-import com.nested.app.contect.UserContext;
+import com.nested.app.context.UserContext;
 import com.nested.app.entity.Investor;
 import com.nested.app.entity.User;
 import com.nested.app.repository.InvestorRepository;

@@ -1,14 +1,13 @@
 package com.nested.app.filter;
 
-import com.nested.app.contect.UserContext;
+import com.nested.app.context.UserContext;
 import com.nested.app.entity.User;
 import jakarta.persistence.EntityManager;
+import java.util.Objects;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.hibernate.Session;
 import org.springframework.stereotype.Component;
-
-import java.util.Objects;
 
 /**
  * Entity-level authorization filter

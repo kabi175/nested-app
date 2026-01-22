@@ -1,6 +1,6 @@
 package com.nested.app.controllers;
 
-import com.nested.app.contect.UserContext;
+import com.nested.app.context.UserContext;
 import com.nested.app.dto.Entity;
 import com.nested.app.dto.GoalHoldingDTO;
 import com.nested.app.dto.PortfolioGoalDTO;

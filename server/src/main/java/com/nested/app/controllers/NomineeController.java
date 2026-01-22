@@ -1,7 +1,7 @@
 package com.nested.app.controllers;
 
 import com.nested.app.annotation.RequiresMfa;
-import com.nested.app.contect.UserContext;
+import com.nested.app.context.UserContext;
 import com.nested.app.dto.Entity;
 import com.nested.app.dto.NomineeRequestDTO;
 import com.nested.app.dto.NomineeResponseDTO;
