@@ -7,6 +7,7 @@ import com.nested.app.context.UserContext;
 import com.nested.app.dto.PreVerificationData;
 import com.nested.app.entity.User;
 import com.nested.app.entity.UserVerification;
+import com.nested.app.events.KycCompletedEvent;
 import com.nested.app.repository.UserRepository;
 import com.nested.app.repository.UserVerificationRepository;
 import java.text.SimpleDateFormat;
@@ -14,6 +15,7 @@ import java.util.List;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.quartz.SchedulerException;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 
 @Slf4j
@@ -24,6 +26,7 @@ public class PreVerificationServiceImpl implements PreVerificationService {
   private final UserVerificationRepository userVerificationRepository;
   private final UserRepository userRepository;
   private final QuartzJobSchedulerService quartzJobSchedulerService;
+  private final ApplicationEventPublisher eventPublisher;
 
   public List<PreVerificationData> getVerification(UserContext userContext, Long userID) {
     var user = userRepository.findById(userID).orElseThrow();
@@ -183,6 +186,7 @@ public class PreVerificationServiceImpl implements PreVerificationService {
     if (isVerified) {
       user.setKycStatus(User.KYCStatus.COMPLETED);
       userRepository.save(user);
+      eventPublisher.publishEvent(new KycCompletedEvent(this, user));
     }
     return true;
   }

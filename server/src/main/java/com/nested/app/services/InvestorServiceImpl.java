@@ -6,12 +6,14 @@ import com.nested.app.client.mf.dto.AddAddressRequest;
 import com.nested.app.client.mf.dto.CreateAccountRequest;
 import com.nested.app.dto.MinifiedUserDTO;
 import com.nested.app.entity.User;
+import com.nested.app.events.KycCompletedEvent;
 import com.nested.app.repository.InvestorRepository;
 import com.nested.app.repository.UserRepository;
 import com.nested.app.services.mapper.CreateInvestorRequestMapper;
 import java.util.Objects;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -25,6 +27,7 @@ public class InvestorServiceImpl implements InvestorService {
 
   private final InvestorAPIClient investorAPIClient;
   private final KycAPIClient kycAPIClient;
+  private final ApplicationEventPublisher eventPublisher;
 
   @Override
   public void createInvestor(MinifiedUserDTO userDto) {
@@ -74,6 +77,7 @@ public class InvestorServiceImpl implements InvestorService {
     user.setKycStatus(User.KYCStatus.COMPLETED);
     user.setReadyToInvest(true);
     userRepository.save(user);
+    eventPublisher.publishEvent(new KycCompletedEvent(this, user));
   }
 
   /** Builds address request from User entity */

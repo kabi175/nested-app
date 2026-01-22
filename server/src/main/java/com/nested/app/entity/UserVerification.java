@@ -43,6 +43,7 @@ public class UserVerification {
   private String ref;
 
   @Enumerated(EnumType.STRING)
+  @Builder.Default
   private KycVerificationResponse.RequestStatus status =
       KycVerificationResponse.RequestStatus.ACCEPTED;
 
