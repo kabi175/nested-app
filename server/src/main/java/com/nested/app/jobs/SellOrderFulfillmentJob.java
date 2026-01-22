@@ -6,6 +6,7 @@ import com.nested.app.entity.Folio;
 import com.nested.app.entity.OrderItems;
 import com.nested.app.entity.Transaction;
 import com.nested.app.enums.TransactionType;
+import com.nested.app.events.GoalSyncEvent;
 import com.nested.app.repository.FolioRepository;
 import com.nested.app.repository.OrderItemsRepository;
 import com.nested.app.repository.TransactionRepository;
@@ -14,6 +15,7 @@ import java.math.RoundingMode;
 import java.sql.Timestamp;
 import java.time.Instant;
 import java.util.List;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.quartz.DisallowConcurrentExecution;
 import org.quartz.Job;
@@ -22,7 +24,7 @@ import org.quartz.JobExecutionContext;
 import org.quartz.JobExecutionException;
 import org.quartz.Scheduler;
 import org.quartz.SchedulerException;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Component;
 
 /**
@@ -36,16 +38,18 @@ import org.springframework.stereotype.Component;
 @Slf4j
 @Component
 @DisallowConcurrentExecution
+@RequiredArgsConstructor
 public class SellOrderFulfillmentJob implements Job {
 
   private static final int DECIMAL_SCALE = 4;
   private static final int CALCULATION_SCALE = 8;
 
-  @Autowired private SellOrderApiClient sellOrderApiClient;
-  @Autowired private OrderItemsRepository orderItemsRepository;
-  @Autowired private Scheduler scheduler;
-  @Autowired private TransactionRepository transactionRepository;
-  @Autowired private FolioRepository folioRepository;
+  private final SellOrderApiClient sellOrderApiClient;
+  private final OrderItemsRepository orderItemsRepository;
+  private final Scheduler scheduler;
+  private final TransactionRepository transactionRepository;
+  private final FolioRepository folioRepository;
+  private final ApplicationEventPublisher publisher;
 
   @Override
   public void execute(JobExecutionContext context) throws JobExecutionException {
@@ -224,6 +228,12 @@ public class SellOrderFulfillmentJob implements Job {
       txn.setSourceOrderItemId(item.getId());
       txn.setExecutedAt(Timestamp.from(Instant.now()));
       transactionRepository.save(txn);
+
+      if (txn.getGoal() != null) {
+        publisher.publishEvent(new GoalSyncEvent(txn.getGoal().getId(), txn.getUser()));
+      } else {
+        log.warn("goal not populated for transaction {}", txn.getId());
+      }
       created++;
     }
     if (created > 0) {

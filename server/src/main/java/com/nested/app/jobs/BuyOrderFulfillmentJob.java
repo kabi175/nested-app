@@ -6,6 +6,7 @@ import com.nested.app.entity.Folio;
 import com.nested.app.entity.OrderItems;
 import com.nested.app.entity.Transaction;
 import com.nested.app.enums.TransactionType;
+import com.nested.app.events.GoalSyncEvent;
 import com.nested.app.mapper.OrderStateMapper;
 import com.nested.app.repository.FolioRepository;
 import com.nested.app.repository.OrderItemsRepository;
@@ -25,6 +26,7 @@ import org.quartz.JobExecutionContext;
 import org.quartz.JobExecutionException;
 import org.quartz.Scheduler;
 import org.quartz.SchedulerException;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Component;
 
 /**
@@ -48,6 +50,7 @@ public class BuyOrderFulfillmentJob implements Job {
   private final Scheduler scheduler;
   private final TransactionRepository transactionRepository;
   private final FolioRepository folioRepository;
+  private final ApplicationEventPublisher publisher;
 
   @Override
   public void execute(JobExecutionContext context) throws JobExecutionException {
@@ -222,7 +225,13 @@ public class BuyOrderFulfillmentJob implements Job {
       // TODO: fix executedAt handling
       txn.setExecutedAt(Timestamp.from(Instant.now()));
       txn.setStatus(OrderStateMapper.toTransactionStatus(order.getState()));
+      txn.setGoal(item.getOrder() != null ? item.getOrder().getGoal() : null);
       transactionRepository.save(txn);
+      if (txn.getGoal() != null) {
+        publisher.publishEvent(new GoalSyncEvent(txn.getGoal().getId(), txn.getUser()));
+      } else {
+        log.warn("goal not populated for transaction {}", txn.getId());
+      }
       created++;
     }
     if (created > 0) {

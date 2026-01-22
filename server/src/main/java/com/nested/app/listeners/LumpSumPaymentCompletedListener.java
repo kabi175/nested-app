@@ -120,6 +120,12 @@ public class LumpSumPaymentCompletedListener {
               if (goal.getStatus() == Goal.Status.PAYMENT_PENDING) {
                 goal.setStatus(Goal.Status.ACTIVE);
               }
+              // currentAmount is getting updated in here, so that the uses
+              // know that amount is invested, GoalSyncJob will run in
+              // background to compute & sync actual amount
+              if (order instanceof BuyOrder) {
+                goal.setCurrentAmount(goal.getCurrentAmount() + order.getAmount());
+              }
               goalRepository.save(goal);
             });
 

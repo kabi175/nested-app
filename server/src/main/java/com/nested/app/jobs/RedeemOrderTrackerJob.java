@@ -5,6 +5,7 @@ import com.nested.app.client.mf.dto.OrderData;
 import com.nested.app.entity.Transaction;
 import com.nested.app.enums.TransactionStatus;
 import com.nested.app.enums.TransactionType;
+import com.nested.app.events.GoalSyncEvent;
 import com.nested.app.repository.OrderItemsRepository;
 import com.nested.app.repository.TransactionRepository;
 import java.util.List;
@@ -18,6 +19,7 @@ import org.quartz.JobExecutionContext;
 import org.quartz.JobExecutionException;
 import org.quartz.Scheduler;
 import org.quartz.SchedulerException;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Component;
 
 /**
@@ -49,6 +51,7 @@ public class RedeemOrderTrackerJob implements Job {
   private OrderItemsRepository orderItemsRepository;
   private TransactionRepository transactionRepository;
   private Scheduler scheduler;
+  private final ApplicationEventPublisher publisher;
 
   /**
    * Executes the redeem order tracking job.
@@ -228,6 +231,13 @@ public class RedeemOrderTrackerJob implements Job {
                       oi.getId(),
                       oi.getFund().getName(),
                       orderData.getRedeemedAmount());
+
+                  if (transaction.getGoal() != null) {
+                    publisher.publishEvent(
+                        new GoalSyncEvent(transaction.getGoal().getId(), transaction.getUser()));
+                  } else {
+                    log.warn("goal not populated for transaction {}", transaction.getId());
+                  }
 
                   return transaction;
                 })
