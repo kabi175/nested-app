@@ -5,6 +5,7 @@ import com.nested.app.client.mf.dto.OrderData;
 import com.nested.app.entity.SIPOrder;
 import com.nested.app.entity.Transaction;
 import com.nested.app.enums.TransactionType;
+import com.nested.app.events.TransactionSuccessEvent;
 import com.nested.app.jobs.SipOrderVerificationJob;
 import com.nested.app.repository.SIPOrderRepository;
 import com.nested.app.repository.TransactionRepository;
@@ -19,6 +20,7 @@ import org.quartz.Scheduler;
 import org.quartz.SimpleScheduleBuilder;
 import org.quartz.Trigger;
 import org.quartz.TriggerBuilder;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -45,6 +47,7 @@ public class SipOrderSchedulerService {
   // Ledger repository for idempotent transaction writes
   private final TransactionRepository transactionRepository;
   private final Scheduler scheduler;
+  private final ApplicationEventPublisher publisher;
 
   /**
    * Scan for due SIPOrders (scheduleStatus=ACTIVE) and mark them RUNNING with a generated orderRef.
@@ -138,6 +141,13 @@ public class SipOrderSchedulerService {
           txn.setProviderTransactionId(providerId);
           txn.setExternalRef(order.getLastOrderRef());
           transactionRepository.save(txn);
+          // Send transaction success email notification
+          publisher.publishEvent(
+              new TransactionSuccessEvent(
+                  txn.getUser(),
+                  txn.getFund() != null ? txn.getFund().getName() : null,
+                  txn.getAmount(),
+                  txn.getType()));
           created++;
         }
         if (created > 0) {

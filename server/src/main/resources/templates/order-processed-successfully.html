@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+</head>
+<body>
+<p>Hello <span th:text="${name}">Investor</span>,</p>
+
+<p>Thank you for investing through NestEd.</p>
+
+<p>This is to inform you that your transaction request has been submitted
+    successfully.</p>
+
+<p>Please note the transaction details below:</p>
+
+<table style="border-collapse: collapse; margin: 20px 0;">
+    <tr>
+        <td style="padding: 8px 16px 8px 0; font-weight: bold;">Fund Name:</td>
+        <td style="padding: 8px 0;" th:text="${fundName}">Fund Name</td>
+    </tr>
+    <tr>
+        <td style="padding: 8px 16px 8px 0; font-weight: bold;">Invested
+            Amount:
+        </td>
+        <td style="padding: 8px 0;">₹<span th:text="${investedAmount}">0</span>
+        </td>
+    </tr>
+    <tr>
+        <td style="padding: 8px 16px 8px 0; font-weight: bold;">Transaction
+            Type:
+        </td>
+        <td style="padding: 8px 0;" th:text="${transactionType}">Purchase</td>
+    </tr>
+</table>
+
+<p>You shall receive a confirmation on your registered email ID from the AMC
+    once the request is processed successfully.</p>
+
+<p>It may take <strong>up to three working days</strong> for units to be
+    allocated in the case of purchase requests. For <strong>redemption
+        requests</strong>,
+    the funds may take <strong>up to three working days</strong> to be
+    <strong>reflected in your bank account.</strong></p>
+
+<p>Warmly,<br/>
+    <strong>Team NestEd</strong></p>
+</body>
+</html>

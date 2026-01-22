@@ -7,6 +7,7 @@ import com.nested.app.entity.OrderItems;
 import com.nested.app.entity.Transaction;
 import com.nested.app.enums.TransactionType;
 import com.nested.app.events.GoalSyncEvent;
+import com.nested.app.events.TransactionSuccessEvent;
 import com.nested.app.mapper.OrderStateMapper;
 import com.nested.app.repository.FolioRepository;
 import com.nested.app.repository.OrderItemsRepository;
@@ -232,6 +233,13 @@ public class BuyOrderFulfillmentJob implements Job {
       } else {
         log.warn("goal not populated for transaction {}", txn.getId());
       }
+      // Send transaction success email notification
+      publisher.publishEvent(
+          new TransactionSuccessEvent(
+              txn.getUser(),
+              txn.getFund() != null ? txn.getFund().getName() : null,
+              txn.getAmount(),
+              txn.getType()));
       created++;
     }
     if (created > 0) {

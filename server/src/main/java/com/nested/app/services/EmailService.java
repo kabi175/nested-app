@@ -1,5 +1,6 @@
 package com.nested.app.services;
 
+import com.nested.app.enums.TransactionType;
 import com.sendgrid.Method;
 import com.sendgrid.Request;
 import com.sendgrid.Response;
@@ -7,6 +8,7 @@ import com.sendgrid.SendGrid;
 import com.sendgrid.helpers.mail.Mail;
 import com.sendgrid.helpers.mail.objects.Content;
 import com.sendgrid.helpers.mail.objects.Email;
+import java.text.DecimalFormat;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -118,5 +120,88 @@ public class EmailService {
       log.error("Failed to send welcome email to {}: {}", maskEmail(email), e.getMessage(), e);
       // Don't throw exception to avoid disrupting the KYC flow
     }
+  }
+
+  /**
+   * Sends transaction success email to user when a transaction is processed successfully
+   *
+   * @param email Recipient email address
+   * @param name User's name to personalize the email
+   * @param fundName Name of the fund involved in the transaction
+   * @param amount Transaction amount
+   * @param transactionType Type of transaction (BUY, SELL, SIP)
+   */
+  public void sendTransactionSuccessEmail(
+      String email, String name, String fundName, Double amount, TransactionType transactionType) {
+    try {
+      Email from = new Email(fromEmail);
+      Email to = new Email(email);
+
+      // Map transaction type to display text
+      String displayType = getTransactionTypeDisplayText(transactionType);
+      String subject = "Your " + displayType + " request submitted successfully";
+
+      // Process the template with Thymeleaf
+      Context context = new Context();
+      context.setVariable("name", name != null ? name : "Investor");
+      context.setVariable("fundName", fundName != null ? fundName : "N/A");
+      context.setVariable("investedAmount", formatAmount(amount));
+      context.setVariable("transactionType", displayType);
+      String htmlContent = templateEngine.process("order-processed-successfully", context);
+
+      Content content = new Content("text/html", htmlContent);
+      Mail mail = new Mail(from, subject, to, content);
+      Request request = new Request();
+
+      request.setMethod(Method.POST);
+      request.setEndpoint("mail/send");
+      request.setBody(mail.build());
+      Response response = sg.api(request);
+
+      log.info(
+          "Transaction success email sent to {} (masked) for {} transaction, Request Status: {}",
+          maskEmail(email),
+          displayType,
+          response.getStatusCode());
+    } catch (Exception e) {
+      log.error(
+          "Failed to send transaction success email to {}: {}",
+          maskEmail(email),
+          e.getMessage(),
+          e);
+      // Don't throw exception to avoid disrupting the transaction flow
+    }
+  }
+
+  /**
+   * Maps TransactionType enum to user-friendly display text
+   *
+   * @param type TransactionType enum value
+   * @return Display text for the transaction type
+   */
+  private String getTransactionTypeDisplayText(TransactionType type) {
+    if (type == null) {
+      return "Transaction";
+    }
+    return switch (type) {
+      case BUY -> "Purchase";
+      case SELL -> "Redemption";
+      case SIP -> "SIP";
+      case SWP -> "SWP";
+    };
+  }
+
+  /**
+   * Formats amount with Indian number format (commas) and 2 decimal places
+   *
+   * @param amount Amount to format
+   * @return Formatted amount string
+   */
+  private String formatAmount(Double amount) {
+    if (amount == null) {
+      return "0.00";
+    }
+    DecimalFormat df = new DecimalFormat("#,##,##0.00");
+    return df.format(amount);
   }
 }
