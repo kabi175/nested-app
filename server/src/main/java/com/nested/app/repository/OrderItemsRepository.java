@@ -37,4 +37,22 @@ public interface OrderItemsRepository extends JpaRepository<OrderItems, Long> {
       nativeQuery = true)
   List<OrderAllocationProjection> findAllocationByOrderIds(
       @Param("orderIds") List<Long> orderIds, @Param("userId") Long userId);
+
+  /**
+   * Sums the amount of SIP order items for a given goal where status is COMPLETED or IN_PROGRESS.
+   *
+   * @param goalId the goal ID
+   * @param statuses list of status values (e.g., "completed", "in_progress")
+   * @return sum of amounts, or null if no matching items
+   */
+  @Query(
+      value =
+          "SELECT COALESCE(SUM(oi.amount), 0) FROM order_items oi "
+              + "JOIN orders o ON o.id = oi.order_id "
+              + "WHERE o.goal_id = :goalId "
+              + "AND o.dtype = 'SIP' "
+              + "AND oi.status IN :statuses",
+      nativeQuery = true)
+  Double sumSipOrderItemsAmountByGoalIdAndStatuses(
+      @Param("goalId") Long goalId, @Param("statuses") List<String> statuses);
 }
