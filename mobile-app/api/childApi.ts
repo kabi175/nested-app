@@ -22,12 +22,13 @@ export const getChildren = async (api: AxiosInstance): Promise<Child[]> => {
       id: child.id,
       firstName: child.first_name,
       lastName: child.last_name,
-      dateOfBirth: child.date_of_birth,
+      dateOfBirth: new Date(child.date_of_birth),
       gender: child.gender,
       investUnderChild: child.invest_under_child,
     })
   );
 
+  console.log("getChildren", children);
   return children;
 };
 

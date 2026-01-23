@@ -47,7 +47,7 @@ export default function CreateGoalScreen() {
       selectedChild &&
       !goals.find((goal) => goal.childId === selectedChildId)
     ) {
-      const targetYear = selectedChild.dateOfBirth.getFullYear() + 18;
+      const targetYear = selectedChild.dateOfBirth?.getFullYear() + 18;
       setGoals((prev) => [
         ...prev,
         {

@@ -37,11 +37,13 @@ export default function GoalScreen() {
       // Navigate to first goal or create new goal
       if (firstChild) {
         router.push(`/child/${firstChild.id}/goal/create`);
+      } else {
+        handleCreateChild();
       }
     } else {
       handleCreateGoal();
     }
-  }, [hasGoals, goals, firstChild, handleCreateGoal]);
+  }, [hasGoals, goals, firstChild, handleCreateGoal, handleCreateChild]);
 
   if (isLoading) {
     return (
