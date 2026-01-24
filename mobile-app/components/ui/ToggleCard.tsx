@@ -19,6 +19,7 @@ interface ToggleCardProps {
   inputLabel: string;
   placeholder?: string;
   max?: number;
+  min?: number;
 }
 
 export default function ToggleCard({
@@ -29,6 +30,7 @@ export default function ToggleCard({
   inputLabel,
   placeholder = "0",
   max,
+  min = 0,
 }: ToggleCardProps) {
   const [isEnabled, setIsEnabled] = useState(initialValue > 0);
   const [value, setValue] = useState(initialValue);
@@ -60,7 +62,7 @@ export default function ToggleCard({
 
   const handleValueChange = (text: string) => {
     const numericValue = parseInt(text.replace(/,/g, "")) || 0;
-    setValue(Math.min(numericValue, max || Number.MAX_VALUE));
+    setValue(Math.max(min, Math.min(numericValue, max || Number.MAX_VALUE)));
   };
 
   return (

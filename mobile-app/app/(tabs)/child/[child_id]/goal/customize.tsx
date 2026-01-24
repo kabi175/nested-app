@@ -325,6 +325,7 @@ export default function CustomizeInvestmentScreen() {
             initialValue={lumpSumAmount}
             onValueChange={handleLumpSumAmountChange}
             inputLabel="Lump Sum Amount"
+            min={minInvestment}
             max={MAX_LUMPSUM_AMOUNT}
           />
 
@@ -335,6 +336,7 @@ export default function CustomizeInvestmentScreen() {
             initialValue={stepUpAmount}
             onValueChange={handleStepUpAmountChange}
             inputLabel="Annual Step-Up Amount"
+            min={minInvestment}
             max={MAX_STEPUP_AMOUNT}
           />
 
