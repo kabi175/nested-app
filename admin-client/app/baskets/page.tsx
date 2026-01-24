@@ -61,6 +61,7 @@ export default function BasketsPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [basketName, setBasketName] = useState('');
   const [basketYears, setBasketYears] = useState('');
+  const [basketExpectedReturns, setBasketExpectedReturns] = useState('');
   const [editingBasket, setEditingBasket] = useState<Basket | null>(null);
   const [currentPage, setCurrentPage] = useState(0);
   const [pageSize, setPageSize] = useState(10);
@@ -193,6 +194,7 @@ export default function BasketsPage() {
       await createBasket({
         title: basketName,
         years: basketYears ? parseFloat(basketYears) : undefined,
+        expectedReturns: basketExpectedReturns ? parseFloat(basketExpectedReturns) : undefined,
         funds: fundsPayload,
       });
 
@@ -203,6 +205,7 @@ export default function BasketsPage() {
 
       setBasketName('');
       setBasketYears('');
+      setBasketExpectedReturns('');
       setSelectedFunds([]);
       setFundSearchTerms({});
       setIsCreateDialogOpen(false);
@@ -223,6 +226,7 @@ export default function BasketsPage() {
     setEditingBasket(basket);
     setBasketName(basket.name);
     setBasketYears(basket.duration ? String(basket.duration) : '');
+    setBasketExpectedReturns(basket.expectedReturns ? String(basket.expectedReturns) : '');
     setSelectedFunds(basket.funds.map(f => ({
       fundId: f.fundId,
       percentage: f.percentage,
@@ -273,6 +277,7 @@ export default function BasketsPage() {
         id: editingBasket.id,
         title: basketName,
         years: basketYears ? parseFloat(basketYears) : undefined,
+        expectedReturns: basketExpectedReturns ? parseFloat(basketExpectedReturns) : undefined,
         funds: fundsPayload,
       });
 
@@ -283,6 +288,7 @@ export default function BasketsPage() {
 
       setBasketName('');
       setBasketYears('');
+      setBasketExpectedReturns('');
       setSelectedFunds([]);
       setFundSearchTerms({});
       setEditingBasket(null);
@@ -330,6 +336,7 @@ export default function BasketsPage() {
         ID: basket.id,
         Name: basket.name,
         'Duration (Years)': basket.duration,
+        'Expected Returns (%)': basket.expectedReturns || 'N/A',
         'Number of Funds': basket.funds?.length || 0,
         'Total Allocation %': basket.totalPercentage,
         'Created Date': basket.createdAt ? new Date(basket.createdAt).toLocaleDateString() : 'N/A',
@@ -368,7 +375,8 @@ export default function BasketsPage() {
         <TableRow key={i}>
           <TableCell><Skeleton className="h-4 w-32" /></TableCell>
           <TableCell><Skeleton className="h-4 w-16" /></TableCell>
-          <TableCell><Skeleton className="h-4 w-20" /></TableCell>
+          <TableCell><Skeleton className="h-4 w-16" /></TableCell>
+          <TableCell><Skeleton className="h-4 w-12" /></TableCell>
           <TableCell><Skeleton className="h-4 w-16" /></TableCell>
           <TableCell><Skeleton className="h-4 w-16" /></TableCell>
         </TableRow>
@@ -473,6 +481,7 @@ export default function BasketsPage() {
                     <TableRow className="bg-slate-50/50 dark:bg-slate-800/50">
                       <TableHead className="text-slate-700 dark:text-slate-300 font-semibold">Basket</TableHead>
                       <TableHead className="text-slate-700 dark:text-slate-300 font-semibold">Duration</TableHead>
+                      <TableHead className="text-slate-700 dark:text-slate-300 font-semibold">Expected Returns</TableHead>
                       <TableHead className="text-slate-700 dark:text-slate-300 font-semibold">Funds</TableHead>
                       <TableHead className="text-slate-700 dark:text-slate-300 font-semibold">Allocation</TableHead>
                       <TableHead className="text-right text-slate-700 dark:text-slate-300 font-semibold">Actions</TableHead>
@@ -483,7 +492,7 @@ export default function BasketsPage() {
                       <LoadingSkeleton />
                     ) : error ? (
                       <TableRow>
-                        <TableCell colSpan={5} className="text-center py-12">
+                        <TableCell colSpan={6} className="text-center py-12">
                           <div className="flex flex-col items-center gap-4">
                             <div className="w-16 h-16 rounded-full bg-red-100 dark:bg-red-900/30 flex items-center justify-center">
                               <Package className="h-8 w-8 text-red-600 dark:text-red-400" />
@@ -497,7 +506,7 @@ export default function BasketsPage() {
                       </TableRow>
                     ) : baskets.length === 0 ? (
                       <TableRow>
-                        <TableCell colSpan={5} className="text-center py-12">
+                        <TableCell colSpan={6} className="text-center py-12">
                           <div className="flex flex-col items-center gap-4">
                             <div className="w-16 h-16 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center">
                               <Package className="h-8 w-8 text-slate-400" />
@@ -533,6 +542,14 @@ export default function BasketsPage() {
                             <div className="flex items-center gap-2">
                               <Clock className="h-4 w-4 text-slate-400" />
                               <span className="font-medium text-slate-900 dark:text-slate-100">{basket.duration} years</span>
+                            </div>
+                          </TableCell>
+                          <TableCell>
+                            <div className="flex items-center gap-2">
+                              <TrendingUp className="h-4 w-4 text-emerald-500" />
+                              <span className="font-semibold text-emerald-600 dark:text-emerald-400">
+                                {basket.expectedReturns ? `${basket.expectedReturns}%` : '-'}
+                              </span>
                             </div>
                           </TableCell>
                           <TableCell>
@@ -621,6 +638,23 @@ export default function BasketsPage() {
                 value={basketYears}
                 onChange={(e) => setBasketYears(e.target.value)}
               />
+            </div>
+
+            <div className="grid gap-2">
+              <Label htmlFor="basketExpectedReturns">Expected Returns (%)</Label>
+              <Input
+                id="basketExpectedReturns"
+                type="number"
+                min="0"
+                max="100"
+                step="0.1"
+                placeholder="e.g., 12.5"
+                value={basketExpectedReturns}
+                onChange={(e) => setBasketExpectedReturns(e.target.value)}
+              />
+              <p className="text-xs text-slate-500 dark:text-slate-400">
+                Expected annual returns percentage for SIP calculations
+              </p>
             </div>
 
             <div className="space-y-4">
@@ -751,6 +785,7 @@ export default function BasketsPage() {
               onClick={() => {
                 setBasketName('');
                 setBasketYears('');
+                setBasketExpectedReturns('');
                 setSelectedFunds([]);
                 setFundSearchTerms({});
                 setIsCreateDialogOpen(false);
@@ -812,6 +847,23 @@ export default function BasketsPage() {
                 value={basketYears}
                 onChange={(e) => setBasketYears(e.target.value)}
               />
+            </div>
+
+            <div className="grid gap-2">
+              <Label htmlFor="edit-basketExpectedReturns">Expected Returns (%)</Label>
+              <Input
+                id="edit-basketExpectedReturns"
+                type="number"
+                min="0"
+                max="100"
+                step="0.1"
+                placeholder="e.g., 12.5"
+                value={basketExpectedReturns}
+                onChange={(e) => setBasketExpectedReturns(e.target.value)}
+              />
+              <p className="text-xs text-slate-500 dark:text-slate-400">
+                Expected annual returns percentage for SIP calculations
+              </p>
             </div>
 
             <div className="space-y-4">
@@ -939,6 +991,7 @@ export default function BasketsPage() {
               onClick={() => {
                 setBasketName('');
                 setBasketYears('');
+                setBasketExpectedReturns('');
                 setSelectedFunds([]);
                 setFundSearchTerms({});
                 setEditingBasket(null);

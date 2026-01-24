@@ -201,6 +201,7 @@ public class BasketServiceImpl implements BasketService {
       // Update fields
       existingBasket.setTitle(basketDTO.getTitle());
       existingBasket.setYears(basketDTO.getYears()); // Update years (can be null)
+      existingBasket.setReturns(basketDTO.getExpectedReturns()); // Update expected returns
 
       Basket updatedBasket = basketRepository.save(existingBasket);
 
@@ -233,6 +234,7 @@ public class BasketServiceImpl implements BasketService {
     dto.setId(basket.getId());
     dto.setTitle(basket.getTitle());
     dto.setYears(basket.getYears());
+    dto.setExpectedReturns(basket.getReturns());
 
     // Convert basket funds if available
     if (basket.getBasketFunds() != null && !basket.getBasketFunds().isEmpty()) {
@@ -343,6 +345,7 @@ public class BasketServiceImpl implements BasketService {
     basket.setId(basketDTO.getId());
     basket.setTitle(basketDTO.getTitle());
     basket.setYears(basketDTO.getYears());
+    basket.setReturns(basketDTO.getExpectedReturns());
 
     // Note: BasketFunds would be set separately through dedicated methods
     // to maintain proper entity relationships

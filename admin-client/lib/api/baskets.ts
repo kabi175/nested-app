@@ -26,12 +26,14 @@ export interface BasketDTO {
   id: string;
   title: string;
   years?: number;
+  expectedReturns?: number; // Expected annual returns percentage
   funds: BasketFund[];
 }
 
 export interface CreateBasketDTO {
   title: string;
   years?: number;
+  expectedReturns?: number; // Expected annual returns percentage
   funds: {
     id: number; // Backend expects "id" (see @JsonProperty("id") in BasketFundDTO)
     allocationPercentage: number;
@@ -42,6 +44,7 @@ export interface UpdateBasketDTO {
   id: string;
   title: string;
   years?: number;
+  expectedReturns?: number; // Expected annual returns percentage
   funds: {
     id: number; // Backend expects "id" (see @JsonProperty("id") in BasketFundDTO)
     allocationPercentage: number;
@@ -52,6 +55,7 @@ export interface Basket {
   id: string;
   name: string;
   duration: number;
+  expectedReturns?: number; // Expected annual returns percentage
   funds: {
     fundId: string;
     fundName: string;
@@ -108,6 +112,7 @@ export async function getBaskets(
           id: String(basket.id),
           name: basket.title,
           duration: basket.years || 0,
+          expectedReturns: basket.expectedReturns,
           funds,
           totalPercentage,
           createdAt: new Date().toISOString(),
@@ -158,6 +163,7 @@ export async function getBasketById(id: string): Promise<Basket> {
       id: String(basket.id),
       name: basket.title,
       duration: basket.years || 0,
+      expectedReturns: basket.expectedReturns,
       funds,
       totalPercentage,
       createdAt: new Date().toISOString(),
