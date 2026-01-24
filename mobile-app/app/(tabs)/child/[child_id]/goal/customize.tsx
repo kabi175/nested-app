@@ -67,7 +67,7 @@ export default function CustomizeInvestmentScreen() {
     goalsForCustomize.length > 0 ? 100 * goalsForCustomize.length : 100;
 
   // Normalize SIP amount to be a multiple of the step
-  const normalizedSipAmount = Math.round(sipAmount / sipStep) * sipStep;
+  const normalizedSipAmount = Math.max(minInvestment, Math.round(sipAmount / sipStep) * sipStep);
 
   // Handler for SIP amount changes that enforces step increments
   const handleSipAmountChange = (value: number) => {
