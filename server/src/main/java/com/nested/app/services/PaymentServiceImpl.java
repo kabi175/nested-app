@@ -133,17 +133,29 @@ public class PaymentServiceImpl implements PaymentService {
       Payment savedPayment = paymentRepository.saveAndFlush(payment);
 
       if (savedPayment.getSipStatus() == Payment.PaymentStatus.PENDING) {
-        // create mandate for SIP orders
-        createMandateWithExternalAPI(savedPayment);
+        try {
+          // create mandate for SIP orders
+          createMandateWithExternalAPI(savedPayment);
+        } catch (Exception e) {
+          log.error("Error creating mandate for payment {}", payment.getId(), e);
+          savedPayment.setSipStatus(Payment.PaymentStatus.FAILED);
+        }
       }
 
-      if (savedPayment.getBuyStatus() == Payment.PaymentStatus.PENDING) {
-        // place buy orders in the external system
-        placeOrderWithExternalAPI(savedPayment);
+      if (savedPayment.getSipStatus() != Payment.PaymentStatus.FAILED
+          && savedPayment.getBuyStatus() == Payment.PaymentStatus.PENDING) {
+        try {
+          // place buy orders in the external system
+          placeOrderWithExternalAPI(savedPayment);
 
-        savedPayment.getOrders().stream()
-            .filter(BuyOrder.class::isInstance)
-            .forEach(buyOrder -> buyOrder.setPlaced(true));
+          savedPayment.getOrders().stream()
+              .filter(BuyOrder.class::isInstance)
+              .forEach(buyOrder -> buyOrder.setPlaced(true));
+
+        } catch (Exception e) {
+          log.error("Error creating purchase order for payment {}", payment.getId(), e);
+          savedPayment.setBuyStatus(Payment.PaymentStatus.FAILED);
+        }
       }
 
       // Save again to persist any updates from external API calls (e.g., mandate ID, order items
