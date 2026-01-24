@@ -10,7 +10,6 @@ import {
   useFetchLumpsumPaymentUrl,
   useFetchMandatePaymentUrl,
 } from "@/hooks/usePaymentMutations";
-import { Ionicons } from "@expo/vector-icons";
 import * as Linking from "expo-linking";
 import { router, useLocalSearchParams } from "expo-router";
 import { openAuthSessionAsync } from "expo-web-browser";
@@ -19,8 +18,7 @@ import {
   Alert,
   ScrollView,
   StyleSheet,
-  TouchableOpacity,
-  View,
+  View
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
@@ -74,13 +72,6 @@ export default function PaymentProcessingScreen() {
       <View style={styles.container}>
         {/* Header */}
         <View style={styles.header}>
-          <TouchableOpacity
-            onPress={() => router.back()}
-            style={styles.backButton}
-            activeOpacity={0.7}
-          >
-            <Ionicons name="arrow-back" size={24} color="#000" />
-          </TouchableOpacity>
           <ThemedText type="title" style={styles.headerTitle}>
             Payment Processing
           </ThemedText>
