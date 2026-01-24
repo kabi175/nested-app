@@ -20,6 +20,7 @@ public class BasketDTO {
 
   private String title;
   private Double years;
+  private Double expectedReturns; // Expected annual returns percentage
   private List<BasketFundDTO> funds;
   private Timestamp createdAt;
   private Timestamp updatedAt;
