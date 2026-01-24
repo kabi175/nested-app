@@ -14,6 +14,7 @@ import { Ionicons } from "@expo/vector-icons";
 import * as Linking from "expo-linking";
 import { router, useLocalSearchParams } from "expo-router";
 import { openAuthSessionAsync } from "expo-web-browser";
+import { useEffect } from "react";
 import {
   Alert,
   ScrollView,
@@ -30,6 +31,14 @@ export default function PaymentProcessingScreen() {
   const { data: payment, refetch } = usePayment(paymentId);
   const fetchLumpsumUrl = useFetchLumpsumPaymentUrl();
   const fetchMandateUrl = useFetchMandatePaymentUrl();
+  useEffect(() => {
+   const isPaymentPending = payment?.buy_status === "pending" || payment?.sip_status === "pending";
+   if (!isPaymentPending) {
+    router.replace("/child");
+    return;
+   }
+
+  }, [payment]);
 
   const handleLumpsumPayment = async () => {
     const redirectUrl = await fetchLumpsumUrl.mutateAsync(paymentId as string);

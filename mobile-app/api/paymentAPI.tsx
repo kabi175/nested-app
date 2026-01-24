@@ -143,9 +143,9 @@ export const fetchPayment = async (
 };
 
 export const lumsumPostPayment = async (paymentId: string): Promise<void> => {
-  await redirectClient.post(`/payment/${paymentId}`);
+  await redirectClient.post(`/redirects/payment/${paymentId}`);
 };
 
 export const mandatePostPayment = async (mandateId: string): Promise<void> => {
-  await redirectClient.post(`/mandate/${mandateId}`);
+  await redirectClient.post(`/redirects/mandate/${mandateId}`);
 };
