@@ -13,7 +13,7 @@ export function useAuthAxios() {
   useEffect(() => {
     const interceptor = api.interceptors.request.use(async (config) => {
       try {
-        let credential = await getCredentials();
+        let credential = await getCredentials("offline_access", 36000);
         let expiresAt = credential.expiresAt;
         const now = Math.floor(Date.now() / 1000);
         if (now >= expiresAt) {
