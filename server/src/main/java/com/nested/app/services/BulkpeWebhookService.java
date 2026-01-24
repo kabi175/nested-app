@@ -1,6 +1,7 @@
 package com.nested.app.services;
 
 import com.nested.app.client.bulkpe.dto.BulkpeWebhookRequest;
+import com.nested.app.dto.BankAccountDto;
 import com.nested.app.entity.BankDetail;
 import com.nested.app.entity.ReversePennyDrop;
 import com.nested.app.entity.User;
@@ -26,6 +27,7 @@ public class BulkpeWebhookService {
   private final UserRepository userRepository;
   private final InvestorRepository investorRepository;
   private final ReversePennyDropRepository reversePennyDropRepository;
+  private final UserService userService;
 
   /**
    * Process webhook request from Bulkpe for reverse penny drop
@@ -125,13 +127,11 @@ public class BulkpeWebhookService {
     }
     // Create new bank detail for the user
     log.info("Creating new bank detail for user: {}", user.getId());
-    var bankDetail = createBankDetailFromWebhook(user, data);
-    bankDetailRepository.save(bankDetail);
+    createBankDetailFromWebhook(user, data);
     log.info(
-        "Successfully processed webhook for userId={}, accountNumber={}, bankDetailId={}",
+        "Successfully processed webhook for userId={}, accountNumber={}",
         referenceId,
-        accountNumber,
-        bankDetail.getId());
+        accountNumber);
     reversePennyDrop.setStatus(ReversePennyDrop.ReversePennyDropStatus.COMPLETED);
 
     reversePennyDropRepository.save(reversePennyDrop);
@@ -139,31 +139,20 @@ public class BulkpeWebhookService {
   }
 
   /** Create new bank detail entity from webhook data */
-  private BankDetail createBankDetailFromWebhook(
-      User user, BulkpeWebhookRequest.WebhookData data) {
-    BankDetail bankDetail = new BankDetail();
+  private void createBankDetailFromWebhook(User user, BulkpeWebhookRequest.WebhookData data) {
+    var bankDetail = new BankAccountDto();
 
-    bankDetail.setUser(user);
-    bankDetail.setInvestor(user.getInvestor());
     bankDetail.setAccountNumber(data.getRemitterAccountNumber());
-    bankDetail.setIfscCode(data.getRemitterIfsc());
-
-    // Extract bank name from IFSC or use remitter name
-    String bankName = extractBankName(data.getRemitterIfsc(), data.getRemitterName());
-    bankDetail.setBankName(bankName);
-
-    // Set reference ID
-    bankDetail.setRefId(data.getReferenceId());
+    bankDetail.setIfsc(data.getRemitterIfsc());
 
     bankDetail.setAccountType(
         BankDetail.AccountType.SAVINGS); // Default account type, adjust as needed
 
+    userService.addBankAccount(user.getId(), bankDetail);
     log.debug(
         "Created new bank detail for user {} with account number {}",
         user.getId(),
         data.getRemitterAccountNumber());
-
-    return bankDetail;
   }
 
   /** Update bank detail entity with data from webhook */
