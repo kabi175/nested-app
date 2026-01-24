@@ -91,12 +91,12 @@ export function OneTimePurchaseCard({
         };
       case "not_available":
         return {
-          icon: "cart" as const,
+          icon: "close-circle" as const,
           iconColor: "#FFFFFF",
-          iconBgColor: "#2563EB",
-          borderColor: "#2563EB",
-          statusText: "Ready to process",
-          statusTextColor: "#2563EB",
+          iconBgColor: "#6B7280",
+          borderColor: "#6B7280",
+          statusText: "Payment not available",
+          statusTextColor: "#6B7280",
           showSpinner: false,
           disabled: false,
         };
