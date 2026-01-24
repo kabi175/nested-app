@@ -8,7 +8,9 @@ import { Stack } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import "react-native-reanimated";
 
+import { ForceUpdateScreen } from "@/components/ForceUpdateScreen";
 import { useColorScheme } from "@/hooks/useColorScheme";
+import { useForceUpdate } from "@/hooks/useForceUpdate";
 import { QueryProvider } from "@/providers/QueryProvider";
 import * as eva from "@eva-design/eva";
 import { ApplicationProvider } from "@ui-kitten/components";
@@ -22,14 +24,6 @@ export default function RootLayout() {
   const [loaded] = useFonts({
     SpaceMono: require("../assets/fonts/SpaceMono-Regular.ttf"),
   });
-
-  // const pathname = usePathname();
-  // const segments = useSegments();
-
-  // useEffect(() => {
-  //   console.log("Current route:", pathname);
-  //   console.log("Segments:", segments);
-  // }, [pathname, segments]);
 
   if (!loaded) {
     // Async font loading only occurs in development.
@@ -51,7 +45,9 @@ export default function RootLayout() {
             value={colorScheme === "dark" ? DarkTheme : DefaultTheme}
           >
             <SafeAreaProvider>
-              <RootNavigator />
+              <VersionCheckGuard>
+                <RootNavigator />
+              </VersionCheckGuard>
             </SafeAreaProvider>
             <StatusBar style="auto" />
           </ThemeProvider>
@@ -59,6 +55,24 @@ export default function RootLayout() {
       </QueryProvider>
     </ApplicationProvider>
   );
+}
+
+function VersionCheckGuard({ children }: { children: React.ReactNode }) {
+  const { isUpdateRequired, config, isLoading } = useForceUpdate();
+
+  if (isLoading) {
+    return (
+      <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
+        <ActivityIndicator size="large" color="#2563EB" />
+      </View>
+    );
+  }
+
+  if (isUpdateRequired) {
+    return <ForceUpdateScreen config={config} />;
+  }
+
+  return <>{children}</>;
 }
 
 export const unstable_settings = {
