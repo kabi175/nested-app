@@ -13,7 +13,7 @@ export function useAuthAxios() {
   useEffect(() => {
     const interceptor = api.interceptors.request.use(async (config) => {
       try {
-        let credential = await getCredentials("offline_access", 36000);
+        let credential = await getCredentials();
         let expiresAt = credential.expiresAt;
         const now = Math.floor(Date.now() / 1000);
         if (now >= expiresAt) {
@@ -25,7 +25,7 @@ export function useAuthAxios() {
             true
           );
         }
-        config.headers.Authorization = `Bearer ${credential?.idToken}`;
+        config.headers.Authorization = `Bearer ${credential?.accessToken}`;
       } catch (error) {
         console.log("error during credential refresh", error);
         if (error instanceof CredentialsManagerError) {
@@ -38,7 +38,7 @@ export function useAuthAxios() {
     });
 
     return () => api.interceptors.request.eject(interceptor);
-  }, [getCredentials]);
+  }, [getCredentials, queryClient]);
 
   return api;
 }

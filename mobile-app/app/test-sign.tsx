@@ -41,6 +41,8 @@ export default function TestSign() {
         username: username.trim(),
         password: password,
         realm: "phone-and-password",
+        scope: "openid profile email phone offline_access",
+        audience: `https://${process.env.EXPO_PUBLIC_AUTH0_DOMAIN}/api/v2/`,
       });
 
       console.log("Login successful");

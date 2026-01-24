@@ -82,7 +82,8 @@ export default function SignIn() {
       await authorizeWithSMS({
         phoneNumber: fullPhoneNumber,
         code: otpCode,
-        scope: "offline_access",
+        scope: "openid profile email phone offline_access",
+        audience: `https://${process.env.EXPO_PUBLIC_AUTH0_DOMAIN}/api/v2/`,
       });
       console.log("Authorization successful");
       router.replace("/name-input");
