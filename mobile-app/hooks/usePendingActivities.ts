@@ -1,8 +1,8 @@
 import { fetchPendingActivities } from "@/api/activitiesAPI";
 import { QUERY_KEYS } from "@/constants/queryKeys";
 import { useQuery } from "@tanstack/react-query";
-import { useUser } from "./useUser";
 import { useAuthAxios } from "./useAuthAxios";
+import { useUser } from "./useUser";
 
 export function usePendingActivities() {
   const api = useAuthAxios();
@@ -18,6 +18,7 @@ export function usePendingActivities() {
       return fetchPendingActivities(api, userId);
     },
     enabled: !!userId,
+    refetchInterval: 1000 * 60 * 1, // 1 minute
   });
 
   return {
