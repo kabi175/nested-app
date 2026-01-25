@@ -2,6 +2,7 @@ package com.nested.app.repository;
 
 import com.nested.app.entity.Goal;
 import com.nested.app.entity.User;
+import com.nested.app.enums.BasketType;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
 import java.util.List;
@@ -40,6 +41,21 @@ public class TenantAwareGoalRepository extends SimpleJpaRepository<Goal, Long> {
   public List<Goal> findAll(User user) {
     enableUserFilter(user);
     return super.findAll();
+  }
+
+  /**
+   * Find goals by basket type with tenant filtering
+   *
+   * @param user Current user context
+   * @param type Basket type to filter by
+   * @return List of goals associated with baskets of the specified type
+   */
+  public List<Goal> findByBasketType(User user, BasketType type) {
+    enableUserFilter(user);
+    return entityManager
+        .createQuery("SELECT g FROM Goal g WHERE g.basket.basketType = :type", Goal.class)
+        .setParameter("type", type)
+        .getResultList();
   }
 
   /**

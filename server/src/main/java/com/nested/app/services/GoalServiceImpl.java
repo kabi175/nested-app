@@ -8,6 +8,7 @@ import com.nested.app.dto.MinifiedUserDTO;
 import com.nested.app.entity.Basket;
 import com.nested.app.entity.Goal;
 import com.nested.app.entity.User;
+import com.nested.app.enums.BasketType;
 import com.nested.app.exception.ExternalServiceException;
 import com.nested.app.repository.BasketRepository;
 import com.nested.app.repository.EducationRepository;
@@ -49,11 +50,16 @@ public class GoalServiceImpl implements GoalService {
    */
   @Override
   @Transactional(readOnly = true)
-  public List<GoalDTO> getAllGoals(User user) {
+  public List<GoalDTO> getAllGoals(User user, BasketType type) {
     log.info("Retrieving all goals from database for user ID: {}", user.getId());
 
     try {
-      List<Goal> goals = goalRepository.findAll(user);
+      List<Goal> goals;
+      if (type == null) {
+        goals = goalRepository.findAll(user);
+      } else {
+        goals = goalRepository.findByBasketType(user, type);
+      }
       List<GoalDTO> goalDTOs = goals.stream().map(this::convertToDTO).collect(Collectors.toList());
 
       log.info("Successfully retrieved {} goals", goalDTOs.size());

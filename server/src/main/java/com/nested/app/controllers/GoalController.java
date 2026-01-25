@@ -7,6 +7,7 @@ import com.nested.app.dto.GoalDTO;
 import com.nested.app.dto.GoalUpdateDTO;
 import com.nested.app.dto.HoldingDTO;
 import com.nested.app.dto.OrderDTO;
+import com.nested.app.enums.BasketType;
 import com.nested.app.services.GoalService;
 import com.nested.app.services.HoldingService;
 import com.nested.app.services.OrderService;
@@ -29,6 +30,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 /**
@@ -70,14 +72,14 @@ public class GoalController {
                     schema = @Schema(implementation = Map.class))),
         @ApiResponse(responseCode = "500", description = "Internal server error")
       })
-  public ResponseEntity<Map<String, List<GoalDTO>>> getAllGoals() {
+  public ResponseEntity<Entity<GoalDTO>> getAllGoals(@RequestParam BasketType type) {
     log.info("GET /api/v1/goals - Retrieving all goals");
 
     try {
-      List<GoalDTO> goals = goalService.getAllGoals(userContext.getUser());
+      List<GoalDTO> goals = goalService.getAllGoals(userContext.getUser(), type);
       log.info("Successfully retrieved {} goals", goals.size());
 
-      return ResponseEntity.ok(Map.of("data", goals));
+      return ResponseEntity.ok(Entity.of(goals));
 
     } catch (Exception e) {
       log.error("Error retrieving goals: {}", e.getMessage(), e);

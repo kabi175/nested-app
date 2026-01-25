@@ -1,5 +1,6 @@
 package com.nested.app.entity;
 
+import com.nested.app.enums.BasketType;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -33,6 +34,9 @@ public class Basket {
   private List<BasketFund> basketFunds;
 
   private Double years;
+
+  @Column(nullable = false)
+  private BasketType basketType;
 
   @CreationTimestamp
   @Column(nullable = false, updatable = false)

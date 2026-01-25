@@ -2,6 +2,7 @@ package com.nested.app.services;
 
 import com.nested.app.dto.GoalDTO;
 import com.nested.app.entity.User;
+import com.nested.app.enums.BasketType;
 import java.util.List;
 
 /**
@@ -19,7 +20,7 @@ public interface GoalService {
    * @param user Current user context
    * @return List of all goals
    */
-  List<GoalDTO> getAllGoals(User user);
+  List<GoalDTO> getAllGoals(User user, BasketType type);
 
   GoalDTO getGoalById(Long goalId, User user);
 
