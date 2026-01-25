@@ -3,6 +3,7 @@ package com.nested.app.services;
 import com.nested.app.jobs.PreVerificationPollerJob;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.quartz.DateBuilder;
 import org.quartz.JobBuilder;
 import org.quartz.JobDetail;
 import org.quartz.Scheduler;
@@ -40,16 +41,20 @@ public class QuartzJobSchedulerService {
         JobBuilder.newJob(PreVerificationPollerJob.class)
             .withIdentity(jobName, jobGroup)
             .usingJobData("userId", userId)
+            .requestRecovery(true)
             .build();
 
     // Create trigger to run every 5 minutes
     Trigger trigger =
         TriggerBuilder.newTrigger()
             .withIdentity(jobName + "-trigger", jobGroup)
-            .startAt(new java.util.Date(System.currentTimeMillis() + 3000))
+            .startAt(DateBuilder.futureDate(3, DateBuilder.IntervalUnit.SECOND))
             // 3 seconds delay
             .withSchedule(
-                SimpleScheduleBuilder.simpleSchedule().withIntervalInMinutes(5).repeatForever())
+                SimpleScheduleBuilder.simpleSchedule()
+                    .withIntervalInMinutes(1)
+                    .repeatForever()
+                    .withMisfireHandlingInstructionFireNow())
             .build();
 
     // Schedule the job

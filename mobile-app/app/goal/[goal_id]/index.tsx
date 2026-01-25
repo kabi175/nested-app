@@ -1,9 +1,12 @@
 import { Holding, Transaction } from "@/api/portfolioAPI";
 import { goalsForCustomizeAtom } from "@/atoms/goals";
+import { DeleteGoalModal } from "@/components/goal/DeleteGoalModal";
 import { PortfolioOverview } from "@/components/PortfolioOverview";
 import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
+import { useDeleteGoal } from "@/hooks/useDeleteGoal";
 import { useGoal } from "@/hooks/useGoal";
+import { useEducationGoals, useSuperFDGoals } from "@/hooks/useGoals";
 import {
   usePortfolioHoldings,
   usePortfolioTransactions,
@@ -12,11 +15,13 @@ import { formatCurrency } from "@/utils/formatters";
 import { Button } from "@ui-kitten/components";
 import { router, useLocalSearchParams } from "expo-router";
 import { useSetAtom } from "jotai";
-import { ArrowLeft, TrendingDown, TrendingUp } from "lucide-react-native";
-import React, { useMemo } from "react";
+import { ArrowLeft, MoreVertical, TrendingDown, TrendingUp } from "lucide-react-native";
+import React, { useMemo, useState } from "react";
 import {
   ActivityIndicator,
+  Alert,
   ScrollView,
+  StatusBar,
   StyleSheet,
   TouchableOpacity,
   View,
@@ -33,10 +38,14 @@ export default function GoalDetailScreen() {
   const { data: goal, isLoading: goalLoading } = useGoal(goal_id);
   const { data: holdings, isLoading: holdingsLoading } =
     usePortfolioHoldings(goal_id);
+  const { data: educationGoals } = useEducationGoals();
+  const { data: superFDGoals } = useSuperFDGoals();
   const setGoalsForCustomize = useSetAtom(goalsForCustomizeAtom);
+  const deleteGoalMutation = useDeleteGoal();
   const [activeTab, setActiveTab] = React.useState<TabType>(
     (tab as TabType) || "holdings"
   );
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
   const transactionsLoadMoreRef = React.useRef<(() => void) | null>(null);
 
   // Update tab when route parameter changes
@@ -83,6 +92,25 @@ export default function GoalDetailScreen() {
     };
   }, [holdings]);
 
+
+  const handleDeleteConfirm = async (transferToGoalId: string) => {
+    try {
+      await deleteGoalMutation.mutateAsync({
+        goalId: goal_id,
+        transferToGoalId,
+      });
+      setShowDeleteModal(false);
+      router.back();
+    } catch (error) {
+      console.error("Error deleting goal:", error);
+      Alert.alert(
+        "Error",
+        "Failed to delete goal. Please try again.",
+        [{ text: "OK" }]
+      );
+    }
+  };
+
   const isLoading = goalLoading || holdingsLoading;
 
   if (isLoading) {
@@ -109,6 +137,7 @@ export default function GoalDetailScreen() {
 
   return (
     <SafeAreaView style={styles.container} edges={["top"]}>
+      <StatusBar backgroundColor="#FFFFFF" />
       {/* Header */}
       <View style={styles.header}>
         <TouchableOpacity
@@ -120,7 +149,12 @@ export default function GoalDetailScreen() {
         <ThemedText style={styles.headerTitle}>
           {goal?.title || "Goal"}
         </ThemedText>
-        <View style={styles.backButton} />
+        <TouchableOpacity
+          onPress={() => setShowDeleteModal(true)}
+          style={styles.backButton}
+        >
+          <MoreVertical size={24} color="#1F2937" />
+        </TouchableOpacity>
       </View>
 
       <ScrollView
@@ -202,6 +236,11 @@ export default function GoalDetailScreen() {
             if (goal == null) {
               return;
             }
+            const secureFDTitles = ["gold-silver-basket", "secure-money", "grow-money"];
+            if (secureFDTitles.includes(goal.basket.title)) {
+              router.push(`/basket?type=${goal.basket.title}`);
+              return;
+            }
             // Set the goal in the atom for customize screen
             setGoalsForCustomize([goal]);
             // Navigate to customize screen
@@ -213,6 +252,16 @@ export default function GoalDetailScreen() {
           Invest More
         </Button>
       </ScrollView>
+
+      {/* Delete Goal Modal */}
+      <DeleteGoalModal
+        visible={showDeleteModal}
+        goal={goal || null}
+        availableGoals={educationGoals || []}
+        onConfirm={handleDeleteConfirm}
+        onCancel={() => setShowDeleteModal(false)}
+        isSubmitting={deleteGoalMutation.isPending}
+      />
     </SafeAreaView>
   );
 }
@@ -221,12 +270,10 @@ export default function GoalDetailScreen() {
 function HoldingCard({
   holding,
   borderColor,
-  index,
   goalId,
 }: {
   holding: Holding;
   borderColor: string;
-  index: number;
   goalId: string;
 }) {
   const returnsPercentage =
@@ -267,33 +314,35 @@ function HoldingCard({
           </View>
         </View>
 
-        <View style={styles.holdingReturns}>
-          <View style={styles.returnsRow}>
-            {holding.returns_amount >= 0 ? (
-              <TrendingUp size={14} color="#10B981" />
-            ) : (
-              <TrendingDown size={14} color="#EF4444" />
-            )}
+        {returnsPercentage !== 0 && (
+          <View style={styles.holdingReturns}>
+            <View style={styles.returnsRow}>
+              {holding.returns_amount >= 0 ? (
+                <TrendingUp size={14} color="#10B981" />
+              ) : (
+                <TrendingDown size={14} color="#EF4444" />
+              )}
+              <ThemedText
+                style={[
+                  styles.returnsText,
+                  isNegative && styles.returnsTextNegative,
+                ]}
+              >
+                {isNegative ? "-" : "+"}
+                {Math.abs(returnsPercentage).toFixed(2)}%
+              </ThemedText>
+            </View>
             <ThemedText
               style={[
-                styles.returnsText,
-                isNegative && styles.returnsTextNegative,
+                styles.returnsAmountText,
+                holding.returns_amount < 0 && styles.returnsAmountTextNegative,
               ]}
             >
-              {isNegative ? "-" : "+"}
-              {Math.abs(returnsPercentage).toFixed(2)}%
+              {holding.returns_amount >= 0 ? "+" : "-"}
+              {formatCurrency(Math.abs(holding.returns_amount))}
             </ThemedText>
           </View>
-          <ThemedText
-            style={[
-              styles.returnsAmountText,
-              holding.returns_amount < 0 && styles.returnsAmountTextNegative,
-            ]}
-          >
-            {holding.returns_amount >= 0 ? "+" : "-"}
-            {formatCurrency(Math.abs(holding.returns_amount))}
-          </ThemedText>
-        </View>
+        )}
       </ThemedView>
     </TouchableOpacity>
   );
@@ -324,10 +373,9 @@ function HoldingsContent({
         const borderColor = colors[index % colors.length];
         return (
           <HoldingCard
-            key={holding.fund}
+            key={index}
             holding={holding}
             borderColor={borderColor}
-            index={index}
             goalId={goalId}
           />
         );

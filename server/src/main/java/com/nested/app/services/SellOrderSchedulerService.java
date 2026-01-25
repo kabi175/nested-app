@@ -10,10 +10,12 @@ import java.util.Set;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.quartz.CronScheduleBuilder;
+import org.quartz.DateBuilder;
 import org.quartz.JobBuilder;
 import org.quartz.JobDetail;
 import org.quartz.Scheduler;
 import org.quartz.SchedulerException;
+import org.quartz.SimpleScheduleBuilder;
 import org.quartz.Trigger;
 import org.quartz.TriggerBuilder;
 import org.springframework.stereotype.Service;
@@ -43,6 +45,7 @@ public class SellOrderSchedulerService {
             .withIdentity("sell-order-check-" + orderRef)
             .usingJobData("orderRef", orderRef)
             .storeDurably()
+            .requestRecovery(true)
             .build();
 
     Trigger trigger =
@@ -50,7 +53,9 @@ public class SellOrderSchedulerService {
             .withIdentity("sell-order-check-trigger-" + orderRef)
             .forJob(jobDetail)
             .withSchedule(
-                CronScheduleBuilder.cronSchedule("0 0 */6 * * ?") // every 6 hours
+                CronScheduleBuilder.cronSchedule("0 0 */6 * * ?")
+                    .withMisfireHandlingInstructionFireAndProceed() // every 6
+                // hours
                 )
             .startNow()
             .build();
@@ -82,6 +87,7 @@ public class SellOrderSchedulerService {
               .withIdentity("sell-order-check-" + orderRef)
               .usingJobData("orderRef", orderRef)
               .storeDurably()
+              .requestRecovery(true)
               .build();
 
       Trigger trigger =
@@ -89,7 +95,9 @@ public class SellOrderSchedulerService {
               .withIdentity("sell-order-check-trigger-" + orderRef)
               .forJob(jobDetail)
               .withSchedule(
-                  CronScheduleBuilder.cronSchedule("0 0 */6 * * ?") // every 6 hours
+                  CronScheduleBuilder.cronSchedule("0 0 */6 * * ?")
+                      .withMisfireHandlingInstructionFireAndProceed() // every
+                  // 6 hours
                   )
               .startNow()
               .build();
@@ -117,6 +125,7 @@ public class SellOrderSchedulerService {
             .withIdentity("redeem-order-tracker-" + orderRef)
             .usingJobData("orderId", orderRef)
             .storeDurably()
+            .requestRecovery(true)
             .build();
 
     Set<Trigger> triggers = new HashSet<>();
@@ -126,7 +135,11 @@ public class SellOrderSchedulerService {
         TriggerBuilder.newTrigger()
             .withIdentity("redeem-order-tracker-5s-" + orderRef)
             .forJob(jobDetail)
-            .startAt(new java.util.Date(System.currentTimeMillis() + 5000))
+            .startAt(DateBuilder.futureDate(5, DateBuilder.IntervalUnit.SECOND))
+            .withSchedule(
+                SimpleScheduleBuilder.simpleSchedule()
+                    .withRepeatCount(0)
+                    .withMisfireHandlingInstructionFireNow())
             .build();
     triggers.add(trigger5s);
 
@@ -135,7 +148,11 @@ public class SellOrderSchedulerService {
         TriggerBuilder.newTrigger()
             .withIdentity("redeem-order-tracker-10m-" + orderRef)
             .forJob(jobDetail)
-            .startAt(new java.util.Date(System.currentTimeMillis() + 600000))
+            .startAt(DateBuilder.futureDate(10, DateBuilder.IntervalUnit.MINUTE))
+            .withSchedule(
+                SimpleScheduleBuilder.simpleSchedule()
+                    .withRepeatCount(0)
+                    .withMisfireHandlingInstructionFireNow())
             .build();
     triggers.add(trigger10m);
 
@@ -144,7 +161,9 @@ public class SellOrderSchedulerService {
         TriggerBuilder.newTrigger()
             .withIdentity("redeem-order-tracker-6h-" + orderRef)
             .forJob(jobDetail)
-            .withSchedule(CronScheduleBuilder.cronSchedule("0 0 */6 * * ?"))
+            .withSchedule(
+                CronScheduleBuilder.cronSchedule("0 0 */6 * * ?")
+                    .withMisfireHandlingInstructionFireAndProceed())
             .startNow()
             .build();
     triggers.add(trigger6h);

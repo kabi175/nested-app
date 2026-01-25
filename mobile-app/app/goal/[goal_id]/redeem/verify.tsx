@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import {
   Alert,
   ScrollView,
+  StatusBar,
   StyleSheet,
   TouchableOpacity,
   View,
@@ -145,7 +146,8 @@ export default function RedeemVerificationScreen() {
   }, [resendTimer]);
 
   return (
-    <SafeAreaView style={styles.safeArea} edges={["bottom"]}>
+    <SafeAreaView style={styles.safeArea} edges={[]}>
+      <StatusBar backgroundColor="#FFFFFF" />
       <View style={styles.container}>
         <ScrollView
           style={styles.scrollView}
@@ -205,7 +207,7 @@ export default function RedeemVerificationScreen() {
                       (otpCode.length !== 6 ||
                         isVerifying ||
                         isProcessingRedeem) &&
-                        styles.verifyButtonDisabled,
+                      styles.verifyButtonDisabled,
                     ]}
                     activeOpacity={0.8}
                   >
@@ -221,8 +223,8 @@ export default function RedeemVerificationScreen() {
                       {isProcessingRedeem
                         ? "Processing Redemption..."
                         : isVerifying
-                        ? "Verifying..."
-                        : "Verify & Continue"}
+                          ? "Verifying..."
+                          : "Verify & Continue"}
                     </Text>
                   </TouchableOpacity>
 
@@ -285,11 +287,11 @@ export default function RedeemVerificationScreen() {
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: "#2D2D2D",
+    backgroundColor: "#FFFFFF",
   },
   container: {
     flex: 1,
-    backgroundColor: "#2D2D2D",
+    backgroundColor: "#FFFFFF",
   },
   scrollView: {
     flex: 1,
@@ -297,14 +299,15 @@ const styles = StyleSheet.create({
   scrollContent: {
     flexGrow: 1,
     justifyContent: "center",
-    paddingVertical: 20,
-    paddingBottom: 32,
+    paddingVertical: 24,
+    paddingBottom: 40,
   },
   contentContainer: {
     backgroundColor: "#FFFFFF",
-    marginHorizontal: 16,
-    borderRadius: 20,
+    marginHorizontal: 0,
+    borderRadius: 0,
     padding: 24,
+    alignItems: "center",
   },
   shieldContainer: {
     alignItems: "center",
@@ -336,6 +339,9 @@ const styles = StyleSheet.create({
   },
   otpContainer: {
     marginBottom: 24,
+    alignItems: "center",
+    justifyContent: "center",
+    width: "100%",
   },
   loadingContainer: {
     alignItems: "center",
@@ -351,6 +357,8 @@ const styles = StyleSheet.create({
     gap: 16,
     marginTop: 8,
     marginBottom: 24,
+    alignItems: "center",
+    width: "100%",
   },
   verifyButton: {
     borderRadius: 12,
@@ -361,6 +369,7 @@ const styles = StyleSheet.create({
     paddingVertical: 16,
     paddingHorizontal: 24,
     gap: 8,
+    width: "100%",
   },
   verifyButtonDisabled: {
     opacity: 0.6,
@@ -398,6 +407,7 @@ const styles = StyleSheet.create({
     padding: 16,
     marginTop: 16,
     marginBottom: 24,
+    width: "100%",
   },
   redeemDetailsRow: {
     flexDirection: "row",
@@ -423,6 +433,7 @@ const styles = StyleSheet.create({
   },
   securityContainer: {
     marginTop: 32,
+    width: "100%",
   },
   securityBox: {
     backgroundColor: "#FEF3C7",

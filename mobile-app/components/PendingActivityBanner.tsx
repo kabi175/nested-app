@@ -1,3 +1,4 @@
+import { Activity } from "@/api/activitiesAPI";
 import { getPendingOrdersByGoalId } from "@/api/paymentAPI";
 import { cartAtom } from "@/atoms/cart";
 import { goalsForCustomizeAtom } from "@/atoms/goals";
@@ -13,15 +14,14 @@ import { useSetAtom } from "jotai";
 import { Banknote, IdCard, Landmark, UserCog } from "lucide-react-native";
 import React from "react";
 import {
-  GestureResponderEvent,
   Pressable,
   StyleSheet,
   Text,
-  View,
+  View
 } from "react-native";
 
 type PendingActivityBannerProps = {
-  onPress?: (event: GestureResponderEvent) => void;
+  onPress?: (activity: Activity) => void;
 };
 
 export function PendingActivityBanner({ onPress }: PendingActivityBannerProps) {
@@ -56,9 +56,9 @@ export function PendingActivityBanner({ onPress }: PendingActivityBannerProps) {
     }
   };
 
-  const handlePress = async (event: GestureResponderEvent) => {
+  const handlePress = async () => {
     if (onPress) {
-      onPress(event);
+      onPress(firstActivity);
       return;
     }
 

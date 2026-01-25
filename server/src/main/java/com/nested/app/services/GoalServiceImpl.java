@@ -8,18 +8,27 @@ import com.nested.app.dto.MinifiedUserDTO;
 import com.nested.app.entity.Basket;
 import com.nested.app.entity.Goal;
 import com.nested.app.entity.User;
+import com.nested.app.enums.BasketType;
+import com.nested.app.events.GoalSyncEvent;
 import com.nested.app.exception.ExternalServiceException;
 import com.nested.app.repository.BasketRepository;
 import com.nested.app.repository.EducationRepository;
 import com.nested.app.repository.OrderRepository;
 import com.nested.app.repository.TenantAwareGoalRepository;
+import com.nested.app.repository.TransactionRepository;
+import java.sql.Timestamp;
 import java.time.LocalDate;
 import java.time.Period;
+import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -40,6 +49,8 @@ public class GoalServiceImpl implements GoalService {
   private final BasketRepository basketRepository;
   private final EducationRepository educationRepository;
   private final OrderRepository orderRepository;
+  private final TransactionRepository transactionRepository;
+  private final ApplicationEventPublisher eventPublisher;
 
   /**
    * Retrieves all goals from the system
@@ -49,11 +60,16 @@ public class GoalServiceImpl implements GoalService {
    */
   @Override
   @Transactional(readOnly = true)
-  public List<GoalDTO> getAllGoals(User user) {
+  public List<GoalDTO> getAllGoals(User user, BasketType type) {
     log.info("Retrieving all goals from database for user ID: {}", user.getId());
 
     try {
-      List<Goal> goals = goalRepository.findAll(user);
+      List<Goal> goals;
+      if (type == null) {
+        goals = goalRepository.findAll(user);
+      } else {
+        goals = goalRepository.findByBasketType(user, type);
+      }
       List<GoalDTO> goalDTOs = goals.stream().map(this::convertToDTO).collect(Collectors.toList());
 
       log.info("Successfully retrieved {} goals", goalDTOs.size());
@@ -104,10 +120,17 @@ public class GoalServiceImpl implements GoalService {
         throw new IllegalStateException("Cannot update goal when an order exists for this goal");
       }
 
+      // Fetch existing titles for the user excluding the current goal
+      List<String> existingTitlesList =
+          goalRepository.findAllTitlesByUserExcludingGoal(user, goalDTO.getId());
+      Set<String> existingTitles = new HashSet<>(existingTitlesList);
+
+      // Generate unique title if the new title conflicts with existing ones
+      String uniqueTitle = generateUniqueTitle(goalDTO.getTitle(), existingTitles);
+
       // Update fields
-      existingGoal.setTitle(goalDTO.getTitle());
+      existingGoal.setTitle(uniqueTitle);
       existingGoal.setTargetAmount(goalDTO.getTargetAmount());
-      existingGoal.setCurrentAmount(goalDTO.getCurrentAmount());
       existingGoal.setTargetDate(goalDTO.getTargetDate());
 
       Goal updatedGoal = goalRepository.save(existingGoal);
@@ -137,11 +160,26 @@ public class GoalServiceImpl implements GoalService {
     log.info("Creating {} goals for user ID: {}", goalDtos.size(), user.getId());
 
     try {
+      // Fetch existing titles for the user (case-insensitive deduplication)
+      List<String> existingTitlesList = goalRepository.findAllTitlesByUser(user);
+      Set<String> existingTitles = new HashSet<>(existingTitlesList);
+      var superFDGoals =
+          goalRepository.findByBasketType(user, BasketType.SUPER_FD).stream().toList();
 
-      List<Goal> goalEntities = goalDtos.stream().map(this::convertToEntity).toList();
+      List<Goal> goalEntities =
+          goalDtos.stream()
+              .map(this::convertToEntity)
+              .toList();
 
+      var toBeSaved = new ArrayList<Goal>();
       goalEntities.forEach(
           goal -> {
+            // Generate unique title
+            String uniqueTitle = generateUniqueTitle(goal.getTitle(), existingTitles);
+            goal.setTitle(uniqueTitle);
+            // Track the newly assigned title to handle duplicates within the same batch
+            existingTitles.add(uniqueTitle);
+
             goal.setUser(user);
             Basket basket;
             if (goal.getEducation() == null && goal.getBasket() != null) {
@@ -165,11 +203,19 @@ public class GoalServiceImpl implements GoalService {
               goal.setTargetAmount(goal.getEducation().getExpectedFee());
             }
             goal.setCurrentAmount(0.0);
+            goal.setInvestedAmount(0.0);
+
+            var superFDGoal =
+                superFDGoals.stream()
+                    .filter(fdGoal -> fdGoal.getBasket().getId().equals(goal.getBasket().getId()))
+                    .findFirst()
+                    .orElse(null);
+            toBeSaved.add(
+                Objects.requireNonNullElseGet(superFDGoal, () -> goalRepository.save(goal)));
           });
 
-      List<Goal> savedGoals = goalRepository.saveAll(goalEntities);
       List<GoalDTO> savedGoalDTOs =
-          savedGoals.stream().map(this::convertToDTO).collect(Collectors.toList());
+          toBeSaved.stream().map(this::convertToDTO).collect(Collectors.toList());
 
       log.info("Successfully created {} goalDtos", savedGoalDTOs.size());
       return savedGoalDTOs;
@@ -242,6 +288,37 @@ public class GoalServiceImpl implements GoalService {
   }
 
   /**
+   * Generates a unique title by appending numeric suffixes if the title already exists. Uses
+   * case-insensitive comparison.
+   *
+   * @param baseTitle The original title
+   * @param existingTitles Set of existing titles (case-insensitive)
+   * @return A unique title with suffix if necessary (e.g., "Goal", "Goal 1", "Goal 2")
+   */
+  private String generateUniqueTitle(String baseTitle, Set<String> existingTitles) {
+    // Create a lowercase set for case-insensitive comparison
+    Set<String> lowerCaseTitles = new HashSet<>();
+    for (String title : existingTitles) {
+      lowerCaseTitles.add(title.toLowerCase());
+    }
+
+    // Check if base title is unique
+    if (!lowerCaseTitles.contains(baseTitle.toLowerCase())) {
+      return baseTitle;
+    }
+
+    // Find the next available suffix
+    int suffix = 1;
+    String candidateTitle;
+    do {
+      candidateTitle = baseTitle + " " + suffix;
+      suffix++;
+    } while (lowerCaseTitles.contains(candidateTitle.toLowerCase()));
+
+    return candidateTitle;
+  }
+
+  /**
    * Checks if a goal has active orders This is a business rule check to prevent updating goals with
    * existing orders
    *
@@ -267,6 +344,7 @@ public class GoalServiceImpl implements GoalService {
     dto.setTitle(goal.getTitle());
     dto.setTargetAmount(goal.getTargetAmount());
     dto.setCurrentAmount(goal.getCurrentAmount());
+    dto.setInvestedAmount(goal.getInvestedAmount());
     dto.setTargetDate(goal.getTargetDate());
     dto.setMonthlySip(goal.getMonthlySip());
     dto.setStatus(goal.getStatus());
@@ -307,6 +385,7 @@ public class GoalServiceImpl implements GoalService {
     goal.setTitle(goalDTO.getTitle());
     goal.setTargetAmount(goalDTO.getTargetAmount());
     goal.setCurrentAmount(goalDTO.getCurrentAmount());
+    goal.setInvestedAmount(goalDTO.getInvestedAmount());
     goal.setTargetDate(goalDTO.getTargetDate());
 
     if (goalDTO.getEducation() != null) {
@@ -325,5 +404,82 @@ public class GoalServiceImpl implements GoalService {
     }
 
     return goal;
+  }
+
+  /**
+   * Soft deletes a goal and transfers all associated records to target goal. Only supported for
+   * goals with BasketType.EDUCATION.
+   *
+   * @param goalId The ID of the goal to delete
+   * @param transferToGoalId The ID of the goal to transfer orders and transactions to
+   * @param user Current user context
+   * @throws IllegalArgumentException if validation fails
+   */
+  @Override
+  public void softDeleteGoal(Long goalId, Long transferToGoalId, User user) {
+    log.info(
+        "Soft deleting goal ID: {} with transfer to goal ID: {} for user ID: {}",
+        goalId,
+        transferToGoalId,
+        user.getId());
+
+    // Validate source goal
+    Goal sourceGoal =
+        goalRepository
+            .findByIdIncludingDeleted(goalId, user)
+            .orElseThrow(() -> new IllegalArgumentException("Goal not found"));
+
+    if (sourceGoal.getIsDeleted()) {
+      throw new IllegalArgumentException("Goal has already been deleted");
+    }
+
+    if (sourceGoal.getBasket() == null
+        || sourceGoal.getBasket().getBasketType() != BasketType.EDUCATION) {
+      throw new IllegalArgumentException("Only education goals can be deleted");
+    }
+
+    // Validate target goal
+    Goal targetGoal =
+        goalRepository
+            .findByIdIncludingDeleted(transferToGoalId, user)
+            .orElseThrow(() -> new IllegalArgumentException("Transfer goal not found"));
+
+    if (targetGoal.getIsDeleted()) {
+      throw new IllegalArgumentException("Cannot transfer to a deleted goal");
+    }
+
+    if (targetGoal.getBasket() == null
+        || targetGoal.getBasket().getBasketType() != BasketType.EDUCATION) {
+      throw new IllegalArgumentException(
+          "Transfer goal must be of the same basket type (education)");
+    }
+
+    // Transfer orders from source goal to target goal
+    int ordersTransferred = orderRepository.updateGoalId(goalId, transferToGoalId);
+    log.info(
+        "Transferred {} orders from goal {} to goal {}",
+        ordersTransferred,
+        goalId,
+        transferToGoalId);
+
+    // Transfer transactions from source goal to target goal
+    int transactionsTransferred = transactionRepository.updateGoalId(goalId, transferToGoalId);
+    log.info(
+        "Transferred {} transactions from goal {} to goal {}",
+        transactionsTransferred,
+        goalId,
+        transferToGoalId);
+
+    // Mark source goal as deleted
+    sourceGoal.setIsDeleted(true);
+    sourceGoal.setDeletedAt(new Timestamp(System.currentTimeMillis()));
+    sourceGoal.setTransferredToGoal(targetGoal);
+    goalRepository.save(sourceGoal);
+
+    log.info("Successfully soft deleted goal ID: {}", goalId);
+
+    // Trigger recalculation of target goal
+    eventPublisher.publishEvent(new GoalSyncEvent(transferToGoalId, user));
+    log.info("Published GoalSyncEvent for target goal ID: {}", transferToGoalId);
   }
 }

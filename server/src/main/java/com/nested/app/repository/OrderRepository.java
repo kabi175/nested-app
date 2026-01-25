@@ -3,6 +3,9 @@ package com.nested.app.repository;
 import com.nested.app.entity.Order;
 import java.util.List;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 /**
@@ -27,4 +30,16 @@ public interface OrderRepository extends JpaRepository<Order, Long> {
   List<Order> findByPaymentId(Long paymentId);
 
   boolean existsByGoalId(Long goalId);
+
+  /**
+   * Transfer all orders from source goal to target goal
+   *
+   * @param sourceGoalId Source goal ID
+   * @param targetGoalId Target goal ID
+   * @return Number of orders updated
+   */
+  @Modifying
+  @Query("UPDATE Order o SET o.goal.id = :targetGoalId WHERE o.goal.id = :sourceGoalId")
+  int updateGoalId(
+      @Param("sourceGoalId") Long sourceGoalId, @Param("targetGoalId") Long targetGoalId);
 }

@@ -4,11 +4,11 @@ import com.nested.app.context.UserContext;
 import com.nested.app.dto.Entity;
 import com.nested.app.dto.GoalCreateDTO;
 import com.nested.app.dto.GoalDTO;
+import com.nested.app.dto.GoalDeleteDTO;
 import com.nested.app.dto.GoalUpdateDTO;
-import com.nested.app.dto.HoldingDTO;
 import com.nested.app.dto.OrderDTO;
+import com.nested.app.enums.BasketType;
 import com.nested.app.services.GoalService;
-import com.nested.app.services.HoldingService;
 import com.nested.app.services.OrderService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -17,18 +17,21 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import java.util.List;
 import java.util.Map;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 /**
@@ -46,7 +49,6 @@ import org.springframework.web.bind.annotation.RestController;
 public class GoalController {
 
   private final GoalService goalService;
-  private final HoldingService holdingService;
   private final OrderService orderService;
   private final UserContext userContext;
 
@@ -70,14 +72,14 @@ public class GoalController {
                     schema = @Schema(implementation = Map.class))),
         @ApiResponse(responseCode = "500", description = "Internal server error")
       })
-  public ResponseEntity<Map<String, List<GoalDTO>>> getAllGoals() {
+  public ResponseEntity<Entity<GoalDTO>> getAllGoals(@RequestParam BasketType type) {
     log.info("GET /api/v1/goals - Retrieving all goals");
 
     try {
-      List<GoalDTO> goals = goalService.getAllGoals(userContext.getUser());
+      List<GoalDTO> goals = goalService.getAllGoals(userContext.getUser(), type);
       log.info("Successfully retrieved {} goals", goals.size());
 
-      return ResponseEntity.ok(Map.of("data", goals));
+      return ResponseEntity.ok(Entity.of(goals));
 
     } catch (Exception e) {
       log.error("Error retrieving goals: {}", e.getMessage(), e);
@@ -119,7 +121,7 @@ public class GoalController {
         @ApiResponse(responseCode = "400", description = "Invalid input data"),
         @ApiResponse(responseCode = "500", description = "Internal server error")
       })
-  public ResponseEntity<Map<String, List<GoalDTO>>> createGoal(
+  public ResponseEntity<Entity<GoalDTO>> createGoal(
       @RequestBody Entity<GoalCreateDTO> requestBody) {
 
     log.info("POST /api/v1/goals - Creating new goal");
@@ -135,7 +137,7 @@ public class GoalController {
       List<GoalDTO> createdGoals = goalService.createGoals(goalData, userContext.getUser());
       log.info("Successfully created {} goals", createdGoals.size());
 
-      return ResponseEntity.status(HttpStatus.CREATED).body(Map.of("data", createdGoals));
+      return ResponseEntity.status(HttpStatus.CREATED).body(Entity.of(createdGoals));
 
     } catch (Exception e) {
       log.error("Error creating goal: {}", e.getMessage(), e);
@@ -201,46 +203,7 @@ public class GoalController {
     }
   }
 
-  /**
-   * Retrieves holdings for a specific goal
-   *
-   * @param goalId The ID of the goal
-   * @return ResponseEntity containing list of holdings for the goal
-   */
-  @GetMapping("/{goalId}/holdings")
-  @Operation(
-      summary = "Get holdings for a goal",
-      description = "Retrieves all holdings associated with a specific investment goal")
-  @ApiResponses(
-      value = {
-        @ApiResponse(
-            responseCode = "200",
-            description = "Successfully retrieved holdings",
-            content =
-                @Content(
-                    mediaType = "application/json",
-                    schema = @Schema(implementation = Map.class))),
-        @ApiResponse(responseCode = "404", description = "Goal not found"),
-        @ApiResponse(responseCode = "500", description = "Internal server error")
-      })
-  public ResponseEntity<Map<String, List<HoldingDTO>>> getGoalHoldings(
-      @Parameter(description = "Goal ID", required = true) @PathVariable String goalId) {
-
-    log.info("GET /api/v1/goals/{}/holdings - Retrieving holdings for goal", goalId);
-
-    try {
-      List<HoldingDTO> holdings = holdingService.getHoldingsByGoalId(goalId);
-      log.info("Successfully retrieved {} holdings for goal {}", holdings.size(), goalId);
-
-      return ResponseEntity.ok(Map.of("data", holdings));
-
-    } catch (Exception e) {
-      log.error("Error retrieving holdings for goal {}: {}", goalId, e.getMessage(), e);
-      return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
-    }
-  }
-
-  /**
+    /**
    * Retrieves orders for a specific goal
    *
    * @param goalId The ID of the goal
@@ -327,6 +290,53 @@ public class GoalController {
 
     } catch (Exception e) {
       log.error("Error retrieving goals for basket {}: {}", basketName, e.getMessage(), e);
+      return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+    }
+  }
+
+  /**
+   * Soft deletes a goal and transfers all associated records to target goal. Only supported for
+   * goals with BasketType.EDUCATION.
+   *
+   * @param goalId The ID of the goal to delete
+   * @param requestBody Request body containing the target goal ID for transfer
+   * @return ResponseEntity with success message or error
+   */
+  @DeleteMapping("/{goalId}")
+  @Operation(
+      summary = "Soft delete a goal",
+      description =
+          "Soft deletes an education goal and transfers all orders and transactions to the specified target goal")
+  @ApiResponses(
+      value = {
+        @ApiResponse(responseCode = "200", description = "Goal deleted successfully"),
+        @ApiResponse(
+            responseCode = "400",
+            description =
+                "Validation error (e.g., goal not found, not an education goal, target goal invalid)"),
+        @ApiResponse(responseCode = "500", description = "Internal server error")
+      })
+  public ResponseEntity<?> deleteGoal(
+      @Parameter(description = "Goal ID to delete", required = true) @PathVariable Long goalId,
+      @Valid @RequestBody GoalDeleteDTO requestBody) {
+
+    log.info(
+        "DELETE /api/v1/goals/{} - Soft deleting goal with transfer to goal {}",
+        goalId,
+        requestBody.getTransferToGoalId());
+
+    try {
+      goalService.softDeleteGoal(goalId, requestBody.getTransferToGoalId(), userContext.getUser());
+      log.info("Successfully soft deleted goal {}", goalId);
+
+      return ResponseEntity.ok(Map.of("message", "Goal deleted successfully"));
+
+    } catch (IllegalArgumentException e) {
+      log.warn("Cannot delete goal {}: {}", goalId, e.getMessage());
+      return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of("error", e.getMessage()));
+
+    } catch (Exception e) {
+      log.error("Error deleting goal {}: {}", goalId, e.getMessage(), e);
       return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
     }
   }

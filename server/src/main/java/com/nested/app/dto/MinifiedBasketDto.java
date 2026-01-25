@@ -14,10 +14,13 @@ public class MinifiedBasketDto {
   @JsonFormat(shape = JsonFormat.Shape.STRING)
   private Long id;
 
+  private String title;
+
   @JsonProperty("min_investment")
   private Double minInvestment;
 
   public static MinifiedBasketDto fromEntity(Basket basket) {
-    return new MinifiedBasketDto(basket.getId(), basket.getMinInvesmtnetAmount());
+    return new MinifiedBasketDto(
+        basket.getId(), basket.getTitle(), basket.getMinInvesmtnetAmount());
   }
 }

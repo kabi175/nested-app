@@ -11,7 +11,8 @@ export function useGoalCreation() {
     mutationFn: (goals: Parameters<typeof createGoal>[1]) => createGoal(api, goals),
     onSuccess: () => {
       // Invalidate and refetch goals after successful creation
-      queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.goals] });
+      queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.educationGoals] });
+      queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.superFDGoals] });
     },
   });
 }

@@ -2,6 +2,7 @@ package com.nested.app.services;
 
 import com.nested.app.dto.GoalDTO;
 import com.nested.app.entity.User;
+import com.nested.app.enums.BasketType;
 import java.util.List;
 
 /**
@@ -19,7 +20,7 @@ public interface GoalService {
    * @param user Current user context
    * @return List of all goals
    */
-  List<GoalDTO> getAllGoals(User user);
+  List<GoalDTO> getAllGoals(User user, BasketType type);
 
   GoalDTO getGoalById(Long goalId, User user);
 
@@ -59,4 +60,15 @@ public interface GoalService {
    * @return List of goals associated with the specified basket
    */
   List<GoalDTO> getGoalsByBasketName(String basketName, User user);
+
+  /**
+   * Soft deletes a goal and transfers all associated records to target goal. Only supported for
+   * goals with BasketType.EDUCATION.
+   *
+   * @param goalId The ID of the goal to delete
+   * @param transferToGoalId The ID of the goal to transfer orders and transactions to
+   * @param user Current user context
+   * @throws IllegalArgumentException if validation fails
+   */
+  void softDeleteGoal(Long goalId, Long transferToGoalId, User user);
 }

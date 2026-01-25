@@ -1,14 +1,26 @@
 import type { Goal } from "@/types/investment";
 import type { AxiosInstance } from "axios";
 
-export const getGoals = async (api: AxiosInstance): Promise<Goal[]> => {
-  const { data } = await api.get("/goals");
+export const getGoals = async (api: AxiosInstance, type: "education" | "super_fd" ): Promise<Goal[]> => {
+  console.log("fetching goals for type", type);
+  const { data } = await api.get(`/goals?type=${type}`);
   return (data.data ?? []).map((goal: GoalDTO): Goal => mapGoalToGoal(goal));
 };
 
 export const getGoalsByBasketName = async (api: AxiosInstance, basketName: string): Promise<Goal[]> => {
   const { data } = await api.get(`/goals/by-basket/${basketName}`);
   return (data.data ?? []).map((goal: GoalDTO): Goal => mapGoalToGoal(goal));
+};
+
+export const deleteGoal = async (
+  api: AxiosInstance,
+  goalId: string,
+  transferToGoalId: string
+): Promise<void> => {
+  console.log("deleting goal", goalId, "with transfer to goal", transferToGoalId);
+  await api.delete(`/goals/${goalId}`, {
+    data: { transfer_to_goal_id:transferToGoalId },
+  });
 };
 
 export const getGoal = async (
@@ -65,10 +77,12 @@ type GoalDTO = {
   child_id: string;
   target_amount: number;
   current_amount: number;
+  invested_amount: number;
   monthly_sip: number | null;
   status: Goal["status"];
   basket: {
     id: string;
+    title: string;
     min_investment: number;
   };
   target_date?: string;
@@ -83,6 +97,7 @@ function mapGoalToGoal(goal: GoalDTO): Goal {
     childId: goal.child_id,
     targetAmount: goal.target_amount,
     currentAmount: goal.current_amount,
+    investedAmount: goal.invested_amount,
     monthlySip: goal.monthly_sip,
     status: goal.status,
     targetDate: goal.target_date ? new Date(goal.target_date) : new Date(),

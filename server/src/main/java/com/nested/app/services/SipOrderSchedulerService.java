@@ -185,6 +185,7 @@ public class SipOrderSchedulerService {
               .withIdentity(jobIdentity)
               .usingJobData("paymentID", paymentID)
               .storeDurably()
+              .requestRecovery(true)
               .build();
 
       Trigger trigger =
@@ -194,6 +195,7 @@ public class SipOrderSchedulerService {
               .withSchedule(
                   SimpleScheduleBuilder.simpleSchedule()
                       .withIntervalInSeconds(10)
+                      .withMisfireHandlingInstructionFireNow()
                       .withRepeatCount(0)) // Run once
               .startNow()
               .build();

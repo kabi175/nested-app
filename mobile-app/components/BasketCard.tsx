@@ -1,6 +1,9 @@
+import { BasketCardData } from "@/hooks/useSuperFDBaskets";
+import { formatCurrency } from "@/utils/formatters";
 import { LinearGradient } from "expo-linear-gradient";
+import { router } from "expo-router";
 import { ChevronRight, Target, TrendingUp, Zap } from "lucide-react-native";
-import React from "react";
+import React, { useState } from "react";
 import {
   Animated,
   Pressable,
@@ -10,77 +13,41 @@ import {
   View,
 } from "react-native";
 
-export interface BasketCardData {
-  id: string;
-  title: string;
-  subtitle: string;
-  icon: React.ReactNode;
-  iconBgColor: string;
-  returns: string;
-  risk: string;
-  lockIn: string;
-  features: string[];
-  minInvestment: string;
-  buttonGradient: readonly [string, string, ...string[]];
-  cardBgColor: string;
-  minInvestmentBgColor: string;
-  subtitleColor: string;
-  minInvestmentTextColor: string;
-  isRecommended?: boolean;
-}
 
 interface BasketCardProps {
   data: BasketCardData;
   cardWidth?: number;
-  onPress?: () => void;
-  onInvestNowPress?: () => void;
 }
 
 export default function BasketCard({
   data,
   cardWidth,
-  onPress,
-  onInvestNowPress,
 }: BasketCardProps) {
   const { width } = useWindowDimensions();
   const calculatedCardWidth = cardWidth ?? width - 80; // Account for margins and padding
   const cardScale = React.useRef(new Animated.Value(1)).current;
   const buttonScale = React.useRef(new Animated.Value(1)).current;
 
-  const handleCardPress = () => {
-    Animated.sequence([
-      Animated.timing(cardScale, {
-        toValue: 0.98,
-        duration: 100,
-        useNativeDriver: true,
-      }),
-      Animated.timing(cardScale, {
-        toValue: 1,
-        duration: 100,
-        useNativeDriver: true,
-      }),
-    ]).start();
-    onPress?.();
-  };
+  const [isLoading, setIsLoading] = useState(false);
 
   const handleButtonPress = () => {
-    Animated.sequence([
-      Animated.timing(buttonScale, {
-        toValue: 0.97,
-        duration: 100,
-        useNativeDriver: true,
-      }),
-      Animated.timing(buttonScale, {
-        toValue: 1,
-        duration: 100,
-        useNativeDriver: true,
-      }),
-    ]).start();
-    onInvestNowPress?.();
+    if(isLoading) return;
+    setIsLoading(true);
+    try {
+    if(data.goalId && data.currentValue) {
+      router.push(`/goal/${data.goalId}/holdings`);
+    } else {
+      router.push(`/basket?type=${data.id}`);
+    }
+    } catch (error) {
+      console.error(error);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
-    <Pressable onPress={handleCardPress} style={styles.cardContainer}>
+    <Pressable onPress={handleButtonPress} style={styles.cardContainer}>
       <Animated.View
         style={[
           styles.card,
@@ -153,20 +120,21 @@ export default function BasketCard({
             { backgroundColor: data.minInvestmentBgColor },
           ]}
         >
-          <Text style={styles.minInvestmentLabel}>Min. Investment</Text>
+          <Text style={styles.minInvestmentLabel}>{data.currentValue ? "Current Value" : "Min. Investment"}</Text>
           <Text
             style={[
               styles.minInvestmentValue,
               { color: data.minInvestmentTextColor },
             ]}
           >
-            {data.minInvestment}
+            {data.currentValue ? formatCurrency(data.currentValue) : data.minInvestment}
           </Text>
         </View>
 
         {/* Invest Now Button */}
         <Pressable
-          onPress={handleButtonPress}
+          onPress={() => handleButtonPress()}
+          disabled={isLoading}
           style={({ pressed }) => [
             styles.button,
             pressed && styles.buttonPressed,
@@ -185,7 +153,10 @@ export default function BasketCard({
               end={{ x: 1, y: 0 }}
               style={styles.buttonGradient}
             >
-              <Text style={styles.buttonText}>Invest Now</Text>
+              <Text style={styles.buttonText}>{
+              isLoading ? "Loading..." : (
+                data.currentValue ? "View Details" : "Invest Now"
+              )}</Text>
               <ChevronRight size={18} color="#FFFFFF" strokeWidth={2.5} />
             </LinearGradient>
           </Animated.View>

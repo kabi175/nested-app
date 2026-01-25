@@ -4,6 +4,8 @@ export const QUERY_KEYS = {
   children: "children",
   bankAccounts: "bankAccounts",
   goals: "goals",
+  educationGoals: "educationGoals",
+  superFDGoals: "superFDGoals",
   goal: "goal",
   pendingActivities: "pendingActivities",
   pendingOrders: "pendingOrders",

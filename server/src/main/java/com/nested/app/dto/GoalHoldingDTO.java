@@ -48,6 +48,7 @@ public class GoalHoldingDTO {
   @JsonProperty("current_value")
   private Double currentValue; // Units * current NAV
 
+  @JsonSerialize(using = OneDecimalDoubleSerializer.class)
   @JsonProperty("returns_amount")
   private Double returnsAmount; // Current value - invested amount
 }

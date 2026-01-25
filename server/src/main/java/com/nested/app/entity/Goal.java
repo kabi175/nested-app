@@ -38,6 +38,9 @@ public class Goal {
   @Column(nullable = false)
   private Double currentAmount = 0.0;
 
+  @Column(nullable = false)
+  private Double investedAmount = 0.0;
+
   private Double monthlySip = 0.0;
 
   @Column(nullable = false)
@@ -70,6 +73,15 @@ public class Goal {
   @UpdateTimestamp
   @Column(nullable = false)
   private Timestamp updatedAt;
+
+  @Column(nullable = false)
+  private Boolean isDeleted = false;
+
+  private Timestamp deletedAt;
+
+  @ManyToOne
+  @JoinColumn(name = "transferred_to_goal_id")
+  private Goal transferredToGoal;
 
   public boolean canInvest() {
     return this.status == Status.ACTIVE || this.status == Status.DRAFT || this.status == Status.PAYMENT_PENDING;

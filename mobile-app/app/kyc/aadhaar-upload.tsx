@@ -3,8 +3,9 @@ import { StepProgress } from "@/components/ui/StepProgress";
 import { useAuthAxios } from "@/hooks/useAuthAxios";
 import { useUser } from "@/hooks/useUser";
 import { Button, Layout, Text } from "@ui-kitten/components";
+import * as Linking from "expo-linking";
 import { useRouter } from "expo-router";
-import * as WebBrowser from "expo-web-browser";
+import { openAuthSessionAsync } from "expo-web-browser";
 import React, { useCallback, useState } from "react";
 import { KeyboardAvoidingView, Platform, ScrollView, View } from "react-native";
 
@@ -28,21 +29,13 @@ export default function AadhaarUploadScreen() {
     try {
       const redirectUrl = await fetchAadhaarUploadRedirectUrl(api, user);
       if (redirectUrl) {
-        await WebBrowser.openBrowserAsync(redirectUrl, {
-          toolbarColor: "#0A84FF",
-          controlsColor: "#ffffff",
-          showTitle: true,
-          enableDefaultShareMenuItem: false,
-          dismissButtonStyle: "done",
-          readerMode: false,
-        });
+        const returnUrl = Linking.createURL(
+          `/kyc/esign-upload`
+        );
+        await openAuthSessionAsync(redirectUrl, returnUrl);
       }
       await refetch();
-      if (user?.kycStatus === "esign_pending") {
-        router.push("/kyc/esign-upload");
-      } else if (user?.kycStatus === "submitted") {
-        router.push("/kyc/waiting-for-approval");
-      }
+      router.push("/kyc/esign-upload");
     } catch (err) {
       console.error("Failed to start Aadhaar upload flow", err);
       setError(

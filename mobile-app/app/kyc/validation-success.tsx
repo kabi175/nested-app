@@ -11,7 +11,7 @@ export default function ValidationSuccessScreen() {
   const router = useRouter();
   const { mutateAsync: initKyc } = useInitKyc();
   const [isContinuing, setIsContinuing] = useState(false);
-  const {data: user, refetch: refetchUser} = useUser();
+  const { data: user, refetch: refetchUser } = useUser();
 
   const routeToNextStep = (kycStatus: string | undefined) => {
     switch (kycStatus) {
@@ -55,8 +55,8 @@ export default function ValidationSuccessScreen() {
 
       if (needsKycInit) {
         await initKyc(user);
-        await refetchUser();
-        kycStatus = user.kycStatus;
+        const refreshedUser = await refetchUser();
+        kycStatus = refreshedUser.data?.kycStatus || "aadhaar_pending";
       }
 
       routeToNextStep(kycStatus);

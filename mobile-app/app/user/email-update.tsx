@@ -245,7 +245,7 @@ export default function EmailUpdateScreen() {
   };
 
   return (
-    <SafeAreaView style={styles.safeArea} edges={["bottom"]}>
+    <SafeAreaView style={styles.safeArea} edges={[]}>
       <KeyboardAvoidingView
         behavior={Platform.select({ ios: "padding", android: undefined })}
         style={styles.keyboardView}
@@ -328,7 +328,7 @@ export default function EmailUpdateScreen() {
                     style={[
                       styles.continueButton,
                       (!newEmail.trim() || isLoading) &&
-                        styles.continueButtonDisabled,
+                      styles.continueButtonDisabled,
                     ]}
                     activeOpacity={0.8}
                   >
@@ -392,7 +392,7 @@ export default function EmailUpdateScreen() {
                           style={[
                             styles.verifyButton,
                             (otpCode.length !== 6 || isVerifying) &&
-                              styles.verifyButtonDisabled,
+                            styles.verifyButtonDisabled,
                           ]}
                           activeOpacity={0.8}
                         >
@@ -432,7 +432,7 @@ export default function EmailUpdateScreen() {
                           style={[
                             styles.resendButton,
                             (resendTimer > 0 || isLoading) &&
-                              styles.resendButtonDisabled,
+                            styles.resendButtonDisabled,
                           ]}
                           activeOpacity={0.7}
                         >
@@ -450,7 +450,7 @@ export default function EmailUpdateScreen() {
                             style={[
                               styles.resendButtonText,
                               (resendTimer > 0 || isLoading) &&
-                                styles.resendButtonTextDisabled,
+                              styles.resendButtonTextDisabled,
                             ]}
                           >
                             Resend OTP{" "}
@@ -543,14 +543,14 @@ export default function EmailUpdateScreen() {
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: "#F3F4F6",
+    backgroundColor: "#FFFFFF",
   },
   keyboardView: {
     flex: 1,
   },
   container: {
     flex: 1,
-    backgroundColor: "#F3F4F6",
+    backgroundColor: "#FFFFFF",
   },
   scrollView: {
     flex: 1,
@@ -563,17 +563,10 @@ const styles = StyleSheet.create({
   },
   contentContainer: {
     backgroundColor: "#FFFFFF",
-    marginHorizontal: 20,
-    borderRadius: 24,
+    marginHorizontal: 0,
+    borderRadius: 0,
     padding: 28,
-    shadowColor: "#000",
-    shadowOffset: {
-      width: 0,
-      height: 4,
-    },
-    shadowOpacity: 0.1,
-    shadowRadius: 12,
-    elevation: 8,
+    flex: 1,
   },
   header: {
     flexDirection: "row",

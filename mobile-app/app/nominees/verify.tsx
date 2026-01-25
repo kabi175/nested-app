@@ -177,7 +177,7 @@ export default function NomineeVerificationScreen() {
       }
 
       // Redirect back to nominees screen
-      router.replace("/nominees");
+      router.replace("/bank-accounts");
     } catch (error: any) {
       console.error("Verification error", error);
       const errorMessage =
@@ -201,7 +201,7 @@ export default function NomineeVerificationScreen() {
   }, [resendTimer]);
 
   return (
-    <SafeAreaView style={styles.safeArea} edges={["bottom"]}>
+    <SafeAreaView style={styles.safeArea} edges={[]}>
       <View style={styles.container}>
         <ScrollView
           style={styles.scrollView}
@@ -283,16 +283,16 @@ export default function NomineeVerificationScreen() {
                         otpCode.length !== 6 ||
                         isVerifying ||
                         isProcessingNominees) &&
-                        styles.verifyButtonDisabled,
+                      styles.verifyButtonDisabled,
                     ]}
                     activeOpacity={0.8}
                   >
                     <LinearGradient
                       colors={
                         mfaSessionId &&
-                        otpCode.length === 6 &&
-                        !isVerifying &&
-                        !isProcessingNominees
+                          otpCode.length === 6 &&
+                          !isVerifying &&
+                          !isProcessingNominees
                           ? ["#2563EB", "#1D4ED8"]
                           : ["#D1D5DB", "#9CA3AF"]
                       }
@@ -318,10 +318,10 @@ export default function NomineeVerificationScreen() {
                             ? "Opting Out..."
                             : "Saving Nominees..."
                           : isVerifying
-                          ? "Verifying..."
-                          : isOptOutFlow
-                          ? "Verify & Opt Out"
-                          : "Verify & Save"}
+                            ? "Verifying..."
+                            : isOptOutFlow
+                              ? "Verify & Opt Out"
+                              : "Verify & Save"}
                       </Text>
                     </LinearGradient>
                   </TouchableOpacity>
@@ -332,7 +332,7 @@ export default function NomineeVerificationScreen() {
                     style={[
                       styles.resendButton,
                       (resendTimer > 0 || isLoading) &&
-                        styles.resendButtonDisabled,
+                      styles.resendButtonDisabled,
                     ]}
                     activeOpacity={0.7}
                   >
@@ -348,7 +348,7 @@ export default function NomineeVerificationScreen() {
                       style={[
                         styles.resendButtonText,
                         (resendTimer > 0 || isLoading) &&
-                          styles.resendButtonTextDisabled,
+                        styles.resendButtonTextDisabled,
                       ]}
                     >
                       Resend OTP{" "}
@@ -389,11 +389,11 @@ export default function NomineeVerificationScreen() {
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: "#F3F4F6",
+    backgroundColor: "#FFFFFF",
   },
   container: {
     flex: 1,
-    backgroundColor: "#F3F4F6",
+    backgroundColor: "#FFFFFF",
   },
   scrollView: {
     flex: 1,
@@ -406,17 +406,10 @@ const styles = StyleSheet.create({
   },
   contentContainer: {
     backgroundColor: "#FFFFFF",
-    marginHorizontal: 20,
-    borderRadius: 24,
+    marginHorizontal: 0,
+    borderRadius: 0,
     padding: 28,
-    shadowColor: "#000",
-    shadowOffset: {
-      width: 0,
-      height: 4,
-    },
-    shadowOpacity: 0.1,
-    shadowRadius: 12,
-    elevation: 8,
+    alignItems: "center",
   },
   shieldContainer: {
     alignItems: "center",
@@ -465,6 +458,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 4,
     alignItems: "center",
     justifyContent: "center",
+    width: "100%",
   },
   loadingContainer: {
     alignItems: "center",
@@ -484,6 +478,8 @@ const styles = StyleSheet.create({
     gap: 20,
     marginTop: 12,
     marginBottom: 28,
+    alignItems: "center",
+    width: "100%",
   },
   verifyButton: {
     borderRadius: 16,
@@ -496,6 +492,7 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.3,
     shadowRadius: 8,
     elevation: 6,
+    width: "100%",
   },
   verifyButtonDisabled: {
     shadowOpacity: 0,
@@ -550,6 +547,7 @@ const styles = StyleSheet.create({
   },
   securityContainer: {
     marginTop: 28,
+    width: "100%",
   },
   securityBox: {
     backgroundColor: "#FFFBEB",

@@ -167,6 +167,7 @@ export default function CreateGoalScreen() {
     const selectedChild = children?.find(
       (child) => child.id === selectedChildId
     );
+    const targetYear = (selectedChild?.dateOfBirth?.getFullYear() ?? 2016) + 22;
     const newGoal: GoalForm = {
       id: Date.now().toString(),
       type: "postgraduate",
@@ -174,7 +175,7 @@ export default function CreateGoalScreen() {
       degree: "Choose a course",
       college: "Select Dream College",
       currentCost: 2500000,
-      targetYear: 2030,
+      targetYear: targetYear,
       futureCost: 4500000,
       selectionMode: "course",
       childId:

@@ -18,8 +18,8 @@ export default function GoalSuggestionsScreen() {
   return (
     <SafeAreaView style={styles.container}>
       <ScreenHeader
-        title="Suggested Investments For Your Goals"
-        subtitle="Start today and stay consistent - your goals are within reach."
+        title="Suggested Investments"
+        subtitle="Choose your investments to start your journey."
       />
       <ScrollView
         style={styles.scrollView}

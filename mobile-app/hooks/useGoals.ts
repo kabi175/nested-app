@@ -3,10 +3,20 @@ import { QUERY_KEYS } from "@/constants/queryKeys";
 import { useQuery } from "@tanstack/react-query";
 import { useAuthAxios } from "./useAuthAxios";
 
-export function useGoals() {
+export function useEducationGoals() {
   const api = useAuthAxios();
   return useQuery({
-    queryKey: [QUERY_KEYS.goals],
-    queryFn: () => getGoals(api),
+    queryKey: [QUERY_KEYS.educationGoals],
+    queryFn: () => getGoals(api, "education"),
+    refetchOnWindowFocus: 'always'
+  });
+}
+
+export function useSuperFDGoals() {
+  const api = useAuthAxios();
+  return useQuery({
+    queryKey: [QUERY_KEYS.superFDGoals],
+    queryFn: () => getGoals(api, "super_fd"),
+    refetchOnWindowFocus: 'always'
   });
 }
