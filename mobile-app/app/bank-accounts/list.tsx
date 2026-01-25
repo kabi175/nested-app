@@ -1,23 +1,21 @@
 import { ThemedText } from "@/components/ThemedText";
-import { useBankAccounts, useDeleteBankAccount } from "@/hooks/useBankAccount";
+import { useBankAccounts } from "@/hooks/useBankAccount";
 import { BankAccount } from "@/types/bank";
 import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
 import { useState } from "react";
 import {
-  Alert,
   Animated,
   FlatList,
   ListRenderItem,
   StyleSheet,
   TouchableOpacity,
-  View,
+  View
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function BankAccountsList() {
   const { data: bankAccounts, isLoading } = useBankAccounts();
-  const { mutate: deleteBank, isPending } = useDeleteBankAccount();
   const [itemAnimations] = useState(() => new Map<string, Animated.Value>());
 
   const getAnimation = (itemId: string) => {
@@ -27,41 +25,6 @@ export default function BankAccountsList() {
     return itemAnimations.get(itemId)!;
   };
 
-  const handleDelete = (account: BankAccount) => {
-    Alert.alert(
-      "Delete Bank Account",
-      `Are you sure you want to delete this ${
-        account.type
-      } account ending in ${account.accountNumber.slice(-4)}?`,
-      [
-        {
-          text: "Cancel",
-          style: "cancel",
-        },
-        {
-          text: "Delete",
-          style: "destructive",
-          onPress: () => {
-            const animValue = getAnimation(account.id);
-
-            // Animate out first
-            Animated.timing(animValue, {
-              toValue: -500,
-              duration: 300,
-              useNativeDriver: true,
-            }).start(() => {
-              // Then delete
-              deleteBank(account.id, {
-                onSuccess: () => {
-                  itemAnimations.delete(account.id);
-                },
-              });
-            });
-          },
-        },
-      ]
-    );
-  };
 
   const formatAccountNumber = (accountNumber: string) => {
     // Show only last 4 digits
@@ -115,13 +78,6 @@ export default function BankAccountsList() {
               </ThemedText>
               <ThemedText style={styles.ifscCode}>{item.ifscCode}</ThemedText>
             </View>
-            <TouchableOpacity
-              style={styles.deleteButton}
-              onPress={() => handleDelete(item)}
-              disabled={isPending}
-            >
-              <Ionicons name="trash-outline" size={20} color="#EF4444" />
-            </TouchableOpacity>
           </View>
         </View>
       </Animated.View>
