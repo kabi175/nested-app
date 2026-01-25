@@ -13,6 +13,8 @@ import com.nested.app.repository.BasketRepository;
 import com.nested.app.repository.EducationRepository;
 import com.nested.app.repository.OrderRepository;
 import com.nested.app.repository.TenantAwareGoalRepository;
+import java.time.LocalDate;
+import java.time.Period;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -145,10 +147,13 @@ public class GoalServiceImpl implements GoalService {
             if (goal.getEducation() == null && goal.getBasket() != null) {
               basket = basketRepository.findById(goal.getBasket().getId()).orElseThrow();
             } else {
+              var now = LocalDate.now();
+              var futureDate = goal.getTargetDate().toLocalDate();
+              var period = Period.between(now, futureDate);
               basket =
                   basketRepository
-                      .findClosestByReturns(goal.getTargetAmount())
-                      .orElseGet(basketRepository::findFirstByOrderByReturnsDesc);
+                      .findFirstByYearsGreaterThanOrderByYears((double) period.getYears())
+                      .orElseGet(basketRepository::findFirstByOrderByYearsDesc);
             }
 
             goal.setBasket(basket);
