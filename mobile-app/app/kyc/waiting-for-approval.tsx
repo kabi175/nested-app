@@ -53,7 +53,7 @@ export default function WaitingForApprovalScreen() {
     if (status === "completed") {
       // Invalidate queries to ensure fresh data
       queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.user] });
-      router.replace("/bank-accounts");
+      router.replace("/nominees");
       return;
     }
 
