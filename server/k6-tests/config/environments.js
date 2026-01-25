@@ -8,10 +8,6 @@ export const environments = {
     baseUrl: 'http://localhost:8080',
     authUrl: 'http://localhost:8080',
   },
-  staging: {
-    baseUrl: 'https://staging-api.nested.money',
-    authUrl: 'https://staging-api.nested.money',
-  },
   production: {
     baseUrl: 'https://api.nested.money',
     authUrl: 'https://api.nested.money',
