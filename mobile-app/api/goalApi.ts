@@ -12,6 +12,17 @@ export const getGoalsByBasketName = async (api: AxiosInstance, basketName: strin
   return (data.data ?? []).map((goal: GoalDTO): Goal => mapGoalToGoal(goal));
 };
 
+export const deleteGoal = async (
+  api: AxiosInstance,
+  goalId: string,
+  transferToGoalId: string
+): Promise<void> => {
+  console.log("deleting goal", goalId, "with transfer to goal", transferToGoalId);
+  await api.delete(`/goals/${goalId}`, {
+    data: { transfer_to_goal_id:transferToGoalId },
+  });
+};
+
 export const getGoal = async (
   api: AxiosInstance,
   id: string
