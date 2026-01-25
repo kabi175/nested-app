@@ -34,6 +34,7 @@ export default function EsignUploadScreen() {
         );
         await openAuthSessionAsync(redirectUrl, returnUrl);
       }
+      router.push("/kyc/waiting-for-approval");
       await refetch();
     } catch (err) {
       console.error("Failed to launch eSign flow", err);

@@ -35,6 +35,7 @@ export default function AadhaarUploadScreen() {
         await openAuthSessionAsync(redirectUrl, returnUrl);
       }
       await refetch();
+      router.push("/kyc/esign-upload");
     } catch (err) {
       console.error("Failed to start Aadhaar upload flow", err);
       setError(

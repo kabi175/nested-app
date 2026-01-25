@@ -55,10 +55,9 @@ export default function ValidationSuccessScreen() {
 
       if (needsKycInit) {
         await initKyc(user);
-        await refetchUser();
-        kycStatus = user.kycStatus;
+        const refreshedUser = await refetchUser();
+        kycStatus = refreshedUser.data?.kycStatus || "aadhaar_pending";
       }
-      console.log("kycStatus", kycStatus);
 
       routeToNextStep(kycStatus);
     } catch (error) {
