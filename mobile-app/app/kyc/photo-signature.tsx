@@ -9,7 +9,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Button, Text } from "@ui-kitten/components";
 import * as ImagePicker from "expo-image-picker";
 import { useRouter } from "expo-router";
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import {
   Alert,
   Image,
@@ -29,7 +29,7 @@ export default function PhotoSignatureScreen() {
   const totalSteps = 5;
   const currentStep = 3;
   const api = useAuthAxios();
-  const normalizeSignatureUri = (uri: string | null | undefined) => {
+  const normalizeSignatureUri = useCallback((uri: string | null | undefined) => {
     if (!uri) {
       return null;
     }
@@ -53,7 +53,7 @@ export default function PhotoSignatureScreen() {
 
     const defaultMime = "image/png";
     return `data:${defaultMime};base64,${uri}`;
-  };
+  }, [api]);
 
   const { data: existingSignature } = useQuery({
     queryKey: [QUERY_KEYS.userSignature, user?.id],
@@ -87,6 +87,7 @@ export default function PhotoSignatureScreen() {
     data.photoSignature.signatureUri,
     data.photoSignature.signatureDrawData,
     update,
+    normalizeSignatureUri,
   ]);
 
   useEffect(() => {
@@ -97,6 +98,32 @@ export default function PhotoSignatureScreen() {
 
   const pickSignature = async () => {
     const res = await ImagePicker.launchImageLibraryAsync({
+      quality: 0.7,
+      base64: false,
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+    });
+    if (!res.canceled && res.assets && res.assets[0]?.uri) {
+      update("photoSignature", {
+        signatureUri: res.assets[0].uri,
+        signatureDrawData: undefined,
+      });
+      setErrors((prev) => ({ ...prev, signatureUri: "" }));
+      setHasSignatureChanged(true);
+    }
+  };
+
+  const takeSignaturePhoto = async () => {
+    // Request camera permissions
+    const { status } = await ImagePicker.requestCameraPermissionsAsync();
+    if (status !== "granted") {
+      Alert.alert(
+        "Permission required",
+        "Camera permission is required to take a photo of your signature."
+      );
+      return;
+    }
+
+    const res = await ImagePicker.launchCameraAsync({
       quality: 0.7,
       base64: false,
       mediaTypes: ImagePicker.MediaTypeOptions.Images,
@@ -174,17 +201,29 @@ export default function PhotoSignatureScreen() {
       <ScrollView contentContainerStyle={{ padding: 16, gap: 16 }}>
         <View style={{ gap: 8 }}>
           <View style={{ flexDirection: "row", alignItems: "center" }}>
-            <Text category="label">Draw Signature</Text>
+            <Text category="label">Upload Signature</Text>
             <InfoTooltip content="Your signature is needed for eSign and document verification." />
           </View>
-          <Button
-            onPress={pickSignature}
-            appearance={data.photoSignature.signatureUri ? "filled" : "outline"}
-          >
-            {data.photoSignature.signatureUri
-              ? "Replace Signature"
-              : "Upload Signature"}
-          </Button>
+          <View style={{ flexDirection: "row", gap: 12 }}>
+            <Button
+              style={{ flex: 1 }}
+              onPress={pickSignature}
+              appearance={data.photoSignature.signatureUri ? "filled" : "outline"}
+            >
+              {data.photoSignature.signatureUri
+                ? "Replace from Gallery"
+                : "Upload from Gallery"}
+            </Button>
+            <Button
+              style={{ flex: 1 }}
+              onPress={takeSignaturePhoto}
+              appearance={data.photoSignature.signatureUri ? "filled" : "outline"}
+            >
+              {data.photoSignature.signatureUri
+                ? "Replace with Camera"
+                : "Take Photo"}
+            </Button>
+          </View>
           {data.photoSignature.signatureUri && (
             <Image
               source={{ uri: data.photoSignature.signatureUri }}
