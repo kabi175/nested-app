@@ -27,9 +27,8 @@ export default function SuperFDScreen() {
 
   const currentValue =
     goals?.reduce((sum, goal) => sum + goal.currentAmount, 0) || 0;
-  // For now, using currentValue as invested (can be updated when invested field is available)
-  // In a real scenario, invested would be tracked separately
-  const invested = currentValue * 0.88; // Approximate for demo - should come from API
+
+  const invested = goals?.reduce((sum, goal) => sum + goal.investedAmount, 0) || 0;
 
   return (
     <SafeAreaView style={styles.container}>

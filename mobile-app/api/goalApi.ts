@@ -66,6 +66,7 @@ type GoalDTO = {
   child_id: string;
   target_amount: number;
   current_amount: number;
+  invested_amount: number;
   monthly_sip: number | null;
   status: Goal["status"];
   basket: {
@@ -85,6 +86,7 @@ function mapGoalToGoal(goal: GoalDTO): Goal {
     childId: goal.child_id,
     targetAmount: goal.target_amount,
     currentAmount: goal.current_amount,
+    investedAmount: goal.invested_amount,
     monthlySip: goal.monthly_sip,
     status: goal.status,
     targetDate: goal.target_date ? new Date(goal.target_date) : new Date(),

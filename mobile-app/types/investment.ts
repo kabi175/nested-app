@@ -4,6 +4,7 @@ export type Goal = {
   title: string;
   targetAmount: number;
   currentAmount: number;
+  investedAmount: number;
   monthlySip: number | null;
 
   basket: {
