@@ -161,8 +161,22 @@ public class GoalServiceImpl implements GoalService {
       // Fetch existing titles for the user (case-insensitive deduplication)
       List<String> existingTitlesList = goalRepository.findAllTitlesByUser(user);
       Set<String> existingTitles = new HashSet<>(existingTitlesList);
+      var superFDBasketIds =
+          goalRepository.findByBasketType(user, BasketType.SUPER_FD).stream()
+              .map(Goal::getBasket)
+              .map(Basket::getId)
+              .toList();
 
-      List<Goal> goalEntities = goalDtos.stream().map(this::convertToEntity).toList();
+      List<Goal> goalEntities =
+          goalDtos.stream()
+              .map(this::convertToEntity)
+              .filter(
+                  goal ->
+                      superFDBasketIds.stream()
+                          .noneMatch(
+                              id ->
+                                  goal.getBasket() != null && goal.getBasket().getId().equals(id)))
+              .toList();
 
       goalEntities.forEach(
           goal -> {
@@ -197,6 +211,10 @@ public class GoalServiceImpl implements GoalService {
             goal.setCurrentAmount(0.0);
             goal.setInvestedAmount(0.0);
           });
+
+      if (goalEntities.isEmpty()) {
+        return List.of();
+      }
 
       List<Goal> savedGoals = goalRepository.saveAll(goalEntities);
       List<GoalDTO> savedGoalDTOs =
