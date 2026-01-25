@@ -265,33 +265,35 @@ function HoldingCard({
           </View>
         </View>
 
-        <View style={styles.holdingReturns}>
-          <View style={styles.returnsRow}>
-            {holding.returns_amount >= 0 ? (
-              <TrendingUp size={14} color="#10B981" />
-            ) : (
-              <TrendingDown size={14} color="#EF4444" />
-            )}
+        {returnsPercentage !== 0 && (
+          <View style={styles.holdingReturns}>
+            <View style={styles.returnsRow}>
+              {holding.returns_amount >= 0 ? (
+                <TrendingUp size={14} color="#10B981" />
+              ) : (
+                <TrendingDown size={14} color="#EF4444" />
+              )}
+              <ThemedText
+                style={[
+                  styles.returnsText,
+                  isNegative && styles.returnsTextNegative,
+                ]}
+              >
+                {isNegative ? "-" : "+"}
+                {Math.abs(returnsPercentage).toFixed(2)}%
+              </ThemedText>
+            </View>
             <ThemedText
               style={[
-                styles.returnsText,
-                isNegative && styles.returnsTextNegative,
+                styles.returnsAmountText,
+                holding.returns_amount < 0 && styles.returnsAmountTextNegative,
               ]}
             >
-              {isNegative ? "-" : "+"}
-              {Math.abs(returnsPercentage).toFixed(2)}%
+              {holding.returns_amount >= 0 ? "+" : "-"}
+              {formatCurrency(Math.abs(holding.returns_amount))}
             </ThemedText>
           </View>
-          <ThemedText
-            style={[
-              styles.returnsAmountText,
-              holding.returns_amount < 0 && styles.returnsAmountTextNegative,
-            ]}
-          >
-            {holding.returns_amount >= 0 ? "+" : "-"}
-            {formatCurrency(Math.abs(holding.returns_amount))}
-          </ThemedText>
-        </View>
+        )}
       </ThemedView>
     </TouchableOpacity>
   );
