@@ -6,7 +6,7 @@ import { useAuthAxios } from "./useAuthAxios";
 export function useEducationGoals() {
   const api = useAuthAxios();
   return useQuery({
-    queryKey: [QUERY_KEYS.goals],
+    queryKey: [QUERY_KEYS.educationGoals],
     queryFn: () => getGoals(api, "education"),
   });
 }
@@ -14,7 +14,7 @@ export function useEducationGoals() {
 export function useSuperFDGoals() {
   const api = useAuthAxios();
   return useQuery({
-    queryKey: [QUERY_KEYS.goals],
+    queryKey: [QUERY_KEYS.superFDGoals],
     queryFn: () => getGoals(api, "super_fd"),
   });
 }
