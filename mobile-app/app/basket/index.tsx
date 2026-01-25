@@ -68,7 +68,7 @@ const transformBasketFundToRecommendedFund = (
         : "N/A",
     allocation:
       typeof fund.allocationPercentage === "number" &&
-      !isNaN(fund.allocationPercentage)
+        !isNaN(fund.allocationPercentage)
         ? `${fund.allocationPercentage}%`
         : "N/A",
     expRatio:
@@ -119,137 +119,137 @@ interface FeatureCardConfig {
 }
 
 const basketFeatures: Record<keyof typeof popularBaskets, FeatureCardConfig[]> =
-  {
-    "gold-silver-basket": [
-      {
-        title: "No lock-in period",
-        subtitle: "Withdraw anytime",
-        backgroundColor: "#FCE7F3",
-        iconType: Unlock,
-        iconColor: "#DC2626",
-        iconSize: 20,
-      },
-      {
-        title: "Moderate",
-        subtitle: "Risk",
-        backgroundColor: "#FEF3C7",
-        iconType: Shield,
-        iconColor: "#D97706",
-        iconSize: 20,
-      },
-      {
-        title: "Top Rated Funds",
-        subtitle: "",
-        backgroundColor: "#D1FAE5",
-        iconType: Star,
-        iconColor: "#059669",
-        iconSize: 20,
-      },
-      {
-        title: "Instant withdrawal",
-        subtitle: "Directly to your bank",
-        backgroundColor: "#DBEAFE",
-        iconType: Zap,
-        iconColor: "#2563EB",
-        iconSize: 20,
-      },
-      {
-        title: "No share market risk",
-        subtitle: "100% safe investments",
-        backgroundColor: "#F3E8FF",
-        iconType: Target,
-        iconColor: "#7C3AED",
-        iconSize: 20,
-        isFullWidth: true,
-      },
-    ],
-    "secure-money": [
-      {
-        title: "No lock-in period",
-        subtitle: "Withdraw anytime",
-        backgroundColor: "#FCE7F3",
-        iconType: Unlock,
-        iconColor: "#DC2626",
-        iconSize: 20,
-      },
-      {
-        title: "Moderate",
-        subtitle: "Risk",
-        backgroundColor: "#FEF3C7",
-        iconType: Shield,
-        iconColor: "#D97706",
-        iconSize: 20,
-      },
-      {
-        title: "Top Rated Funds",
-        subtitle: "",
-        backgroundColor: "#D1FAE5",
-        iconType: Star,
-        iconColor: "#059669",
-        iconSize: 20,
-      },
-      {
-        title: "Instant withdrawal",
-        subtitle: "Directly to your bank",
-        backgroundColor: "#DBEAFE",
-        iconType: Zap,
-        iconColor: "#2563EB",
-        iconSize: 20,
-      },
-      {
-        title: "No share market risk",
-        subtitle: "100% safe investments",
-        backgroundColor: "#F3E8FF",
-        iconType: Target,
-        iconColor: "#7C3AED",
-        iconSize: 20,
-        isFullWidth: true,
-      },
-    ],
-    "grow-money": [
-      {
-        title: "No lock-in period",
-        subtitle: "Withdraw anytime",
-        backgroundColor: "#FCE7F3",
-        iconType: Unlock,
-        iconColor: "#DC2626",
-        iconSize: 20,
-      },
-      {
-        title: "Moderate",
-        subtitle: "Risk",
-        backgroundColor: "#FEF3C7",
-        iconType: Shield,
-        iconColor: "#D97706",
-        iconSize: 20,
-      },
-      {
-        title: "Top Rated Funds",
-        subtitle: "",
-        backgroundColor: "#D1FAE5",
-        iconType: Star,
-        iconColor: "#059669",
-        iconSize: 20,
-      },
-      {
-        title: "Instant withdrawal",
-        subtitle: "Directly to your bank",
-        backgroundColor: "#DBEAFE",
-        iconType: Zap,
-        iconColor: "#2563EB",
-        iconSize: 20,
-      },
-      {
-        title: "Share market investment less than 50%",
-        subtitle: "Rest in gold and safer debt",
-        backgroundColor: "#F3E8FF",
-        iconType: Target,
-        iconColor: "#7C3AED",
-        iconSize: 20,
-        isFullWidth: true,
-      },
-    ],
-  };
+{
+  "gold-silver-basket": [
+    {
+      title: "No lock-in period",
+      subtitle: "Withdraw anytime",
+      backgroundColor: "#FCE7F3",
+      iconType: Unlock,
+      iconColor: "#DC2626",
+      iconSize: 20,
+    },
+    {
+      title: "Moderate",
+      subtitle: "Risk",
+      backgroundColor: "#FEF3C7",
+      iconType: Shield,
+      iconColor: "#D97706",
+      iconSize: 20,
+    },
+    {
+      title: "Top Rated Funds",
+      subtitle: "",
+      backgroundColor: "#D1FAE5",
+      iconType: Star,
+      iconColor: "#059669",
+      iconSize: 20,
+    },
+    {
+      title: "Instant withdrawal",
+      subtitle: "Directly to your bank",
+      backgroundColor: "#DBEAFE",
+      iconType: Zap,
+      iconColor: "#2563EB",
+      iconSize: 20,
+    },
+    {
+      title: "No share market risk",
+      subtitle: "100% safe investments",
+      backgroundColor: "#F3E8FF",
+      iconType: Target,
+      iconColor: "#7C3AED",
+      iconSize: 20,
+      isFullWidth: true,
+    },
+  ],
+  "secure-money": [
+    {
+      title: "No lock-in period",
+      subtitle: "Withdraw anytime",
+      backgroundColor: "#FCE7F3",
+      iconType: Unlock,
+      iconColor: "#DC2626",
+      iconSize: 20,
+    },
+    {
+      title: "Moderate",
+      subtitle: "Risk",
+      backgroundColor: "#FEF3C7",
+      iconType: Shield,
+      iconColor: "#D97706",
+      iconSize: 20,
+    },
+    {
+      title: "Top Rated Funds",
+      subtitle: "",
+      backgroundColor: "#D1FAE5",
+      iconType: Star,
+      iconColor: "#059669",
+      iconSize: 20,
+    },
+    {
+      title: "Instant withdrawal",
+      subtitle: "Directly to your bank",
+      backgroundColor: "#DBEAFE",
+      iconType: Zap,
+      iconColor: "#2563EB",
+      iconSize: 20,
+    },
+    {
+      title: "No share market risk",
+      subtitle: "100% safe investments",
+      backgroundColor: "#F3E8FF",
+      iconType: Target,
+      iconColor: "#7C3AED",
+      iconSize: 20,
+      isFullWidth: true,
+    },
+  ],
+  "grow-money": [
+    {
+      title: "No lock-in period",
+      subtitle: "Withdraw anytime",
+      backgroundColor: "#FCE7F3",
+      iconType: Unlock,
+      iconColor: "#DC2626",
+      iconSize: 20,
+    },
+    {
+      title: "Moderate",
+      subtitle: "Risk",
+      backgroundColor: "#FEF3C7",
+      iconType: Shield,
+      iconColor: "#D97706",
+      iconSize: 20,
+    },
+    {
+      title: "Top Rated Funds",
+      subtitle: "",
+      backgroundColor: "#D1FAE5",
+      iconType: Star,
+      iconColor: "#059669",
+      iconSize: 20,
+    },
+    {
+      title: "Instant withdrawal",
+      subtitle: "Directly to your bank",
+      backgroundColor: "#DBEAFE",
+      iconType: Zap,
+      iconColor: "#2563EB",
+      iconSize: 20,
+    },
+    {
+      title: "Share market investment less than 50%",
+      subtitle: "Rest in gold and safer debt",
+      backgroundColor: "#F3E8FF",
+      iconType: Target,
+      iconColor: "#7C3AED",
+      iconSize: 20,
+      isFullWidth: true,
+    },
+  ],
+};
 
 const basketFaqs = [
   {
@@ -594,7 +594,7 @@ export default function BasketInvestingScreen() {
             (isInvesting ||
               createGoalMutation.isPending ||
               createOrdersMutation.isPending) &&
-              styles.investButtonDisabled,
+            styles.investButtonDisabled,
           ]}
           onPress={handleInvest}
           disabled={
@@ -604,8 +604,8 @@ export default function BasketInvestingScreen() {
           }
         >
           {isInvesting ||
-          createGoalMutation.isPending ||
-          createOrdersMutation.isPending ? (
+            createGoalMutation.isPending ||
+            createOrdersMutation.isPending ? (
             <ActivityIndicator color="#FFFFFF" />
           ) : (
             <ThemedText style={styles.investButtonText}>Invest</ThemedText>

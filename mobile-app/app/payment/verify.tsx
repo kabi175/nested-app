@@ -199,7 +199,7 @@ export default function PaymentVerificationScreen() {
   }, [resendTimer]);
 
   return (
-    <SafeAreaView style={styles.safeArea} edges={["bottom"]}>
+    <SafeAreaView style={styles.safeArea} edges={[]}>
       <View style={styles.container}>
         <ScrollView
           style={styles.scrollView}
@@ -293,10 +293,10 @@ export default function PaymentVerificationScreen() {
                 {isProcessingPayment
                   ? "Processing Payment..."
                   : isVerifying
-                  ? "Verifying..."
-                  : isLoading
-                  ? "Sending OTP..."
-                  : "Verify & Continue"}
+                    ? "Verifying..."
+                    : isLoading
+                      ? "Sending OTP..."
+                      : "Verify & Continue"}
               </Button>
 
               {/* Resend Button - Always visible */}
@@ -352,11 +352,11 @@ export default function PaymentVerificationScreen() {
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: "#F3F4F6",
+    backgroundColor: "#FFFFFF",
   },
   container: {
     flex: 1,
-    backgroundColor: "#F3F4F6",
+    backgroundColor: "#FFFFFF",
   },
   scrollView: {
     flex: 1,
@@ -369,17 +369,10 @@ const styles = StyleSheet.create({
   },
   contentContainer: {
     backgroundColor: "#FFFFFF",
-    marginHorizontal: 20,
-    borderRadius: 24,
+    marginHorizontal: 0,
+    borderRadius: 0,
     padding: 28,
-    shadowColor: "#000",
-    shadowOffset: {
-      width: 0,
-      height: 4,
-    },
-    shadowOpacity: 0.1,
-    shadowRadius: 12,
-    elevation: 8,
+    alignItems: "center",
   },
   shieldContainer: {
     alignItems: "center",
@@ -448,6 +441,8 @@ const styles = StyleSheet.create({
     gap: 20,
     marginTop: 12,
     marginBottom: 28,
+    alignItems: "center",
+    width: "100%",
   },
   verifyButton: {
     borderRadius: 16,
@@ -459,6 +454,7 @@ const styles = StyleSheet.create({
   },
   securityContainer: {
     marginTop: 28,
+    width: "100%",
   },
   securityBox: {
     backgroundColor: "#FFFBEB",
