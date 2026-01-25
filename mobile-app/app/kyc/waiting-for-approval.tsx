@@ -1,6 +1,7 @@
 import { getUser } from "@/api/userApi";
 import { StepProgress } from "@/components/ui/StepProgress";
 import { QUERY_KEYS } from "@/constants/queryKeys";
+import { useAuthAxios } from "@/hooks/useAuthAxios";
 import { useUser } from "@/hooks/useUser";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Button, Layout, Text } from "@ui-kitten/components";
@@ -13,7 +14,6 @@ import {
   ScrollView,
   View,
 } from "react-native";
-import { useAuthAxios } from "@/hooks/useAuthAxios";
 
 export default function WaitingForApprovalScreen() {
   const api = useAuthAxios();
@@ -53,7 +53,7 @@ export default function WaitingForApprovalScreen() {
     if (status === "completed") {
       // Invalidate queries to ensure fresh data
       queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.user] });
-      router.replace("/(tabs)");
+      router.replace("/bank-accounts");
       return;
     }
 
@@ -161,7 +161,7 @@ export default function WaitingForApprovalScreen() {
                 appearance="hint"
                 style={{ textAlign: "center", marginTop: 8 }}
               >
-                Your KYC documents have been submitted successfully. We're
+                Your KYC documents have been submitted successfully. We&apos;re
                 reviewing your information and will notify you once the
                 verification is complete.
               </Text>
@@ -179,7 +179,7 @@ export default function WaitingForApprovalScreen() {
                   appearance="hint"
                   style={{ textAlign: "center" }}
                 >
-                  This usually takes a few minutes. We'll automatically update
+                  This usually takes a few minutes. We&apos;ll automatically update
                   you when your status changes.
                 </Text>
               </View>
