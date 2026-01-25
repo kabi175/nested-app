@@ -29,7 +29,8 @@ import java.util.Objects;
 @Component
 @AllArgsConstructor
 @Slf4j
-@Order(Ordered.HIGHEST_PRECEDENCE + 100) // Run after TraceIdFilter
+// Note: This filter is registered in SecurityConfig to run after Spring Security filters
+// Not using @Component to avoid duplicate registration
 public class UserContextFilter extends OncePerRequestFilter {
 
   private final UserContext userContext;

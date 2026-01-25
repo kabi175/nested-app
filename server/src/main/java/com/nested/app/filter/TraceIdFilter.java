@@ -30,12 +30,14 @@ public class TraceIdFilter extends OncePerRequestFilter {
             FilterChain filterChain) throws ServletException, IOException {
         
         // Check if trace ID is provided in request header, otherwise generate one
+        // Generate 32-character hexadecimal trace ID (standard format for distributed tracing)
         String traceId = request.getHeader(TRACE_ID_HEADER);
         if (traceId == null || traceId.isBlank()) {
-            traceId = "REQ-" + UUID.randomUUID().toString().substring(0, 12).toUpperCase();
+            traceId = UUID.randomUUID().toString().replace("-", "").toLowerCase();
         }
         
-        String spanId = UUID.randomUUID().toString().substring(0, 8);
+        // Generate 16-character hexadecimal span ID
+        String spanId = UUID.randomUUID().toString().replace("-", "").substring(0, 16).toLowerCase();
         
         // Add to MDC for logging
         MDC.put(TRACE_ID_KEY, traceId);
