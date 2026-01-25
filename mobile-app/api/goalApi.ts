@@ -2,6 +2,7 @@ import type { Goal } from "@/types/investment";
 import type { AxiosInstance } from "axios";
 
 export const getGoals = async (api: AxiosInstance, type: "education" | "super_fd" ): Promise<Goal[]> => {
+  console.log("fetching goals for type", type);
   const { data } = await api.get(`/goals?type=${type}`);
   return (data.data ?? []).map((goal: GoalDTO): Goal => mapGoalToGoal(goal));
 };
@@ -69,6 +70,7 @@ type GoalDTO = {
   status: Goal["status"];
   basket: {
     id: string;
+    title: string;
     min_investment: number;
   };
   target_date?: string;

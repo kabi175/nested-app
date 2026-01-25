@@ -8,6 +8,7 @@ export function useEducationGoals() {
   return useQuery({
     queryKey: [QUERY_KEYS.educationGoals],
     queryFn: () => getGoals(api, "education"),
+    refetchOnWindowFocus: 'always'
   });
 }
 
@@ -16,5 +17,6 @@ export function useSuperFDGoals() {
   return useQuery({
     queryKey: [QUERY_KEYS.superFDGoals],
     queryFn: () => getGoals(api, "super_fd"),
+    refetchOnWindowFocus: 'always'
   });
 }
