@@ -3,8 +3,9 @@ import { StepProgress } from "@/components/ui/StepProgress";
 import { useAuthAxios } from "@/hooks/useAuthAxios";
 import { useUser } from "@/hooks/useUser";
 import { Button, Layout, Spinner, Text } from "@ui-kitten/components";
+import * as Linking from "expo-linking";
 import { Redirect, useRouter } from "expo-router";
-import * as WebBrowser from "expo-web-browser";
+import { openAuthSessionAsync } from "expo-web-browser";
 import React, { useCallback, useState } from "react";
 import { KeyboardAvoidingView, Platform, ScrollView, View } from "react-native";
 
@@ -28,17 +29,12 @@ export default function EsignUploadScreen() {
     try {
       const redirectUrl = await fetchEsignUploadRedirectUrl(api, user);
       if (redirectUrl) {
-        await WebBrowser.openBrowserAsync(redirectUrl, {
-          toolbarColor: "#0A84FF",
-          controlsColor: "#ffffff",
-          showTitle: true,
-          enableDefaultShareMenuItem: false,
-          dismissButtonStyle: "done",
-          readerMode: false,
-        });
+        const returnUrl = Linking.createURL(
+          `/kyc/waiting-for-approval`
+        );
+        await openAuthSessionAsync(redirectUrl, returnUrl);
       }
       await refetch();
-      router.push("/kyc/waiting-for-approval");
     } catch (err) {
       console.error("Failed to launch eSign flow", err);
       setError("We couldn't launch the eSign flow. Please retry in a moment.");
