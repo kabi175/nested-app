@@ -22,7 +22,7 @@ public class FundSyncScheduler {
   private final FundRepository fundRepository;
 
   //  @Scheduled(cron = "0 0 1 * * ?")
-  @Scheduled(fixedDelayString = "10m")
+  @Scheduled(fixedDelayString = "1h")
   public void syncFunds() {
     var pageable = org.springframework.data.domain.PageRequest.of(0, 100);
     var hasMore = true;
