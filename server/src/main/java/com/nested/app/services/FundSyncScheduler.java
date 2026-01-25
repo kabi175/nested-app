@@ -21,7 +21,8 @@ public class FundSyncScheduler {
   private final FundAPIClient fundAPIClient;
   private final FundRepository fundRepository;
 
-  @Scheduled(cron = "0 0 1 * * ?")
+//  @Scheduled(cron = "0 0 1 * * ?")
+  @Scheduled(fixedDelay = 5000000)
   public void syncFunds() {
     var pageable = org.springframework.data.domain.PageRequest.of(0, 100);
     var hasMore = true;
