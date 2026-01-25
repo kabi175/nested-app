@@ -1,9 +1,7 @@
-import { getPendingOrdersByGoalId } from "@/api/paymentAPI";
 import { cartAtom } from "@/atoms/cart";
 import { goalsForCustomizeAtom } from "@/atoms/goals";
 import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
-import { QUERY_KEYS } from "@/constants/queryKeys";
 import { useAuthAxios } from "@/hooks/useAuthAxios";
 import type { Goal } from "@/types/investment";
 import { formatCurrency } from "@/utils/formatters";
@@ -82,27 +80,30 @@ export function GoalCard({ goal }: GoalCardProps) {
         },
       });
     } else if (goal.status === "payment_pending") {
-      const orders = await queryClient.fetchQuery({
-        queryKey: [QUERY_KEYS.pendingOrders, goal.id],
-        queryFn: () => getPendingOrdersByGoalId(api, goal.id),
+      router.replace({
+        pathname: `/goal/${goal.id}/draft`,
       });
-      if (orders.length > 0) {
-        setCart(orders);
+      // const orders = await queryClient.fetchQuery({
+      //   queryKey: [QUERY_KEYS.pendingOrders, goal.id],
+      //   queryFn: () => getPendingOrdersByGoalId(api, goal.id),
+      // });
+      // if (orders.length > 0) {
+      //   setCart(orders);
 
-        router.push({
-          pathname: `/payment`,
-        });
-      } else {
-        setGoalsForCustomize([goal]);
-        router.push({
-          pathname: `/child/${goal.childId}/goal/customize`,
-          params: {
-            goal_id: goal.id,
-            target_amount: goal.targetAmount.toString(),
-            target_date: goal.targetDate.toISOString(),
-          },
-        });
-      }
+      //   router.push({
+      //     pathname: `/payment`,
+      //   });
+      // } else {
+      //   setGoalsForCustomize([goal]);
+      //   router.push({
+      //     pathname: `/child/${goal.childId}/goal/customize`,
+      //     params: {
+      //       goal_id: goal.id,
+      //       target_amount: goal.targetAmount.toString(),
+      //       target_date: goal.targetDate.toISOString(),
+      //     },
+      //   });
+      // }
     } else {
       router.push({
         pathname: `/goal/${goal.id}`,
