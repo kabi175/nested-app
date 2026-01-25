@@ -16,7 +16,7 @@ export function usePreVerification() {
       return fetchPreVerification(api, user);
     },
     enabled: !!user,
-    refetchInterval: 30000, // Poll every 30 seconds
+    refetchInterval: 10000, // Poll every 10 seconds
     refetchIntervalInBackground: false,
   });
 
