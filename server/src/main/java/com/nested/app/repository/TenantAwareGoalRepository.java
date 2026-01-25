@@ -104,6 +104,32 @@ public class TenantAwareGoalRepository extends SimpleJpaRepository<Goal, Long> {
   }
 
   /**
+   * Find all goal titles for a user with tenant filtering
+   *
+   * @param user Current user context
+   * @return List of goal titles for the user
+   */
+  public List<String> findAllTitlesByUser(User user) {
+    enableUserFilter(user);
+    return entityManager.createQuery("SELECT g.title FROM Goal g", String.class).getResultList();
+  }
+
+  /**
+   * Find all goal titles for a user excluding a specific goal ID
+   *
+   * @param user Current user context
+   * @param excludeGoalId Goal ID to exclude from results
+   * @return List of goal titles for the user excluding the specified goal
+   */
+  public List<String> findAllTitlesByUserExcludingGoal(User user, Long excludeGoalId) {
+    enableUserFilter(user);
+    return entityManager
+        .createQuery("SELECT g.title FROM Goal g WHERE g.id != :excludeGoalId", String.class)
+        .setParameter("excludeGoalId", excludeGoalId)
+        .getResultList();
+  }
+
+  /**
    * Enables the user filter for tenant isolation Admin users bypass the filter and can see all
    * goals
    *

@@ -16,8 +16,10 @@ import com.nested.app.repository.OrderRepository;
 import com.nested.app.repository.TenantAwareGoalRepository;
 import java.time.LocalDate;
 import java.time.Period;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -110,8 +112,16 @@ public class GoalServiceImpl implements GoalService {
         throw new IllegalStateException("Cannot update goal when an order exists for this goal");
       }
 
+      // Fetch existing titles for the user excluding the current goal
+      List<String> existingTitlesList =
+          goalRepository.findAllTitlesByUserExcludingGoal(user, goalDTO.getId());
+      Set<String> existingTitles = new HashSet<>(existingTitlesList);
+
+      // Generate unique title if the new title conflicts with existing ones
+      String uniqueTitle = generateUniqueTitle(goalDTO.getTitle(), existingTitles);
+
       // Update fields
-      existingGoal.setTitle(goalDTO.getTitle());
+      existingGoal.setTitle(uniqueTitle);
       existingGoal.setTargetAmount(goalDTO.getTargetAmount());
       existingGoal.setTargetDate(goalDTO.getTargetDate());
 
@@ -142,11 +152,20 @@ public class GoalServiceImpl implements GoalService {
     log.info("Creating {} goals for user ID: {}", goalDtos.size(), user.getId());
 
     try {
+      // Fetch existing titles for the user (case-insensitive deduplication)
+      List<String> existingTitlesList = goalRepository.findAllTitlesByUser(user);
+      Set<String> existingTitles = new HashSet<>(existingTitlesList);
 
       List<Goal> goalEntities = goalDtos.stream().map(this::convertToEntity).toList();
 
       goalEntities.forEach(
           goal -> {
+            // Generate unique title
+            String uniqueTitle = generateUniqueTitle(goal.getTitle(), existingTitles);
+            goal.setTitle(uniqueTitle);
+            // Track the newly assigned title to handle duplicates within the same batch
+            existingTitles.add(uniqueTitle);
+
             goal.setUser(user);
             Basket basket;
             if (goal.getEducation() == null && goal.getBasket() != null) {
@@ -245,6 +264,37 @@ public class GoalServiceImpl implements GoalService {
       log.error("Error retrieving goals for basket name {}: {}", basketName, e.getMessage(), e);
       throw new ExternalServiceException("Failed to retrieve goals by basket name", e);
     }
+  }
+
+  /**
+   * Generates a unique title by appending numeric suffixes if the title already exists. Uses
+   * case-insensitive comparison.
+   *
+   * @param baseTitle The original title
+   * @param existingTitles Set of existing titles (case-insensitive)
+   * @return A unique title with suffix if necessary (e.g., "Goal", "Goal 1", "Goal 2")
+   */
+  private String generateUniqueTitle(String baseTitle, Set<String> existingTitles) {
+    // Create a lowercase set for case-insensitive comparison
+    Set<String> lowerCaseTitles = new HashSet<>();
+    for (String title : existingTitles) {
+      lowerCaseTitles.add(title.toLowerCase());
+    }
+
+    // Check if base title is unique
+    if (!lowerCaseTitles.contains(baseTitle.toLowerCase())) {
+      return baseTitle;
+    }
+
+    // Find the next available suffix
+    int suffix = 1;
+    String candidateTitle;
+    do {
+      candidateTitle = baseTitle + " " + suffix;
+      suffix++;
+    } while (lowerCaseTitles.contains(candidateTitle.toLowerCase()));
+
+    return candidateTitle;
   }
 
   /**
