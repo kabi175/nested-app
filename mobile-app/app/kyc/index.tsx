@@ -19,9 +19,12 @@ export default function KycIntroScreen() {
         onError: (error) => {
           console.error("Failed to create investor:", error);
         },
+        onSuccess: () => {
+          router.replace("/nominees");
+        },
       });
     }
-  }, [user, createInvestorMutation]);
+  }, [user, createInvestorMutation, router]);
 
   const handleContinue = async () => {
     if (!user?.email) {

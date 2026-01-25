@@ -11,7 +11,7 @@ export default function ValidationSuccessScreen() {
   const router = useRouter();
   const { mutateAsync: initKyc } = useInitKyc();
   const [isContinuing, setIsContinuing] = useState(false);
-  const {data: user, refetch: refetchUser} = useUser();
+  const { data: user, refetch: refetchUser } = useUser();
 
   const routeToNextStep = (kycStatus: string | undefined) => {
     switch (kycStatus) {
@@ -58,6 +58,7 @@ export default function ValidationSuccessScreen() {
         await refetchUser();
         kycStatus = user.kycStatus;
       }
+      console.log("kycStatus", kycStatus);
 
       routeToNextStep(kycStatus);
     } catch (error) {
