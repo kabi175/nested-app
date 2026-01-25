@@ -13,8 +13,6 @@ import jakarta.servlet.http.HttpServletResponse;
 import lombok.AllArgsConstructor;
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.core.Ordered;
-import org.springframework.core.annotation.Order;
 import org.springframework.http.HttpHeaders;
 import org.springframework.security.authentication.AnonymousAuthenticationToken;
 import org.springframework.security.core.Authentication;
@@ -29,8 +27,6 @@ import java.util.Objects;
 @Component
 @AllArgsConstructor
 @Slf4j
-// Note: This filter is registered in SecurityConfig to run after Spring Security filters
-// Not using @Component to avoid duplicate registration
 public class UserContextFilter extends OncePerRequestFilter {
 
   private final UserContext userContext;

@@ -36,7 +36,6 @@ public class PreVerificationServiceImpl implements PreVerificationService {
     var data = userVerificationRepository.findByUser(user);
 
     if (!data.isEmpty()) {
-      refresh(userContext, userID);
       return data.stream().map(PreVerificationData::fromEntity).toList();
     }
 
