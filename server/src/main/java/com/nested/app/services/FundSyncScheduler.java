@@ -25,8 +25,8 @@ public class FundSyncScheduler {
 
   private static final String TRACE_ID_KEY = "traceId";
   private static final String SPAN_ID_KEY = "spanId";
-
-  @Scheduled(cron = "0 0 1 * * ?")
+  //  @Scheduled(cron = "0 0 1 * * ?")
+  @Scheduled(fixedDelayString = "1h")
   public void syncFunds() {
     // Generate trace ID for this scheduled job run
     String traceId = "SYNC-" + UUID.randomUUID().toString().substring(0, 8).toUpperCase();
