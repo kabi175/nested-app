@@ -234,6 +234,11 @@ export default function GoalDetailScreen() {
             if (goal == null) {
               return;
             }
+            const secureFDTitles = ["gold-silver-basket", "secure-money", "grow-money"];
+            if (secureFDTitles.includes(goal.basket.title)) {
+              router.push(`/basket?type=${goal.basket.title}`);
+              return;
+            }
             // Set the goal in the atom for customize screen
             setGoalsForCustomize([goal]);
             // Navigate to customize screen
