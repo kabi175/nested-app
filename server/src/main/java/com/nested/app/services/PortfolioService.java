@@ -105,18 +105,25 @@ public class PortfolioService {
   @Transactional(readOnly = true)
   public PortfolioGoalDTO getGoalPortfolio(Long goalId, User user) {
     if (user == null) return null;
-    List<Transaction> txns = transactionRepository.findByUserIdAndGoalId(user.getId(), goalId);
-    if (txns.isEmpty()) return null;
-    double currentValue = computeTotalCurrentValue(txns);
-    double invested =
-        txns.stream().filter(t -> t.getUnits() > 0).mapToDouble(Transaction::getAmount).sum();
-    double units = txns.stream().mapToDouble(Transaction::getUnits).sum();
-    Goal goal = txns.getFirst().getGoal();
-    double progress =
-        goal.getTargetAmount() > 0 ? currentValue / goal.getTargetAmount() * 100.0 : 0.0;
+
+    // Fetch aggregated portfolio data from database with calculations done in SQL
+    var projection = transactionRepository.findGoalPortfolioAggregated(user.getId(), goalId);
+    if (projection == null || projection.getGoalId() == null) return null;
+
+    double currentValue = projection.getCurrentValue();
+    double invested = projection.getInvestedAmount();
+    double units = projection.getTotalUnits();
+    double targetAmount = projection.getTargetAmount();
+    double progress = targetAmount > 0 ? currentValue / targetAmount * 100.0 : 0.0;
+
     // allocation determined externally; set 0 for single view
     return new PortfolioGoalDTO(
-        MinifiedGoalDTO.fromEntity(goal), invested, currentValue, units, progress, 0.0);
+        new MinifiedGoalDTO(projection.getGoalId(), projection.getGoalTitle()),
+        invested,
+        currentValue,
+        units,
+        progress,
+        0.0);
   }
 
   private List<PortfolioGoalDTO> buildGoalBreakdown(

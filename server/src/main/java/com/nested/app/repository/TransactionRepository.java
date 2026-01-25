@@ -1,6 +1,7 @@
 package com.nested.app.repository;
 
 import com.nested.app.dto.GoalHoldingProjection;
+import com.nested.app.dto.GoalPortfolioProjection;
 import com.nested.app.entity.Transaction;
 import com.nested.app.enums.TransactionType;
 import java.sql.Timestamp;
@@ -67,5 +68,32 @@ public interface TransactionRepository extends JpaRepository<Transaction, Long> 
       GROUP BY f.id, f.label, f.nav
       """)
   List<GoalHoldingProjection> findGoalHoldingsAggregated(
+      @Param("userId") Long userId, @Param("goalId") Long goalId);
+
+  /**
+   * Retrieves aggregated portfolio data for a specific goal using database-level calculations. This
+   * query computes: - Invested amount (sum of amounts where units > 0) - Current value (sum of net
+   * units per fund * current NAV) - Total units (sum of all transaction units)
+   *
+   * @param userId The user ID
+   * @param goalId The goal ID
+   * @return Optional containing the aggregated portfolio projection if data exists
+   */
+  @Query(
+      """
+      SELECT
+        g.id AS goalId,
+        g.title AS goalTitle,
+        g.targetAmount AS targetAmount,
+        COALESCE(SUM(t.amount), 0) AS investedAmount,
+        COALESCE(SUM(t.units * f.nav), 0) AS currentValue,
+        COALESCE(SUM(t.units), 0) AS totalUnits
+      FROM Goal g
+      LEFT JOIN Transaction t ON t.goal.id = g.id AND t.user.id = :userId AND t.status = 'COMPLETED'
+      LEFT JOIN t.fund f
+      WHERE g.id = :goalId
+      GROUP BY g.id, g.title, g.targetAmount
+      """)
+  GoalPortfolioProjection findGoalPortfolioAggregated(
       @Param("userId") Long userId, @Param("goalId") Long goalId);
 }
