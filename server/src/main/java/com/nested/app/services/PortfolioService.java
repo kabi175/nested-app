@@ -216,9 +216,9 @@ public class PortfolioService {
     return holdingProjections.stream()
         .map(
             h -> {
-              double currentValue = h.getTotalUnits() * h.getCurrentNav();
-              double returnsAmount = currentValue - h.getInvestedAmount();
-              double allocationPercentage =
+              Double currentValue = h.getTotalUnits() * h.getCurrentNav();
+              Double returnsAmount = currentValue - h.getInvestedAmount();
+              Double allocationPercentage =
                   totalGoalCurrentValue > 0 ? (currentValue / totalGoalCurrentValue * 100.0) : 0.0;
 
               return new GoalHoldingDTO(

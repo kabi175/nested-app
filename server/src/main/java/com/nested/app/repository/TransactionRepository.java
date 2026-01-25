@@ -57,14 +57,14 @@ public interface TransactionRepository extends JpaRepository<Transaction, Long> 
         f.label AS fundLabel,
         AVG(t.unitPrice) as averageNav,
         SUM(t.units) AS totalUnits,
-        SUM(CASE WHEN t.units > 0 THEN t.amount ELSE 0 END) AS investedAmount,
+        SUM(t.amount) AS investedAmount,
         f.nav AS currentNav
       FROM Transaction t
       JOIN t.fund f
       WHERE t.user.id = :userId
         AND t.goal.id = :goalId
+        AND t.status = 'COMPLETED'
       GROUP BY f.id, f.label, f.nav
-      HAVING SUM(t.units) > 0
       """)
   List<GoalHoldingProjection> findGoalHoldingsAggregated(
       @Param("userId") Long userId, @Param("goalId") Long goalId);
