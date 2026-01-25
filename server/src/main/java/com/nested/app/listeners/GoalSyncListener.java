@@ -29,8 +29,8 @@ import org.springframework.transaction.event.TransactionalEventListener;
 @RequiredArgsConstructor
 public class GoalSyncListener {
 
-  private static final String JOB_GROUP = "goal-sync-group";
-  private static final long DELAY_MS = 5000; // 5 seconds delay
+  private static final String JOB_GROUP = "DEFAULT";
+  private static final long DELAY_MS = 10000; // 10 seconds delay
 
   private final Scheduler scheduler;
 
@@ -68,6 +68,7 @@ public class GoalSyncListener {
                 .usingJobData("goalId", goalId)
                 .usingJobData("userId", userId)
                 .storeDurably()
+                .requestRecovery(true)
                 .build();
 
         Trigger trigger =
