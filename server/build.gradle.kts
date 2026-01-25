@@ -58,6 +58,12 @@ dependencies {
     implementation("com.auth0:auth0:2.26.0")
     implementation("com.sendgrid:sendgrid-java:4.10.1")
 
+    // Note: Trace IDs are handled by custom TraceIdFilter using MDC
+    // No external tracing dependencies needed
+    
+    // Logstash encoder for JSON logging (Grafana/Loki friendly)
+    implementation("net.logstash.logback:logstash-logback-encoder:7.4")
+
 
 //	runtimeOnly("io.netty:netty-resolver-dns-native-macos:4.1.94.Final:osx-aarch_64");
 
