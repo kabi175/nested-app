@@ -52,7 +52,7 @@ public class QuartzJobSchedulerService {
             // 3 seconds delay
             .withSchedule(
                 SimpleScheduleBuilder.simpleSchedule()
-                    .withIntervalInMinutes(5)
+                    .withIntervalInMinutes(1)
                     .repeatForever()
                     .withMisfireHandlingInstructionFireNow())
             .build();
