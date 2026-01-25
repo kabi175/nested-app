@@ -28,6 +28,9 @@ public class GoalDTO {
   @JsonProperty("current_amount")
   private Double currentAmount;
 
+  @JsonProperty("invested_amount")
+  private Double investedAmount;
+
   @JsonProperty("monthly_sip")
   private Double monthlySip;
 
@@ -59,6 +62,7 @@ public class GoalDTO {
     dto.setTitle(goal.getTitle());
     dto.setTargetAmount(goal.getTargetAmount());
     dto.setCurrentAmount(goal.getCurrentAmount());
+    dto.setInvestedAmount(goal.getInvestedAmount());
     dto.setMonthlySip(goal.getMonthlySip());
     dto.setTargetDate(goal.getTargetDate());
     dto.setStatus(goal.getStatus());

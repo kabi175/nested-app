@@ -113,7 +113,6 @@ public class GoalServiceImpl implements GoalService {
       // Update fields
       existingGoal.setTitle(goalDTO.getTitle());
       existingGoal.setTargetAmount(goalDTO.getTargetAmount());
-      existingGoal.setCurrentAmount(goalDTO.getCurrentAmount());
       existingGoal.setTargetDate(goalDTO.getTargetDate());
 
       Goal updatedGoal = goalRepository.save(existingGoal);
@@ -171,6 +170,7 @@ public class GoalServiceImpl implements GoalService {
               goal.setTargetAmount(goal.getEducation().getExpectedFee());
             }
             goal.setCurrentAmount(0.0);
+            goal.setInvestedAmount(0.0);
           });
 
       List<Goal> savedGoals = goalRepository.saveAll(goalEntities);
@@ -273,6 +273,7 @@ public class GoalServiceImpl implements GoalService {
     dto.setTitle(goal.getTitle());
     dto.setTargetAmount(goal.getTargetAmount());
     dto.setCurrentAmount(goal.getCurrentAmount());
+    dto.setInvestedAmount(goal.getInvestedAmount());
     dto.setTargetDate(goal.getTargetDate());
     dto.setMonthlySip(goal.getMonthlySip());
     dto.setStatus(goal.getStatus());
@@ -313,6 +314,7 @@ public class GoalServiceImpl implements GoalService {
     goal.setTitle(goalDTO.getTitle());
     goal.setTargetAmount(goalDTO.getTargetAmount());
     goal.setCurrentAmount(goalDTO.getCurrentAmount());
+    goal.setInvestedAmount(goalDTO.getInvestedAmount());
     goal.setTargetDate(goalDTO.getTargetDate());
 
     if (goalDTO.getEducation() != null) {

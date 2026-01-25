@@ -125,6 +125,7 @@ public class LumpSumPaymentCompletedListener {
               // background to compute & sync actual amount
               if (order instanceof BuyOrder) {
                 goal.setCurrentAmount(goal.getCurrentAmount() + order.getAmount());
+                goal.setInvestedAmount(goal.getInvestedAmount() + order.getAmount());
               }
               goalRepository.save(goal);
             });

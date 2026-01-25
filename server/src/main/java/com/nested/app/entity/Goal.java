@@ -38,6 +38,9 @@ public class Goal {
   @Column(nullable = false)
   private Double currentAmount = 0.0;
 
+  @Column(nullable = false)
+  private Double investedAmount = 0.0;
+
   private Double monthlySip = 0.0;
 
   @Column(nullable = false)

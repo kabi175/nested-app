@@ -64,6 +64,17 @@ public class GoalSyncJob implements Job {
         log.debug("No portfolio data found, setting currentAmount to 0 for goalId={}", goalId);
       }
 
+      if (portfolio != null && portfolio.getInvestedAmount() != null) {
+        goal.setInvestedAmount(portfolio.getInvestedAmount());
+        log.debug(
+            "Updated goal investedAmount to {} for goalId={}",
+            portfolio.getInvestedAmount(),
+            goalId);
+      } else {
+        goal.setInvestedAmount(0.0);
+        log.debug("No portfolio data found, setting investedAmount to 0 for goalId={}", goalId);
+      }
+
       // Update monthlySip from SIP order items
       Double sipAmount =
           orderItemsRepository.sumSipOrderItemsAmountByGoalIdAndStatuses(
@@ -73,9 +84,11 @@ public class GoalSyncJob implements Job {
 
       goalRepository.save(goal);
       log.info(
-          "Successfully synced goal for goalId={}, currentAmount={}, monthlySip={}",
+          "Successfully synced goal for goalId={}, currentAmount={}, investedAmount={} "
+              + "monthlySip={}",
           goalId,
           goal.getCurrentAmount(),
+          goal.getInvestedAmount(),
           goal.getMonthlySip());
 
     } catch (Exception e) {
