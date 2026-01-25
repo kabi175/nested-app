@@ -34,26 +34,26 @@ export default function SuperFDScreen() {
   return (
     <SafeAreaView style={styles.container}>
       <StatusBar style="auto" backgroundColor="#F8F7FF" />
-        <SuperFDListHeader />
+      <SuperFDListHeader />
       <ScrollView
         style={styles.scrollContainer}
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
       >
-          <>
-            <View style={styles.contentContainer}>
-              {currentValue > 0 && (
-                <PortfolioSummaryCard
-                  currentValue={currentValue}
-                  investedAmount={invested}
-                  returnsAmount={currentValue - invested}
-                />
-              )}
+        <>
+          <View style={styles.contentContainer}>
+            {currentValue > 0 && (
+              <PortfolioSummaryCard
+                currentValue={currentValue}
+                investedAmount={invested}
+                returnsAmount={currentValue - invested}
+              />
+            )}
 
-              <SuperFDSection showHeader={false} />
+            <SuperFDSection showHeader={false} />
 
-            </View>
-          </>
+          </View>
+        </>
       </ScrollView>
     </SafeAreaView>
   );
