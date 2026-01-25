@@ -5,11 +5,9 @@ import com.nested.app.dto.Entity;
 import com.nested.app.dto.GoalCreateDTO;
 import com.nested.app.dto.GoalDTO;
 import com.nested.app.dto.GoalUpdateDTO;
-import com.nested.app.dto.HoldingDTO;
 import com.nested.app.dto.OrderDTO;
 import com.nested.app.enums.BasketType;
 import com.nested.app.services.GoalService;
-import com.nested.app.services.HoldingService;
 import com.nested.app.services.OrderService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -48,7 +46,6 @@ import org.springframework.web.bind.annotation.RestController;
 public class GoalController {
 
   private final GoalService goalService;
-  private final HoldingService holdingService;
   private final OrderService orderService;
   private final UserContext userContext;
 
@@ -203,46 +200,7 @@ public class GoalController {
     }
   }
 
-  /**
-   * Retrieves holdings for a specific goal
-   *
-   * @param goalId The ID of the goal
-   * @return ResponseEntity containing list of holdings for the goal
-   */
-  @GetMapping("/{goalId}/holdings")
-  @Operation(
-      summary = "Get holdings for a goal",
-      description = "Retrieves all holdings associated with a specific investment goal")
-  @ApiResponses(
-      value = {
-        @ApiResponse(
-            responseCode = "200",
-            description = "Successfully retrieved holdings",
-            content =
-                @Content(
-                    mediaType = "application/json",
-                    schema = @Schema(implementation = Map.class))),
-        @ApiResponse(responseCode = "404", description = "Goal not found"),
-        @ApiResponse(responseCode = "500", description = "Internal server error")
-      })
-  public ResponseEntity<Map<String, List<HoldingDTO>>> getGoalHoldings(
-      @Parameter(description = "Goal ID", required = true) @PathVariable String goalId) {
-
-    log.info("GET /api/v1/goals/{}/holdings - Retrieving holdings for goal", goalId);
-
-    try {
-      List<HoldingDTO> holdings = holdingService.getHoldingsByGoalId(goalId);
-      log.info("Successfully retrieved {} holdings for goal {}", holdings.size(), goalId);
-
-      return ResponseEntity.ok(Map.of("data", holdings));
-
-    } catch (Exception e) {
-      log.error("Error retrieving holdings for goal {}: {}", goalId, e.getMessage(), e);
-      return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
-    }
-  }
-
-  /**
+    /**
    * Retrieves orders for a specific goal
    *
    * @param goalId The ID of the goal
