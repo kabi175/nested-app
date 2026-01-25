@@ -28,7 +28,6 @@ export const getChildren = async (api: AxiosInstance): Promise<Child[]> => {
     })
   );
 
-  console.log("getChildren", children);
   return children;
 };
 
