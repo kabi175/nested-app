@@ -13,8 +13,6 @@ import jakarta.servlet.http.HttpServletResponse;
 import lombok.AllArgsConstructor;
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.core.Ordered;
-import org.springframework.core.annotation.Order;
 import org.springframework.http.HttpHeaders;
 import org.springframework.security.authentication.AnonymousAuthenticationToken;
 import org.springframework.security.core.Authentication;
@@ -29,7 +27,6 @@ import java.util.Objects;
 @Component
 @AllArgsConstructor
 @Slf4j
-@Order(Ordered.HIGHEST_PRECEDENCE + 100) // Run after TraceIdFilter
 public class UserContextFilter extends OncePerRequestFilter {
 
   private final UserContext userContext;
