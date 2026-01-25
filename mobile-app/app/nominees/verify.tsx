@@ -177,7 +177,7 @@ export default function NomineeVerificationScreen() {
       }
 
       // Redirect back to nominees screen
-      router.replace("/nominees");
+      router.replace("/bank-accounts");
     } catch (error: any) {
       console.error("Verification error", error);
       const errorMessage =
