@@ -1,4 +1,12 @@
+import { getPendingOrdersByGoalId } from "@/api/paymentAPI";
+import { cartAtom } from "@/atoms/cart";
+import { goalsForCustomizeAtom } from "@/atoms/goals";
+import { QUERY_KEYS } from "@/constants/queryKeys";
+import { useAuthAxios } from "@/hooks/useAuthAxios";
 import { useAddBankAccount } from "@/hooks/useBankAccount";
+import { usePendingActivities } from "@/hooks/usePendingActivities";
+import { Goal } from "@/types";
+import { useQueryClient } from "@tanstack/react-query";
 import {
   Button,
   Card,
@@ -10,11 +18,17 @@ import {
 } from "@ui-kitten/components";
 import { router } from "expo-router";
 import { StatusBar } from "expo-status-bar";
+import { useSetAtom } from "jotai";
 import { useState } from "react";
 import { Alert, ScrollView, StyleSheet, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function AddManualScreen() {
+  const api = useAuthAxios();
+  const { data: pendingActivities } = usePendingActivities();
+  const queryClient = useQueryClient();
+  const setCart = useSetAtom(cartAtom);
+  const setGoalsForCustomize = useSetAtom(goalsForCustomizeAtom);
   const accountTypes = [
     { label: "Savings", value: "savings" },
     { label: "Current", value: "current" },
@@ -48,7 +62,32 @@ export default function AddManualScreen() {
           Alert.alert("Success", "Bank account added successfully", [
             {
               text: "OK",
-              onPress: () => router.back(),
+              onPress: async () => {
+                const firstActivity = pendingActivities?.find(activity => activity.type === "goal_payment_pending");
+                if (!firstActivity) {
+                  router.back();
+                  return;
+                }
+
+                const goal = firstActivity.metadata as Goal;
+                const orders = await queryClient.fetchQuery({
+                  queryKey: [QUERY_KEYS.pendingOrders, goal.id],
+                  queryFn: () => getPendingOrdersByGoalId(api, goal.id),
+                });
+                if (orders && orders.length > 0) {
+                  setCart(orders);
+                  router.push("/payment");
+                } else {
+                  setGoalsForCustomize([goal]);
+                  router.push({
+                    pathname: `/child/${goal.childId}/goal/customize`,
+                    params: {
+                      goal_id: goal.id,
+                    },
+                  });
+                }
+
+              },
             },
           ]);
         },
@@ -56,7 +95,7 @@ export default function AddManualScreen() {
           Alert.alert(
             "Error",
             error?.response?.data?.message ||
-              "Failed to add bank account. Please try again."
+            "Failed to add bank account. Please try again."
           );
         },
       }
@@ -108,15 +147,15 @@ export default function AddManualScreen() {
                 keyboardType="numeric"
                 status={
                   reAccountNumber &&
-                  accountNumber &&
-                  reAccountNumber !== accountNumber
+                    accountNumber &&
+                    reAccountNumber !== accountNumber
                     ? "danger"
                     : "basic"
                 }
                 caption={
                   reAccountNumber &&
-                  accountNumber &&
-                  reAccountNumber !== accountNumber
+                    accountNumber &&
+                    reAccountNumber !== accountNumber
                     ? "Account numbers do not match"
                     : ""
                 }

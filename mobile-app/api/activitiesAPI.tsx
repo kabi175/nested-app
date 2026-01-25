@@ -1,15 +1,15 @@
 import { Goal, User } from "@/types";
 import type { AxiosInstance } from "axios";
 
-type Activity = {
+export type Activity = {
   id: string;
   title: string;
   type:
-    | "kyc_incomplete"
-    | "bank_account_pending"
-    | "goal_payment_pending"
-    | "profile_incomplete"
-    | "nominee_configuration_pending";
+  | "kyc_incomplete"
+  | "bank_account_pending"
+  | "goal_payment_pending"
+  | "profile_incomplete"
+  | "nominee_configuration_pending";
   priority: "low" | "medium" | "high";
   description: string;
   status: "PENDING";
