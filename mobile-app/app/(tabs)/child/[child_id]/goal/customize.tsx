@@ -15,11 +15,12 @@ import { useAtomValue, useSetAtom } from "jotai";
 import { CalendarSync } from "lucide-react-native";
 import React, { useEffect, useState } from "react";
 import {
+  Alert,
   Animated,
   ScrollView,
   StyleSheet,
   TouchableOpacity,
-  View,
+  View
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
@@ -146,6 +147,10 @@ export default function CustomizeInvestmentScreen() {
   const handleContinue = async () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
 
+    if (lumpSumAmount > 0 && lumpSumAmount < minInvestment) {
+      Alert.alert("Lump Sum Amount", `Please add at least ${formatCurrency(minInvestment)} for lump sum`);
+      return;
+    }
     // Prepare orders array for all goals
     const orders: CreateOrderRequest[] = [];
 
@@ -321,11 +326,10 @@ export default function CustomizeInvestmentScreen() {
           {/* Add Lump Sum Card */}
           <ToggleCard
             title="Add Lump Sum"
-            subtitle="One-time investment"
+            subtitle={`One-time investment (minimum of ${formatCurrency(minInvestment)})`}
             initialValue={lumpSumAmount}
             onValueChange={handleLumpSumAmountChange}
             inputLabel="Lump Sum Amount"
-            min={minInvestment}
             max={MAX_LUMPSUM_AMOUNT}
           />
 
@@ -336,7 +340,6 @@ export default function CustomizeInvestmentScreen() {
             initialValue={stepUpAmount}
             onValueChange={handleStepUpAmountChange}
             inputLabel="Annual Step-Up Amount"
-            min={minInvestment}
             max={MAX_STEPUP_AMOUNT}
           />
 
@@ -344,7 +347,6 @@ export default function CustomizeInvestmentScreen() {
           <Button
             style={[
               styles.continueButton,
-              createOrdersMutation.isPending && styles.continueButtonDisabled,
             ]}
             onPress={handleContinue}
             disabled={createOrdersMutation.isPending}
@@ -551,10 +553,6 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.1,
     shadowRadius: 12,
     elevation: 8,
-  },
-  continueButtonDisabled: {
-    opacity: 0.7,
-    shadowOpacity: 0.05,
   },
   continueButtonGradient: {
     paddingVertical: 20,
