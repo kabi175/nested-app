@@ -44,6 +44,7 @@ public class OrderSchedulerService {
           JobBuilder.newJob(BuyOrderFulfillmentJob.class)
               .withIdentity("order-check-" + orderId)
               .usingJobData("orderId", orderId)
+              .requestRecovery(true)
               .storeDurably()
               .build();
 
@@ -52,7 +53,9 @@ public class OrderSchedulerService {
               .withIdentity("order-check-trigger-" + orderId)
               .forJob(jobDetail)
               .withSchedule(
-                  CronScheduleBuilder.cronSchedule("0 0 */6 * * ?") // every 6 hours
+                  CronScheduleBuilder.cronSchedule("0 0 */6 * * ?")
+                      .withMisfireHandlingInstructionFireAndProceed() //
+                  // every 6 hours
                   )
               .startNow()
               .build();
@@ -79,6 +82,7 @@ public class OrderSchedulerService {
       JobDetail jobDetail =
           JobBuilder.newJob(BuyOrderFulfillmentJob.class)
               .withIdentity("order-check-instant-" + orderId)
+              .requestRecovery(true)
               .usingJobData("orderId", orderId)
               .storeDurably()
               .build();
@@ -91,6 +95,7 @@ public class OrderSchedulerService {
               .startAt(new java.util.Date(System.currentTimeMillis() + 10000)) // 10 seconds delay
               .withSchedule(
                   SimpleScheduleBuilder.simpleSchedule()
+                      .withMisfireHandlingInstructionFireNow()
                       .withRepeatCount(0)) // ensures it's persisted
               .build();
 
