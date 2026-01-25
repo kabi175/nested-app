@@ -8,6 +8,7 @@ export type Goal = {
 
   basket: {
     id: string;
+    title: string;
     min_investment: number;
   };
 

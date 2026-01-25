@@ -1,16 +1,13 @@
-import { getGoalsByBasketName } from "@/api/goalApi";
 import HaveQuestions from "@/components/HaveQuestions";
 import HowNestedHelps from "@/components/HowNestedHelps";
 import KnowMore from "@/components/KnowMore";
 import NestedFooter from "@/components/NestedFooter";
 import ShareApp from "@/components/ShareApp";
-import SuperFDList from "@/components/SuperFDList";
+import SuperFDSection from "@/components/SuperFDList";
 import WhatParentsSay from "@/components/WhatParentsSay";
 import WhyParentTrustUs from "@/components/WhyParentTrustUs";
-import { useAuthAxios } from "@/hooks/useAuthAxios";
 import { useUser } from "@/hooks/useUser";
 import { Divider, Layout, Text } from "@ui-kitten/components";
-import { router } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import React, { useRef } from "react";
 import { ScrollView, StyleSheet, View } from "react-native";
@@ -22,7 +19,6 @@ export default function NestedIntro() {
   const scrollViewRef = useRef<ScrollView>(null);
   const superFDListYPosition = useRef<number>(0);
   const layoutYPosition = useRef<number>(0);
-  const api = useAuthAxios();
 
   const handleScrollToSuperFD = () => {
     if (scrollViewRef.current && superFDListYPosition.current >= 0) {
@@ -31,16 +27,6 @@ export default function NestedIntro() {
         y: Math.max(0, totalY - 20), // Small offset for better visibility
         animated: true,
       });
-    }
-  };
-
-  const handleInvestNowPress = async(basketId: string) => {
-
-    const goals = await getGoalsByBasketName(api, basketId);
-    if(goals.length > 0) {
-      router.push(`/goal/${goals[0].id}/holdings`);
-    } else {
-      router.push(`/basket?type=${basketId}`);
     }
   };
 
@@ -70,7 +56,7 @@ export default function NestedIntro() {
                 superFDListYPosition.current = event.nativeEvent.layout.y;
               }}
             >
-              <SuperFDList onInvestNowPress={handleInvestNowPress} />
+              <SuperFDSection />
             </View>
 
             <KnowMore />
