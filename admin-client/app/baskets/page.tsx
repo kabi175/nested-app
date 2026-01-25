@@ -336,7 +336,7 @@ export default function BasketsPage() {
         ID: basket.id,
         Name: basket.name,
         'Duration (Years)': basket.duration,
-        'Expected Returns (%)': basket.expectedReturns || 'N/A',
+        'Expected Returns': basket.expectedReturns || 'N/A',
         'Number of Funds': basket.funds?.length || 0,
         'Total Allocation %': basket.totalPercentage,
         'Created Date': basket.createdAt ? new Date(basket.createdAt).toLocaleDateString() : 'N/A',
@@ -641,7 +641,7 @@ export default function BasketsPage() {
             </div>
 
             <div className="grid gap-2">
-              <Label htmlFor="basketExpectedReturns">Expected Returns (%)</Label>
+              <Label htmlFor="basketExpectedReturns">Expected Returns </Label>
               <Input
                 id="basketExpectedReturns"
                 type="number"
@@ -850,7 +850,7 @@ export default function BasketsPage() {
             </div>
 
             <div className="grid gap-2">
-              <Label htmlFor="edit-basketExpectedReturns">Expected Returns (%)</Label>
+              <Label htmlFor="edit-basketExpectedReturns">Expected Returns </Label>
               <Input
                 id="edit-basketExpectedReturns"
                 type="number"
