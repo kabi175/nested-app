@@ -19,8 +19,10 @@ import com.nested.app.repository.TransactionRepository;
 import java.sql.Timestamp;
 import java.time.LocalDate;
 import java.time.Period;
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -161,23 +163,15 @@ public class GoalServiceImpl implements GoalService {
       // Fetch existing titles for the user (case-insensitive deduplication)
       List<String> existingTitlesList = goalRepository.findAllTitlesByUser(user);
       Set<String> existingTitles = new HashSet<>(existingTitlesList);
-      var superFDBasketIds =
-          goalRepository.findByBasketType(user, BasketType.SUPER_FD).stream()
-              .map(Goal::getBasket)
-              .map(Basket::getId)
-              .toList();
+      var superFDGoals =
+          goalRepository.findByBasketType(user, BasketType.SUPER_FD).stream().toList();
 
       List<Goal> goalEntities =
           goalDtos.stream()
               .map(this::convertToEntity)
-              .filter(
-                  goal ->
-                      superFDBasketIds.stream()
-                          .noneMatch(
-                              id ->
-                                  goal.getBasket() != null && goal.getBasket().getId().equals(id)))
               .toList();
 
+      var toBeSaved = new ArrayList<Goal>();
       goalEntities.forEach(
           goal -> {
             // Generate unique title
@@ -210,15 +204,18 @@ public class GoalServiceImpl implements GoalService {
             }
             goal.setCurrentAmount(0.0);
             goal.setInvestedAmount(0.0);
+
+            var superFDGoal =
+                superFDGoals.stream()
+                    .filter(fdGoal -> fdGoal.getBasket().getId().equals(goal.getBasket().getId()))
+                    .findFirst()
+                    .orElse(null);
+            toBeSaved.add(
+                Objects.requireNonNullElseGet(superFDGoal, () -> goalRepository.save(goal)));
           });
 
-      if (goalEntities.isEmpty()) {
-        return List.of();
-      }
-
-      List<Goal> savedGoals = goalRepository.saveAll(goalEntities);
       List<GoalDTO> savedGoalDTOs =
-          savedGoals.stream().map(this::convertToDTO).collect(Collectors.toList());
+          toBeSaved.stream().map(this::convertToDTO).collect(Collectors.toList());
 
       log.info("Successfully created {} goalDtos", savedGoalDTOs.size());
       return savedGoalDTOs;
