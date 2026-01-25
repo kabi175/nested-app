@@ -1,8 +1,8 @@
 import type { Goal } from "@/types/investment";
 import type { AxiosInstance } from "axios";
 
-export const getGoals = async (api: AxiosInstance): Promise<Goal[]> => {
-  const { data } = await api.get("/goals");
+export const getGoals = async (api: AxiosInstance, type: "education" | "super_fd" ): Promise<Goal[]> => {
+  const { data } = await api.get(`/goals?type=${type}`);
   return (data.data ?? []).map((goal: GoalDTO): Goal => mapGoalToGoal(goal));
 };
 

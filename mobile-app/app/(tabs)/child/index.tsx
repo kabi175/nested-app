@@ -1,11 +1,11 @@
 import { ThemedText } from "@/components/ThemedText";
 import {
-  EmptyGoalState,
-  GoalsList,
-  PortfolioSummaryCard,
+    EmptyGoalState,
+    GoalsList,
+    PortfolioSummaryCard,
 } from "@/components/goal";
 import { useChildren } from "@/hooks/useChildren";
-import { useGoals } from "@/hooks/useGoals";
+import { useEducationGoals } from "@/hooks/useGoals";
 import { Button } from "@ui-kitten/components";
 import { router } from "expo-router";
 import { StatusBar } from "expo-status-bar";
@@ -15,7 +15,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function GoalScreen() {
   const { data: children, isLoading: childrenLoading } = useChildren();
-  const { data: goals, isLoading: goalsLoading } = useGoals();
+  const { data: goals, isLoading: goalsLoading } = useEducationGoals();
 
   const isLoading = childrenLoading || goalsLoading;
   const hasChildren = Boolean(children && children.length > 0);
