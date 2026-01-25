@@ -9,7 +9,6 @@ import { useSIPCalculator } from "@/hooks/useSIPCalculator";
 import { formatCurrency } from "@/utils/formatters";
 import { Ionicons } from "@expo/vector-icons";
 import { Button, Datepicker } from "@ui-kitten/components";
-import * as Haptics from "expo-haptics";
 import { router } from "expo-router";
 import { useAtomValue, useSetAtom } from "jotai";
 import { CalendarSync } from "lucide-react-native";
@@ -145,7 +144,6 @@ export default function CustomizeInvestmentScreen() {
   }, [fadeAnim, slideAnim, scaleAnim, pulseAnim]);
 
   const handleContinue = async () => {
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
 
     if (lumpSumAmount > 0 && lumpSumAmount < minInvestment) {
       Alert.alert("Lump Sum Amount", `Please add at least ${formatCurrency(minInvestment)} for lump sum`);
