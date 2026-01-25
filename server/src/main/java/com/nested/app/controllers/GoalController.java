@@ -119,7 +119,7 @@ public class GoalController {
         @ApiResponse(responseCode = "400", description = "Invalid input data"),
         @ApiResponse(responseCode = "500", description = "Internal server error")
       })
-  public ResponseEntity<Map<String, List<GoalDTO>>> createGoal(
+  public ResponseEntity<Entity<GoalDTO>> createGoal(
       @RequestBody Entity<GoalCreateDTO> requestBody) {
 
     log.info("POST /api/v1/goals - Creating new goal");
@@ -135,7 +135,7 @@ public class GoalController {
       List<GoalDTO> createdGoals = goalService.createGoals(goalData, userContext.getUser());
       log.info("Successfully created {} goals", createdGoals.size());
 
-      return ResponseEntity.status(HttpStatus.CREATED).body(Map.of("data", createdGoals));
+      return ResponseEntity.status(HttpStatus.CREATED).body(Entity.of(createdGoals));
 
     } catch (Exception e) {
       log.error("Error creating goal: {}", e.getMessage(), e);
