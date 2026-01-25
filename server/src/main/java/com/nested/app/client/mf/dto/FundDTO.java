@@ -25,6 +25,9 @@ public class FundDTO {
   @JsonIgnore private double minUnitsSell;
   @JsonIgnore private double maxUnitsSell;
   @JsonIgnore private double sellUnitsMultiplier;
+  @JsonIgnore private double minAmountSell;
+  @JsonIgnore private double maxAmountSell;
+  @JsonIgnore private double sellAmountMultiplier;
 
   @JsonIgnore private double minSipAmount;
   @JsonIgnore private double maxSipAmount;
@@ -53,11 +56,11 @@ public class FundDTO {
           if (threshold.get("units_multiples") != null)
             sellUnitsMultiplier = Double.parseDouble(threshold.get("units_multiples").toString());
           if (threshold.get("amount_min") != null)
-            minAmountBuy = Double.parseDouble(threshold.get("amount_min").toString());
+            minAmountSell = Double.parseDouble(threshold.get("amount_min").toString());
           if (threshold.get("amount_max") != null)
-            maxAmountBuy = Double.parseDouble(threshold.get("amount_max").toString());
+            maxAmountSell = Double.parseDouble(threshold.get("amount_max").toString());
           if (threshold.get("amount_multiples") != null)
-            buyAmountMultiplier = Double.parseDouble(threshold.get("amount_multiples").toString());
+            sellAmountMultiplier = Double.parseDouble(threshold.get("amount_multiples").toString());
           break;
         case "sip":
           if (threshold.get("amount_min") != null)
