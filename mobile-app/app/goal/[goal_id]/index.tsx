@@ -221,12 +221,10 @@ export default function GoalDetailScreen() {
 function HoldingCard({
   holding,
   borderColor,
-  index,
   goalId,
 }: {
   holding: Holding;
   borderColor: string;
-  index: number;
   goalId: string;
 }) {
   const returnsPercentage =
@@ -324,10 +322,9 @@ function HoldingsContent({
         const borderColor = colors[index % colors.length];
         return (
           <HoldingCard
-            key={holding.fund}
+            key={index}
             holding={holding}
             borderColor={borderColor}
-            index={index}
             goalId={goalId}
           />
         );
