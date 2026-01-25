@@ -34,7 +34,7 @@ export default function BasketCard({
     if(isLoading) return;
     setIsLoading(true);
     try {
-    if(data.goalId) {
+    if(data.goalId && data.currentValue) {
       router.push(`/goal/${data.goalId}/holdings`);
     } else {
       router.push(`/basket?type=${data.id}`);
