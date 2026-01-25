@@ -152,7 +152,7 @@ public class GoalServiceImpl implements GoalService {
               var period = Period.between(now, futureDate);
               basket =
                   basketRepository
-                      .findFirstByGreaterThanYearsOrderByYears((double) period.getYears())
+                      .findFirstByYearsGreaterThanOrderByYears((double) period.getYears())
                       .orElseGet(basketRepository::findFirstByOrderByYearsDesc);
             }
 

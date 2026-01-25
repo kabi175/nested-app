@@ -40,7 +40,7 @@ public interface BasketRepository extends JpaRepository<Basket, Long> {
      */
     List<Basket> findByTitleIgnoreCase(String title);
 
-  Optional<Basket> findFirstByGreaterThanYearsOrderByYears(Double years);
+  Optional<Basket> findFirstByYearsGreaterThanOrderByYears(Double years);
 
   Basket findFirstByOrderByYearsDesc();
 }
