@@ -9,11 +9,14 @@ import com.nested.app.entity.Basket;
 import com.nested.app.entity.Goal;
 import com.nested.app.entity.User;
 import com.nested.app.enums.BasketType;
+import com.nested.app.events.GoalSyncEvent;
 import com.nested.app.exception.ExternalServiceException;
 import com.nested.app.repository.BasketRepository;
 import com.nested.app.repository.EducationRepository;
 import com.nested.app.repository.OrderRepository;
 import com.nested.app.repository.TenantAwareGoalRepository;
+import com.nested.app.repository.TransactionRepository;
+import java.sql.Timestamp;
 import java.time.LocalDate;
 import java.time.Period;
 import java.util.HashSet;
@@ -23,6 +26,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -43,6 +47,8 @@ public class GoalServiceImpl implements GoalService {
   private final BasketRepository basketRepository;
   private final EducationRepository educationRepository;
   private final OrderRepository orderRepository;
+  private final TransactionRepository transactionRepository;
+  private final ApplicationEventPublisher eventPublisher;
 
   /**
    * Retrieves all goals from the system
@@ -383,5 +389,82 @@ public class GoalServiceImpl implements GoalService {
     }
 
     return goal;
+  }
+
+  /**
+   * Soft deletes a goal and transfers all associated records to target goal. Only supported for
+   * goals with BasketType.EDUCATION.
+   *
+   * @param goalId The ID of the goal to delete
+   * @param transferToGoalId The ID of the goal to transfer orders and transactions to
+   * @param user Current user context
+   * @throws IllegalArgumentException if validation fails
+   */
+  @Override
+  public void softDeleteGoal(Long goalId, Long transferToGoalId, User user) {
+    log.info(
+        "Soft deleting goal ID: {} with transfer to goal ID: {} for user ID: {}",
+        goalId,
+        transferToGoalId,
+        user.getId());
+
+    // Validate source goal
+    Goal sourceGoal =
+        goalRepository
+            .findByIdIncludingDeleted(goalId, user)
+            .orElseThrow(() -> new IllegalArgumentException("Goal not found"));
+
+    if (sourceGoal.getIsDeleted()) {
+      throw new IllegalArgumentException("Goal has already been deleted");
+    }
+
+    if (sourceGoal.getBasket() == null
+        || sourceGoal.getBasket().getBasketType() != BasketType.EDUCATION) {
+      throw new IllegalArgumentException("Only education goals can be deleted");
+    }
+
+    // Validate target goal
+    Goal targetGoal =
+        goalRepository
+            .findByIdIncludingDeleted(transferToGoalId, user)
+            .orElseThrow(() -> new IllegalArgumentException("Transfer goal not found"));
+
+    if (targetGoal.getIsDeleted()) {
+      throw new IllegalArgumentException("Cannot transfer to a deleted goal");
+    }
+
+    if (targetGoal.getBasket() == null
+        || targetGoal.getBasket().getBasketType() != BasketType.EDUCATION) {
+      throw new IllegalArgumentException(
+          "Transfer goal must be of the same basket type (education)");
+    }
+
+    // Transfer orders from source goal to target goal
+    int ordersTransferred = orderRepository.updateGoalId(goalId, transferToGoalId);
+    log.info(
+        "Transferred {} orders from goal {} to goal {}",
+        ordersTransferred,
+        goalId,
+        transferToGoalId);
+
+    // Transfer transactions from source goal to target goal
+    int transactionsTransferred = transactionRepository.updateGoalId(goalId, transferToGoalId);
+    log.info(
+        "Transferred {} transactions from goal {} to goal {}",
+        transactionsTransferred,
+        goalId,
+        transferToGoalId);
+
+    // Mark source goal as deleted
+    sourceGoal.setIsDeleted(true);
+    sourceGoal.setDeletedAt(new Timestamp(System.currentTimeMillis()));
+    sourceGoal.setTransferredToGoal(targetGoal);
+    goalRepository.save(sourceGoal);
+
+    log.info("Successfully soft deleted goal ID: {}", goalId);
+
+    // Trigger recalculation of target goal
+    eventPublisher.publishEvent(new GoalSyncEvent(transferToGoalId, user));
+    log.info("Published GoalSyncEvent for target goal ID: {}", transferToGoalId);
   }
 }

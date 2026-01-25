@@ -4,6 +4,7 @@ import com.nested.app.context.UserContext;
 import com.nested.app.dto.Entity;
 import com.nested.app.dto.GoalCreateDTO;
 import com.nested.app.dto.GoalDTO;
+import com.nested.app.dto.GoalDeleteDTO;
 import com.nested.app.dto.GoalUpdateDTO;
 import com.nested.app.dto.OrderDTO;
 import com.nested.app.enums.BasketType;
@@ -16,12 +17,14 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import java.util.List;
 import java.util.Map;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -287,6 +290,53 @@ public class GoalController {
 
     } catch (Exception e) {
       log.error("Error retrieving goals for basket {}: {}", basketName, e.getMessage(), e);
+      return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+    }
+  }
+
+  /**
+   * Soft deletes a goal and transfers all associated records to target goal. Only supported for
+   * goals with BasketType.EDUCATION.
+   *
+   * @param goalId The ID of the goal to delete
+   * @param requestBody Request body containing the target goal ID for transfer
+   * @return ResponseEntity with success message or error
+   */
+  @DeleteMapping("/{goalId}")
+  @Operation(
+      summary = "Soft delete a goal",
+      description =
+          "Soft deletes an education goal and transfers all orders and transactions to the specified target goal")
+  @ApiResponses(
+      value = {
+        @ApiResponse(responseCode = "200", description = "Goal deleted successfully"),
+        @ApiResponse(
+            responseCode = "400",
+            description =
+                "Validation error (e.g., goal not found, not an education goal, target goal invalid)"),
+        @ApiResponse(responseCode = "500", description = "Internal server error")
+      })
+  public ResponseEntity<?> deleteGoal(
+      @Parameter(description = "Goal ID to delete", required = true) @PathVariable Long goalId,
+      @Valid @RequestBody GoalDeleteDTO requestBody) {
+
+    log.info(
+        "DELETE /api/v1/goals/{} - Soft deleting goal with transfer to goal {}",
+        goalId,
+        requestBody.getTransferToGoalId());
+
+    try {
+      goalService.softDeleteGoal(goalId, requestBody.getTransferToGoalId(), userContext.getUser());
+      log.info("Successfully soft deleted goal {}", goalId);
+
+      return ResponseEntity.ok(Map.of("message", "Goal deleted successfully"));
+
+    } catch (IllegalArgumentException e) {
+      log.warn("Cannot delete goal {}: {}", goalId, e.getMessage());
+      return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of("error", e.getMessage()));
+
+    } catch (Exception e) {
+      log.error("Error deleting goal {}: {}", goalId, e.getMessage(), e);
       return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
     }
   }

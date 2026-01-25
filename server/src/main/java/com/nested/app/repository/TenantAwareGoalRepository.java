@@ -33,18 +33,20 @@ public class TenantAwareGoalRepository extends SimpleJpaRepository<Goal, Long> {
   }
 
   /**
-   * Find all goals with tenant filtering
+   * Find all goals with tenant filtering (excludes deleted goals)
    *
    * @param user Current user context
    * @return List of goals visible to user
    */
   public List<Goal> findAll(User user) {
     enableUserFilter(user);
-    return super.findAll();
+    return entityManager
+        .createQuery("SELECT g FROM Goal g WHERE g.isDeleted = false", Goal.class)
+        .getResultList();
   }
 
   /**
-   * Find goals by basket type with tenant filtering
+   * Find goals by basket type with tenant filtering (excludes deleted goals)
    *
    * @param user Current user context
    * @param type Basket type to filter by
@@ -53,7 +55,9 @@ public class TenantAwareGoalRepository extends SimpleJpaRepository<Goal, Long> {
   public List<Goal> findByBasketType(User user, BasketType type) {
     enableUserFilter(user);
     return entityManager
-        .createQuery("SELECT g FROM Goal g WHERE g.basket.basketType = :type", Goal.class)
+        .createQuery(
+            "SELECT g FROM Goal g WHERE g.basket.basketType = :type AND g.isDeleted = false",
+            Goal.class)
         .setParameter("type", type)
         .getResultList();
   }
@@ -71,7 +75,24 @@ public class TenantAwareGoalRepository extends SimpleJpaRepository<Goal, Long> {
   }
 
   /**
+   * Find goal by ID including deleted goals (for internal soft delete operations)
+   *
+   * @param id Goal ID
+   * @param user Current user context
+   * @return Optional containing goal if found and user has access
+   */
+  public Optional<Goal> findByIdIncludingDeleted(Long id, User user) {
+    enableUserFilter(user);
+    return entityManager
+        .createQuery("SELECT g FROM Goal g WHERE g.id = :id", Goal.class)
+        .setParameter("id", id)
+        .getResultStream()
+        .findFirst();
+  }
+
+  /**
    * Find goals by user ID and status Note: User filter is still applied for non-admin users
+   * (excludes deleted goals)
    *
    * @param userId User ID
    * @param status Goal status
@@ -82,14 +103,15 @@ public class TenantAwareGoalRepository extends SimpleJpaRepository<Goal, Long> {
     enableUserFilter(user);
     return entityManager
         .createQuery(
-            "SELECT g FROM Goal g WHERE g.user.id = :userId AND g.status = :status", Goal.class)
+            "SELECT g FROM Goal g WHERE g.user.id = :userId AND g.status = :status AND g.isDeleted = false",
+            Goal.class)
         .setParameter("userId", userId)
         .setParameter("status", status)
         .getResultList();
   }
 
   /**
-   * Find goals by basket title with tenant filtering
+   * Find goals by basket title with tenant filtering (excludes deleted goals)
    *
    * @param basketTitle Exact basket title to search for
    * @param user Current user context
@@ -98,24 +120,28 @@ public class TenantAwareGoalRepository extends SimpleJpaRepository<Goal, Long> {
   public List<Goal> findByBasketTitle(String basketTitle, User user) {
     enableUserFilter(user);
     return entityManager
-        .createQuery("SELECT g FROM Goal g WHERE g.basket.title = :basketTitle", Goal.class)
+        .createQuery(
+            "SELECT g FROM Goal g WHERE g.basket.title = :basketTitle AND g.isDeleted = false",
+            Goal.class)
         .setParameter("basketTitle", basketTitle)
         .getResultList();
   }
 
   /**
-   * Find all goal titles for a user with tenant filtering
+   * Find all goal titles for a user with tenant filtering (excludes deleted goals)
    *
    * @param user Current user context
    * @return List of goal titles for the user
    */
   public List<String> findAllTitlesByUser(User user) {
     enableUserFilter(user);
-    return entityManager.createQuery("SELECT g.title FROM Goal g", String.class).getResultList();
+    return entityManager
+        .createQuery("SELECT g.title FROM Goal g WHERE g.isDeleted = false", String.class)
+        .getResultList();
   }
 
   /**
-   * Find all goal titles for a user excluding a specific goal ID
+   * Find all goal titles for a user excluding a specific goal ID (excludes deleted goals)
    *
    * @param user Current user context
    * @param excludeGoalId Goal ID to exclude from results
@@ -124,7 +150,9 @@ public class TenantAwareGoalRepository extends SimpleJpaRepository<Goal, Long> {
   public List<String> findAllTitlesByUserExcludingGoal(User user, Long excludeGoalId) {
     enableUserFilter(user);
     return entityManager
-        .createQuery("SELECT g.title FROM Goal g WHERE g.id != :excludeGoalId", String.class)
+        .createQuery(
+            "SELECT g.title FROM Goal g WHERE g.id <> :excludeGoalId AND g.isDeleted = false",
+            String.class)
         .setParameter("excludeGoalId", excludeGoalId)
         .getResultList();
   }

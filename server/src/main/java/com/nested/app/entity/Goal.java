@@ -74,6 +74,15 @@ public class Goal {
   @Column(nullable = false)
   private Timestamp updatedAt;
 
+  @Column(nullable = false)
+  private Boolean isDeleted = false;
+
+  private Timestamp deletedAt;
+
+  @ManyToOne
+  @JoinColumn(name = "transferred_to_goal_id")
+  private Goal transferredToGoal;
+
   public boolean canInvest() {
     return this.status == Status.ACTIVE || this.status == Status.DRAFT || this.status == Status.PAYMENT_PENDING;
   }
