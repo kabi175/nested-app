@@ -5,11 +5,13 @@ import {
 import { ThemedText } from "@/components/ThemedText";
 import { OneTimePurchaseCard } from "@/components/payment/OneTimePurchaseCard";
 import { SIPAutoDebitCard } from "@/components/payment/SIPAutoDebitCard";
+import { QUERY_KEYS } from "@/constants/queryKeys";
 import { usePayment } from "@/hooks/usePayment";
 import {
   useFetchLumpsumPaymentUrl,
   useFetchMandatePaymentUrl,
 } from "@/hooks/usePaymentMutations";
+import { useQueryClient } from "@tanstack/react-query";
 import * as Linking from "expo-linking";
 import { router, useLocalSearchParams } from "expo-router";
 import { openAuthSessionAsync } from "expo-web-browser";
@@ -29,12 +31,14 @@ export default function PaymentProcessingScreen() {
   const { data: payment, refetch } = usePayment(paymentId);
   const fetchLumpsumUrl = useFetchLumpsumPaymentUrl();
   const fetchMandateUrl = useFetchMandatePaymentUrl();
+  const queryClient = useQueryClient();
+
   useEffect(() => {
-   const isPaymentPending = payment?.buy_status === "pending" || payment?.sip_status === "pending";
-   if (!isPaymentPending) {
-    router.replace("/child");
-    return;
-   }
+    const isPaymentPending = payment?.buy_status === "pending" || payment?.sip_status === "pending";
+    if (!isPaymentPending) {
+      router.replace("/child");
+      return;
+    }
 
   }, [payment]);
 
@@ -47,6 +51,11 @@ export default function PaymentProcessingScreen() {
       await openAuthSessionAsync(redirectUrl, returnUrl);
       await lumsumPostPayment(paymentId as string);
       await refetch();
+      queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.pendingActivities] });
+      queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.educationGoals] });
+      queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.superFDGoals] });
+      queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.goal] });
+      queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.portfolio] });
     } else {
       Alert.alert("Error", "Failed to get payment redirect URL.");
     }
