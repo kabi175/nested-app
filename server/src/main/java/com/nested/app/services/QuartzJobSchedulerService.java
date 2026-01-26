@@ -3,6 +3,7 @@ package com.nested.app.services;
 import com.nested.app.jobs.LumpSumPaymentPollerJob;
 import com.nested.app.jobs.MandateProcessPollerJob;
 import com.nested.app.jobs.PreVerificationPollerJob;
+import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.quartz.DateBuilder;
@@ -36,7 +37,8 @@ public class QuartzJobSchedulerService {
    * @throws SchedulerException if scheduling fails
    */
   public void schedulePreVerificationPollingJob(Long userId) throws SchedulerException {
-    String jobName = "PreVerificationPollerJob-" + userId;
+    String randomId = UUID.randomUUID().toString().substring(0, 8);
+    String jobName = "PreVerificationPollerJob-" + userId + "-" + randomId;
     String jobGroup = "pre-verification-group";
 
     // Create job detail

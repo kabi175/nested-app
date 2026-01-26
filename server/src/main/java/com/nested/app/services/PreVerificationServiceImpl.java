@@ -116,7 +116,7 @@ public class PreVerificationServiceImpl implements PreVerificationService {
     var data = userVerificationRepository.findByUser(user);
 
     if (data.isEmpty()) {
-      return true;
+      return false;
     }
 
     var ref = data.stream().map(UserVerification::getRef).findFirst().orElseThrow();
