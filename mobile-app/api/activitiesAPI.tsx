@@ -1,5 +1,6 @@
-import { Goal, User } from "@/types";
+import { User } from "@/types";
 import type { AxiosInstance } from "axios";
+import { GoalDTO } from "./goalApi";
 
 export type Activity = {
   id: string;
@@ -13,7 +14,7 @@ export type Activity = {
   priority: "low" | "medium" | "high";
   description: string;
   status: "PENDING";
-  metadata: User | Goal | null;
+  metadata: User | GoalDTO | null;
   created_at: Date;
   updated_at: Date;
 };

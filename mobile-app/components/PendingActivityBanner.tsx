@@ -1,4 +1,5 @@
 import { Activity } from "@/api/activitiesAPI";
+import { GoalDTO, mapGoalToGoal } from "@/api/goalApi";
 import { getPendingOrdersByGoalId } from "@/api/paymentAPI";
 import { cartAtom } from "@/atoms/cart";
 import { goalsForCustomizeAtom } from "@/atoms/goals";
@@ -7,7 +8,6 @@ import { QUERY_KEYS } from "@/constants/queryKeys";
 import { useAuthAxios } from "@/hooks/useAuthAxios";
 import { useColorScheme } from "@/hooks/useColorScheme";
 import { usePendingActivities } from "@/hooks/usePendingActivities";
-import { Goal } from "@/types";
 import { useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "expo-router";
 import { useSetAtom } from "jotai";
@@ -70,7 +70,8 @@ export function PendingActivityBanner({ onPress }: PendingActivityBannerProps) {
         router.push("/bank-accounts");
         break;
       case "goal_payment_pending":
-        const goal = firstActivity.metadata as Goal;
+        const goalDto = firstActivity.metadata as GoalDTO;
+        const goal = mapGoalToGoal(goalDto);
         const orders = await queryClient.fetchQuery({
           queryKey: [QUERY_KEYS.pendingOrders, goal.id],
           queryFn: () => getPendingOrdersByGoalId(api, goal.id),

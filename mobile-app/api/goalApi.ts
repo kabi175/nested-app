@@ -1,7 +1,7 @@
 import type { Goal } from "@/types/investment";
 import type { AxiosInstance } from "axios";
 
-export const getGoals = async (api: AxiosInstance, type: "education" | "super_fd" ): Promise<Goal[]> => {
+export const getGoals = async (api: AxiosInstance, type: "education" | "super_fd"): Promise<Goal[]> => {
   console.log("fetching goals for type", type);
   const { data } = await api.get(`/goals?type=${type}`);
   return (data.data ?? []).map((goal: GoalDTO): Goal => mapGoalToGoal(goal));
@@ -19,7 +19,7 @@ export const deleteGoal = async (
 ): Promise<void> => {
   console.log("deleting goal", goalId, "with transfer to goal", transferToGoalId);
   await api.delete(`/goals/${goalId}`, {
-    data: { transfer_to_goal_id:transferToGoalId },
+    data: { transfer_to_goal_id: transferToGoalId },
   });
 };
 
@@ -71,7 +71,7 @@ export const createGoal = async (
   return (data.data ?? []).map((goal: GoalDTO): Goal => mapGoalToGoal(goal));
 };
 
-type GoalDTO = {
+export type GoalDTO = {
   id: string;
   title: string;
   child_id: string;
@@ -90,7 +90,7 @@ type GoalDTO = {
   updatedAt?: string;
 };
 
-function mapGoalToGoal(goal: GoalDTO): Goal {
+export function mapGoalToGoal(goal: GoalDTO): Goal {
   return {
     id: goal.id,
     title: goal.title,
