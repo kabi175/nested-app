@@ -1,8 +1,10 @@
 package com.nested.app.listeners;
 
+import com.nested.app.dto.MinifiedUserDTO;
 import com.nested.app.entity.User;
 import com.nested.app.events.KycCompletedEvent;
 import com.nested.app.services.EmailService;
+import com.nested.app.services.InvestorService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.event.EventListener;
@@ -19,6 +21,7 @@ import org.springframework.stereotype.Component;
 public class KycCompletedListener {
 
   private final EmailService emailService;
+  private final InvestorService investorService;
 
   /**
    * Handles KycCompletedEvent by sending a welcome email to the user. Processes asynchronously to
@@ -33,6 +36,11 @@ public class KycCompletedListener {
     log.info("Processing KycCompletedEvent for user ID: {}", user.getId());
 
     try {
+
+      var userDto = new MinifiedUserDTO();
+      userDto.setId(user.getId());
+      investorService.createInvestor(userDto);
+
       String email = user.getEmail();
       String name = user.getFullName();
 
