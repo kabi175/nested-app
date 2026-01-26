@@ -1,5 +1,6 @@
 package com.nested.app.services;
 
+import com.nested.app.jobs.LumpSumPaymentPollerJob;
 import com.nested.app.jobs.PreVerificationPollerJob;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -77,5 +78,44 @@ public class QuartzJobSchedulerService {
     scheduler.unscheduleJob(triggerKey);
 
     log.info("Unscheduled PreVerification polling job for user {}", userId);
+  }
+
+  /**
+   * Schedules a LumpSumPaymentPoller job for a specific payment reference. The job will run every
+   * 10 seconds for up to 10 minutes, publishing LumpSumPaymentCompletedEvent. The job terminates
+   * early if the payment's buyStatus is no longer SUBMITTED.
+   *
+   * @param paymentRef the payment reference to poll
+   * @throws SchedulerException if scheduling fails
+   */
+  public void scheduleLumpSumPaymentPollerJob(String paymentRef) throws SchedulerException {
+    String jobName = "LumpSumPaymentPollerJob-" + paymentRef;
+    String jobGroup = "lumpsum-payment-poller-group";
+
+    // Create job detail
+    JobDetail jobDetail =
+        JobBuilder.newJob(LumpSumPaymentPollerJob.class)
+            .withIdentity(jobName, jobGroup)
+            .usingJobData("paymentRef", paymentRef)
+            .usingJobData("startTime", System.currentTimeMillis())
+            .requestRecovery(true)
+            .build();
+
+    // Create trigger to run every 10 seconds
+    Trigger trigger =
+        TriggerBuilder.newTrigger()
+            .withIdentity(jobName + "-trigger", jobGroup)
+            .startNow()
+            .withSchedule(
+                SimpleScheduleBuilder.simpleSchedule()
+                    .withIntervalInSeconds(10)
+                    .withRepeatCount(60)
+                    .withMisfireHandlingInstructionFireNow())
+            .build();
+
+    // Schedule the job
+    scheduler.scheduleJob(jobDetail, trigger);
+
+    log.info("Scheduled LumpSumPaymentPoller job for payment ref: {}", paymentRef);
   }
 }

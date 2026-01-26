@@ -18,6 +18,7 @@ import com.nested.app.repository.PaymentRepository;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.quartz.SchedulerException;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -43,6 +44,7 @@ public class BuyOrderPaymentServiceImpl implements BuyOrderPaymentService {
   private final PaymentsAPIClient paymentsAPIClient;
   private final PaymentServiceImpl paymentServiceHelper;
   private final PaymentRedirectService PaymentRedirectService;
+  private final QuartzJobSchedulerService quartzJobSchedulerService;
 
   @Value("${app.url}")
   private String appUrl;
@@ -181,6 +183,16 @@ public class BuyOrderPaymentServiceImpl implements BuyOrderPaymentService {
               .toList();
 
       buyOrderApiClient.confirmOrder(buyOrderRefList).block();
+
+      // Schedule the LumpSumPaymentPoller job to publish events every 10 seconds for 10 minutes
+      try {
+        quartzJobSchedulerService.scheduleLumpSumPaymentPollerJob(payment.getRef());
+      } catch (SchedulerException e) {
+        log.warn(
+            "Failed to schedule LumpSumPaymentPollerJob for payment ref: {}. Payment flow will continue.",
+            payment.getRef(),
+            e);
+      }
 
       log.info("Successfully fetched buy order payment URL for payment ID: {}", paymentID);
 
