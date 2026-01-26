@@ -99,7 +99,7 @@ public interface TransactionRepository extends JpaRepository<Transaction, Long> 
         g.title AS goalTitle,
         g.targetAmount AS targetAmount,
         COALESCE(SUM(t.amount), 0) AS investedAmount,
-        COALESCE(SUM(t.units * f.nav), 0) AS currentValue,
+        COALESCE(SUM(CASE WHEN t.status = 'COMPLETED' THEN t.units * f.nav ELSE t.amount END), 0) AS currentValue,
         COALESCE(SUM(t.units), 0) AS totalUnits
       FROM Goal g
       LEFT JOIN Transaction t ON t.goal.id = g.id AND t.user.id = :userId AND t.status in ('COMPLETED', 'SUBMITTED')
