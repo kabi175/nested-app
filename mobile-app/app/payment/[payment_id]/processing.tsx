@@ -6,9 +6,10 @@ import {
   useFetchLumpsumPaymentUrl,
   useFetchMandatePaymentUrl
 } from "@/hooks/usePaymentMutations";
+import { Button } from "@ui-kitten/components";
 import * as Linking from "expo-linking";
 import { router, useLocalSearchParams } from "expo-router";
-import { useEffect, useRef } from "react";
+import { useEffect, useMemo, useRef } from "react";
 import {
   Alert,
   ScrollView,
@@ -26,22 +27,20 @@ export default function PaymentProcessingScreen() {
   const fetchMandateUrl = useFetchMandatePaymentUrl();
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
 
-  useEffect(() => {
-    console.log("payment?.sip_status", payment?.sip_status);
-    const isPaymentPending = payment?.buy_status === "pending" || payment?.sip_status === "pending";
-    if (!isLoadingPayment && !isPaymentPending) {
-      console.log("payment is not pending, redirecting to child");
-      // Clear interval if payment is no longer pending
-      if (intervalRef.current) {
-        clearInterval(intervalRef.current);
-        intervalRef.current = null;
-      }
-      setTimeout(() => {
-        router.replace("/child");
-      }, 10000);
-      return;
-    }
+  const isPaymentPending = useMemo(() => {
+    const pendingState = ["pending", "submitted"];
+    return pendingState.includes(payment?.buy_status ?? "pending") || pendingState.includes(payment?.sip_status ?? "pending");
+  }, [payment]);
 
+  const onPaymentComplete = () => {
+    if (intervalRef.current) {
+      clearInterval(intervalRef.current);
+      intervalRef.current = null;
+    }
+    router.replace("/child");
+  };
+
+  useEffect(() => {
     // Set up interval to refetch payment every 10 seconds when payment is pending
     if (isPaymentPending && !intervalRef.current) {
       intervalRef.current = setInterval(() => {
@@ -54,7 +53,7 @@ export default function PaymentProcessingScreen() {
       clearInterval(intervalRef.current);
       intervalRef.current = null;
     }
-  }, [payment, isLoadingPayment, refetch]);
+  }, [payment, isLoadingPayment, refetch, isPaymentPending]);
 
   // Cleanup interval on unmount
   useEffect(() => {
@@ -71,7 +70,9 @@ export default function PaymentProcessingScreen() {
 
       const redirectUrl = await fetchLumpsumUrl.mutateAsync(paymentId as string);
       if (redirectUrl) {
+        console.log("redirectUrl", redirectUrl);
         if (redirectUrl.startsWith("redirect:nested://")) {
+          console.log("redirecting to nested url", redirectUrl.replace("redirect:nested://", ""));
           router.push(redirectUrl.replace("redirect:nested://", ""));
         } else {
           await Linking.openURL(redirectUrl);
@@ -135,6 +136,20 @@ export default function PaymentProcessingScreen() {
               Please do not close this window or press back button
             </ThemedText>
           </View>
+
+          {/* Complete Payment Button - shown when payment is not pending */}
+          {!isPaymentPending && payment && (
+            <View style={styles.buttonContainer}>
+              <Button
+                onPress={onPaymentComplete}
+                size="large"
+                status="primary"
+                style={styles.completeButton}
+              >
+                Go to Goals
+              </Button>
+            </View>
+          )}
         </ScrollView>
       </View>
     </SafeAreaView>
@@ -190,5 +205,12 @@ const styles = StyleSheet.create({
     color: "#1E40AF",
     textAlign: "center",
     lineHeight: 20,
+  },
+  buttonContainer: {
+    marginTop: 24,
+    paddingHorizontal: 0,
+  },
+  completeButton: {
+    width: "100%",
   },
 });
