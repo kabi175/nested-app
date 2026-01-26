@@ -7,6 +7,7 @@ import { ThemedView } from "@/components/ThemedView";
 import { useBasket } from "@/hooks/useBasket";
 import { useCreateOrders } from "@/hooks/useCreateOrders";
 import { useGoalCreation } from "@/hooks/useGoalCreation";
+import { formatCurrency } from "@/utils/formatters";
 import { router, useLocalSearchParams } from "expo-router";
 import { useSetAtom } from "jotai";
 import {
@@ -326,6 +327,10 @@ export default function BasketInvestingScreen() {
       .map((fund, index) => transformBasketFundToRecommendedFund(fund, index));
   }, [basketQuery.data?.funds]);
 
+  const minInvestment = basketQuery.data?.min_investment || 0;
+  const minSip = basketQuery.data?.min_sip || 0;
+  const minStepUp = basketQuery.data?.funds?.length ? basketQuery.data.funds.length * 100 : 1000;
+
   const handleInvest = async () => {
     // Validate inputs
     const initialAmount = parseFloat(initialInvestment.replace(/,/g, "")) || 0;
@@ -334,8 +339,32 @@ export default function BasketInvestingScreen() {
 
     if (initialAmount === 0 && sipAmount === 0) {
       Alert.alert(
-        "Error",
-        "Please enter at least Initial Investment or Monthly SIP amount"
+        "Invalid Transaction",
+        "Please enter at least one of the amounts: One-Time Investment or Monthly SIP"
+      );
+      return;
+    }
+
+    if (initialAmount !== 0 && initialAmount < minInvestment) {
+      Alert.alert(
+        "Invalid One-Time Investment Amount",
+        `Minimum amount for one-time investment is ${formatCurrency(minInvestment)}`
+      );
+      return;
+    }
+
+    if (stepUpAmount !== 0 && stepUpAmount < minStepUp) {
+      Alert.alert(
+        "Invalid Yearly Step Up Amount",
+        `Minimum amount for yearly step up is ${formatCurrency(minStepUp)}`
+      );
+      return;
+    }
+
+    if (sipAmount !== 0 && sipAmount < minSip) {
+      Alert.alert(
+        "Invalid Monthly SIP Amount",
+        `Minimum amount for monthly SIP is ${formatCurrency(minSip)}`
       );
       return;
     }
@@ -496,7 +525,7 @@ export default function BasketInvestingScreen() {
 
           <View style={styles.inputContainer}>
             <ThemedText style={styles.inputLabel}>
-              Initial Investment
+              One-Time Investment (min {formatCurrency(minInvestment)})
             </ThemedText>
             <View style={styles.currencyInputContainer}>
               <ThemedText style={styles.currencySymbol}>₹</ThemedText>
@@ -513,27 +542,9 @@ export default function BasketInvestingScreen() {
             </View>
           </View>
 
-          <View style={styles.inputContainer}>
-            <ThemedText style={styles.inputLabel}>
-              Increase SIP Every Year (₹)
-            </ThemedText>
-            <View style={styles.currencyInputContainer}>
-              <ThemedText style={styles.currencySymbol}>₹</ThemedText>
-              <TextInput
-                style={styles.currencyInput}
-                value={yearlyStepUp}
-                onChangeText={(value) =>
-                  handleAmountChange(value, setYearlyStepUp)
-                }
-                keyboardType="numeric"
-                placeholder="Enter amount"
-                placeholderTextColor="#9CA3AF"
-              />
-            </View>
-          </View>
 
           <View style={styles.inputContainer}>
-            <ThemedText style={styles.inputLabel}>Monthly SIP</ThemedText>
+            <ThemedText style={styles.inputLabel}>Monthly SIP (min {formatCurrency(minSip)})</ThemedText>
             <View style={styles.currencyInputContainer}>
               <ThemedText style={styles.currencySymbol}>₹</ThemedText>
               <TextInput
@@ -547,6 +558,26 @@ export default function BasketInvestingScreen() {
                 placeholderTextColor="#9CA3AF"
               />
             </View>
+
+            <View style={styles.inputContainer}>
+              <ThemedText style={styles.inputLabel}>
+                Increase SIP Every Year (min {formatCurrency(minStepUp)})
+              </ThemedText>
+              <View style={styles.currencyInputContainer}>
+                <ThemedText style={styles.currencySymbol}>₹</ThemedText>
+                <TextInput
+                  style={styles.currencyInput}
+                  value={yearlyStepUp}
+                  onChangeText={(value) =>
+                    handleAmountChange(value, setYearlyStepUp)
+                  }
+                  keyboardType="numeric"
+                  placeholder="Enter amount"
+                  placeholderTextColor="#9CA3AF"
+                />
+              </View>
+            </View>
+
           </View>
         </ThemedView>
 
@@ -858,7 +889,7 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   inputContainer: {
-    marginBottom: 16,
+    marginTop: 16,
   },
   inputLabel: {
     fontSize: 14,

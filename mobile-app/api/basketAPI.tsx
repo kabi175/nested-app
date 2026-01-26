@@ -4,6 +4,8 @@ export type Basket = {
   id: string;
   title: string;
   funds: BasketFund[];
+  min_investment: number;
+  min_sip: number;
 };
 
 export type BasketFund = {
