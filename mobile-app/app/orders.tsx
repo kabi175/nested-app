@@ -3,7 +3,7 @@ import { formatCurrency } from "@/utils/formatters";
 import { Card, Datepicker, Text } from "@ui-kitten/components";
 import { router } from "expo-router";
 import { StatusBar } from "expo-status-bar";
-import { ArrowLeft, CalendarDays } from "lucide-react-native";
+import { ArrowLeft, CalendarDays, ChevronLeft, ChevronRight } from "lucide-react-native";
 import { useState } from "react";
 import {
   ActivityIndicator,
@@ -126,12 +126,39 @@ const formatDate = (date: Date): string => {
 export default function OrdersScreen() {
   const [fromDate, setFromDate] = useState<Date | undefined>(undefined);
   const [toDate, setToDate] = useState<Date | undefined>(undefined);
+  const [currentPage, setCurrentPage] = useState(0);
 
   const { data: transactions, isLoading } = useTransactions(
-    0,
+    currentPage,
     fromDate,
     toDate
   );
+
+  // Reset to page 0 when date filters change
+  const handleDateChange = (date: Date | undefined, isFromDate: boolean) => {
+    setCurrentPage(0);
+    if (isFromDate) {
+      setFromDate(date);
+    } else {
+      setToDate(date);
+    }
+  };
+
+  const handlePreviousPage = () => {
+    if (currentPage > 0) {
+      setCurrentPage((prev) => prev - 1);
+    }
+  };
+
+  const handleNextPage = () => {
+    // If current page has data, assume there might be a next page
+    if (transactions && transactions.length > 0) {
+      setCurrentPage((prev) => prev + 1);
+    }
+  };
+
+  const hasNextPage = transactions && transactions.length > 0;
+  const hasPreviousPage = currentPage > 0;
 
   return (
     <SafeAreaView style={styles.container} edges={["top"]}>
@@ -166,7 +193,7 @@ export default function OrdersScreen() {
               <Datepicker
                 placeholder="dd-mm-yy"
                 date={fromDate}
-                onSelect={setFromDate}
+                onSelect={(date) => handleDateChange(date, true)}
                 accessoryRight={() => (
                   <CalendarDays size={20} color="#6B7280" />
                 )}
@@ -181,7 +208,7 @@ export default function OrdersScreen() {
               <Datepicker
                 placeholder="dd-mm-yy"
                 date={toDate}
-                onSelect={setToDate}
+                onSelect={(date) => handleDateChange(date, false)}
                 accessoryRight={() => (
                   <CalendarDays size={20} color="#6B7280" />
                 )}
@@ -216,7 +243,7 @@ export default function OrdersScreen() {
                   style={[
                     styles.transactionItem,
                     index < transactions.length - 1 &&
-                      styles.transactionItemBorder,
+                    styles.transactionItemBorder,
                   ]}
                 >
                   <View style={styles.transactionHeader}>
@@ -282,6 +309,63 @@ export default function OrdersScreen() {
                   </View>
                 </View>
               ))}
+            </View>
+          )}
+
+          {/* Pagination Controls */}
+          {!isLoading && (transactions?.length > 0 || currentPage > 0) && (
+            <View style={styles.paginationContainer}>
+              <TouchableOpacity
+                style={[
+                  styles.paginationButton,
+                  !hasPreviousPage && styles.paginationButtonDisabled,
+                ]}
+                onPress={handlePreviousPage}
+                disabled={!hasPreviousPage}
+              >
+                <ChevronLeft
+                  size={20}
+                  color={hasPreviousPage ? "#2563EB" : "#9CA3AF"}
+                />
+                <Text
+                  category="s1"
+                  style={[
+                    styles.paginationButtonText,
+                    !hasPreviousPage && styles.paginationButtonTextDisabled,
+                  ]}
+                >
+                  Previous
+                </Text>
+              </TouchableOpacity>
+
+              <View style={styles.pageIndicator}>
+                <Text category="s1" style={styles.pageIndicatorText}>
+                  Page {currentPage + 1}
+                </Text>
+              </View>
+
+              <TouchableOpacity
+                style={[
+                  styles.paginationButton,
+                  !hasNextPage && styles.paginationButtonDisabled,
+                ]}
+                onPress={handleNextPage}
+                disabled={!hasNextPage}
+              >
+                <Text
+                  category="s1"
+                  style={[
+                    styles.paginationButtonText,
+                    !hasNextPage && styles.paginationButtonTextDisabled,
+                  ]}
+                >
+                  Next
+                </Text>
+                <ChevronRight
+                  size={20}
+                  color={hasNextPage ? "#2563EB" : "#9CA3AF"}
+                />
+              </TouchableOpacity>
             </View>
           )}
         </Card>
@@ -411,5 +495,46 @@ const styles = StyleSheet.create({
   badgeText: {
     fontSize: 11,
     fontWeight: "600",
+  },
+  paginationContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    marginTop: 24,
+    paddingTop: 20,
+    borderTopWidth: 1,
+    borderTopColor: "#E5E7EB",
+  },
+  paginationButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    borderRadius: 8,
+    backgroundColor: "#F3F4F6",
+    minWidth: 100,
+    justifyContent: "center",
+  },
+  paginationButtonDisabled: {
+    backgroundColor: "#F9FAFB",
+    opacity: 0.6,
+  },
+  paginationButtonText: {
+    fontSize: 14,
+    fontWeight: "600",
+    color: "#2563EB",
+  },
+  paginationButtonTextDisabled: {
+    color: "#9CA3AF",
+  },
+  pageIndicator: {
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+  },
+  pageIndicatorText: {
+    fontSize: 14,
+    fontWeight: "600",
+    color: "#374151",
   },
 });

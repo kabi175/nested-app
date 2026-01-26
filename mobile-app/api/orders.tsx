@@ -55,7 +55,6 @@ export const getTransactions = async (
     const { data } = await api.get("/transactions", {
       params,
     });
-    console.log(data);
     return data.data.map((transaction: Transaction) => ({
       ...transaction,
       executed_at: new Date(transaction.executed_at),
