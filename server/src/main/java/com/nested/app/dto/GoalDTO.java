@@ -63,6 +63,9 @@ public class GoalDTO {
     dto.setTargetAmount(goal.getTargetAmount());
     dto.setCurrentAmount(goal.getCurrentAmount());
     dto.setInvestedAmount(goal.getInvestedAmount());
+    if (goal.getCurrentAmount() == 0) {
+      dto.setCurrentAmount(goal.getInvestedAmount());
+    }
     dto.setMonthlySip(goal.getMonthlySip());
     dto.setTargetDate(goal.getTargetDate());
     dto.setStatus(goal.getStatus());
