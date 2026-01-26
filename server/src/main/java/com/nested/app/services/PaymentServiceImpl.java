@@ -17,6 +17,7 @@ import com.nested.app.entity.Order;
 import com.nested.app.entity.Payment;
 import com.nested.app.entity.SIPOrder;
 import com.nested.app.entity.User;
+import com.nested.app.events.GoalSyncEvent;
 import com.nested.app.events.OrderItemsRefUpdatedEvent;
 import com.nested.app.exception.ExternalServiceException;
 import com.nested.app.repository.BankDetailRepository;
@@ -167,6 +168,10 @@ public class PaymentServiceImpl implements PaymentService {
       PlaceOrderDTO placeOrderDTO = convertPaymentToPlaceOrderDTO(savedPayment);
 
       log.info("Successfully created payment with {} orders ", orders.size());
+
+      orders.stream().map(Order::getGoal).filter(Objects::nonNull).distinct().forEach(goal -> {
+          eventPublisher.publishEvent(new GoalSyncEvent(goal.getId(), user));
+      });
       return placeOrderDTO;
 
     } catch (IllegalArgumentException e) {
