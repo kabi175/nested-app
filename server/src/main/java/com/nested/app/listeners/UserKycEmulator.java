@@ -2,10 +2,12 @@ package com.nested.app.listeners;
 
 import com.nested.app.client.mf.KycAPIClient;
 import com.nested.app.entity.User;
+import com.nested.app.events.KycCompletedEvent;
 import com.nested.app.events.UserUpdateEvent;
 import com.nested.app.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.annotation.Profile;
 import org.springframework.context.event.EventListener;
 import org.springframework.scheduling.annotation.Async;
@@ -24,6 +26,7 @@ public class UserKycEmulator {
 
   private final UserRepository userRepository;
   private final KycAPIClient kycAPIClient;
+  private final ApplicationEventPublisher eventPublisher;
 
   @EventListener
   @Async
@@ -59,6 +62,8 @@ public class UserKycEmulator {
                   kycAPIClient.completeKycRequest(user.getInvestor().getKycRequestRef()).block();
                   log.info("KYC Emulator: Completing KYC for user {}", userId);
                   user.setKycStatus(User.KYCStatus.COMPLETED);
+                  eventPublisher.publishEvent(new KycCompletedEvent(this, user));
+
                 } catch (Exception e) {
                   log.error("KYC Emulator: Failing KYC for user {}", userId);
                   user.setKycStatus(User.KYCStatus.FAILED);
