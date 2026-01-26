@@ -5,6 +5,7 @@ import com.nested.app.client.mf.dto.OrderData;
 import com.nested.app.entity.Folio;
 import com.nested.app.entity.OrderItems;
 import com.nested.app.entity.Transaction;
+import com.nested.app.enums.TransactionStatus;
 import com.nested.app.enums.TransactionType;
 import com.nested.app.events.GoalSyncEvent;
 import com.nested.app.events.TransactionSuccessEvent;
@@ -219,12 +220,16 @@ public class BuyOrderFulfillmentJob implements Job {
       txn.setType(TransactionType.BUY);
       txn.setUnits(Objects.requireNonNullElse(item.getUnits(), 0d));
       txn.setUnitPrice(Objects.requireNonNullElse(item.getUnitPrice(), 0d));
-      txn.setAmount(Math.abs(txn.getUnits() * txn.getUnitPrice()));
       txn.setExternalRef(item.getRef());
       txn.setSourceOrderItemId(item.getId());
       // TODO: fix executedAt handling
       txn.setExecutedAt(Timestamp.from(Instant.now()));
       txn.setStatus(OrderStateMapper.toTransactionStatus(order.getState()));
+      if (!Objects.equals(TransactionStatus.COMPLETED, txn.getStatus())) {
+        txn.setAmount(item.getAmount());
+      } else {
+        txn.setAmount(Math.abs(txn.getUnits() * txn.getUnitPrice()));
+      }
       txn.setGoal(item.getOrder() != null ? item.getOrder().getGoal() : null);
       transactionRepository.save(txn);
       if (txn.getGoal() != null) {
@@ -232,13 +237,15 @@ public class BuyOrderFulfillmentJob implements Job {
       } else {
         log.warn("goal not populated for transaction {}", txn.getId());
       }
-      // Send transaction success email notification
-      publisher.publishEvent(
-          new TransactionSuccessEvent(
-              txn.getUser(),
-              txn.getFund() != null ? txn.getFund().getName() : null,
-              txn.getAmount(),
-              txn.getType()));
+      if (txn.getStatus() == TransactionStatus.COMPLETED) {
+        // Send transaction success email notification
+        publisher.publishEvent(
+            new TransactionSuccessEvent(
+                txn.getUser(),
+                txn.getFund() != null ? txn.getFund().getName() : null,
+                txn.getAmount(),
+                txn.getType()));
+      }
       created++;
     }
     if (created > 0) {

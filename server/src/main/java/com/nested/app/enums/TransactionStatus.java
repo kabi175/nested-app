@@ -7,8 +7,8 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public enum TransactionStatus {
   VERIFICATION_PENDING("verification_pending"),
-  SUBMITTED("submitted"),
   PENDING("in_progress"),
+  SUBMITTED("submitted"),
   COMPLETED("completed"),
   FAILED("failed"),
   REFUNDED("refunded");
