@@ -85,6 +85,7 @@ export type GoalDTO = {
     title: string;
     min_investment: number;
     min_sip: number;
+    min_step_up: number;
   };
   target_date?: string;
   createdAt?: string;

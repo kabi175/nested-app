@@ -45,6 +45,14 @@ export default function CustomizeInvestmentScreen() {
     .map((goal) => goal.basket.min_investment)
     .reduce((a, b) => a + b, 0);
 
+  const minSip = goalsForCustomize
+    .map((goal) => goal.basket.min_sip)
+    .reduce((a, b) => a + b, 0);
+
+  const minStepUp = goalsForCustomize
+    .map((goal) => goal.basket.min_step_up)
+    .reduce((a, b) => a + b, 0);
+
   const targetDate = goalsForCustomize
     .map((goal) => goal.targetDate)
     .sort((a, b) => a.getTime() - b.getTime())[0];
@@ -67,7 +75,7 @@ export default function CustomizeInvestmentScreen() {
     goalsForCustomize.length > 0 ? 100 * goalsForCustomize.length : 100;
 
   // Normalize SIP amount to be a multiple of the step
-  const normalizedSipAmount = Math.max(minInvestment, Math.round(sipAmount / sipStep) * sipStep);
+  const normalizedSipAmount = Math.max(minSip, Math.round(sipAmount / sipStep) * sipStep);
 
   // Handler for SIP amount changes that enforces step increments
   const handleSipAmountChange = (value: number) => {
@@ -149,6 +157,17 @@ export default function CustomizeInvestmentScreen() {
       Alert.alert("Lump Sum Amount", `Please add at least ${formatCurrency(minInvestment)} for lump sum`);
       return;
     }
+
+    if (normalizedSipAmount < minSip) {
+      Alert.alert("SIP Amount", `Please add at least ${formatCurrency(minSip)} for SIP`);
+      return;
+    }
+
+    if (stepUpAmount < minStepUp) {
+      Alert.alert("Step-Up Amount", `Please add at least ${formatCurrency(minStepUp)} for step-up`);
+      return;
+    }
+
     // Prepare orders array for all goals
     const orders: CreateOrderRequest[] = [];
 
@@ -283,7 +302,7 @@ export default function CustomizeInvestmentScreen() {
             </View>
 
             <Slider
-              min={minInvestment}
+              min={minSip}
               max={MAX_SIP_AMOUNT}
               value={normalizedSipAmount}
               onValueChange={handleSipAmountChange}
@@ -334,7 +353,7 @@ export default function CustomizeInvestmentScreen() {
           {/* Add Step-Up Plan Card */}
           <ToggleCard
             title="Add Step-Up Plan"
-            subtitle="Increase SIP annually"
+            subtitle={`Increase SIP annually (minimum of ${formatCurrency(minStepUp)})`}
             initialValue={stepUpAmount}
             onValueChange={handleStepUpAmountChange}
             inputLabel="Annual Step-Up Amount"
