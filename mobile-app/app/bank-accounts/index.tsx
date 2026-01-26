@@ -6,8 +6,10 @@ import UPIButton from "@/components/buttons/UPIButton";
 import { useAuthAxios } from "@/hooks/useAuthAxios";
 import { useUser } from "@/hooks/useUser";
 import { formatCurrency } from "@/utils/formatters";
+import { useQuery } from "@tanstack/react-query";
 import { Button, Layout, Text } from "@ui-kitten/components";
 import { LinearGradient } from "expo-linear-gradient";
+import * as Linking from "expo-linking";
 import { Link, Redirect, router } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import { ArrowRight, CreditCard, Lock, Sparkles } from "lucide-react-native";
@@ -15,7 +17,6 @@ import { useEffect, useRef, useState } from "react";
 import {
   ActivityIndicator,
   Alert,
-  Linking,
   ScrollView,
   StyleSheet,
   TouchableOpacity,
@@ -24,11 +25,7 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 
 const POLL_INTERVAL_MS = 2000;
-const MAX_POLL_ATTEMPTS = 60; // ~2 minutes
-
-function sleep(ms: number) {
-  return new Promise<void>((resolve) => setTimeout(resolve, ms));
-}
+const MAX_POLL_ATTEMPTS = 180; // ~6 minutes
 
 export default function BankAccountsScreen() {
   const { data: user, isLoading: isUserLoading } = useUser();
@@ -39,7 +36,7 @@ export default function BankAccountsScreen() {
     userID: string;
     actionID: string;
   } | null>(null);
-  const abortPollRef = useRef(false);
+  const attemptCountRef = useRef(0);
 
   const routeByStatus = (
     status: "pending" | "completed" | "failed" | "cancelled"
@@ -49,51 +46,81 @@ export default function BankAccountsScreen() {
     else if (status === "cancelled") router.push("/bank-accounts/cancelled");
   };
 
-  useEffect(() => {
-    if (!isPendingStatus || !pendingAction) return;
-
-    abortPollRef.current = false;
-    const { userID, actionID } = pendingAction;
-
-    const poll = async () => {
-      for (let attempt = 0; attempt < MAX_POLL_ATTEMPTS; attempt++) {
-        if (abortPollRef.current) return;
-        try {
-          const status = await getLinkBankAccountStatus(api, userID, actionID);
-          if (status === "pending") {
-            await sleep(POLL_INTERVAL_MS);
-            continue;
-          }
-          setIsPendingStatus(false);
-          setPendingAction(null);
-          routeByStatus(status);
-          return;
-        } catch {
-          // transient failures -> keep polling
-          await sleep(POLL_INTERVAL_MS);
-        }
+  // React Query polling for bank account status
+  const { data: status } = useQuery({
+    queryKey: [
+      "bankAccountLinkStatus",
+      pendingAction?.userID,
+      pendingAction?.actionID,
+    ],
+    queryFn: async () => {
+      if (!pendingAction) {
+        throw new Error("No pending action");
       }
+      const status = await getLinkBankAccountStatus(
+        api,
+        pendingAction.userID,
+        pendingAction.actionID
+      );
+      console.log("status", status);
+      // Increment attempt count on each successful query
+      attemptCountRef.current += 1;
+      return status;
+    },
+    enabled: isPendingStatus && !!pendingAction,
+    refetchInterval: (query) => {
+      // Stop polling if status is not pending or max attempts reached
+      const currentStatus = query.state.data;
+      if (currentStatus && currentStatus !== "pending") {
+        return false;
+      }
+      if (attemptCountRef.current >= MAX_POLL_ATTEMPTS) {
+        return false;
+      }
+      return POLL_INTERVAL_MS;
+    },
+    refetchIntervalInBackground: false,
+    retry: true, // Retry on transient failures
+  });
 
-      if (abortPollRef.current) return;
+  // Reset attempt count when polling starts
+  useEffect(() => {
+    if (isPendingStatus && pendingAction) {
+      attemptCountRef.current = 0;
+    }
+  }, [isPendingStatus, pendingAction]);
+
+  // Handle status changes and routing
+  useEffect(() => {
+    if (!isPendingStatus || !pendingAction || !status) return;
+
+    // If status is no longer pending, stop polling and route
+    if (status !== "pending") {
       setIsPendingStatus(false);
       setPendingAction(null);
+      attemptCountRef.current = 0;
+      routeByStatus(status);
+      return;
+    }
+
+    // If max attempts reached, stop polling and show alert
+    if (attemptCountRef.current >= MAX_POLL_ATTEMPTS) {
+      setIsPendingStatus(false);
+      setPendingAction(null);
+      attemptCountRef.current = 0;
       Alert.alert(
         "Still processing",
         "Bank verification is taking longer than usual. Please wait a moment and try again."
       );
-    };
-
-    poll();
-    return () => {
-      abortPollRef.current = true;
-    };
-  }, [api, isPendingStatus, pendingAction]);
+    }
+  }, [status, isPendingStatus, pendingAction]);
 
   const handleContinue = async () => {
     if (!user?.id) return;
     const { redirect_url, id } = await linkBankAccount(api, user?.id);
     try {
       await Linking.openURL(redirect_url);
+      console.log("redirect_url", redirect_url);
     } catch (error: unknown) {
       console.log("error during opening bank link url", error);
       Alert.alert(

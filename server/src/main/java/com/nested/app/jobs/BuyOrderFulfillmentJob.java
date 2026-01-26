@@ -57,6 +57,7 @@ public class BuyOrderFulfillmentJob implements Job {
   public void execute(JobExecutionContext context) throws JobExecutionException {
     JobDataMap data = context.getMergedJobDataMap();
     String orderId = data.getString("orderId");
+    log.info("BuyOrderFulfillmentJob start order_id{}", orderId);
 
     var order = buyOrderAPIClient.fetchOrderDetails(orderId).block();
     if (order == null) {
@@ -205,10 +206,8 @@ public class BuyOrderFulfillmentJob implements Job {
 
     int created = 0;
     for (var item : orderItems) {
-      if (item.getUnits() == null || item.getUnitPrice() == null) {
-        continue; // incomplete item
-      }
       if (transactionRepository.existsBySourceOrderItemId(item.getId())) {
+        log.info("Transaction already exists for orderItemId {}", item.getId());
         continue; // idempotent skip
       }
       var txn =

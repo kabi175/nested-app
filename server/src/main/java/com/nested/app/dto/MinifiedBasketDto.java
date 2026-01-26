@@ -19,8 +19,14 @@ public class MinifiedBasketDto {
   @JsonProperty("min_investment")
   private Double minInvestment;
 
+  @JsonProperty("min_sip")
+  private Double minSIP;
+
   public static MinifiedBasketDto fromEntity(Basket basket) {
     return new MinifiedBasketDto(
-        basket.getId(), basket.getTitle(), basket.getMinInvesmtnetAmount());
+        basket.getId(),
+        basket.getTitle(),
+        basket.getMinInvestmentAmount(),
+        basket.getMinSIPAmount());
   }
 }

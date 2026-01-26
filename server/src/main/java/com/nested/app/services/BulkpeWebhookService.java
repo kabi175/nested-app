@@ -159,74 +159,9 @@ public class BulkpeWebhookService {
         data.getRemitterAccountNumber());
   }
 
-  /** Update bank detail entity with data from webhook */
-  private void updateBankDetailFromWebhook(
-      BankDetail bankDetail, BulkpeWebhookRequest.WebhookData data) {
-    // Update account number and IFSC if they match (should be the same)
-    if (data.getRemitterAccountNumber() != null) {
-      bankDetail.setAccountNumber(data.getRemitterAccountNumber());
-    }
-
-    if (data.getRemitterIfsc() != null) {
-      bankDetail.setIfscCode(data.getRemitterIfsc());
-    }
-
-    // Extract bank name from IFSC (first 4 characters) or use remitter name
-    String bankName = extractBankName(data.getRemitterIfsc(), data.getRemitterName());
-    bankDetail.setBankName(bankName);
-
-    // Update refId if reference_id is provided
-    if (data.getReferenceId() != null) {
-      bankDetail.setRefId(data.getReferenceId());
-    }
-
-    log.debug("Updated bank detail {} with webhook data", bankDetail.getId());
-  }
-
   /**
-   * Extract bank name from IFSC code or use remitter name IFSC code format: XXXX0YYYYY where first
-   * 4 chars are bank code
-   */
-  private String extractBankName(String ifscCode, String remitterName) {
-    if (ifscCode != null && ifscCode.length() >= 4) {
-      // Map common IFSC bank codes to bank names
-      String bankCode = ifscCode.substring(0, 4);
-      String bankName = getBankNameFromCode(bankCode);
-      if (bankName != null) {
-        return bankName;
-      }
-    }
-
-    // Fallback to remitter name or generic name
-    if (remitterName != null && !remitterName.isEmpty()) {
-      return remitterName;
-    }
-
-    return "Bank"; // Default fallback
-  }
-
-  /** Map IFSC bank code to bank name */
-  private String getBankNameFromCode(String bankCode) {
-    // Common bank codes mapping
-    return switch (bankCode) {
-      case "HDFC" -> "HDFC Bank";
-      case "SBIN" -> "State Bank of India";
-      case "ICIC" -> "ICICI Bank";
-      case "AXIS", "UTIB" -> "Axis Bank";
-      case "KOTB" -> "Kotak Mahindra Bank";
-      case "YESB" -> "Yes Bank";
-      case "INDB" -> "IndusInd Bank";
-      case "PUNB" -> "Punjab National Bank";
-      case "BARC" -> "Baroda Bank";
-      case "CNRB" -> "Canara Bank";
-      case "UBIN" -> "Union Bank of India";
-      default -> bankCode;
-    };
-  }
-
-  /**
-   * Calculates a normalized similarity between two names using Levenshtein distance.
-   * Returns a value between 0.0 and 1.0.
+   * Calculates a normalized similarity between two names using Levenshtein distance. Returns a
+   * value between 0.0 and 1.0.
    */
   private double calculateNameSimilarity(String userName, String remitterName) {
     if (userName == null || remitterName == null) return 0.0;
@@ -236,9 +171,19 @@ public class BulkpeWebhookService {
 
     if (userName.isEmpty() || remitterName.isEmpty()) return 0.0;
 
-    int distance = LevenshteinDistance.getDefaultInstance().apply(userName, remitterName);
-    int maxLength = Math.max(userName.length(), remitterName.length());
+    // Sort words to make comparison word-order independent
+    String normalizedUserName = normalizeNameForComparison(userName);
+    String normalizedRemitterName = normalizeNameForComparison(remitterName);
+
+    int distance =
+        LevenshteinDistance.getDefaultInstance().apply(normalizedUserName, normalizedRemitterName);
+    int maxLength = Math.max(normalizedUserName.length(), normalizedRemitterName.length());
     return 1.0 - ((double) distance / maxLength);
   }
 
+  private String normalizeNameForComparison(String name) {
+    String[] words = name.split("\\s+");
+    java.util.Arrays.sort(words);
+    return String.join(" ", words);
+  }
 }
