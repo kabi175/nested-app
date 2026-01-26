@@ -47,7 +47,7 @@ public class QuartzJobSchedulerService {
             .requestRecovery(true)
             .build();
 
-    // Create trigger to run every 5 minutes
+    // Create trigger to run every 10s for 10min
     Trigger trigger =
         TriggerBuilder.newTrigger()
             .withIdentity(jobName + "-trigger", jobGroup)
@@ -55,8 +55,8 @@ public class QuartzJobSchedulerService {
             // 3 seconds delay
             .withSchedule(
                 SimpleScheduleBuilder.simpleSchedule()
-                    .withIntervalInMinutes(1)
-                    .repeatForever()
+                    .withIntervalInSeconds(10)
+                    .withRepeatCount(60)
                     .withMisfireHandlingInstructionFireNow())
             .build();
 

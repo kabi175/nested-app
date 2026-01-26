@@ -3,7 +3,6 @@ package com.nested.app.jobs;
 import com.nested.app.services.PreVerificationService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.quartz.DisallowConcurrentExecution;
 import org.quartz.Job;
 import org.quartz.JobExecutionContext;
 import org.quartz.JobExecutionException;
@@ -15,7 +14,6 @@ import org.springframework.stereotype.Component;
  */
 @Slf4j
 @Component
-@DisallowConcurrentExecution
 @RequiredArgsConstructor
 public class PreVerificationPollerJob implements Job {
   private final PreVerificationService preVerificationService;
