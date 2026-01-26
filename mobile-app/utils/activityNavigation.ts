@@ -4,9 +4,9 @@ import { getPendingOrdersByGoalId } from "@/api/paymentAPI";
 import { GoalForCustomize } from "@/atoms/goals";
 import { QUERY_KEYS } from "@/constants/queryKeys";
 import { Order } from "@/types";
+import { QueryClient } from "@tanstack/react-query";
 import type { AxiosInstance } from "axios";
 import { router } from "expo-router";
-import { QueryClient } from "@tanstack/react-query";
 
 export async function handleActivityNavigation(
     activity: Activity,
