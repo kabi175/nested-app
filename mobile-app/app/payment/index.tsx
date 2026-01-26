@@ -6,7 +6,7 @@ import { BankAccount } from "@/types/bank";
 import { formatCurrency } from "@/utils/formatters";
 import { Ionicons } from "@expo/vector-icons";
 import { Button } from "@ui-kitten/components";
-import { router } from "expo-router";
+import { Redirect, router } from "expo-router";
 import { useAtomValue } from "jotai";
 import { useEffect, useMemo, useState } from "react";
 import {
@@ -20,6 +20,32 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 
 type PaymentMethod = "upi" | "netbanking";
+
+// Get bank name from IFSC code
+const getBankNameFromIFSC = (ifsc: string): string => {
+  const bankCode = ifsc.substring(0, 4).toUpperCase();
+  const bankMap: { [key: string]: string } = {
+    AXIS: "Axis Bank",
+    HDFC: "HDFC Bank",
+    ICIC: "ICICI Bank",
+    SBIN: "State Bank of India",
+    KOTAK: "Kotak Mahindra Bank",
+  };
+  return bankMap[bankCode] || `${bankCode} Bank`;
+};
+
+// Get bank icon color based on bank name
+const getBankIconColor = (bankName: string): string => {
+  const colorMap: { [key: string]: string } = {
+    "HDFC Bank": "#004C8C",
+    "State Bank of India": "#004C8C",
+    "ICICI Bank": "#FF6600",
+    "Axis Bank": "#8E2DE2",
+    "Kotak Mahindra Bank": "#E31837",
+  };
+  return colorMap[bankName] || "#2563EB";
+};
+
 
 export default function PaymentMethodScreen() {
   const cart = useAtomValue(cartAtom);
@@ -39,6 +65,32 @@ export default function PaymentMethodScreen() {
 
   const cardBackground = "#FFFFFF";
 
+  // Auto-select bank account when bank accounts finish loading and a payment method is selected
+  useEffect(() => {
+    if (
+      !isLoadingBanks &&
+      selectedMethod &&
+      !selectedBank &&
+      bankAccounts.length > 0
+    ) {
+      // Prefer primary bank account, otherwise select the first one
+      const primaryBank = bankAccounts.find((bank) => bank.isPrimary);
+      setSelectedBank(primaryBank || bankAccounts[0]);
+    }
+  }, [isLoadingBanks, selectedMethod, selectedBank, bankAccounts]);
+
+  // Auto-select bank when method is pre-selected (UPI)
+  useEffect(() => {
+    if (selectedMethod === "upi" && !selectedBank && bankAccounts.length > 0) {
+      const primaryBank = bankAccounts.find((bank) => bank.isPrimary);
+      setSelectedBank(primaryBank || bankAccounts[0]);
+    }
+  }, [selectedMethod, selectedBank, bankAccounts]);
+
+  if (cart == null || cart.length === 0) {
+    return <Redirect href="/child" />;
+  }
+
   // Check if banks are available when any payment method is selected
   // Keep selected bank across payment method changes since both need it
 
@@ -49,31 +101,6 @@ export default function PaymentMethodScreen() {
   const sipOrdersAmount = cart
     .filter((item) => item.type === "sip")
     .reduce((acc, item) => acc + item.amount, 0);
-
-  // Get bank name from IFSC code
-  const getBankNameFromIFSC = (ifsc: string): string => {
-    const bankCode = ifsc.substring(0, 4).toUpperCase();
-    const bankMap: { [key: string]: string } = {
-      AXIS: "Axis Bank",
-      HDFC: "HDFC Bank",
-      ICIC: "ICICI Bank",
-      SBIN: "State Bank of India",
-      KOTAK: "Kotak Mahindra Bank",
-    };
-    return bankMap[bankCode] || `${bankCode} Bank`;
-  };
-
-  // Get bank icon color based on bank name
-  const getBankIconColor = (bankName: string): string => {
-    const colorMap: { [key: string]: string } = {
-      "HDFC Bank": "#004C8C",
-      "State Bank of India": "#004C8C",
-      "ICICI Bank": "#FF6600",
-      "Axis Bank": "#8E2DE2",
-      "Kotak Mahindra Bank": "#E31837",
-    };
-    return colorMap[bankName] || "#2563EB";
-  };
 
   const handlePaymentMethodSelect = (method: PaymentMethod) => {
     // Check if banks are available before selecting any payment method
@@ -105,27 +132,6 @@ export default function PaymentMethodScreen() {
     }
   };
 
-  // Auto-select bank account when bank accounts finish loading and a payment method is selected
-  useEffect(() => {
-    if (
-      !isLoadingBanks &&
-      selectedMethod &&
-      !selectedBank &&
-      bankAccounts.length > 0
-    ) {
-      // Prefer primary bank account, otherwise select the first one
-      const primaryBank = bankAccounts.find((bank) => bank.isPrimary);
-      setSelectedBank(primaryBank || bankAccounts[0]);
-    }
-  }, [isLoadingBanks, selectedMethod, selectedBank, bankAccounts]);
-
-  // Auto-select bank when method is pre-selected (UPI)
-  useEffect(() => {
-    if (selectedMethod === "upi" && !selectedBank && bankAccounts.length > 0) {
-      const primaryBank = bankAccounts.find((bank) => bank.isPrimary);
-      setSelectedBank(primaryBank || bankAccounts[0]);
-    }
-  }, [selectedMethod, selectedBank, bankAccounts]);
 
   const handleConfirmOrder = async () => {
     if (!selectedMethod) {
@@ -159,13 +165,7 @@ export default function PaymentMethodScreen() {
 
       // Redirect to verification screen
       router.replace({
-        pathname: "/payment/verify",
-        params: {
-          paymentId: payment.id,
-          paymentMethod: selectedMethod === "upi" ? "UPI" : "Net Banking",
-          bankName: getBankNameFromIFSC(selectedBank.ifscCode),
-          buyOrdersAmount: buyOrdersAmount.toString(),
-        },
+        pathname: `/payment/${payment.id}/verify`,
       });
     } catch (error: any) {
       console.error("Failed to create payment", error);

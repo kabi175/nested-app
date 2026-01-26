@@ -25,8 +25,8 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function PaymentProcessingScreen() {
-  const { paymentId } = useLocalSearchParams<{
-    paymentId: string;
+  const { payment_id: paymentId } = useLocalSearchParams<{
+    payment_id: string;
   }>();
   const { data: payment, refetch } = usePayment(paymentId);
   const fetchLumpsumUrl = useFetchLumpsumPaymentUrl();

@@ -39,14 +39,14 @@ export default function Layout() {
         }}
       />
       <Stack.Screen
-        name="verify"
+        name="[payment_id]/verify"
         options={{
           headerShown: false,
           title: "Verify Payment",
         }}
       />
       <Stack.Screen
-        name="processing"
+        name="[payment_id]/processing"
         options={{
           headerShown: false,
         }}

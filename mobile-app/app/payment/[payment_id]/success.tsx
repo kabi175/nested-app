@@ -44,7 +44,7 @@ export default function PaymentSuccessScreen() {
   const handleContinue = () => {
     if (type === "buy" && payment?.sip_status === "pending") {
       router.replace({
-        pathname: "/payment/processing",
+        pathname: `/payment/${payment_id}/processing`,
         params: {
           paymentId: payment_id,
         },
@@ -54,7 +54,7 @@ export default function PaymentSuccessScreen() {
 
     if (type === "sip" && payment?.buy_status === "pending") {
       router.replace({
-        pathname: "/payment/processing",
+        pathname: `/payment/${payment_id}/processing`,
         params: {
           paymentId: payment_id,
         },

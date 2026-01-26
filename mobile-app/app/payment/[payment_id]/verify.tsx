@@ -1,8 +1,8 @@
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
-import { router, useLocalSearchParams } from "expo-router";
+import { Redirect, router, useLocalSearchParams } from "expo-router";
 import { useEffect, useState } from "react";
-import { Alert, Animated, ScrollView, StyleSheet, View } from "react-native";
+import { ActivityIndicator, Alert, Animated, ScrollView, StyleSheet, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import { OtpInput } from "@/components/ui/OtpInput";
@@ -19,9 +19,8 @@ import {
 import { Button, Spinner, Text } from "@ui-kitten/components";
 
 export default function PaymentVerificationScreen() {
-  const { paymentId, bankName = "Bank" } = useLocalSearchParams<{
-    paymentId: string;
-    bankName?: string;
+  const { payment_id } = useLocalSearchParams<{
+    payment_id: string;
   }>();
   const api = useAuthAxios();
   const verifyPaymentMutation = useVerifyPayment();
@@ -31,11 +30,10 @@ export default function PaymentVerificationScreen() {
   const [isLoading, setIsLoading] = useState(false);
   const [isVerifying, setIsVerifying] = useState(false);
   const [isProcessingPayment, setIsProcessingPayment] = useState(false);
-  const { data: payment } = usePayment(paymentId);
+  const { data: payment, isLoading: isLoadingPayment } = usePayment(payment_id);
   const [fadeAnim] = useState(new Animated.Value(0));
   const [scaleAnim] = useState(new Animated.Value(0.9));
 
-  const paymentMethod = payment?.payment_method;
 
   // Auto-send OTP when component mounts
   useEffect(() => {
@@ -148,7 +146,7 @@ export default function PaymentVerificationScreen() {
   };
 
   const handleVerifyAndContinue = async () => {
-    if (!mfaSessionId || !paymentId) {
+    if (!mfaSessionId || !payment_id) {
       Alert.alert("Error", "Missing verification data. Please try again.");
       return;
     }
@@ -166,15 +164,10 @@ export default function PaymentVerificationScreen() {
       console.log("MFA verification successful");
       // After MFA verification, verify payment
       setIsProcessingPayment(true);
-      await verifyPaymentMutation.mutateAsync(paymentId);
+      await verifyPaymentMutation.mutateAsync(payment_id);
 
       router.replace({
-        pathname: "/payment/processing",
-        params: {
-          paymentId,
-          paymentMethod,
-          bankName,
-        },
+        pathname: `/payment/${payment_id}/processing`,
       });
     } catch (error: any) {
       console.error("Verification error", error);
@@ -197,6 +190,14 @@ export default function PaymentVerificationScreen() {
     }
     return () => clearInterval(interval);
   }, [resendTimer]);
+
+  if (isLoadingPayment) {
+    return <ActivityIndicator size="large" color="#2563EB" />;
+  }
+
+  if (payment == null || payment.verification_status !== "pending") {
+    return <Redirect href="/child" />;
+  }
 
   return (
     <SafeAreaView style={styles.safeArea} edges={[]}>
