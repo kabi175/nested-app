@@ -90,5 +90,5 @@ export const getLinkBankAccountStatus = async (
   const { data } = await api.get(
     `users/${userID}/actions/reverse-penny-drop/status/${actionID}`
   );
-  return data;
+  return data.status;
 };
