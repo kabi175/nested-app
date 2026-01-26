@@ -1,11 +1,8 @@
-import { getPendingOrdersByGoalId } from "@/api/paymentAPI";
 import { cartAtom } from "@/atoms/cart";
 import { goalsForCustomizeAtom } from "@/atoms/goals";
-import { QUERY_KEYS } from "@/constants/queryKeys";
 import { useAuthAxios } from "@/hooks/useAuthAxios";
 import { useAddBankAccount } from "@/hooks/useBankAccount";
 import { usePendingActivities } from "@/hooks/usePendingActivities";
-import { Goal } from "@/types";
 import { useQueryClient } from "@tanstack/react-query";
 import {
   Button,
@@ -59,37 +56,7 @@ export default function AddManualScreen() {
       },
       {
         onSuccess: () => {
-          Alert.alert("Success", "Bank account added successfully", [
-            {
-              text: "OK",
-              onPress: async () => {
-                const firstActivity = pendingActivities?.find(activity => activity.type === "goal_payment_pending");
-                if (!firstActivity) {
-                  router.back();
-                  return;
-                }
-
-                const goal = firstActivity.metadata as Goal;
-                const orders = await queryClient.fetchQuery({
-                  queryKey: [QUERY_KEYS.pendingOrders, goal.id],
-                  queryFn: () => getPendingOrdersByGoalId(api, goal.id),
-                });
-                if (orders && orders.length > 0) {
-                  setCart(orders);
-                  router.push("/payment");
-                } else {
-                  setGoalsForCustomize([goal]);
-                  router.push({
-                    pathname: `/child/${goal.childId}/goal/customize`,
-                    params: {
-                      goal_id: goal.id,
-                    },
-                  });
-                }
-
-              },
-            },
-          ]);
+          router.replace("/bank-accounts/success");
         },
         onError: (error: any) => {
           Alert.alert(

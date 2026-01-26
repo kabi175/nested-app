@@ -1,14 +1,41 @@
+import { Activity } from "@/api/activitiesAPI";
+import { cartAtom } from "@/atoms/cart";
+import { goalsForCustomizeAtom } from "@/atoms/goals";
+import { FirstPendingActivityCard } from "@/components/FirstPendingActivityCard";
+import { useAuthAxios } from "@/hooks/useAuthAxios";
+import { usePendingActivities } from "@/hooks/usePendingActivities";
+import { handleActivityNavigation } from "@/utils/activityNavigation";
+import { useQueryClient } from "@tanstack/react-query";
 import { Button, Layout, Text } from "@ui-kitten/components";
 import { LinearGradient } from "expo-linear-gradient";
 import { router } from "expo-router";
 import { StatusBar } from "expo-status-bar";
+import { useSetAtom } from "jotai";
 import { CheckCircle } from "lucide-react-native";
 import { StyleSheet, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function BankAccountSuccessScreen() {
-  const handleContinue = () => {
-    router.replace("/bank-accounts/list");
+  const { data: activities } = usePendingActivities();
+  const api = useAuthAxios();
+  const queryClient = useQueryClient();
+  const setCart = useSetAtom(cartAtom);
+  const setGoalsForCustomize = useSetAtom(goalsForCustomizeAtom);
+
+  const firstActivity: Activity | undefined = activities?.[0];
+
+  const handleContinue = async () => {
+    if (firstActivity) {
+      await handleActivityNavigation(
+        firstActivity,
+        api,
+        queryClient,
+        setCart,
+        setGoalsForCustomize
+      );
+    } else {
+      router.replace("/bank-accounts/list");
+    }
   };
 
   return (
@@ -39,6 +66,9 @@ export default function BankAccountSuccessScreen() {
             </Text>
           </View>
 
+          {/* Pending Activity Card */}
+          <FirstPendingActivityCard showProceedButton={false} />
+
           {/* Action Button */}
           <View style={styles.buttonContainer}>
             <Button
@@ -46,7 +76,7 @@ export default function BankAccountSuccessScreen() {
               size="large"
               onPress={handleContinue}
             >
-              View Bank Accounts
+              {firstActivity ? "Continue" : "View Bank Accounts"}
             </Button>
           </View>
         </View>
@@ -90,7 +120,7 @@ const styles = StyleSheet.create({
   },
   textContainer: {
     alignItems: "center",
-    marginBottom: 48,
+    marginBottom: 32,
     paddingHorizontal: 16,
   },
   title: {
