@@ -119,7 +119,7 @@ public class MandateProcessEventListener {
         payment.setSipStatus(Payment.PaymentStatus.FAILED);
         log.warn("Mandate Rejected for mandate ID: {}, payment ID: {}", mandateId, payment.getId());
       }
-      paymentRepository.save(payment);
+      paymentRepository.saveAndFlush(payment);
     } catch (Exception e) {
       log.error(
           "Error verifying mandate status for mandate ID: {}, payment ID: {}",
@@ -139,7 +139,7 @@ public class MandateProcessEventListener {
   private boolean isMandateEventAlreadyProcessed(Payment payment) {
     Payment.PaymentStatus currentSipStatus = payment.getSipStatus();
 
-    // If sipStatus is already SUBMITTED or COMPLETED, consider it processed
-    return currentSipStatus != Payment.PaymentStatus.PENDING;
+    // If sipStatus is already COMPLETED, consider it processed
+    return currentSipStatus != Payment.PaymentStatus.SUBMITTED;
   }
 }
