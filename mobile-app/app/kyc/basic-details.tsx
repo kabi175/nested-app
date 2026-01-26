@@ -144,7 +144,7 @@ export default function BasicDetailsScreen() {
               marginBottom: 6,
             }}
           >
-            <Text category="label">Full Name</Text>
+            <Text category="label">Full Name (As per PAN)</Text>
             <InfoTooltip content="Your name helps us verify your identity as per your PAN." />
           </View>
           <Input
@@ -164,7 +164,7 @@ export default function BasicDetailsScreen() {
               marginBottom: 6,
             }}
           >
-            <Text category="label">Date of Birth</Text>
+            <Text category="label">Date of Birth (As per PAN)</Text>
             <InfoTooltip content="Used to confirm age eligibility and identity verification." />
           </View>
           <Datepicker
