@@ -77,7 +77,7 @@ public interface TransactionRepository extends JpaRepository<Transaction, Long> 
       JOIN t.fund f
       WHERE t.user.id = :userId
         AND t.goal.id = :goalId
-        AND t.status = 'COMPLETED'
+        AND t.status in ('COMPLETED', 'SUBMITTED')
       GROUP BY f.id, f.label, f.nav
       """)
   List<GoalHoldingProjection> findGoalHoldingsAggregated(
@@ -102,7 +102,7 @@ public interface TransactionRepository extends JpaRepository<Transaction, Long> 
         COALESCE(SUM(t.units * f.nav), 0) AS currentValue,
         COALESCE(SUM(t.units), 0) AS totalUnits
       FROM Goal g
-      LEFT JOIN Transaction t ON t.goal.id = g.id AND t.user.id = :userId AND t.status = 'COMPLETED'
+      LEFT JOIN Transaction t ON t.goal.id = g.id AND t.user.id = :userId AND t.status in ('COMPLETED', 'SUBMITTED')
       LEFT JOIN t.fund f
       WHERE g.id = :goalId
       GROUP BY g.id, g.title, g.targetAmount
