@@ -20,6 +20,7 @@ import java.util.List;
 import java.util.stream.Stream;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.quartz.SchedulerException;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -47,6 +48,7 @@ public class SipOrderPaymentServiceImpl implements SipOrderPaymentService {
   private final MandateApiClient mandateApiClient;
   private final SipOrderSchedulerService sipOrderSchedulerService;
   private final PaymentRedirectService paymentRedirectService;
+  private final QuartzJobSchedulerService quartzJobSchedulerService;
 
   /**
    * Verifies a SIP order payment using verification code
@@ -127,6 +129,16 @@ public class SipOrderPaymentServiceImpl implements SipOrderPaymentService {
 
     payment.setSipStatus(Payment.PaymentStatus.SUBMITTED);
     paymentRepository.save(payment);
+
+    // Schedule the MandateProcessPoller job to publish events every 10 seconds for 10 minutes
+    try {
+      quartzJobSchedulerService.scheduleMandatePollingJob(paymentID, mandateID);
+    } catch (SchedulerException e) {
+      log.warn(
+          "Failed to schedule MandateProcessPollerJob for payment ID: {}. Payment flow will continue.",
+          paymentID,
+          e);
+    }
 
     return UserActionRequest.builder().redirectUrl(resp.getRedirectUrl()).build();
   }
