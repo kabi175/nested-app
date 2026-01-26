@@ -1,4 +1,5 @@
 import { NetworkErrorScreen } from "@/components/NetworkErrorScreen";
+import RestoreLastRoute from "@/components/RestoreLastRoute";
 import { useUser } from "@/hooks/useUser";
 import { AxiosError } from "axios";
 import { Redirect } from "expo-router";
@@ -60,8 +61,7 @@ export default function Home() {
   }
 
   if (isSignedIn) {
-    console.log("redirecting to (tabs)");
-    return <Redirect href="/(tabs)" />;
+    return <RestoreLastRoute />;
   }
 
   console.log("redirecting to sign-in");

@@ -11,6 +11,7 @@ import "react-native-reanimated";
 import { ForceUpdateScreen } from "@/components/ForceUpdateScreen";
 import { useColorScheme } from "@/hooks/useColorScheme";
 import { useForceUpdate } from "@/hooks/useForceUpdate";
+import { usePersistRoute } from "@/hooks/usePersistRoute";
 import { QueryProvider } from "@/providers/QueryProvider";
 import * as eva from "@eva-design/eva";
 import { ApplicationProvider } from "@ui-kitten/components";
@@ -24,6 +25,7 @@ export default function RootLayout() {
   const [loaded] = useFonts({
     SpaceMono: require("../assets/fonts/SpaceMono-Regular.ttf"),
   });
+  usePersistRoute();
 
   if (!loaded) {
     // Async font loading only occurs in development.
