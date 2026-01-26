@@ -169,9 +169,14 @@ public class PaymentServiceImpl implements PaymentService {
 
       log.info("Successfully created payment with {} orders ", orders.size());
 
-      orders.stream().map(Order::getGoal).filter(Objects::nonNull).distinct().forEach(goal -> {
-          eventPublisher.publishEvent(new GoalSyncEvent(goal.getId(), user));
-      });
+      orders.stream()
+          .map(Order::getGoal)
+          .filter(Objects::nonNull)
+          .distinct()
+          .forEach(
+              goal -> {
+                eventPublisher.publishEvent(new GoalSyncEvent(goal.getId(), user));
+              });
       return placeOrderDTO;
 
     } catch (IllegalArgumentException e) {
