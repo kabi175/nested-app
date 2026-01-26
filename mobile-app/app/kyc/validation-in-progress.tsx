@@ -1,5 +1,7 @@
+import { NetworkErrorScreen } from "@/components/NetworkErrorScreen";
 import { usePreVerification } from "@/hooks/usePreVerification";
 import { Layout, Text } from "@ui-kitten/components";
+import { AxiosError } from "axios";
 import { useRouter } from "expo-router";
 import React, { useEffect } from "react";
 import { ActivityIndicator, StyleSheet, View } from "react-native";
@@ -7,7 +9,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function ValidationInProgressScreen() {
   const router = useRouter();
-  const { status  } = usePreVerification();
+  const { status, isError, error, refetch } = usePreVerification();
 
   useEffect(() => {
     if (status === "success") {
@@ -16,6 +18,53 @@ export default function ValidationInProgressScreen() {
       router.replace("/kyc/validation-failure");
     }
   }, [status, router]);
+
+  // Handle request errors (network errors, server errors, etc.)
+  if (isError && error) {
+    // Check if it's a network error or server error
+    if (error instanceof AxiosError) {
+      const isNetworkError =
+        !error.response || // No response = network issue
+        error.code === "ERR_NETWORK" ||
+        error.code === "ECONNABORTED" ||
+        error.code === "ETIMEDOUT" ||
+        error.code === "ECONNREFUSED" ||
+        (error.response?.status && error.response.status >= 500); // Server errors
+
+      if (isNetworkError) {
+        return (
+          <NetworkErrorScreen
+            error={error}
+            onRetry={() => {
+              refetch();
+            }}
+            onGoBack={() => {
+              router.replace("/kyc/basic-details");
+            }}
+          />
+        );
+      }
+
+      // For authentication errors, redirect to sign-in
+      if (error.response?.status === 401 || error.response?.status === 403) {
+        router.replace("/sign-in");
+        return null;
+      }
+    }
+
+    // For other errors, show network error screen with retry
+    return (
+      <NetworkErrorScreen
+        error={error instanceof Error ? error : new Error("An error occurred")}
+        onRetry={() => {
+          refetch();
+        }}
+        onGoBack={() => {
+          router.replace("/kyc/basic-details");
+        }}
+      />
+    );
+  }
 
   return (
     <SafeAreaView style={styles.safeArea} edges={["bottom"]}>
