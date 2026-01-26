@@ -22,11 +22,19 @@ public class MinifiedBasketDto {
   @JsonProperty("min_sip")
   private Double minSIP;
 
+  @JsonProperty("min_step_up")
+  private Double minStepUp;
+
   public static MinifiedBasketDto fromEntity(Basket basket) {
+    var minStepUp = 5000D;
+    if (basket.getBasketFunds() != null) {
+      minStepUp = Math.max(basket.getBasketFunds().size() * 100, 1000);
+    }
     return new MinifiedBasketDto(
         basket.getId(),
         basket.getTitle(),
         basket.getMinInvestmentAmount(),
-        basket.getMinSIPAmount());
+        basket.getMinSIPAmount(),
+        minStepUp);
   }
 }
