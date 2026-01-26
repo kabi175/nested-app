@@ -30,13 +30,17 @@ public class BankAccountDto {
   @JsonProperty("is_primary")
   private boolean isPrimary;
 
+  @JsonProperty("name")
+  private String name;
+
   public static BankAccountDto fromEntity(BankDetail bankDetail) {
     return new BankAccountDto(
         bankDetail.getId(),
         bankDetail.getAccountType(),
         bankDetail.getAccountNumber(),
         bankDetail.getIfscCode(),
-        bankDetail.isPrimary());
+        bankDetail.isPrimary(),
+        bankDetail.getBankName());
   }
 
   public BankDetail toEntity() {
