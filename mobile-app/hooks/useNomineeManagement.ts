@@ -98,13 +98,15 @@ export function useNomineeManagement() {
   const handleFieldChange = (field: keyof NomineeDraft, value: any) => {
     if (!draft) return;
 
-    const updatedDraft = { ...draft, [field]: value };
+    setDraft((prev) => {
+      const draft = prev || {} as NomineeDraft;
+      const updatedDraft = { ...draft, [field]: value };
+      if (field === "dob") {
+        updatedDraft.isMinor = calculateIsMinor(value);
+      }
 
-    if (field === "dob") {
-      updatedDraft.isMinor = calculateIsMinor(value);
-    }
-
-    setDraft(updatedDraft);
+      return updatedDraft;
+    });
 
     if (validationErrors[field as keyof typeof validationErrors]) {
       const newErrors = { ...validationErrors };
