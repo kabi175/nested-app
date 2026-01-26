@@ -6,7 +6,7 @@ import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
 import { useDeleteGoal } from "@/hooks/useDeleteGoal";
 import { useGoal } from "@/hooks/useGoal";
-import { useEducationGoals, useSuperFDGoals } from "@/hooks/useGoals";
+import { useEducationGoals } from "@/hooks/useGoals";
 import {
   usePortfolioHoldings,
   usePortfolioTransactions,
@@ -29,6 +29,7 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 
 type TabType = "holdings" | "transactions";
+const secureFDTitles = ["gold-silver-basket", "secure-money", "grow-money"];
 
 export default function GoalDetailScreen() {
   const { goal_id, tab } = useLocalSearchParams<{
@@ -39,7 +40,6 @@ export default function GoalDetailScreen() {
   const { data: holdings, isLoading: holdingsLoading } =
     usePortfolioHoldings(goal_id);
   const { data: educationGoals } = useEducationGoals();
-  const { data: superFDGoals } = useSuperFDGoals();
   const setGoalsForCustomize = useSetAtom(goalsForCustomizeAtom);
   const deleteGoalMutation = useDeleteGoal();
   const [activeTab, setActiveTab] = React.useState<TabType>(
@@ -149,12 +149,14 @@ export default function GoalDetailScreen() {
         <ThemedText style={styles.headerTitle}>
           {goal?.title || "Goal"}
         </ThemedText>
-        <TouchableOpacity
-          onPress={() => setShowDeleteModal(true)}
-          style={styles.backButton}
-        >
-          <MoreVertical size={24} color="#1F2937" />
-        </TouchableOpacity>
+        {!secureFDTitles.includes(goal?.basket.title || "") && (
+          <TouchableOpacity
+            onPress={() => setShowDeleteModal(true)}
+            style={styles.backButton}
+          >
+            <MoreVertical size={24} color="#1F2937" />
+          </TouchableOpacity>
+        )}
       </View>
 
       <ScrollView
@@ -236,7 +238,6 @@ export default function GoalDetailScreen() {
             if (goal == null) {
               return;
             }
-            const secureFDTitles = ["gold-silver-basket", "secure-money", "grow-money"];
             if (secureFDTitles.includes(goal.basket.title)) {
               router.push(`/basket?type=${goal.basket.title}`);
               return;
