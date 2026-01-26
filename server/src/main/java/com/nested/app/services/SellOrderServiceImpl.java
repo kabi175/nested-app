@@ -194,11 +194,13 @@ public class SellOrderServiceImpl implements SellOrderService {
 
       ServletRequestAttributes attributes =
           (ServletRequestAttributes) RequestContextHolder.getRequestAttributes();
-      if (attributes == null) {
-        throw new IllegalStateException("Error while getting request");
+      String ipAddress;
+      if (attributes != null) {
+        HttpServletRequest request = attributes.getRequest();
+        ipAddress = IpUtils.getClientIpAddress(request);
+      } else {
+        ipAddress = IpUtils.getClientIpAddress(null);
       }
-      HttpServletRequest request = attributes.getRequest();
-      var ipAddress = IpUtils.getClientIpAddress(request);
       sellOrderDetail.setUserIP(ipAddress);
 
       try {
