@@ -14,7 +14,6 @@ import {
 import { useQueryClient } from "@tanstack/react-query";
 import * as Linking from "expo-linking";
 import { router, useLocalSearchParams } from "expo-router";
-import { openAuthSessionAsync } from "expo-web-browser";
 import { useEffect } from "react";
 import {
   Alert,
@@ -36,6 +35,7 @@ export default function PaymentProcessingScreen() {
   useEffect(() => {
     const isPaymentPending = payment?.buy_status === "pending" || payment?.sip_status === "pending";
     if (!isPaymentPending) {
+      console.log("payment is not pending, redirecting to child");
       router.replace("/child");
       return;
     }
@@ -45,10 +45,7 @@ export default function PaymentProcessingScreen() {
   const handleLumpsumPayment = async () => {
     const redirectUrl = await fetchLumpsumUrl.mutateAsync(paymentId as string);
     if (redirectUrl) {
-      const returnUrl = Linking.createURL(
-        `/payment/${paymentId}/success?type=buy`
-      );
-      await openAuthSessionAsync(redirectUrl, returnUrl);
+      await Linking.openURL(redirectUrl);
       await lumsumPostPayment(paymentId as string);
       await refetch();
       queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.pendingActivities] });
@@ -64,10 +61,7 @@ export default function PaymentProcessingScreen() {
   const handleMandatePayment = async () => {
     const redirectUrl = await fetchMandateUrl.mutateAsync(paymentId as string);
     if (redirectUrl) {
-      const returnUrl = Linking.createURL(
-        `/payment/${paymentId}/success?type=sip`
-      );
-      await openAuthSessionAsync(redirectUrl, returnUrl);
+      await Linking.openURL(redirectUrl);
       console.log("mandate completed");
       await mandatePostPayment(payment?.mandate_id as string);
       await refetch();
