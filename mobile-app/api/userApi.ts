@@ -41,10 +41,10 @@ export const getUser = async (api: AxiosInstance): Promise<User | null> => {
       typeof user.pep === "boolean"
         ? user.pep
         : typeof user.pep_status === "boolean"
-        ? user.pep_status
-        : typeof user.pepStatus === "boolean"
-        ? user.pepStatus
-        : null,
+          ? user.pep_status
+          : typeof user.pepStatus === "boolean"
+            ? user.pepStatus
+            : null,
   };
 };
 
@@ -104,8 +104,8 @@ export const uploadUserSignature = async (
     (extension === "png"
       ? "image/png"
       : extension === "jpg" || extension === "jpeg"
-      ? "image/jpeg"
-      : fallbackType);
+        ? "image/jpeg"
+        : fallbackType);
 
   formData.append("file", {
     uri: file.uri,
@@ -131,8 +131,8 @@ export const getUserSignature = async (
     const requestObject = response.request as unknown;
     const responseUrl =
       typeof requestObject === "object" &&
-      requestObject !== null &&
-      "responseURL" in requestObject
+        requestObject !== null &&
+        "responseURL" in requestObject
         ? (requestObject as { responseURL?: string }).responseURL ?? undefined
         : undefined;
 
@@ -181,7 +181,7 @@ export const initKyc = async (
 };
 
 export type PreVerificationData = {
-  entity:  "ready_to_invest"  | "name" | "pan" | "date_of_birth"
+  entity: "ready_to_invest" | "name" | "pan" | "date_of_birth"
   value: string;
   is_valid: boolean;
   is_pending: boolean;
@@ -202,7 +202,6 @@ export const fetchPreVerification = async (
   if (!data.data) {
     return [];
   }
-  console.log("data.data", data.data);
   return data.data as PreVerificationData[];
 };
 

@@ -1,9 +1,9 @@
 import {
-  updateUser,
-  updateEmail,
-  uploadUserSignature,
   fetchAadhaarUploadRedirectUrl,
   fetchEsignUploadRedirectUrl,
+  updateEmail,
+  updateUser,
+  uploadUserSignature,
 } from "@/api/userApi";
 import { QUERY_KEYS } from "@/constants/queryKeys";
 import type { User } from "@/types/auth";
@@ -30,6 +30,7 @@ export function useUpdateUser() {
     }) => updateUser(api, id, payload),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.user] });
+      queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.preVerification] });
     },
   });
 }

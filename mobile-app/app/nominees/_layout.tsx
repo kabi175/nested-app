@@ -15,6 +15,13 @@ export default function NomineesLayout() {
         }}
       />
       <Stack.Screen
+        name="success"
+        options={{
+          headerShown: false,
+          title: "Nominees Success",
+        }}
+      />
+      <Stack.Screen
         name="verify"
         options={{
           headerShown: false,

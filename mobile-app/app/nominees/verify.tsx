@@ -50,13 +50,6 @@ export default function NomineeVerificationScreen() {
 
   const isOptOutFlow = pendingAction === "optOut";
 
-  // Redirect if no nominees and not opt-out flow
-  useEffect(() => {
-    if (!isOptOutFlow && nomineeList.length === 0) {
-      router.replace("/nominees");
-    }
-  }, [nomineeList.length, isOptOutFlow]);
-
   // Auto-send OTP when component mounts
   useEffect(() => {
     if (!mfaSessionId && !isLoading) {
