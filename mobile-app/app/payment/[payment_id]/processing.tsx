@@ -1,20 +1,14 @@
-import {
-  lumsumPostPayment,
-  mandatePostPayment,
-} from "@/api/paymentAPI";
 import { ThemedText } from "@/components/ThemedText";
 import { OneTimePurchaseCard } from "@/components/payment/OneTimePurchaseCard";
 import { SIPAutoDebitCard } from "@/components/payment/SIPAutoDebitCard";
-import { QUERY_KEYS } from "@/constants/queryKeys";
 import { usePayment } from "@/hooks/usePayment";
 import {
   useFetchLumpsumPaymentUrl,
-  useFetchMandatePaymentUrl,
+  useFetchMandatePaymentUrl
 } from "@/hooks/usePaymentMutations";
-import { useQueryClient } from "@tanstack/react-query";
 import * as Linking from "expo-linking";
 import { router, useLocalSearchParams } from "expo-router";
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import {
   Alert,
   ScrollView,
@@ -27,45 +21,81 @@ export default function PaymentProcessingScreen() {
   const { payment_id: paymentId } = useLocalSearchParams<{
     payment_id: string;
   }>();
-  const { data: payment, refetch } = usePayment(paymentId);
+  const { data: payment, isLoading: isLoadingPayment, refetch } = usePayment(paymentId);
   const fetchLumpsumUrl = useFetchLumpsumPaymentUrl();
   const fetchMandateUrl = useFetchMandatePaymentUrl();
-  const queryClient = useQueryClient();
+  const intervalRef = useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
+    console.log("payment?.sip_status", payment?.sip_status);
     const isPaymentPending = payment?.buy_status === "pending" || payment?.sip_status === "pending";
-    if (!isPaymentPending) {
+    if (!isLoadingPayment && !isPaymentPending) {
       console.log("payment is not pending, redirecting to child");
-      router.replace("/child");
+      // Clear interval if payment is no longer pending
+      if (intervalRef.current) {
+        clearInterval(intervalRef.current);
+        intervalRef.current = null;
+      }
+      setTimeout(() => {
+        router.replace("/child");
+      }, 10000);
       return;
     }
 
-  }, [payment]);
+    // Set up interval to refetch payment every 10 seconds when payment is pending
+    if (isPaymentPending && !intervalRef.current) {
+      intervalRef.current = setInterval(() => {
+        refetch();
+      }, 10000);
+    }
+
+    // Cleanup interval when payment is no longer pending
+    if (!isPaymentPending && intervalRef.current) {
+      clearInterval(intervalRef.current);
+      intervalRef.current = null;
+    }
+  }, [payment, isLoadingPayment, refetch]);
+
+  // Cleanup interval on unmount
+  useEffect(() => {
+    return () => {
+      if (intervalRef.current) {
+        clearInterval(intervalRef.current);
+        intervalRef.current = null;
+      }
+    };
+  }, []);
 
   const handleLumpsumPayment = async () => {
-    const redirectUrl = await fetchLumpsumUrl.mutateAsync(paymentId as string);
-    if (redirectUrl) {
-      await Linking.openURL(redirectUrl);
-      await lumsumPostPayment(paymentId as string);
-      await refetch();
-      queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.pendingActivities] });
-      queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.educationGoals] });
-      queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.superFDGoals] });
-      queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.goal] });
-      queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.portfolio] });
-    } else {
+    try {
+
+      const redirectUrl = await fetchLumpsumUrl.mutateAsync(paymentId as string);
+      if (redirectUrl) {
+        if (redirectUrl.startsWith("redirect:nested://")) {
+          router.push(redirectUrl.replace("redirect:nested://", ""));
+        } else {
+          await Linking.openURL(redirectUrl);
+        }
+      } else {
+        Alert.alert("Error", "Failed to get payment redirect URL.");
+      }
+    } catch (error) {
+      console.error("Error fetching lumsum payment redirect URL", error);
       Alert.alert("Error", "Failed to get payment redirect URL.");
     }
   };
 
   const handleMandatePayment = async () => {
-    const redirectUrl = await fetchMandateUrl.mutateAsync(paymentId as string);
-    if (redirectUrl) {
-      await Linking.openURL(redirectUrl);
-      console.log("mandate completed");
-      await mandatePostPayment(payment?.mandate_id as string);
-      await refetch();
-    } else {
+    try {
+      const redirectUrl = await fetchMandateUrl.mutateAsync(paymentId as string);
+      console.log("redirectUrl", redirectUrl)
+      if (redirectUrl && payment?.mandate_id) {
+        await Linking.openURL(redirectUrl);
+      } else {
+        Alert.alert("Error", "Failed to get payment redirect URL.");
+      }
+    } catch (error) {
+      console.error("Error fetching mandate payment redirect URL", error);
       Alert.alert("Error", "Failed to get payment redirect URL.");
     }
   };

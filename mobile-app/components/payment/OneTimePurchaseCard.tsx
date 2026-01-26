@@ -1,7 +1,7 @@
 import { Payment, PaymentStatus } from "@/api/paymentAPI";
 import { ThemedText } from "@/components/ThemedText";
 import { Ionicons } from "@expo/vector-icons";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import {
   ActivityIndicator,
   StyleSheet,
@@ -18,12 +18,22 @@ export function OneTimePurchaseCard({
   onPress,
   payment,
 }: OneTimePurchaseCardProps) {
-  const buyStatus: PaymentStatus | "loading" = payment?.buy_status ?? "loading";
   const [isAuthorizing, setIsAuthorizing] = useState(false);
+  const buyStatus: PaymentStatus | "loading" = useMemo(() => isAuthorizing ? "loading" : payment?.buy_status ?? "loading", [payment?.buy_status, isAuthorizing]);
 
-  const getStatusConfig = () => {
+  const getStatusConfig = (): {
+    icon: string;
+    iconColor: string;
+    iconBgColor: string;
+    borderColor: string;
+    statusText: string;
+    statusTextColor: string;
+    showSpinner: boolean;
+    disabled: boolean;
+  } => {
     switch (buyStatus) {
       case "loading":
+      case "submitted":
         return {
           icon: "cart" as const,
           iconColor: "#FFFFFF",
@@ -44,17 +54,6 @@ export function OneTimePurchaseCard({
           statusTextColor: "#2563EB",
           showSpinner: false,
           disabled: false,
-        };
-      case "submitted":
-        return {
-          icon: "time-outline" as const,
-          iconColor: "#FFFFFF",
-          iconBgColor: "#F59E0B",
-          borderColor: "#F59E0B",
-          statusText: "Payment submitted",
-          statusTextColor: "#F59E0B",
-          showSpinner: false,
-          disabled: true,
         };
       case "completed":
         return {

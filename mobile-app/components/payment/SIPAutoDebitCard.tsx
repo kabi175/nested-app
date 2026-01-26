@@ -21,6 +21,7 @@ export function SIPAutoDebitCard({ onPress, payment }: SIPAutoDebitCardProps) {
   const getStatusConfig = () => {
     switch (sipStatus) {
       case "loading":
+      case "submitted":
         return {
           icon: "refresh" as const,
           iconColor: "#FFFFFF",
@@ -41,17 +42,6 @@ export function SIPAutoDebitCard({ onPress, payment }: SIPAutoDebitCardProps) {
           statusTextColor: "#2563EB",
           showSpinner: false,
           disabled: false,
-        };
-      case "submitted":
-        return {
-          icon: "time-outline" as const,
-          iconColor: "#FFFFFF",
-          iconBgColor: "#F59E0B",
-          borderColor: "#F59E0B",
-          statusText: "Mandate submitted",
-          statusTextColor: "#F59E0B",
-          showSpinner: false,
-          disabled: true,
         };
       case "completed":
         return {

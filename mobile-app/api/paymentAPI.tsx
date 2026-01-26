@@ -100,7 +100,7 @@ export const fetchLumpsumPaymentUrl = async (
   const { data } = await api.post(
     `/payments/${paymentId}/buy/actions/fetch_redirect_url`,
     {
-      timeout: 30000,
+      timeout: 100000,
     }
   );
   return data.redirect_url;
@@ -143,9 +143,21 @@ export const fetchPayment = async (
 };
 
 export const lumsumPostPayment = async (paymentId: string): Promise<void> => {
-  await redirectClient.post(`/redirects/payment/${paymentId}`);
+  try {
+    console.log("posting lumsum payment", paymentId);
+    await redirectClient.post(`/redirects/payment/${paymentId}`);
+  } catch (error) {
+    console.error("Error posting lumsum payment", error);
+    throw error;
+  }
 };
 
 export const mandatePostPayment = async (mandateId: string): Promise<void> => {
-  await redirectClient.post(`/redirects/mandate/${mandateId}`);
+  try {
+    console.log("posting mandate payment", mandateId);
+    await redirectClient.post(`/redirects/mandate/${mandateId}`);
+  } catch (error) {
+    console.error("Error posting mandate payment", error);
+    throw error;
+  }
 };

@@ -2,6 +2,8 @@ import {
   createPayment,
   fetchLumpsumPaymentUrl,
   fetchMandatePaymentUrl,
+  lumsumPostPayment,
+  mandatePostPayment,
   PaymentOption,
   verifyPayment,
 } from "@/api/paymentAPI";
@@ -56,5 +58,37 @@ export function useFetchMandatePaymentUrl() {
 
   return useMutation({
     mutationFn: (paymentId: string) => fetchMandatePaymentUrl(api, paymentId),
+  });
+}
+
+export function useLumsumPostPayment() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (paymentId: string) => lumsumPostPayment(paymentId),
+    onSuccess: (_, paymentId) => {
+      queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.payment, paymentId] });
+      queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.pendingActivities] });
+      queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.educationGoals] });
+      queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.superFDGoals] });
+      queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.goal] });
+      queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.portfolio] });
+    },
+  });
+}
+
+export function useMandatePostPayment() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (mandateId: string) => mandatePostPayment(mandateId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.payment] });
+      queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.pendingActivities] });
+      queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.educationGoals] });
+      queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.superFDGoals] });
+      queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.goal] });
+      queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.portfolio] });
+    },
   });
 }
