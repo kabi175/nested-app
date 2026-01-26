@@ -148,7 +148,11 @@ public class BulkpeWebhookService {
     bankDetail.setAccountType(
         BankDetail.AccountType.SAVINGS); // Default account type, adjust as needed
 
-    userService.addBankAccount(user.getId(), bankDetail);
+    try {
+      userService.addBankAccount(user.getId(), bankDetail);
+    } catch (Exception e) {
+        log.error("Could not add bank account for user {}", user.getId());
+    }
     log.debug(
         "Created new bank detail for user {} with account number {}",
         user.getId(),
