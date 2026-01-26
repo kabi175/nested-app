@@ -2,9 +2,10 @@ package com.nested.app.dto;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import lombok.Data;
+
 import java.sql.Timestamp;
 import java.util.List;
-import lombok.Data;
 
 /**
  * Data Transfer Object for Basket entity Used for API requests and responses to transfer basket
@@ -24,6 +25,12 @@ public class BasketDTO {
   private List<BasketFundDTO> funds;
   private Timestamp createdAt;
   private Timestamp updatedAt;
+
+  @JsonProperty("min_investment")
+  private Double minInvestment;
+
+  @JsonProperty("min_sip")
+  private Double minSIP;
 
   @Data
   public static class BasketFundDTO {

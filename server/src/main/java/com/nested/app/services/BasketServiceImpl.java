@@ -235,6 +235,8 @@ public class BasketServiceImpl implements BasketService {
     dto.setTitle(basket.getTitle());
     dto.setYears(basket.getYears());
     dto.setExpectedReturns(basket.getReturns());
+    dto.setMinInvestment(basket.getMinInvestmentAmount());
+    dto.setMinSIP(basket.getMinSIPAmount());
 
     // Convert basket funds if available
     if (basket.getBasketFunds() != null && !basket.getBasketFunds().isEmpty()) {
