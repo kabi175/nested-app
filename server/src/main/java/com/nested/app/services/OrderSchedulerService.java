@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.Map;
 import lombok.extern.slf4j.Slf4j;
 import org.quartz.CronScheduleBuilder;
+import org.quartz.DateBuilder;
 import org.quartz.JobBuilder;
 import org.quartz.JobDetail;
 import org.quartz.Scheduler;
@@ -92,11 +93,13 @@ public class OrderSchedulerService {
           TriggerBuilder.newTrigger()
               .withIdentity("order-immediate-check-trigger-" + orderId)
               .forJob(jobDetail)
-              .startAt(new java.util.Date(System.currentTimeMillis() + 10000)) // 10 seconds delay
+              .startAt(
+                  DateBuilder.futureDate(10, DateBuilder.IntervalUnit.SECOND)) // 10 seconds delay
               .withSchedule(
                   SimpleScheduleBuilder.simpleSchedule()
-                      .withMisfireHandlingInstructionFireNow()
-                      .withRepeatCount(0)) // ensures it's persisted
+                      .withIntervalInSeconds(60)
+                      .withRepeatCount(5)
+                      .withMisfireHandlingInstructionFireNow())
               .build();
 
       jobsAndTriggers.put(jobDetail, java.util.Set.of(immediateCheckTrigger));

@@ -73,8 +73,21 @@ public class LumpSumPaymentCompletedListener {
         return;
       }
 
-      // Verify payment status and update buyStatus
-      handleSuccessPayment(payment, paymentResponse);
+      switch (paymentResponse.getStatus()) {
+        case PENDING:
+          log.debug(
+              "Payment is still in pending state in FP ref:{} id:{}",
+              payment.getRef(),
+              payment.getId());
+          return;
+        case SUBMITTED, SUCCESS, INITIATED, APPROVED:
+          // Verify payment status and update buyStatus
+          handleSuccessPayment(payment, paymentResponse);
+          return;
+        case FAILED:
+          handleFailurePayment(payment, paymentResponse);
+          return;
+      }
 
       log.info(
           "Successfully processed LumpSumPaymentCompletedEvent for payment ref: {}, new buyStatus: {}",
@@ -86,6 +99,13 @@ public class LumpSumPaymentCompletedListener {
           event.paymentRef(),
           e);
     }
+  }
+
+  private void handleFailurePayment(Payment payment, PaymentsResponse paymentResponse) {
+    log.debug(
+        "Payment failed for payment ref: {}, payment ID: {}", payment.getRef(), payment.getId());
+    payment.setBuyStatus(Payment.PaymentStatus.FAILED);
+    paymentRepository.saveAndFlush(payment);
   }
 
   /**
@@ -108,7 +128,7 @@ public class LumpSumPaymentCompletedListener {
 
         // Update buyStatus to COMPLETED and mark as verified
         payment.setBuyStatus(Payment.PaymentStatus.COMPLETED);
-        paymentRepository.save(payment);
+        paymentRepository.saveAndFlush(payment);
 
         // Update all orders to COMPLETED status
         List<Order> orders =
@@ -168,7 +188,7 @@ public class LumpSumPaymentCompletedListener {
     Payment.PaymentStatus currentBuyStatus = payment.getBuyStatus();
 
     // If buyStatus is already COMPLETED, consider it processed
-    return currentBuyStatus == Payment.PaymentStatus.COMPLETED;
+    return currentBuyStatus != Payment.PaymentStatus.SUBMITTED;
   }
 
   /**

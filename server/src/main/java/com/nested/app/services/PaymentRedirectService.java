@@ -72,12 +72,20 @@ public class PaymentRedirectService {
       var paymentRef = payment.getRef();
       // Publish buy order process event for async processing and verification
       publisher.publishEvent(new LumpSumPaymentCompletedEvent(paymentRef, LocalDateTime.now()));
-
       log.info(
           "Published buy order process event for Payment ID: {}, Ref: {}",
           payment.getId(),
           paymentRef);
-      return mobileRedirectHandler.redirectUrl("payment/" + paymentID + "/success?type=buy");
+
+      payment = paymentRepository.findById(paymentID).orElseThrow();
+      return switch (payment.getBuyStatus()) {
+        case COMPLETED ->
+            mobileRedirectHandler.redirectUrl("payment/" + paymentID + "/success?type=buy");
+        case CANCELLED ->
+            mobileRedirectHandler.redirectUrl("payment/" + paymentID + "/failure?type=buy");
+        default -> mobileRedirectHandler.redirectUrl("payment/" + paymentID + "/processing");
+      };
+
     } catch (Exception e) {
       log.error("Error processing payment redirect for payment id: {}", paymentID, e);
       return mobileRedirectHandler.redirectUrl("payment/" + paymentID + "/failure?type=buy");
