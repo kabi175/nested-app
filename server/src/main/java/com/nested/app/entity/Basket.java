@@ -49,7 +49,7 @@ public class Basket {
   @Column(nullable = false)
   private Timestamp updatedAt;
 
-  public Double getMinInvesmtnetAmount() {
+  public Double getMinInvestmentAmount() {
     double goalMinInvestment = 0.0;
 
     for (var fund : basketFunds) {
@@ -64,5 +64,22 @@ public class Basket {
     }
 
     return goalMinInvestment;
+  }
+
+  public Double getMinSIPAmount() {
+    double goalMinSIP = 0.0;
+
+    for (var fund : basketFunds) {
+      double allocationFraction = fund.getAllocationPercentage() / 100.0;
+
+      var minSipAmount = fund.getFund().getMinSipAmount();
+      if (minSipAmount <= 0) {
+        continue;
+      }
+      double requiredInvestment = minSipAmount / allocationFraction;
+      goalMinSIP = Math.max(goalMinSIP, requiredInvestment);
+    }
+
+    return goalMinSIP;
   }
 }
