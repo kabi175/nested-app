@@ -6,7 +6,8 @@ import { useEffect } from "react";
 export const LAST_ROUTE_KEY = "last_active_route";
 export const BLOCKED_ROUTES: RegExp[] = [
   /^\/$/,          // "/"
-  /^\/login$/,     // "/login"
+  /^\/name-input$/,     // "/login"
+  /^\/sign-in$/,     // "/sign-in"
   /^\/splash$/,    // "/splash"
   /^\/child\/.*$/  // "/child/*"
 ];
