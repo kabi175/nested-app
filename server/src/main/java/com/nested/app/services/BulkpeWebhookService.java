@@ -171,9 +171,19 @@ public class BulkpeWebhookService {
 
     if (userName.isEmpty() || remitterName.isEmpty()) return 0.0;
 
-    int distance = LevenshteinDistance.getDefaultInstance().apply(userName, remitterName);
-    int maxLength = Math.max(userName.length(), remitterName.length());
+    // Sort words to make comparison word-order independent
+    String normalizedUserName = normalizeNameForComparison(userName);
+    String normalizedRemitterName = normalizeNameForComparison(remitterName);
+
+    int distance =
+        LevenshteinDistance.getDefaultInstance().apply(normalizedUserName, normalizedRemitterName);
+    int maxLength = Math.max(normalizedUserName.length(), normalizedRemitterName.length());
     return 1.0 - ((double) distance / maxLength);
   }
 
+  private String normalizeNameForComparison(String name) {
+    String[] words = name.split("\\s+");
+    java.util.Arrays.sort(words);
+    return String.join(" ", words);
+  }
 }
