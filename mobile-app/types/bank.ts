@@ -4,4 +4,5 @@ export type BankAccount = {
   ifscCode: string;
   type: "savings" | "current";
   isPrimary: boolean;
+  name: string;
 };

@@ -22,28 +22,31 @@ import { SafeAreaView } from "react-native-safe-area-context";
 type PaymentMethod = "upi" | "netbanking";
 
 // Get bank name from IFSC code
-const getBankNameFromIFSC = (ifsc: string): string => {
-  const bankCode = ifsc.substring(0, 4).toUpperCase();
-  const bankMap: { [key: string]: string } = {
-    AXIS: "Axis Bank",
-    HDFC: "HDFC Bank",
-    ICIC: "ICICI Bank",
-    SBIN: "State Bank of India",
-    KOTAK: "Kotak Mahindra Bank",
-  };
-  return bankMap[bankCode] || `${bankCode} Bank`;
-};
 
-// Get bank icon color based on bank name
-const getBankIconColor = (bankName: string): string => {
-  const colorMap: { [key: string]: string } = {
-    "HDFC Bank": "#004C8C",
-    "State Bank of India": "#004C8C",
-    "ICICI Bank": "#FF6600",
-    "Axis Bank": "#8E2DE2",
-    "Kotak Mahindra Bank": "#E31837",
-  };
-  return colorMap[bankName] || "#2563EB";
+// Get bank icon color based on bank account id
+const getBankIconColor = (bankId: string): string => {
+  // Generate a consistent color based on the bank account id
+  // Using a simple hash to map id to a color from a predefined palette
+  const colors = [
+    "#004C8C", // Blue
+    "#FF6600", // Orange
+    "#8E2DE2", // Purple
+    "#E31837", // Red
+    "#10B981", // Green
+    "#F59E0B", // Amber
+    "#EC4899", // Pink
+    "#06B6D4", // Cyan
+  ];
+
+  // Simple hash function to convert id to a number
+  let hash = 0;
+  for (let i = 0; i < bankId.length; i++) {
+    hash = bankId.charCodeAt(i) + ((hash << 5) - hash);
+  }
+
+  // Use absolute value and modulo to get index
+  const index = Math.abs(hash) % colors.length;
+  return colors[index];
 };
 
 
@@ -308,8 +311,8 @@ export default function PaymentMethodScreen() {
     bankAccount: BankAccount;
     isSelected: boolean;
   }) => {
-    const bankName = getBankNameFromIFSC(bankAccount.ifscCode);
-    const iconColor = getBankIconColor(bankName);
+    const bankName = bankAccount.name;
+    const iconColor = getBankIconColor(bankAccount.id);
 
     return (
       <TouchableOpacity

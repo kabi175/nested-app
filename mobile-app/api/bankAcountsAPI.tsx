@@ -28,6 +28,7 @@ export const getBankAccounts = async (
       ifscCode: bank.ifsc,
       type: bank.account_type,
       isPrimary: bank.is_primary,
+      name: bank.name,
     }));
   } catch (error) {
     console.error("Error fetching bank accounts:", error);
@@ -58,6 +59,7 @@ export const addBankAccount = async (
     ifscCode: data.ifsc,
     type: data.account_type,
     isPrimary: data.is_primary,
+    name: data.name,
   };
 };
 
