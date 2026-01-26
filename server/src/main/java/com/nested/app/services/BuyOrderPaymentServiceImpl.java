@@ -12,6 +12,7 @@ import com.nested.app.dto.VerifyOrderDTO;
 import com.nested.app.entity.BuyOrder;
 import com.nested.app.entity.Order;
 import com.nested.app.entity.OrderItems;
+import com.nested.app.entity.Payment;
 import com.nested.app.repository.OrderRepository;
 import com.nested.app.repository.PaymentRepository;
 import java.util.List;
@@ -41,6 +42,7 @@ public class BuyOrderPaymentServiceImpl implements BuyOrderPaymentService {
   private final BuyOrderApiClient buyOrderApiClient;
   private final PaymentsAPIClient paymentsAPIClient;
   private final PaymentServiceImpl paymentServiceHelper;
+  private final PaymentRedirectService PaymentRedirectService;
 
   @Value("${app.url}")
   private String appUrl;
@@ -133,6 +135,11 @@ public class BuyOrderPaymentServiceImpl implements BuyOrderPaymentService {
     try {
       var payment = paymentRepository.findById(paymentID).orElseThrow();
 
+      if (payment.getBuyStatus() != Payment.PaymentStatus.PENDING) {
+        var url = PaymentRedirectService.handlePaymentRedirect(paymentID);
+        return UserActionRequest.builder().id(payment.getId().toString()).redirectUrl(url).build();
+      }
+
       var orders = orderRepository.findByPaymentId(paymentID);
 
       var paymentMethod =
@@ -162,6 +169,7 @@ public class BuyOrderPaymentServiceImpl implements BuyOrderPaymentService {
 
       payment.setPaymentUrl(paymentResponse.getRedirectUrl());
       payment.setRef(paymentResponse.getPaymentId());
+      payment.setBuyStatus(Payment.PaymentStatus.SUBMITTED);
       paymentRepository.save(payment);
 
       var buyOrderRefList =

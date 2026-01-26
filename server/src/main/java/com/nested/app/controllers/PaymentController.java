@@ -5,6 +5,7 @@ import com.nested.app.context.UserContext;
 import com.nested.app.dto.PaymentDTO;
 import com.nested.app.dto.PlaceOrderDTO;
 import com.nested.app.dto.PlaceOrderPostDTO;
+import com.nested.app.dto.UserActionRequest;
 import com.nested.app.dto.VerifyOrderDTO;
 import com.nested.app.services.BuyOrderPaymentService;
 import com.nested.app.services.PaymentService;
@@ -58,14 +59,16 @@ public class PaymentController {
   }
 
   @PostMapping("{payment_id}/buy/actions/fetch_redirect_url")
-  public ResponseEntity<?> initiateBuyOrderPayment(@PathVariable("payment_id") Long paymentID) {
+  public ResponseEntity<UserActionRequest> initiateBuyOrderPayment(
+      @PathVariable("payment_id") Long paymentID) {
     log.info("Fetching buy order payment redirect URL for payment ID: {}", paymentID);
     var payment = buyOrderPaymentService.fetchBuyOrderPaymentUrl(paymentID);
     return ResponseEntity.ok(payment);
   }
 
   @PostMapping("{payment_id}/sip/actions/fetch_redirect_url")
-  public ResponseEntity<?> initiateSipOrderPayment(@PathVariable("payment_id") Long paymentID) {
+  public ResponseEntity<UserActionRequest> initiateSipOrderPayment(
+      @PathVariable("payment_id") Long paymentID) {
     log.info("Fetching SIP order payment redirect URL for payment ID: {}", paymentID);
     var payment = sipOrderPaymentService.fetchSipOrderPaymentUrl(paymentID);
     return ResponseEntity.ok(payment);

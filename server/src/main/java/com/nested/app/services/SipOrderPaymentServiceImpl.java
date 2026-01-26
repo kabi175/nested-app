@@ -46,6 +46,7 @@ public class SipOrderPaymentServiceImpl implements SipOrderPaymentService {
   private final ApplicationEventPublisher eventPublisher;
   private final MandateApiClient mandateApiClient;
   private final SipOrderSchedulerService sipOrderSchedulerService;
+  private final PaymentRedirectService paymentRedirectService;
 
   /**
    * Verifies a SIP order payment using verification code
@@ -113,10 +114,19 @@ public class SipOrderPaymentServiceImpl implements SipOrderPaymentService {
       throw new IllegalArgumentException("Payment does not have a mandate ID");
     }
 
+    if (payment.getSipStatus() != Payment.PaymentStatus.PENDING) {
+      return UserActionRequest.builder()
+          .redirectUrl(paymentRedirectService.handleMandateRedirect(mandateID))
+          .build();
+    }
+
     var resp = mandateApiClient.authorizeMandate(mandateID).block();
     if (resp == null) {
       return null;
     }
+
+    payment.setSipStatus(Payment.PaymentStatus.SUBMITTED);
+    paymentRepository.save(payment);
 
     return UserActionRequest.builder().redirectUrl(resp.getRedirectUrl()).build();
   }
