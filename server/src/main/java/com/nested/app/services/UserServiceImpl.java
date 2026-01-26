@@ -198,12 +198,20 @@ public class UserServiceImpl implements UserService {
 
   @Override
   public BankAccountDto addBankAccount(Long userID, BankAccountDto bankAccountDto) {
-    var bank = bankAccountDto.toEntity();
-
     var user =
         userRepository
             .findById(userID)
             .orElseThrow(() -> new IllegalArgumentException("User not found with ID: " + userID));
+
+    // Check if same account number & IFSC code already exists for the user
+    var existingBank =
+        bankDetailRepository.findByAccountNumberAndIfscCode(
+            bankAccountDto.getAccountNumber(), bankAccountDto.getIfsc());
+    if (existingBank.isPresent() && existingBank.get().getUser().getId().equals(userID)) {
+      return BankAccountDto.fromEntity(existingBank.get());
+    }
+
+    var bank = bankAccountDto.toEntity();
     bank.setUser(user);
 
     if (!user.isReadyToInvest()) {
