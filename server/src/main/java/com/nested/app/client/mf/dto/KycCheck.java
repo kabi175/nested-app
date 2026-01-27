@@ -19,7 +19,7 @@ public class KycCheck {
 
     public static Status fromString(String status) {
       return switch (status.toLowerCase()) {
-        case "available" -> AVAILABLE;
+        case "available", "successful" -> AVAILABLE;
         case "pending" -> PENDING;
         case "submitted" -> SUBMITTED;
         case "rejected" -> REJECTED;
