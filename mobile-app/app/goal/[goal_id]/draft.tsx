@@ -69,7 +69,7 @@ export default function DraftGoalScreen() {
                 transferToGoalId,
             });
             setShowDeleteModal(false);
-            router.back();
+            router.replace("/child");
         } catch (error) {
             console.error("Error deleting goal:", error);
             Alert.alert(
@@ -105,7 +105,7 @@ export default function DraftGoalScreen() {
             <SafeAreaView style={styles.container} edges={["top"]}>
                 <View style={styles.header}>
                     <TouchableOpacity
-                        onPress={() => router.back()}
+                        onPress={() => router.replace("/child")}
                         style={styles.backButton}
                     >
                         <ArrowLeft size={24} color="#1F2937" />
