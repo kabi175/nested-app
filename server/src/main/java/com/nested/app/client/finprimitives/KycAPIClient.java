@@ -47,7 +47,8 @@ public class KycAPIClient implements com.nested.app.client.mf.KycAPIClient {
                       .map(KycCheck.Status::fromString)
                       .toList();
 
-              KycCheck.Status status = null;
+              log.info("KYC status list: {} for pan: {}", statusList, pan);
+              KycCheck.Status status;
               if (statusList.isEmpty()) {
                 status = KycCheck.Status.NOT_AVAILABLE;
               } else if (statusList.contains(KycCheck.Status.AVAILABLE)) {
