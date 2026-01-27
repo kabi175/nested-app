@@ -5,7 +5,6 @@ import { useUser } from "@/hooks/useUser";
 import { Button, Layout, Spinner, Text } from "@ui-kitten/components";
 import * as Linking from "expo-linking";
 import { Redirect, useRouter } from "expo-router";
-import { openAuthSessionAsync } from "expo-web-browser";
 import React, { useCallback, useState } from "react";
 import { KeyboardAvoidingView, Platform, ScrollView, View } from "react-native";
 
@@ -29,10 +28,7 @@ export default function EsignUploadScreen() {
     try {
       const redirectUrl = await fetchEsignUploadRedirectUrl(api, user);
       if (redirectUrl) {
-        const returnUrl = Linking.createURL(
-          `/kyc/waiting-for-approval`
-        );
-        await openAuthSessionAsync(redirectUrl, returnUrl);
+        await Linking.openURL(redirectUrl);
       }
       router.push("/kyc/waiting-for-approval");
       await refetch();

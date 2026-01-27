@@ -5,7 +5,6 @@ import { useUser } from "@/hooks/useUser";
 import { Button, Layout, Text } from "@ui-kitten/components";
 import * as Linking from "expo-linking";
 import { useRouter } from "expo-router";
-import { openAuthSessionAsync } from "expo-web-browser";
 import React, { useCallback, useState } from "react";
 import { KeyboardAvoidingView, Platform, ScrollView, View } from "react-native";
 
@@ -29,10 +28,7 @@ export default function AadhaarUploadScreen() {
     try {
       const redirectUrl = await fetchAadhaarUploadRedirectUrl(api, user);
       if (redirectUrl) {
-        const returnUrl = Linking.createURL(
-          `/kyc/esign-upload`
-        );
-        await openAuthSessionAsync(redirectUrl, returnUrl);
+        await Linking.openURL(redirectUrl);
       }
       await refetch();
       router.push("/kyc/esign-upload");
