@@ -6,6 +6,7 @@ import com.nested.app.events.UserUpdateEvent;
 import com.nested.app.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.quartz.SchedulerException;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 
@@ -17,6 +18,7 @@ public class KycRedirectService {
   private final UserRepository userRepository;
   private final KycAPIClient kycAPIClient;
   private final ApplicationEventPublisher publisher;
+  private final QuartzJobSchedulerService quartzJobSchedulerService;
 
   /**
    * Handle Aadhaar upload redirect. Updates the user's KYC status to E_SIGN_PENDING after
@@ -87,6 +89,17 @@ public class KycRedirectService {
         "Successfully updated KYC status to SUBMITTED for user ID: {} (KYC Request ID: {})",
         user.getId(),
         kycRequestId);
+
+    // Schedule KYC status refresh job to poll for KYC completion
+    try {
+      quartzJobSchedulerService.scheduleKycStatusRefreshJob(user.getId());
+    } catch (SchedulerException e) {
+      log.error(
+          "Failed to schedule KycStatusRefreshJob for user ID: {}. Error: {}",
+          user.getId(),
+          e.getMessage(),
+          e);
+    }
   }
 
   /**

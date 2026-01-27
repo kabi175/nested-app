@@ -1,5 +1,6 @@
 package com.nested.app.services;
 
+import com.nested.app.jobs.KycStatusRefreshJob;
 import com.nested.app.jobs.LumpSumPaymentPollerJob;
 import com.nested.app.jobs.MandateProcessPollerJob;
 import com.nested.app.jobs.PreVerificationPollerJob;
@@ -185,6 +186,82 @@ public class QuartzJobSchedulerService {
       log.debug(
           "MandateProcessPoller job for payment ID: {} was not found or already completed",
           paymentID);
+    }
+  }
+
+  /**
+   * Schedules a KycStatusRefresh job for a specific user. The job will run every 30 minutes for up
+   * to 1 week (336 executions), polling KycAPIClient.isKycRecordAvailable with the user's PAN.
+   *
+   * <p>The job will terminate early when:
+   *
+   * <ul>
+   *   <li>KYC status is AVAILABLE (user status updated to COMPLETED)
+   *   <li>KYC status is REJECTED or EXPIRED (user status updated to FAILED)
+   *   <li>KYC status is NOT_AVAILABLE (no status update)
+   * </ul>
+   *
+   * @param userId the ID of the user to schedule KYC status refresh for
+   * @throws SchedulerException if scheduling fails
+   */
+  public void scheduleKycStatusRefreshJob(Long userId) throws SchedulerException {
+    String jobName = "KycStatusRefreshJob-" + userId;
+    String jobGroup = "kyc-status-refresh-group";
+
+    JobKey jobKey = new JobKey(jobName, jobGroup);
+
+    // Check if job already exists for this user
+    if (scheduler.checkExists(jobKey)) {
+      log.info("KycStatusRefreshJob already exists for user {}. Skipping scheduling.", userId);
+      return;
+    }
+
+    // Create job detail
+    JobDetail jobDetail =
+        JobBuilder.newJob(KycStatusRefreshJob.class)
+            .withIdentity(jobName, jobGroup)
+            .usingJobData("userId", userId)
+            .requestRecovery(true)
+            .build();
+
+    // Create trigger to run every 30 minutes for 1 week (336 executions = 30min * 336 = 168 hours)
+    // 335 repeats = 336 total executions
+    Trigger trigger =
+        TriggerBuilder.newTrigger()
+            .withIdentity(jobName + "-trigger", jobGroup)
+            .startAt(DateBuilder.futureDate(1, DateBuilder.IntervalUnit.MINUTE))
+            .withSchedule(
+                SimpleScheduleBuilder.simpleSchedule()
+                    .withIntervalInMinutes(30)
+                    .withRepeatCount(335)
+                    .withMisfireHandlingInstructionFireNow())
+            .build();
+
+    // Schedule the job
+    scheduler.scheduleJob(jobDetail, trigger);
+
+    log.info(
+        "Scheduled KycStatusRefreshJob for user {} (runs every 30 minutes for up to 1 week)",
+        userId);
+  }
+
+  /**
+   * Cancels a KycStatusRefresh job for a specific user.
+   *
+   * @param userId the user ID whose KYC status refresh job should be cancelled
+   * @throws SchedulerException if cancellation fails
+   */
+  public void cancelKycStatusRefreshJob(Long userId) throws SchedulerException {
+    String jobName = "KycStatusRefreshJob-" + userId;
+    String jobGroup = "kyc-status-refresh-group";
+
+    JobKey jobKey = new JobKey(jobName, jobGroup);
+    boolean deleted = scheduler.deleteJob(jobKey);
+
+    if (deleted) {
+      log.info("Cancelled KycStatusRefreshJob for user ID: {}", userId);
+    } else {
+      log.debug("KycStatusRefreshJob for user ID: {} was not found or already completed", userId);
     }
   }
 }
