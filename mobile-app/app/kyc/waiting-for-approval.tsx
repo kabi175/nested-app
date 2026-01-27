@@ -179,8 +179,7 @@ export default function WaitingForApprovalScreen() {
                   appearance="hint"
                   style={{ textAlign: "center" }}
                 >
-                  This usually takes a few minutes. We&apos;ll automatically update
-                  you when your status changes.
+                  KYC pending approval (usually takes 30-45 minutes) with SEBI KRA. We’ll notify you by email and in-app as soon as it's verified.
                 </Text>
               </View>
               <Button
