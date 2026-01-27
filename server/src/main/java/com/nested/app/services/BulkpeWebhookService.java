@@ -105,7 +105,7 @@ public class BulkpeWebhookService {
     double similarity = calculateNameSimilarity(userFullName, remitterName);
     log.info("Name similarity between '{}' and '{}' = {}%", userFullName, remitterName, similarity * 100);
 
-    if (similarity < 0.5) {
+    if (similarity < 0.3) {
       log.warn("Name similarity below threshold ({}%), marking transaction as FAILED", similarity * 100);
       reversePennyDrop.setStatus(ReversePennyDrop.ReversePennyDropStatus.FAILED);
       reversePennyDropRepository.save(reversePennyDrop);
