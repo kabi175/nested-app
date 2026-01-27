@@ -55,7 +55,10 @@ public class GoalSyncListener {
                 .withIdentity(triggerKey)
                 .forJob(jobKey)
                 .startAt(startTime)
-                .withSchedule(SimpleScheduleBuilder.simpleSchedule().withRepeatCount(0))
+                .withSchedule(
+                    SimpleScheduleBuilder.simpleSchedule()
+                        .withRepeatCount(0)
+                        .withMisfireHandlingInstructionFireNow())
                 .build();
 
         scheduler.rescheduleJob(triggerKey, newTrigger);
