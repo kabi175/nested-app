@@ -30,9 +30,7 @@ export function ChildSelector({
   return (
     <View style={styles.childSelectorHeader}>
       <ThemedText style={styles.childGreeting}>
-        {`Hi ddd, let's set up education goals for ${
-          selectedChild?.firstName || "Child"
-        }`}
+        {`Hi, let's set up education goals for ${selectedChild?.firstName || "Child"}`}
       </ThemedText>
       <ScrollView
         horizontal
@@ -63,17 +61,18 @@ export function ChildSelector({
           );
         })}
 
-        {/* Add Child pill */}
-        <TouchableOpacity
-          style={[styles.childPill, styles.addChildPill]}
-          onPress={() => router.push("/(tabs)/child/create")}
-        >
-          <ThemedText
-            style={[styles.childPillText, { color: "#2563EB" }]}
+        {childList.length < 3 && (
+          <TouchableOpacity
+            style={[styles.childPill, styles.addChildPill]}
+            onPress={() => router.push("/(tabs)/child/create")}
           >
-            + Add Child
-          </ThemedText>
-        </TouchableOpacity>
+            <ThemedText
+              style={[styles.childPillText, { color: "#2563EB" }]}
+            >
+              + Add Child
+            </ThemedText>
+          </TouchableOpacity>
+        )}
       </ScrollView>
     </View>
   );
