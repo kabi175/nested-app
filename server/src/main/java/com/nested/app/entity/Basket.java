@@ -63,7 +63,7 @@ public class Basket {
       goalMinInvestment = Math.max(goalMinInvestment, requiredInvestment);
     }
 
-    return goalMinInvestment;
+    return Math.ceil(goalMinInvestment / 100.0) * 100.0;
   }
 
   public Double getMinSIPAmount() {
@@ -80,6 +80,6 @@ public class Basket {
       goalMinSIP = Math.max(goalMinSIP, requiredInvestment);
     }
 
-    return goalMinSIP;
+    return Math.ceil(goalMinSIP / 100.0) * 100.0;
   }
 }
