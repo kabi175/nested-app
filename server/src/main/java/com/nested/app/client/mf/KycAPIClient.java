@@ -5,11 +5,10 @@ import com.nested.app.client.mf.dto.CreateKYCRequest;
 import com.nested.app.client.mf.dto.EntityResponse;
 import com.nested.app.client.mf.dto.FATCAUploadRequest;
 import com.nested.app.client.mf.dto.KycCheck;
-import java.util.Date;
 import reactor.core.publisher.Mono;
 
 public interface KycAPIClient {
-  Mono<KycCheck> isKycRecordAvailable(String pan, Date dob);
+  Mono<KycCheck> isKycRecordAvailable(String pan);
 
   Mono<EntityResponse> createKyc(CreateKYCRequest request);
 

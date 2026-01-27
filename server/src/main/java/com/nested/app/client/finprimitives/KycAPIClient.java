@@ -7,8 +7,6 @@ import com.nested.app.client.mf.dto.EntityResponse;
 import com.nested.app.client.mf.dto.FATCAUploadRequest;
 import com.nested.app.client.mf.dto.KycCheck;
 import jakarta.validation.constraints.NotEmpty;
-import jakarta.validation.constraints.NotNull;
-import java.util.Date;
 import java.util.Map;
 import java.util.Objects;
 import java.util.function.Predicate;
@@ -35,7 +33,7 @@ public class KycAPIClient implements com.nested.app.client.mf.KycAPIClient {
   @Value("${app.url}")
   private String APP_URL;
 
-  public Mono<KycCheck> isKycRecordAvailable(@NotEmpty String pan, @NotNull Date dob) {
+  public Mono<KycCheck> isKycRecordAvailable(@NotEmpty String pan) {
     return api.withAuth()
         .get()
         .uri(uriBuilder -> uriBuilder.path(KYC_REQUEST_API_URL).queryParam("pan", pan).build())
@@ -43,12 +41,20 @@ public class KycAPIClient implements com.nested.app.client.mf.KycAPIClient {
         .bodyToMono(new ParameterizedTypeReference<EntityListResponse<KYCRequest>>() {})
         .map(
             kycGetResponse -> {
-              var status =
+              var statusList =
                   kycGetResponse.data.stream()
-                      .findFirst()
                       .map(r -> r.status)
                       .map(KycCheck.Status::fromString)
-                      .orElse(KycCheck.Status.NOT_AVAILABLE);
+                      .toList();
+
+              KycCheck.Status status = null;
+              if (statusList.isEmpty()) {
+                status = KycCheck.Status.NOT_AVAILABLE;
+              } else if (statusList.contains(KycCheck.Status.AVAILABLE)) {
+                status = KycCheck.Status.AVAILABLE;
+              } else {
+                status = statusList.getFirst();
+              }
 
               return KycCheck.builder().pan(pan).status(status).build();
             });
