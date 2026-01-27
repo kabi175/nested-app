@@ -4,6 +4,7 @@
  */
 
 export * from './users';
+export { getUserStats } from './users';
 export * from './baskets';
 // export * from './colleges';
 export * from './education';

@@ -28,6 +28,9 @@ export interface BasketDTO {
   years?: number;
   expectedReturns?: number; // Expected annual returns percentage
   funds: BasketFund[];
+  min_investment?: number; // Minimum investment amount
+  min_sip?: number; // Minimum SIP amount
+  basketType?: 'education' | 'super_fd'; // Basket type: education or super_fd
 }
 
 export interface CreateBasketDTO {
@@ -38,6 +41,7 @@ export interface CreateBasketDTO {
     id: number; // Backend expects "id" (see @JsonProperty("id") in BasketFundDTO)
     allocationPercentage: number;
   }[];
+  basketType?: 'education' | 'super_fd'; // Basket type: education or super_fd (defaults to EDUCATION)
 }
 
 export interface UpdateBasketDTO {
@@ -49,6 +53,7 @@ export interface UpdateBasketDTO {
     id: number; // Backend expects "id" (see @JsonProperty("id") in BasketFundDTO)
     allocationPercentage: number;
   }[];
+  basketType?: 'education' | 'super_fd'; // Basket type: education or super_fd
 }
 
 export interface Basket {
@@ -63,6 +68,8 @@ export interface Basket {
   }[];
   totalPercentage: number;
   createdAt: string;
+  minInvestment?: number; // Minimum investment amount
+  minSip?: number; // Minimum SIP amount
 }
 
 /**
@@ -116,6 +123,8 @@ export async function getBaskets(
           funds,
           totalPercentage,
           createdAt: new Date().toISOString(),
+          minInvestment: basket.min_investment,
+          minSip: basket.min_sip,
         };
       });
     
@@ -167,6 +176,8 @@ export async function getBasketById(id: string): Promise<Basket> {
       funds,
       totalPercentage,
       createdAt: new Date().toISOString(),
+      minInvestment: basket.min_investment,
+      minSip: basket.min_sip,
     };
   } catch (error) {
     console.error('Error fetching basket:', error);

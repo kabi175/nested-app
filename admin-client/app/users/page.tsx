@@ -34,8 +34,11 @@ import {
   UserPlus,
   X,
   ShieldCheck,
-  Loader2
+  Loader2,
+  CreditCard,
+  DollarSign
 } from 'lucide-react';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import {
   Dialog,
   DialogContent,
@@ -54,8 +57,9 @@ import {
 
 export default function UsersPage() {
   const { toast } = useToast();
-  const [users, setUsers] = useState<User[]>([]);
+  const [users, setUsers] = useState<User[]>([]); // Current page users
   const [search, setSearch] = useState('');
+  const [investorStatusFilter, setInvestorStatusFilter] = useState<string>('all');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
@@ -63,6 +67,7 @@ export default function UsersPage() {
   const [currentPage, setCurrentPage] = useState(0);
   const [pageSize, setPageSize] = useState(10);
   const [pageInfo, setPageInfo] = useState<PageInfo | null>(null);
+  const [readyToInvestCount, setReadyToInvestCount] = useState<number>(0);
 
   // Create Admin User states
   const [isCreateAdminOpen, setIsCreateAdminOpen] = useState(false);
@@ -72,7 +77,7 @@ export default function UsersPage() {
   const [adminLastName, setAdminLastName] = useState('');
   const [creatingAdmin, setCreatingAdmin] = useState(false);
 
-  // Fetch users from API
+  // Fetch users with pagination, search, and filter
   useEffect(() => {
     const fetchUsers = async () => {
       setLoading(true);
@@ -94,13 +99,74 @@ export default function UsersPage() {
     };
 
     fetchUsers();
-  }, [currentPage, pageSize]);
+  }, [currentPage, pageSize, search, investorStatusFilter]);
 
-  const filteredUsers = users.filter(user =>
-    `${user.firstName} ${user.lastName}`.toLowerCase().includes(search.toLowerCase()) ||
-    (user.email?.toLowerCase() || '').includes(search.toLowerCase()) ||
-    (user.phoneNumber?.toLowerCase() || '').includes(search.toLowerCase())
-  );
+  // Fetch all users in background for accurate stats (ready to invest count)
+  useEffect(() => {
+    const fetchAllForStats = async () => {
+      try {
+        // Fetch all users in batches for stats calculation
+        let allFetchedUsers: User[] = [];
+        let currentPageNum = 0;
+        let hasMore = true;
+        const batchSize = 100;
+        
+        while (hasMore && currentPageNum < 50) { // Limit to 50 pages (5000 users max)
+          const response = await getUsers('ALL', {
+            page: currentPageNum,
+            size: batchSize,
+            sort: 'id',
+          });
+          
+          allFetchedUsers = [...allFetchedUsers, ...response.users];
+          
+          if (response.pageInfo) {
+            hasMore = currentPageNum < response.pageInfo.totalPages - 1;
+            currentPageNum++;
+          } else {
+            hasMore = response.users.length === batchSize;
+            currentPageNum++;
+          }
+        }
+        
+        // Calculate ready to invest count
+        // User is ready to invest if:
+        // 1. isReadyToInvest is true, OR
+        // 2. investor status is "ready_to_invest", OR
+        // 3. investor exists and isReadyToInvest is true
+        const count = allFetchedUsers.filter(u => {
+          return u.isReadyToInvest === true || 
+                 u.investor?.status === "ready_to_invest" ||
+                 (u.investor && u.isReadyToInvest);
+        }).length;
+        
+        console.log('Ready to invest count:', count, 'out of', allFetchedUsers.length, 'users');
+        console.log('Sample users:', allFetchedUsers.slice(0, 5).map(u => ({
+          id: u.id,
+          name: `${u.firstName} ${u.lastName}`,
+          isReadyToInvest: u.isReadyToInvest,
+          investorStatus: u.investor?.status,
+          hasInvestor: !!u.investor
+        })));
+        
+        setReadyToInvestCount(count);
+      } catch (err) {
+        console.error('Error fetching stats:', err);
+        // Fallback to current page count
+        setReadyToInvestCount(users.filter(u => u.investor?.status === "ready_to_invest" || u.isReadyToInvest).length);
+      }
+    };
+    
+    fetchAllForStats();
+  }, []); // Only fetch once on mount
+
+  // Reset to first page when search or filter changes
+  useEffect(() => {
+    setCurrentPage(0);
+  }, [search, investorStatusFilter]);
+
+  // Users are already filtered by server, no need for client-side filtering
+  const filteredUsers = users;
 
   const handleViewUser = (user: User) => {
     setSelectedUser(user);
@@ -140,13 +206,25 @@ export default function UsersPage() {
         setIsCreateAdminOpen(false);
         
         // Refresh users list
-        const refreshResponse = await getUsers('ALL', {
-          page: currentPage,
-          size: pageSize,
-          sort: 'id',
-        });
+        const refreshResponse = await getUsers(
+          'ALL',
+          {
+            page: currentPage,
+            size: pageSize,
+            sort: 'id',
+          },
+          search.trim() || undefined,
+          investorStatusFilter
+        );
         setUsers(refreshResponse.users);
         setPageInfo(refreshResponse.pageInfo || null);
+        
+        // Recalculate ready to invest count from current users
+        const count = users.filter(u => 
+          u.investor?.status === "ready_to_invest" || u.isReadyToInvest
+        ).length;
+        // Note: This is approximate from current page only
+        // Full count is calculated in background fetch
       } else {
         toast({
           title: 'Error',
@@ -167,18 +245,20 @@ export default function UsersPage() {
 
   const handleExport = () => {
     try {
+      // Export all filtered users (not just current page)
       const exportData = filteredUsers.map(user => ({
         ID: user.id,
         'First Name': user.firstName,
         'Last Name': user.lastName,
         Email: user.email || 'N/A',
         Phone: user.phoneNumber || 'N/A',
+        'PAN Number': user.panNumber || 'N/A',
         Role: user.role || 'N/A',
         Gender: user.gender || 'N/A',
         'Date of Birth': user.dateOfBirth || 'N/A',
-        'PAN Number': user.panNumber || 'N/A',
-        'Investor Status': user.investor?.status || 'N/A',
-        Address: user.address ? `${user.address.address_line}, ${user.address.city}, ${user.address.state}` : 'N/A',
+        'Investor ID': user.investor?.id || 'N/A',
+        'Investor Status': user.investor?.status?.replace(/_/g, ' ') || 'No Investor',
+        Address: user.address ? `${user.address.address_line || ''}, ${user.address.city || ''}, ${user.address.state || ''}`.replace(/^,\s*|,\s*$/g, '') : 'N/A',
       }));
 
       exportToCSV(exportData, `users-${new Date().toISOString().split('T')[0]}`);
@@ -196,11 +276,11 @@ export default function UsersPage() {
     }
   };
 
+  // Calculate stats from pageInfo
   const stats = {
-    total: pageInfo?.totalElements || users.length,
-    active: users.filter(u => u.investor?.status === "ready_to_invest").length,
-    admins: users.filter(u => u.role === "admin").length,
-    withInvestor: users.filter(u => u.investor !== null && u.investor !== undefined).length,
+    total: pageInfo?.totalElements || 0,
+    active: readyToInvestCount, // Will be updated as we fetch pages
+    admins: users.filter(u => u.role?.toUpperCase() === "ADMIN").length,
   };
 
   const LoadingSkeleton = () => (
@@ -212,6 +292,7 @@ export default function UsersPage() {
           <TableCell><Skeleton className="h-4 w-20" /></TableCell>
           <TableCell><Skeleton className="h-4 w-16" /></TableCell>
           <TableCell><Skeleton className="h-4 w-32" /></TableCell>
+          <TableCell><Skeleton className="h-4 w-24" /></TableCell>
           <TableCell><Skeleton className="h-4 w-12" /></TableCell>
         </TableRow>
       ))}
@@ -249,7 +330,7 @@ export default function UsersPage() {
               size="sm"
               className="bg-white/80 dark:bg-slate-900/80 backdrop-blur-sm border-slate-200/50 dark:border-slate-700/50 hover:bg-white dark:hover:bg-slate-900 transition-all duration-200 rounded-xl px-4 py-2"
               onClick={handleExport}
-              disabled={filteredUsers.length === 0}
+              disabled={users.length === 0}
             >
               <Download className="w-4 h-4 mr-2" />
               Export Users
@@ -266,7 +347,7 @@ export default function UsersPage() {
         </motion.div>
 
         {/* Premium Stats Grid with Glassmorphism */}
-        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
+        <div className="grid gap-6 md:grid-cols-3">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -300,7 +381,7 @@ export default function UsersPage() {
               </CardHeader>
               <CardContent className="relative z-10 space-y-3 min-h-[88px]">
                 <div className="text-3xl lg:text-4xl font-bold text-slate-900 dark:text-slate-100">{stats.active}</div>
-                <p className="text-slate-500 dark:text-slate-400 text-xs">Ready to invest</p>
+                <p className="text-slate-500 dark:text-slate-400 text-xs">Ready to invest users</p>
               </CardContent>
             </Card>
           </motion.div>
@@ -323,23 +404,6 @@ export default function UsersPage() {
             </Card>
           </motion.div>
 
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.4 }}
-          >
-            <Card className="group relative overflow-hidden border-0 shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 rounded-2xl backdrop-blur-sm bg-gradient-to-br from-amber-50/50 to-orange-50/50 dark:from-amber-950/20 dark:to-orange-950/20 border border-amber-200/50 dark:border-amber-800/30">
-              <div className="absolute inset-0 bg-white/40 dark:bg-slate-900/40 backdrop-blur-sm" />
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3 relative z-10">
-                <CardTitle className="text-sm font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-wide">With Investor</CardTitle>
-                <Badge className="bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300 border-amber-200 dark:border-amber-800">Investor</Badge>
-              </CardHeader>
-              <CardContent className="relative z-10 space-y-3 min-h-[88px]">
-                <div className="text-3xl lg:text-4xl font-bold text-slate-900 dark:text-slate-100">{stats.withInvestor}</div>
-                <p className="text-slate-500 dark:text-slate-400 text-xs">Have investor accounts</p>
-              </CardContent>
-            </Card>
-          </motion.div>
         </div>
 
         {/* Search & Filters */}
@@ -358,14 +422,33 @@ export default function UsersPage() {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="relative">
-                <Search className="absolute left-3 top-3 h-4 w-4 text-slate-400" />
-                <Input
-                  placeholder="Search by name or email..."
-                  value={search}
-                  onChange={(e) => setSearch(e.target.value)}
-                  className="pl-10 bg-white/80 dark:bg-slate-900/80 border-slate-200/50 dark:border-slate-700/50 rounded-xl"
-                />
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="relative">
+                  <Search className="absolute left-3 top-3 h-4 w-4 text-slate-400" />
+                  <Input
+                    placeholder="Search by name, email, phone, or PAN..."
+                    value={search}
+                    onChange={(e) => setSearch(e.target.value)}
+                    className="pl-10 bg-white/80 dark:bg-slate-900/80 border-slate-200/50 dark:border-slate-700/50 rounded-xl"
+                  />
+                </div>
+                <div>
+                  <Select value={investorStatusFilter} onValueChange={setInvestorStatusFilter}>
+                    <SelectTrigger className="bg-white/80 dark:bg-slate-900/80 border-slate-200/50 dark:border-slate-700/50 rounded-xl">
+                      <SelectValue placeholder="Filter by investor status" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">All Users</SelectItem>
+                      <SelectItem value="has_investor">Has Investor Account</SelectItem>
+                      <SelectItem value="no_investor">No Investor Account</SelectItem>
+                      <SelectItem value="ready_to_invest">Ready to Invest</SelectItem>
+                      <SelectItem value="under_review">Under Review</SelectItem>
+                      <SelectItem value="incomplete_detail">Incomplete Detail</SelectItem>
+                      <SelectItem value="incomplete_kyc_details">Incomplete KYC</SelectItem>
+                      <SelectItem value="pending_nominee_authentication">Pending Nominee</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
               </div>
             </CardContent>
           </Card>
@@ -384,7 +467,7 @@ export default function UsersPage() {
                   <div className="p-2 rounded-xl bg-gradient-to-r from-blue-500/10 to-indigo-500/10 border border-blue-200/20 dark:border-blue-800/20">
                     <UsersIcon className="h-5 w-5 text-blue-600 dark:text-blue-400" />
                   </div>
-                  Users ({filteredUsers.length})
+                  Users ({filteredUsers.length} of {stats.total})
                 </div>
                 <Button variant="ghost" size="sm" className="text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100">
                   <Eye className="w-4 h-4 mr-2" />
@@ -399,9 +482,10 @@ export default function UsersPage() {
                     <TableRow className="bg-slate-50/50 dark:bg-slate-800/50">
                       <TableHead className="text-slate-700 dark:text-slate-300 font-semibold">User</TableHead>
                       <TableHead className="text-slate-700 dark:text-slate-300 font-semibold">Contact</TableHead>
+                      <TableHead className="text-slate-700 dark:text-slate-300 font-semibold">PAN Card</TableHead>
                       <TableHead className="text-slate-700 dark:text-slate-300 font-semibold">Role</TableHead>
-                      <TableHead className="text-slate-700 dark:text-slate-300 font-semibold">Gender</TableHead>
                       <TableHead className="text-slate-700 dark:text-slate-300 font-semibold">Investor Status</TableHead>
+                      <TableHead className="text-slate-700 dark:text-slate-300 font-semibold">Investment</TableHead>
                       <TableHead className="text-right text-slate-700 dark:text-slate-300 font-semibold">Actions</TableHead>
                     </TableRow>
                   </TableHeader>
@@ -410,7 +494,7 @@ export default function UsersPage() {
                       <LoadingSkeleton />
                     ) : error ? (
                       <TableRow>
-                        <TableCell colSpan={6} className="text-center py-12">
+                        <TableCell colSpan={7} className="text-center py-12">
                           <div className="flex flex-col items-center gap-4">
                             <div className="w-16 h-16 rounded-full bg-red-100 dark:bg-red-900/30 flex items-center justify-center">
                               <UsersIcon className="h-8 w-8 text-red-600 dark:text-red-400" />
@@ -424,7 +508,7 @@ export default function UsersPage() {
                       </TableRow>
                     ) : filteredUsers.length === 0 ? (
                       <TableRow>
-                        <TableCell colSpan={6} className="text-center py-12">
+                        <TableCell colSpan={7} className="text-center py-12">
                           <div className="flex flex-col items-center gap-4">
                             <div className="w-16 h-16 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center">
                               <UsersIcon className="h-8 w-8 text-slate-400" />
@@ -469,18 +553,23 @@ export default function UsersPage() {
                             </div>
                           </TableCell>
                           <TableCell>
+                            <div className="flex items-center gap-2">
+                              <CreditCard className="h-3 w-3 text-slate-400" />
+                              <span className="text-sm font-medium text-slate-900 dark:text-slate-100">
+                                {user.panNumber || 'N/A'}
+                              </span>
+                            </div>
+                          </TableCell>
+                          <TableCell>
                             <Badge 
                               className={
-                                user.role === "admin" 
+                                user.role?.toUpperCase() === "ADMIN" 
                                   ? "bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300 border-purple-200 dark:border-purple-800"
                                   : "bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700"
                               }
                             >
                               {user.role || 'standard'}
                             </Badge>
-                          </TableCell>
-                          <TableCell>
-                            <span className="text-sm text-slate-600 dark:text-slate-400 capitalize">{user.gender || 'N/A'}</span>
                           </TableCell>
                           <TableCell>
                             <Badge 
@@ -497,6 +586,18 @@ export default function UsersPage() {
                             >
                               {user.investor?.status?.replace(/_/g, ' ') || 'No Investor'}
                             </Badge>
+                          </TableCell>
+                          <TableCell>
+                            <div className="flex items-center gap-2">
+                              <DollarSign className="h-3 w-3 text-slate-400" />
+                              <span className="text-sm text-slate-600 dark:text-slate-400">
+                                {user.investor?.id 
+                                  ? `Investor #${user.investor.id}` 
+                                  : user.isReadyToInvest 
+                                    ? 'Ready' 
+                                    : 'N/A'}
+                              </span>
+                            </div>
                           </TableCell>
                           <TableCell className="text-right">
                             <Button 
@@ -518,8 +619,24 @@ export default function UsersPage() {
               {/* Pagination */}
               {pageInfo && pageInfo.totalPages > 1 && (
                 <div className="flex items-center justify-between px-6 py-4 border-t border-slate-200/50 dark:border-slate-700/50">
-                  <div className="text-sm text-slate-600 dark:text-slate-400">
-                    Showing {currentPage * pageSize + 1} to {Math.min((currentPage + 1) * pageSize, pageInfo.totalElements)} of {pageInfo.totalElements} users
+                  <div className="flex items-center gap-4">
+                    <div className="text-sm text-slate-600 dark:text-slate-400">
+                      Showing {currentPage * pageSize + 1} to {Math.min((currentPage + 1) * pageSize, pageInfo.totalElements)} of {pageInfo.totalElements} users
+                    </div>
+                    <Select value={String(pageSize)} onValueChange={(value) => {
+                      setPageSize(Number(value));
+                      setCurrentPage(0); // Reset to first page when changing page size
+                    }}>
+                      <SelectTrigger className="w-24 h-8">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="10">10</SelectItem>
+                        <SelectItem value="25">25</SelectItem>
+                        <SelectItem value="50">50</SelectItem>
+                        <SelectItem value="100">100</SelectItem>
+                      </SelectContent>
+                    </Select>
                   </div>
                   <Pagination>
                     <PaginationContent>

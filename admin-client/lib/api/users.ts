@@ -30,6 +30,9 @@ export interface User {
   panNumber?: string;
   investor?: Investor;
   createdAt?: string;
+  isReadyToInvest?: boolean;
+  kycStatus?: string;
+  nomineeStatus?: string;
 }
 
 export interface UserDTO {
@@ -42,8 +45,13 @@ export interface UserDTO {
   address?: Address;
   date_of_birth?: string;
   gender?: 'male' | 'female' | 'transgender';
-  panNumber?: string;
-  investor?: Investor;
+  pan_number?: string;
+  panNumber?: string; // Support both formats
+  is_ready_to_invest?: boolean;
+  kyc_status?: 'unknown' | 'pending' | 'aadhaar_pending' | 'esign_pending' | 'submitted' | 'completed' | 'failed' | 
+               'UNKNOWN' | 'PENDING' | 'AADHAAR_PENDING' | 'E_SIGN_PENDING' | 'SUBMITTED' | 'COMPLETED' | 'FAILED';
+  nominee_status?: 'unknown' | 'opt_out' | 'completed' | 'UNKNOWN' | 'OPT_OUT' | 'COMPLETED';
+  investor?: Investor; // May not be included in API response
 }
 
 /**
@@ -67,23 +75,91 @@ export async function getUsers(
     const response = await apiClient.get<ApiResponse<UserDTO>>('/users', params);
     
     // Map backend response to frontend User interface
-    const users = response.data.map(user => ({
-      id: user.id,
-      firstName: user.first_name,
-      lastName: user.last_name,
-      email: user.email,
-      phoneNumber: user.phone_number,
-      role: user.role,
-      address: user.address,
-      dateOfBirth: user.date_of_birth,
-      gender: user.gender,
-      panNumber: user.panNumber,
-      investor: user.investor,
-    }));
+    // Note: UserDTO.fromEntity() doesn't explicitly map investor, but Jackson may serialize it
+    // if the relationship is loaded. We derive investor status from User fields as fallback.
+    const users = response.data.map((user: any) => {
+      const panNumber = user.pan_number || user.panNumber;
+      const kycStatus = (user.kyc_status || '').toLowerCase();
+      const nomineeStatus = (user.nominee_status || '').toLowerCase();
+      const isReadyToInvest = user.is_ready_to_invest || false;
+      
+      // Check if user has investor account
+      // User has investor if: investor object exists OR isReadyToInvest is true
+      // (isReadyToInvest=true means investor account exists and is ready)
+      const hasInvestor = !!(user.investor || isReadyToInvest);
+      
+      let investor: Investor | undefined;
+      
+      if (hasInvestor) {
+        let investorStatus: Investor['status'] = 'incomplete_detail';
+        let investorId: number | undefined;
+        
+        // If investor object exists with status/id, use it
+        if (user.investor) {
+          investorId = user.investor.id;
+          if (user.investor.status) {
+            investorStatus = user.investor.status;
+          }
+        }
+        
+        // If no explicit status, derive from User fields (matching server logic)
+        if (!user.investor?.status) {
+          if (isReadyToInvest) {
+            investorStatus = 'ready_to_invest';
+          } else if (kycStatus === 'completed') {
+            // KYC completed - check nominee status
+            if (nomineeStatus === 'unknown') {
+              investorStatus = 'pending_nominee_authentication';
+            } else {
+              investorStatus = 'under_review';
+            }
+          } else if (kycStatus === 'submitted') {
+            investorStatus = 'under_review';
+          } else if (kycStatus === 'pending' || kycStatus === 'aadhaar_pending' || kycStatus === 'esign_pending') {
+            investorStatus = 'incomplete_kyc_details';
+          } else if (nomineeStatus === 'unknown') {
+            investorStatus = 'pending_nominee_authentication';
+          } else {
+            investorStatus = 'incomplete_detail';
+          }
+        }
+        
+        investor = {
+          id: investorId,
+          status: investorStatus,
+        };
+      }
+      
+      return {
+        id: user.id,
+        firstName: user.first_name,
+        lastName: user.last_name,
+        email: user.email,
+        phoneNumber: user.phone_number,
+        role: user.role,
+        address: user.address,
+        dateOfBirth: user.date_of_birth,
+        gender: user.gender,
+        panNumber: panNumber,
+        investor: investor,
+        isReadyToInvest: isReadyToInvest,
+        kycStatus: user.kyc_status,
+        nomineeStatus: user.nominee_status,
+      };
+    });
+    
+    // Extract pagination info from response
+    // Response structure: { data: [...], totalElements: number, totalPages: number }
+    const pageInfo: PageInfo = {
+      totalElements: response.totalElements || response.data.length,
+      totalPages: response.totalPages || 1,
+      currentPage: pagination?.page || 0,
+      pageSize: pagination?.size || 10,
+    };
     
     return {
       users,
-      pageInfo: response.page,
+      pageInfo,
     };
   } catch (error) {
     console.error('Error fetching users:', error);

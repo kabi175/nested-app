@@ -196,6 +196,7 @@ export default function BasketsPage() {
         years: basketYears ? parseFloat(basketYears) : undefined,
         expectedReturns: basketExpectedReturns ? parseFloat(basketExpectedReturns) : undefined,
         funds: fundsPayload,
+        basketType: 'education', // Default to education for admin-created baskets
       });
 
       toast({
@@ -279,6 +280,7 @@ export default function BasketsPage() {
         years: basketYears ? parseFloat(basketYears) : undefined,
         expectedReturns: basketExpectedReturns ? parseFloat(basketExpectedReturns) : undefined,
         funds: fundsPayload,
+        basketType: 'education', // Default to education for admin-created baskets
       });
 
       toast({
@@ -337,6 +339,8 @@ export default function BasketsPage() {
         Name: basket.name,
         'Duration (Years)': basket.duration,
         'Expected Returns': basket.expectedReturns || 'N/A',
+        'Min Investment': basket.minInvestment ? `₹${basket.minInvestment.toLocaleString('en-IN')}` : 'N/A',
+        'Min SIP': basket.minSip ? `₹${basket.minSip.toLocaleString('en-IN')}` : 'N/A',
         'Number of Funds': basket.funds?.length || 0,
         'Total Allocation %': basket.totalPercentage,
         'Created Date': basket.createdAt ? new Date(basket.createdAt).toLocaleDateString() : 'N/A',
@@ -376,6 +380,8 @@ export default function BasketsPage() {
           <TableCell><Skeleton className="h-4 w-32" /></TableCell>
           <TableCell><Skeleton className="h-4 w-16" /></TableCell>
           <TableCell><Skeleton className="h-4 w-16" /></TableCell>
+          <TableCell><Skeleton className="h-4 w-20" /></TableCell>
+          <TableCell><Skeleton className="h-4 w-20" /></TableCell>
           <TableCell><Skeleton className="h-4 w-12" /></TableCell>
           <TableCell><Skeleton className="h-4 w-16" /></TableCell>
           <TableCell><Skeleton className="h-4 w-16" /></TableCell>
@@ -482,6 +488,8 @@ export default function BasketsPage() {
                       <TableHead className="text-slate-700 dark:text-slate-300 font-semibold">Basket</TableHead>
                       <TableHead className="text-slate-700 dark:text-slate-300 font-semibold">Duration</TableHead>
                       <TableHead className="text-slate-700 dark:text-slate-300 font-semibold">Expected Returns</TableHead>
+                      <TableHead className="text-slate-700 dark:text-slate-300 font-semibold">Min Investment</TableHead>
+                      <TableHead className="text-slate-700 dark:text-slate-300 font-semibold">Min SIP</TableHead>
                       <TableHead className="text-slate-700 dark:text-slate-300 font-semibold">Funds</TableHead>
                       <TableHead className="text-slate-700 dark:text-slate-300 font-semibold">Allocation</TableHead>
                       <TableHead className="text-right text-slate-700 dark:text-slate-300 font-semibold">Actions</TableHead>
@@ -492,7 +500,7 @@ export default function BasketsPage() {
                       <LoadingSkeleton />
                     ) : error ? (
                       <TableRow>
-                        <TableCell colSpan={6} className="text-center py-12">
+                        <TableCell colSpan={8} className="text-center py-12">
                           <div className="flex flex-col items-center gap-4">
                             <div className="w-16 h-16 rounded-full bg-red-100 dark:bg-red-900/30 flex items-center justify-center">
                               <Package className="h-8 w-8 text-red-600 dark:text-red-400" />
@@ -506,7 +514,7 @@ export default function BasketsPage() {
                       </TableRow>
                     ) : baskets.length === 0 ? (
                       <TableRow>
-                        <TableCell colSpan={6} className="text-center py-12">
+                        <TableCell colSpan={8} className="text-center py-12">
                           <div className="flex flex-col items-center gap-4">
                             <div className="w-16 h-16 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center">
                               <Package className="h-8 w-8 text-slate-400" />
@@ -549,6 +557,20 @@ export default function BasketsPage() {
                               <TrendingUp className="h-4 w-4 text-emerald-500" />
                               <span className="font-semibold text-emerald-600 dark:text-emerald-400">
                                 {basket.expectedReturns ? `${basket.expectedReturns}%` : '-'}
+                              </span>
+                            </div>
+                          </TableCell>
+                          <TableCell>
+                            <div className="flex items-center gap-2">
+                              <span className="font-medium text-slate-900 dark:text-slate-100">
+                                {basket.minInvestment ? `₹${basket.minInvestment.toLocaleString('en-IN')}` : '-'}
+                              </span>
+                            </div>
+                          </TableCell>
+                          <TableCell>
+                            <div className="flex items-center gap-2">
+                              <span className="font-medium text-slate-900 dark:text-slate-100">
+                                {basket.minSip ? `₹${basket.minSip.toLocaleString('en-IN')}` : '-'}
                               </span>
                             </div>
                           </TableCell>
@@ -864,6 +886,37 @@ export default function BasketsPage() {
               <p className="text-xs text-slate-500 dark:text-slate-400">
                 Expected annual returns percentage for SIP calculations
               </p>
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div className="grid gap-2">
+                <Label htmlFor="edit-minInvestment">Min Investment</Label>
+                <Input
+                  id="edit-minInvestment"
+                  type="text"
+                  value={editingBasket?.minInvestment ? `₹${editingBasket.minInvestment.toLocaleString('en-IN')}` : '-'}
+                  disabled
+                  readOnly
+                  className="bg-slate-50 dark:bg-slate-800/50 cursor-not-allowed opacity-60"
+                />
+                <p className="text-xs text-slate-500 dark:text-slate-400">
+                  Calculated based on fund allocations (read-only)
+                </p>
+              </div>
+              <div className="grid gap-2">
+                <Label htmlFor="edit-minSip">Min SIP</Label>
+                <Input
+                  id="edit-minSip"
+                  type="text"
+                  value={editingBasket?.minSip ? `₹${editingBasket.minSip.toLocaleString('en-IN')}` : '-'}
+                  disabled
+                  readOnly
+                  className="bg-slate-50 dark:bg-slate-800/50 cursor-not-allowed opacity-60"
+                />
+                <p className="text-xs text-slate-500 dark:text-slate-400">
+                  Calculated based on fund allocations (read-only)
+                </p>
+              </div>
             </div>
 
             <div className="space-y-4">

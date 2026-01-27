@@ -13,8 +13,8 @@ export interface PaginationParams {
 }
 
 export interface PageInfo {
-  page: number;
-  size: number;
+  currentPage?: number;
+  pageSize?: number;
   totalElements: number;
   totalPages: number;
 }
@@ -22,6 +22,8 @@ export interface PageInfo {
 export interface ApiResponse<T> {
   data: T[];
   page?: PageInfo;
+  totalElements?: number;
+  totalPages?: number;
 }
 
 export interface ApiError {
