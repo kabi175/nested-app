@@ -10,10 +10,12 @@
  */
 
 import { sleep, check, group } from 'k6';
+import http from 'k6/http';
 import { Counter, Trend, Rate } from 'k6/metrics';
-import { get, post, checkAndParse } from '../lib/http-client.js';
-import { endpoints } from '../config/environments.js';
+import { get, post, checkAndParse, getMfaHeaders } from '../lib/http-client.js';
+import { endpoints, config } from '../config/environments.js';
 import { getTestToken } from '../lib/auth-helper.js';
+import { getMfaToken } from '../lib/mfa-helper.js';
 import { randomIntBetween } from 'https://jslib.k6.io/k6-utils/1.4.0/index.js';
 
 // Custom metrics
@@ -170,7 +172,7 @@ export default function(data) {
   sleep(0.3);
   
   // ========================================
-  // Step 2: Verify Payment
+  // Step 2: Verify Payment (with MFA handling)
   // POST /api/v1/payments/{payment_id}/actions/verify
   // ========================================
   group('Step 2: Verify Payment', () => {
@@ -179,12 +181,27 @@ export default function(data) {
     };
     
     const startTime = Date.now();
-    const response = post(
+    let response = post(
       endpoints.payments.verify(paymentId),
       verifyRequest,
       token,
       { step: 'payment_verify' }
     );
+    
+    // If 403 (MFA required), handle MFA and retry with default test OTP (123456)
+    if (response.status === 403) {
+      const mfaToken = getMfaToken(token, 'MF_BUY', '123456');
+      if (mfaToken) {
+        // Retry with MFA token
+        const headers = getMfaHeaders(token, mfaToken);
+        const url = `${config.baseUrl}${endpoints.payments.verify(paymentId)}`;
+        response = http.post(url, JSON.stringify(verifyRequest), {
+          headers,
+          tags: { name: endpoints.payments.verify(paymentId), step: 'payment_verify', mfa_retry: true },
+        });
+      }
+    }
+    
     paymentVerifyDuration.add(Date.now() - startTime);
     
     const success = check(response, {
@@ -192,15 +209,13 @@ export default function(data) {
     });
     
     if (!success) {
-      // 403 = MFA required (expected in load testing)
+      // Check for graceful failures
       check(response, {
-        'payment verify requires MFA or failed gracefully': (r) => 
-          r.status === 403 || r.status === 400,
+        'payment verify failed gracefully': (r) => 
+          r.status === 400 || r.status === 403,
       });
       
-      if (response.status === 403) {
-        console.log('Payment verify requires MFA - expected');
-      } else if (response.status >= 500) {
+      if (response.status >= 500) {
         paymentErrors.add(1);
         flowSuccess = false;
       }

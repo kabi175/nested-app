@@ -108,6 +108,91 @@ export function getM2MToken() {
 }
 
 /**
+ * Get Mobile App Token via SMS OTP (Auth0 Passwordless)
+ * 
+ * Note: This requires either:
+ * 1. Pre-generated tokens (recommended for load tests)
+ * 2. Test OTP that works in test environment
+ * 3. Manual OTP entry (not suitable for automated load tests)
+ * 
+ * For load testing, generate tokens beforehand using:
+ *   ./scripts/get-mobile-token.sh
+ * 
+ * @param {string} phoneNumber - Full phone number with country code (e.g., +919999999999)
+ * @param {string} testOtp - Test OTP code (if backend supports test mode)
+ * @returns {string|null} Access token or null if failed
+ */
+export function getMobileToken(phoneNumber = null, testOtp = null) {
+  // First, try to use pre-generated token from environment
+  if (__ENV.K6_MOBILE_TOKEN) {
+    return __ENV.K6_MOBILE_TOKEN;
+  }
+  
+  // Use regular token if mobile token not specified
+  if (__ENV.K6_AUTH_TOKEN) {
+    return __ENV.K6_AUTH_TOKEN;
+  }
+  
+  // If phone number and test OTP provided, try to get token
+  if (phoneNumber && testOtp) {
+    const auth0Domain = __ENV.AUTH0_DOMAIN || 'dev-yscagulfy0qamarm.us.auth0.com';
+    const clientId = __ENV.AUTH0_CLIENT_ID;
+    const audience = __ENV.AUTH0_AUDIENCE || `https://${auth0Domain}/api/v2/`;
+    
+    if (!clientId) {
+      console.warn('AUTH0_CLIENT_ID not configured for mobile token generation');
+      return null;
+    }
+    
+    // Step 1: Request OTP (passwordless start)
+    const startResponse = http.post(
+      `https://${auth0Domain}/passwordless/start`,
+      JSON.stringify({
+        client_id: clientId,
+        connection: 'sms',
+        phone_number: phoneNumber,
+      }),
+      {
+        headers: { 'Content-Type': 'application/json' },
+      }
+    );
+    
+    if (startResponse.status !== 200) {
+      console.error(`Failed to request OTP: ${startResponse.status} - ${startResponse.body}`);
+      return null;
+    }
+    
+    // Step 2: Verify OTP and get token
+    const tokenResponse = http.post(
+      `https://${auth0Domain}/oauth/token`,
+      JSON.stringify({
+        grant_type: 'http://auth0.com/oauth/grant-type/passwordless/otp',
+        client_id: clientId,
+        otp: testOtp,
+        realm: 'sms',
+        username: phoneNumber,
+        audience: audience,
+        scope: 'openid profile email phone offline_access',
+      }),
+      {
+        headers: { 'Content-Type': 'application/json' },
+      }
+    );
+    
+    if (tokenResponse.status === 200) {
+      const body = JSON.parse(tokenResponse.body);
+      return body.access_token;
+    }
+    
+    console.error(`Failed to verify OTP: ${tokenResponse.status} - ${tokenResponse.body}`);
+    return null;
+  }
+  
+  console.warn('No mobile token available. Generate tokens using: ./scripts/get-mobile-token.sh');
+  return null;
+}
+
+/**
  * Create test user pool from file
  * Format: one token per line
  */
