@@ -146,11 +146,11 @@ export function NomineeFormModal({
     "West Bengal",
   ];
 
-  const selectedStateIndex = draft?.address?.state
-    ? states.indexOf(draft.address.state) >= 0
-      ? new IndexPath(states.indexOf(draft.address.state))
-      : undefined
-    : undefined;
+  const stateIndex = draft?.address?.state
+    ? states.indexOf(draft.address.state)
+    : -1;
+  const selectedStateIndex =
+    stateIndex >= 0 ? new IndexPath(stateIndex) : undefined;
 
   if (!draft) return null;
 
@@ -374,7 +374,7 @@ export function NomineeFormModal({
               }
               status={
                 typeof errors.address === "object" &&
-                errors.address?.address_line
+                  errors.address?.address_line
                   ? "danger"
                   : "basic"
               }

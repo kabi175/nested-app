@@ -20,10 +20,12 @@ import { router } from "expo-router";
 import { useAtom, useSetAtom } from "jotai";
 import { useState } from "react";
 import { Alert } from "react-native";
+import { useUser } from "./useUser";
 
 const MAX_NOMINEES = 3;
 
 export function useNomineeManagement() {
+  const { data: user } = useUser();
   const [nomineeList, setNomineeList] = useAtom(nomineeListAtom);
   const [draft, setDraft] = useAtom(nomineeDraftAtom);
   const [pendingNomineeId, setPendingNomineeId] = useAtom(pendingNomineeIdAtom);
@@ -54,11 +56,11 @@ export function useNomineeManagement() {
       email: "",
       mobileNumber: "",
       address: {
-        address_line: "",
-        city: "",
-        state: "",
-        pin_code: "",
-        country: "in",
+        address_line: user?.address?.address_line ?? "",
+        city: user?.address?.city ?? "",
+        state: user?.address?.state ?? "",
+        pin_code: user?.address?.pin_code ?? "",
+        country: user?.address?.country ?? "in",
       },
       allocation: 0,
       isMinor: false,
