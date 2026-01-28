@@ -206,16 +206,11 @@ export default function UsersPage() {
         setIsCreateAdminOpen(false);
         
         // Refresh users list
-        const refreshResponse = await getUsers(
-          'ALL',
-          {
-            page: currentPage,
-            size: pageSize,
-            sort: 'id',
-          },
-          search.trim() || undefined,
-          investorStatusFilter
-        );
+        const refreshResponse = await getUsers('ALL', {
+          page: currentPage,
+          size: pageSize,
+          sort: 'id',
+        });
         setUsers(refreshResponse.users);
         setPageInfo(refreshResponse.pageInfo || null);
         

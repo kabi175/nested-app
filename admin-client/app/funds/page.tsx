@@ -151,8 +151,8 @@ export default function FundsPage() {
         : stats.total;
       
       const calculatedPageInfo: PageInfo = {
-        page: currentPage,
-        size: pageSize,
+        currentPage: currentPage,
+        pageSize: pageSize,
         totalElements: total,
         totalPages: Math.max(1, Math.ceil(total / pageSize)),
       };

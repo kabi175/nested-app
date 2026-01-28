@@ -188,8 +188,8 @@ export default function EducationPage() {
         
         setEducation(paginatedEducation);
         setPageInfo({
-          page: currentPage,
-          size: pageSize,
+          currentPage: currentPage,
+          pageSize: pageSize,
           totalElements,
           totalPages,
         });
