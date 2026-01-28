@@ -57,6 +57,7 @@ import {
 
 export default function UsersPage() {
   const { toast } = useToast();
+  const [allUsers, setAllUsers] = useState<User[]>([]); // All users for filtering
   const [users, setUsers] = useState<User[]>([]); // Current page users
   const [search, setSearch] = useState('');
   const [investorStatusFilter, setInvestorStatusFilter] = useState<string>('all');
@@ -77,19 +78,70 @@ export default function UsersPage() {
   const [adminLastName, setAdminLastName] = useState('');
   const [creatingAdmin, setCreatingAdmin] = useState(false);
 
-  // Fetch users with pagination, search, and filter
+  // Fetch all users when search or filter is active, otherwise use server pagination
   useEffect(() => {
     const fetchUsers = async () => {
       setLoading(true);
       setError(null);
       try {
-        const response = await getUsers('ALL', {
-          page: currentPage,
-          size: pageSize,
-          sort: 'id',
-        });
-        setUsers(response.users);
-        setPageInfo(response.pageInfo || null);
+        const hasSearchOrFilter = search.trim().length > 0 || investorStatusFilter !== 'all';
+        
+        if (hasSearchOrFilter) {
+          // Fetch all users for client-side filtering
+          let allFetchedUsers: User[] = [];
+          let currentPageNum = 0;
+          let hasMore = true;
+          const batchSize = 100;
+          
+          while (hasMore && currentPageNum < 50) {
+            const response = await getUsers('ALL', {
+              page: currentPageNum,
+              size: batchSize,
+              sort: 'id',
+            });
+            
+            allFetchedUsers = [...allFetchedUsers, ...response.users];
+            
+            if (response.pageInfo) {
+              hasMore = currentPageNum < response.pageInfo.totalPages - 1;
+              currentPageNum++;
+            } else {
+              hasMore = response.users.length === batchSize;
+              currentPageNum++;
+            }
+          }
+          
+          setAllUsers(allFetchedUsers);
+        } else {
+          // Use server-side pagination when no search/filter
+          const response = await getUsers('ALL', {
+            page: currentPage,
+            size: pageSize,
+            sort: 'id',
+          });
+          setUsers(response.users);
+          // pageInfo should be set from the API response
+          // The API client now estimates totalElements/totalPages if server doesn't provide them
+          if (response.pageInfo) {
+            console.log('PageInfo from API:', response.pageInfo);
+            setPageInfo(response.pageInfo);
+          } else {
+            // This shouldn't happen, but fallback just in case
+            console.warn('No pageInfo in response', { 
+              usersCount: response.users.length, 
+              currentPage, 
+              pageSize 
+            });
+            const hasMore = response.users.length === pageSize;
+            setPageInfo({
+              currentPage,
+              pageSize,
+              totalElements: hasMore ? (currentPage + 1) * pageSize + 1 : currentPage * pageSize + response.users.length,
+              totalPages: hasMore ? currentPage + 2 : currentPage + 1,
+            });
+          }
+          setAllUsers([]); // Clear allUsers when using server pagination
+        }
       } catch (err) {
         console.error('Error fetching users:', err);
         setError(err instanceof Error ? err.message : 'Failed to fetch users');
@@ -165,8 +217,69 @@ export default function UsersPage() {
     setCurrentPage(0);
   }, [search, investorStatusFilter]);
 
-  // Users are already filtered by server, no need for client-side filtering
-  const filteredUsers = users;
+  // Filter users based on search and investor status
+  const hasSearchOrFilter = search.trim().length > 0 || investorStatusFilter !== 'all';
+  
+  // When no search/filter, use server-paginated users directly
+  // When search/filter is active, filter allUsers and paginate client-side
+  const filteredUsers = hasSearchOrFilter
+    ? allUsers.filter(user => {
+        const matchesSearch = 
+          `${user.firstName} ${user.lastName}`.toLowerCase().includes(search.toLowerCase()) ||
+          (user.email?.toLowerCase() || '').includes(search.toLowerCase()) ||
+          (user.phoneNumber?.toLowerCase() || '').includes(search.toLowerCase()) ||
+          (user.panNumber?.toLowerCase() || '').includes(search.toLowerCase());
+        
+        const matchesInvestorFilter = 
+          investorStatusFilter === 'all' ||
+          (investorStatusFilter === 'no_investor' && !user.investor) ||
+          (investorStatusFilter === 'has_investor' && user.investor) ||
+          (user.investor?.status === investorStatusFilter);
+        
+        return matchesSearch && matchesInvestorFilter;
+      })
+    : users; // When no filter, use server-paginated users directly
+
+  // Paginate filtered results when using client-side filtering
+  const paginatedUsers = hasSearchOrFilter
+    ? filteredUsers.slice(currentPage * pageSize, (currentPage + 1) * pageSize)
+    : filteredUsers; // Already paginated by server
+
+  // Calculate pagination info
+  const totalFiltered = filteredUsers.length;
+  
+  // When no search/filter, use pageInfo from server, but ensure it exists
+  // If pageInfo is missing, estimate from current data
+  const displayPageInfo: PageInfo | null = hasSearchOrFilter
+    ? {
+        currentPage,
+        pageSize,
+        totalElements: totalFiltered,
+        totalPages: Math.ceil(totalFiltered / pageSize),
+      }
+    : pageInfo || (users.length > 0 ? {
+        currentPage,
+        pageSize,
+        // If we have a full page, assume there are more
+        totalElements: users.length === pageSize 
+          ? (currentPage + 1) * pageSize + 1 // At least one more user
+          : currentPage * pageSize + users.length, // Last page
+        totalPages: users.length === pageSize 
+          ? currentPage + 2 // At least one more page
+          : currentPage + 1, // This is the last page
+      } : null);
+  
+  // Debug logging
+  console.log('Pagination debug:', {
+    hasSearchOrFilter,
+    pageInfo,
+    displayPageInfo,
+    usersCount: users.length,
+    pageSize,
+    currentPage,
+    totalFiltered,
+    shouldShowPagination: displayPageInfo && (displayPageInfo.totalPages > 1 || (users.length === pageSize && currentPage === 0))
+  });
 
   const handleViewUser = (user: User) => {
     setSelectedUser(user);
@@ -273,9 +386,11 @@ export default function UsersPage() {
 
   // Calculate stats from pageInfo
   const stats = {
-    total: pageInfo?.totalElements || 0,
-    active: readyToInvestCount, // Will be updated as we fetch pages
-    admins: users.filter(u => u.role?.toUpperCase() === "ADMIN").length,
+    total: hasSearchOrFilter ? totalFiltered : (pageInfo?.totalElements || 0),
+    active: readyToInvestCount,
+    admins: hasSearchOrFilter 
+      ? allUsers.filter(u => u.role?.toUpperCase() === "ADMIN").length
+      : users.filter(u => u.role?.toUpperCase() === "ADMIN").length,
   };
 
   const LoadingSkeleton = () => (
@@ -341,65 +456,6 @@ export default function UsersPage() {
           </div>
         </motion.div>
 
-        {/* Premium Stats Grid with Glassmorphism */}
-        <div className="grid gap-6 md:grid-cols-3">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.1 }}
-          >
-            <Card className="group relative overflow-hidden border-0 shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 rounded-2xl backdrop-blur-sm bg-gradient-to-br from-blue-50/50 to-indigo-50/50 dark:from-blue-950/20 dark:to-indigo-950/20 border border-blue-200/50 dark:border-blue-800/30">
-              <div className="absolute inset-0 bg-white/40 dark:bg-slate-900/40 backdrop-blur-sm" />
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3 relative z-10">
-                <CardTitle className="text-sm font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-wide">Total Users</CardTitle>
-                <div className="p-3 rounded-xl bg-gradient-to-br from-blue-500/20 to-indigo-500/20 border border-white/20 dark:border-slate-700/30 group-hover:scale-110 transition-transform duration-200">
-                  <UsersIcon className="h-5 w-5 text-blue-600 dark:text-blue-400" />
-                </div>
-              </CardHeader>
-              <CardContent className="relative z-10 space-y-3 min-h-[88px]">
-                <div className="text-3xl lg:text-4xl font-bold text-slate-900 dark:text-slate-100">{stats.total}</div>
-                <p className="text-slate-500 dark:text-slate-400 text-xs">Registered users</p>
-              </CardContent>
-            </Card>
-          </motion.div>
-
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.2 }}
-          >
-            <Card className="group relative overflow-hidden border-0 shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 rounded-2xl backdrop-blur-sm bg-gradient-to-br from-emerald-50/50 to-teal-50/50 dark:from-emerald-950/20 dark:to-teal-950/20 border border-emerald-200/50 dark:border-emerald-800/30">
-              <div className="absolute inset-0 bg-white/40 dark:bg-slate-900/40 backdrop-blur-sm" />
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3 relative z-10">
-                <CardTitle className="text-sm font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-wide">Ready to Invest</CardTitle>
-                <Badge className="bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800">Active</Badge>
-              </CardHeader>
-              <CardContent className="relative z-10 space-y-3 min-h-[88px]">
-                <div className="text-3xl lg:text-4xl font-bold text-slate-900 dark:text-slate-100">{stats.active}</div>
-                <p className="text-slate-500 dark:text-slate-400 text-xs">Ready to invest users</p>
-              </CardContent>
-            </Card>
-          </motion.div>
-
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.3 }}
-          >
-            <Card className="group relative overflow-hidden border-0 shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 rounded-2xl backdrop-blur-sm bg-gradient-to-br from-violet-50/50 to-purple-50/50 dark:from-violet-950/20 dark:to-purple-950/20 border border-violet-200/50 dark:border-violet-800/30">
-              <div className="absolute inset-0 bg-white/40 dark:bg-slate-900/40 backdrop-blur-sm" />
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3 relative z-10">
-                <CardTitle className="text-sm font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-wide">Admins</CardTitle>
-                <Badge className="bg-violet-100 dark:bg-violet-900/30 text-violet-700 dark:text-violet-300 border-violet-200 dark:border-violet-800">Admin</Badge>
-              </CardHeader>
-              <CardContent className="relative z-10 space-y-3 min-h-[88px]">
-                <div className="text-3xl lg:text-4xl font-bold text-slate-900 dark:text-slate-100">{stats.admins}</div>
-                <p className="text-slate-500 dark:text-slate-400 text-xs">Admin users</p>
-              </CardContent>
-            </Card>
-          </motion.div>
-
-        </div>
 
         {/* Search & Filters */}
         <motion.div
@@ -462,7 +518,7 @@ export default function UsersPage() {
                   <div className="p-2 rounded-xl bg-gradient-to-r from-blue-500/10 to-indigo-500/10 border border-blue-200/20 dark:border-blue-800/20">
                     <UsersIcon className="h-5 w-5 text-blue-600 dark:text-blue-400" />
                   </div>
-                  Users ({filteredUsers.length} of {stats.total})
+                  Users
                 </div>
                 <Button variant="ghost" size="sm" className="text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100">
                   <Eye className="w-4 h-4 mr-2" />
@@ -516,7 +572,7 @@ export default function UsersPage() {
                         </TableCell>
                       </TableRow>
                     ) : (
-                      filteredUsers.map((user, index) => (
+                      paginatedUsers.map((user, index) => (
                         <motion.tr 
                           key={user.id}
                           initial={{ opacity: 0, y: 10 }}
@@ -612,11 +668,14 @@ export default function UsersPage() {
               </div>
               
               {/* Pagination */}
-              {pageInfo && pageInfo.totalPages > 1 && (
+              {displayPageInfo && (
+                displayPageInfo.totalPages > 1 || 
+                (users.length === pageSize && currentPage === 0) // Show if we got a full page on first page
+              ) && (
                 <div className="flex items-center justify-between px-6 py-4 border-t border-slate-200/50 dark:border-slate-700/50">
                   <div className="flex items-center gap-4">
                     <div className="text-sm text-slate-600 dark:text-slate-400">
-                      Showing {currentPage * pageSize + 1} to {Math.min((currentPage + 1) * pageSize, pageInfo.totalElements)} of {pageInfo.totalElements} users
+                      Showing {currentPage * pageSize + 1} to {Math.min((currentPage + 1) * pageSize, displayPageInfo.totalElements)} of {displayPageInfo.totalElements} users
                     </div>
                     <Select value={String(pageSize)} onValueChange={(value) => {
                       setPageSize(Number(value));
@@ -642,11 +701,11 @@ export default function UsersPage() {
                         />
                       </PaginationItem>
                       
-                      {Array.from({ length: pageInfo.totalPages }, (_, i) => i).map((page) => {
+                      {Array.from({ length: displayPageInfo.totalPages }, (_, i) => i).map((page) => {
                         // Show first page, last page, current page, and pages around current
                         if (
                           page === 0 ||
-                          page === pageInfo.totalPages - 1 ||
+                          page === displayPageInfo.totalPages - 1 ||
                           (page >= currentPage - 1 && page <= currentPage + 1)
                         ) {
                           return (
@@ -671,8 +730,8 @@ export default function UsersPage() {
                       
                       <PaginationItem>
                         <PaginationNext 
-                          onClick={() => setCurrentPage(Math.min(pageInfo.totalPages - 1, currentPage + 1))}
-                          className={currentPage === pageInfo.totalPages - 1 ? 'pointer-events-none opacity-50' : 'cursor-pointer'}
+                          onClick={() => setCurrentPage(Math.min(displayPageInfo.totalPages - 1, currentPage + 1))}
+                          className={currentPage === displayPageInfo.totalPages - 1 ? 'pointer-events-none opacity-50' : 'cursor-pointer'}
                         />
                       </PaginationItem>
                     </PaginationContent>

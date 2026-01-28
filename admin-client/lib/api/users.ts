@@ -149,12 +149,26 @@ export async function getUsers(
     });
     
     // Extract pagination info from response
-    // Response structure: { data: [...], totalElements: number, totalPages: number }
+    // Server returns Entity with { data: [...], count: number }
+    // Since server doesn't return totalElements/totalPages, we need to infer it
+    // If we got a full page (data.length === pageSize), assume there are more pages
+    const currentPageNum = pagination?.page || 0;
+    const currentPageSize = pagination?.size || 10;
+    const receivedCount = response.data.length;
+    
+    // If we got a full page, there are likely more pages
+    // We'll estimate totalElements as at least (currentPage + 1) * pageSize + 1
+    // This ensures pagination shows when there are more users
+    const hasMorePages = receivedCount === currentPageSize;
+    const estimatedTotalElements = hasMorePages 
+      ? (currentPageNum + 1) * currentPageSize + 1 // At least one more user
+      : currentPageNum * currentPageSize + receivedCount; // This is the last page
+    
     const pageInfo: PageInfo = {
-      totalElements: response.totalElements || response.data.length,
-      totalPages: response.totalPages || 1,
-      currentPage: pagination?.page || 0,
-      pageSize: pagination?.size || 10,
+      totalElements: response.totalElements || response.page?.totalElements || estimatedTotalElements,
+      totalPages: response.totalPages || response.page?.totalPages || Math.ceil(estimatedTotalElements / currentPageSize),
+      currentPage: currentPageNum,
+      pageSize: currentPageSize,
     };
     
     return {
