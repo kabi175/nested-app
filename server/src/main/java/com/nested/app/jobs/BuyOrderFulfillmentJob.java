@@ -1,5 +1,8 @@
 package com.nested.app.jobs;
 
+import static com.nested.app.filter.TraceIdFilter.SPAN_ID_KEY;
+import static com.nested.app.filter.TraceIdFilter.TRACE_ID_KEY;
+
 import com.nested.app.client.mf.BuyOrderApiClient;
 import com.nested.app.client.mf.dto.OrderData;
 import com.nested.app.entity.Folio;
@@ -19,6 +22,7 @@ import java.sql.Timestamp;
 import java.time.Instant;
 import java.util.List;
 import java.util.Objects;
+import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.quartz.DisallowConcurrentExecution;
@@ -28,6 +32,7 @@ import org.quartz.JobExecutionContext;
 import org.quartz.JobExecutionException;
 import org.quartz.Scheduler;
 import org.quartz.SchedulerException;
+import org.slf4j.MDC;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Component;
 
@@ -56,20 +61,31 @@ public class BuyOrderFulfillmentJob implements Job {
 
   @Override
   public void execute(JobExecutionContext context) throws JobExecutionException {
-    JobDataMap data = context.getMergedJobDataMap();
-    String orderId = data.getString("orderId");
-    log.info("BuyOrderFulfillmentJob start order_id{}", orderId);
+    try {
+      var traceId = UUID.randomUUID().toString().replace("-", "").toLowerCase();
 
-    var order = buyOrderAPIClient.fetchOrderDetails(orderId).block();
-    if (order == null) {
-      log.error("MF BuyOrder not found for id: {}", orderId);
-      return;
-    }
+      String spanId = UUID.randomUUID().toString().replace("-", "").substring(0, 16).toLowerCase();
+      MDC.put(TRACE_ID_KEY, traceId);
+      MDC.put(SPAN_ID_KEY, spanId);
 
-    processSuccessfulOrder(orderId, order);
+      JobDataMap data = context.getMergedJobDataMap();
+      String orderId = data.getString("orderId");
+      log.info("BuyOrderFulfillmentJob start order_id{}", orderId);
 
-    if (isOrderInTerminalState(order.getState())) {
-      deleteJob(context);
+      var order = buyOrderAPIClient.fetchOrderDetails(orderId).block();
+      if (order == null) {
+        log.error("MF BuyOrder not found for id: {}", orderId);
+        return;
+      }
+
+      processSuccessfulOrder(orderId, order);
+
+      if (isOrderInTerminalState(order.getState())) {
+        deleteJob(context);
+      }
+
+    } finally {
+      MDC.clear();
     }
   }
 
@@ -207,12 +223,15 @@ public class BuyOrderFulfillmentJob implements Job {
 
     int created = 0;
     for (var item : orderItems) {
-      if (transactionRepository.existsBySourceOrderItemId(item.getId())) {
-        log.info("Transaction already exists for orderItemId {}", item.getId());
-        continue; // idempotent skip
-      }
+      log.info("Creating transaction for item {}", item.getId());
+
       var txn =
           transactionRepository.findBySourceOrderItemId(item.getId()).orElseGet(Transaction::new);
+
+      if (txn.getId() != null) {
+        log.info("transaction {} already exists for orderItemId {} ", txn.getId(), item.getId());
+      }
+
       txn.setUser(item.getUser());
       txn.setGoal(item.getOrder() != null ? item.getOrder().getGoal() : null);
       txn.setFund(item.getFund());
@@ -245,7 +264,9 @@ public class BuyOrderFulfillmentJob implements Job {
                 txn.getFund() != null ? txn.getFund().getName() : null,
                 txn.getAmount(),
                 txn.getType()));
+        log.info("Transaction {} has been completed", txn.getId());
       }
+      log.info("Transaction {} synced with status {}", txn.getId(), txn.getStatus());
       created++;
     }
     if (created > 0) {
