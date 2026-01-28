@@ -3,6 +3,7 @@ package com.nested.app.listeners;
 import com.nested.app.entity.User;
 import com.nested.app.events.TransactionSuccessEvent;
 import com.nested.app.services.EmailService;
+import com.nested.app.services.SchemeWiseReportService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.event.EventListener;
@@ -19,6 +20,7 @@ import org.springframework.stereotype.Component;
 public class TransactionSuccessListener {
 
   private final EmailService emailService;
+  private final SchemeWiseReportService schemeWiseReportService;
 
   /**
    * Handles TransactionSuccessEvent by sending a confirmation email to the user. Processes
@@ -51,6 +53,17 @@ public class TransactionSuccessListener {
     } catch (Exception e) {
       log.error("Failed to send transaction success email for user ID: {}", user.getId(), e);
       // Don't rethrow - we don't want email failures to affect the transaction flow
+    }
+  }
+
+  @Async
+  @EventListener
+  public void refreshNavOnSuccess(TransactionSuccessEvent event) {
+    try {
+      log.info("Processing TransactionSuccessEvent for user ID: {}", event.user().getId());
+      schemeWiseReportService.fetchReportsForUser(event.user());
+    } catch (Exception e) {
+      log.error("Failed to fetch reports for user ID: {}", event.user().getId(), e);
     }
   }
 }

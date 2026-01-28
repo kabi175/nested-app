@@ -2,6 +2,7 @@ package com.nested.app.services;
 
 import com.nested.app.client.mf.ReportApiClient;
 import com.nested.app.entity.Investor;
+import com.nested.app.entity.User;
 import com.nested.app.repository.FundRepository;
 import com.nested.app.repository.InvestorRepository;
 import java.sql.Timestamp;
@@ -25,7 +26,7 @@ import reactor.core.publisher.Mono;
 @RequiredArgsConstructor
 public class SchemeWiseReportService {
 
-  private static final int PAGE_SIZE = 1000; // Process 1000 investors per page
+  private static final int PAGE_SIZE = 50; // Process 50 investors per page
 
   private final ReportApiClient reportApiClient;
   private final InvestorRepository investorRepository;
@@ -90,6 +91,13 @@ public class SchemeWiseReportService {
     return new ReportFetchSummary(totalProcessed.get(), successCount.get(), failureCount.get());
   }
 
+  public void fetchReportsForUser(User user) {
+    var investor = investorRepository.findById(user.getInvestor().getId()).orElseThrow();
+    if (investor.getAccountRef() != null && !investor.getAccountRef().isBlank()) {
+      fetchReportForInvestor(investor).block();
+    }
+  }
+
   /**
    * Processes a batch of investors in parallel.
    *
@@ -124,7 +132,7 @@ public class SchemeWiseReportService {
                         })
                     .onErrorResume(
                         error -> Mono.empty()), // Continue processing other investors on error
-            50) // Process 50 requests in parallel
+            10) // Process 5 requests in parallel
         .blockLast(); // Wait for all requests to complete
   }
 
