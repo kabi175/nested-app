@@ -26,7 +26,7 @@ public class OneTimeOrderStatusJob implements ApplicationRunner {
             return;
         }
         log.info("Scheduling order status jobs for one-time order IDs: {}", Arrays.toString(ORDER_IDS));
-        orderSchedulerService.scheduleOrderStatusJobs(Arrays.asList(ORDER_IDS));
+    orderSchedulerService.scheduleInstantOrderStatusJobs(Arrays.asList(ORDER_IDS));
         hasRun = true;
     }
 }
