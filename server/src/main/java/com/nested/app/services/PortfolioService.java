@@ -1,6 +1,7 @@
 package com.nested.app.services;
 
 import com.nested.app.dto.GoalHoldingDTO;
+import com.nested.app.dto.GoalHoldingProjection;
 import com.nested.app.dto.MinifiedGoalDTO;
 import com.nested.app.dto.PortfolioGoalDTO;
 import com.nested.app.dto.PortfolioOverallDTO;
@@ -217,13 +218,13 @@ public class PortfolioService {
 
     // Calculate total goal current value for allocation percentages
     double totalGoalCurrentValue =
-        holdingProjections.stream().mapToDouble(h -> h.getTotalUnits() * h.getCurrentNav()).sum();
+        holdingProjections.stream().mapToDouble(GoalHoldingProjection::getCurrentValue).sum();
 
     // Map projections to DTOs with calculated fields
     return holdingProjections.stream()
         .map(
             h -> {
-              Double currentValue = h.getTotalUnits() * h.getCurrentNav();
+              Double currentValue = h.getCurrentValue();
               Double returnsAmount = currentValue - h.getInvestedAmount();
               Double allocationPercentage =
                   totalGoalCurrentValue > 0 ? (currentValue / totalGoalCurrentValue * 100.0) : 0.0;

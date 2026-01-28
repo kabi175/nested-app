@@ -72,6 +72,7 @@ public interface TransactionRepository extends JpaRepository<Transaction, Long> 
         AVG(t.unitPrice) as averageNav,
         SUM(t.units) AS totalUnits,
         SUM(t.amount) AS investedAmount,
+        SUM(CASE WHEN t.status = 'COMPLETED' THEN t.units * f.nav ELSE t.amount END) AS currentValue,
         f.nav AS currentNav
       FROM Transaction t
       JOIN t.fund f
