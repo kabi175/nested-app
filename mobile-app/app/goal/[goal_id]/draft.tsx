@@ -128,7 +128,7 @@ export default function DraftGoalScreen() {
             {/* Header */}
             <View style={styles.header}>
                 <TouchableOpacity
-                    onPress={() => router.back()}
+                    onPress={() => router.replace("/child")}
                     style={styles.backButton}
                 >
                     <ArrowLeft size={24} color="#1F2937" />
