@@ -303,6 +303,11 @@ export default function BasketInvestingScreen() {
     type: keyof typeof popularBaskets;
   }>();
 
+  if (type === "grow-money") {
+    basketFaqs[0].answer = "A safe plan with investment of about 50% in equities and balance 50% in gold and debt."
+  } else {
+    basketFaqs[0].answer = "A safe-plus money plan.\nMostly (more than 80%) in gold and safe debt.\nOnly a small part (less than 20%) in shares.";
+  }
   const basket = popularBaskets[type];
 
   const [initialInvestment, setInitialInvestment] = useState<string>("");
