@@ -35,7 +35,7 @@ export function DeleteGoalModal({
     const transferGoalOptions = useMemo(() => {
         if (!goal) return [];
         return availableGoals
-            .filter((g) => g.id !== goal.id && g.status === "active")
+            .filter((g) => g.id !== goal.id && g.status !== "cancelled")
             .map((g) => ({
                 id: g.id,
                 label: `${g.title} - ${formatCurrency(g.targetAmount)}`,
