@@ -31,14 +31,14 @@ export default function BasketCard({
   const [isLoading, setIsLoading] = useState(false);
 
   const handleButtonPress = () => {
-    if(isLoading) return;
+    if (isLoading) return;
     setIsLoading(true);
     try {
-    if(data.goalId && data.currentValue) {
-      router.push(`/goal/${data.goalId}/holdings`);
-    } else {
-      router.push(`/basket?type=${data.id}`);
-    }
+      if (data.goalId && data.currentValue) {
+        router.push(`/goal/${data.goalId}/holdings`);
+      } else {
+        router.push(`/basket?type=${data.id}`);
+      }
     } catch (error) {
       console.error(error);
     } finally {
@@ -114,23 +114,24 @@ export default function BasketCard({
         </View>
 
         {/* Minimum Investment */}
-        <View
-          style={[
-            styles.minInvestmentContainer,
-            { backgroundColor: data.minInvestmentBgColor },
-          ]}
-        >
-          <Text style={styles.minInvestmentLabel}>{data.currentValue ? "Current Value" : "Min. Investment"}</Text>
-          <Text
+        {data.currentValue && (
+          <View
             style={[
-              styles.minInvestmentValue,
-              { color: data.minInvestmentTextColor },
+              styles.minInvestmentContainer,
+              { backgroundColor: data.minInvestmentBgColor },
             ]}
           >
-            {data.currentValue ? formatCurrency(data.currentValue) : data.minInvestment}
-          </Text>
-        </View>
-
+            <Text style={styles.minInvestmentLabel}>Current Value</Text>
+            <Text
+              style={[
+                styles.minInvestmentValue,
+                { color: data.minInvestmentTextColor },
+              ]}
+            >
+              {formatCurrency(data.currentValue)}
+            </Text>
+          </View>
+        )}
         {/* Invest Now Button */}
         <Pressable
           onPress={() => handleButtonPress()}
@@ -154,9 +155,9 @@ export default function BasketCard({
               style={styles.buttonGradient}
             >
               <Text style={styles.buttonText}>{
-              isLoading ? "Loading..." : (
-                data.currentValue ? "View Details" : "Invest Now"
-              )}</Text>
+                isLoading ? "Loading..." : (
+                  data.currentValue ? "View Details" : "Invest Now"
+                )}</Text>
               <ChevronRight size={18} color="#FFFFFF" strokeWidth={2.5} />
             </LinearGradient>
           </Animated.View>
