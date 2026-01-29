@@ -67,9 +67,9 @@ public class BulkpeWebhookService {
     String transactionID = data.getTranscationId();
     String remitterName = data.getRemitterName();
 
-    if(referenceId == null) {
-        log.error("for testing");
-        return true;
+    if (referenceId == null) {
+      log.error("for testing");
+      return true;
     }
 
     if (accountNumber == null || ifscCode == null) {
@@ -103,36 +103,30 @@ public class BulkpeWebhookService {
     String userFullName = (userFirstName + " " + (userLastName != null ? userLastName : "")).trim();
 
     double similarity = calculateNameSimilarity(userFullName, remitterName);
-    log.info("Name similarity between '{}' and '{}' = {}%", userFullName, remitterName, similarity * 100);
+    log.info(
+        "Name similarity between '{}' and '{}' = {}%",
+        userFullName, remitterName, similarity * 100);
 
     if (similarity < 0.3) {
-      log.warn("Name similarity below threshold ({}%), marking transaction as FAILED", similarity * 100);
-      reversePennyDrop.setStatus(ReversePennyDrop.ReversePennyDropStatus.FAILED);
-      reversePennyDropRepository.save(reversePennyDrop);
-      return false;
-    }
-
-    // Check if bank detail already exists for this user with same account number and IFSC
-    Optional<BankDetail> existingBankDetail =
-        bankDetailRepository.findByAccountNumberAndIfscCode(accountNumber, ifscCode);
-
-    if (existingBankDetail.isPresent()) {
       log.warn(
-          "Bank already added existing_bank_id {} transactionID {}",
-          existingBankDetail.get().getId(),
-          transactionID);
+          "Name similarity below threshold ({}%), marking transaction as FAILED", similarity * 100);
       reversePennyDrop.setStatus(ReversePennyDrop.ReversePennyDropStatus.FAILED);
       reversePennyDropRepository.save(reversePennyDrop);
       return false;
     }
+
     // Create new bank detail for the user
     log.info("Creating new bank detail for user: {}", user.getId());
-    createBankDetailFromWebhook(user, data);
-    log.info(
-        "Successfully processed webhook for userId={}, accountNumber={}",
-        referenceId,
-        accountNumber);
-    reversePennyDrop.setStatus(ReversePennyDrop.ReversePennyDropStatus.COMPLETED);
+    try {
+      createBankDetailFromWebhook(user, data);
+      log.info(
+          "Successfully processed webhook for userId={}, accountNumber={}",
+          referenceId,
+          accountNumber);
+      reversePennyDrop.setStatus(ReversePennyDrop.ReversePennyDropStatus.COMPLETED);
+    } catch (Exception e) {
+      reversePennyDrop.setStatus(ReversePennyDrop.ReversePennyDropStatus.FAILED);
+    }
 
     reversePennyDropRepository.save(reversePennyDrop);
     return true;
@@ -151,7 +145,8 @@ public class BulkpeWebhookService {
     try {
       userService.addBankAccount(user.getId(), bankDetail);
     } catch (Exception e) {
-        log.error("Could not add bank account for user {}", user.getId());
+      log.error("Could not add bank account for user {}", user.getId());
+      throw e;
     }
     log.debug(
         "Created new bank detail for user {} with account number {}",
