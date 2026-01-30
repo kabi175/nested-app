@@ -73,7 +73,7 @@ public class FundSyncScheduler {
     fund.setName(dto.getSchemeName());
 
     fund.setMimPurchaseAmount(Math.max(dto.getMinAmountBuy(), 100));
-    fund.setMinSipAmount(Math.max(dto.getMinAmountBuy(), 500));
+    fund.setMinSipAmount(Math.max(dto.getMinSipAmount(), 500));
 
     fund.setActive(dto.isActive());
     fund.setIsinCode(dto.getIsin());
