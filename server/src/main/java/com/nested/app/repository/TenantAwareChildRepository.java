@@ -33,18 +33,20 @@ public class TenantAwareChildRepository extends SimpleJpaRepository<Child, Long>
   }
 
   /**
-   * Find all children with tenant filtering
+   * Find all children with tenant filtering (excludes soft-deleted)
    *
    * @param user Current user context
    * @return List of children visible to user
    */
   public List<Child> findAll(User user) {
     enableUserFilter(user);
-    return super.findAll();
+    return entityManager
+        .createQuery("SELECT c FROM Child c WHERE c.isDeleted = false", Child.class)
+        .getResultList();
   }
 
   /**
-   * Find child by ID with tenant filtering
+   * Find child by ID with tenant filtering (excludes soft-deleted)
    *
    * @param id Child ID
    * @param user Current user context
@@ -52,11 +54,15 @@ public class TenantAwareChildRepository extends SimpleJpaRepository<Child, Long>
    */
   public Optional<Child> findById(Long id, User user) {
     enableUserFilter(user);
-    return super.findById(id);
+    List<Child> results = entityManager
+        .createQuery("SELECT c FROM Child c WHERE c.id = :id AND c.isDeleted = false", Child.class)
+        .setParameter("id", id)
+        .getResultList();
+    return results.isEmpty() ? Optional.empty() : Optional.of(results.get(0));
   }
-
   /**
-   * Find children by user ID Note: User filter is still applied for non-admin users
+   * Find children by user ID (excludes soft-deleted)
+   * Note: User filter is still applied for non-admin users
    *
    * @param userId User ID
    * @param user Current user context
@@ -65,7 +71,7 @@ public class TenantAwareChildRepository extends SimpleJpaRepository<Child, Long>
   public List<Child> findByUserId(Long userId, User user) {
     enableUserFilter(user);
     return entityManager
-        .createQuery("SELECT c FROM Child c WHERE c.user.id = :userId", Child.class)
+        .createQuery("SELECT c FROM Child c WHERE c.user.id = :userId AND c.isDeleted = false", Child.class)
         .setParameter("userId", userId)
         .getResultList();
   }
