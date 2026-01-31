@@ -1,11 +1,17 @@
 import { getUser } from "@/api/userApi";
+import { cartAtom } from "@/atoms/cart";
+import { goalsForCustomizeAtom } from "@/atoms/goals";
+import { FirstPendingActivityCard } from "@/components/FirstPendingActivityCard";
 import { StepProgress } from "@/components/ui/StepProgress";
 import { QUERY_KEYS } from "@/constants/queryKeys";
 import { useAuthAxios } from "@/hooks/useAuthAxios";
+import { usePendingActivities } from "@/hooks/usePendingActivities";
 import { useUser } from "@/hooks/useUser";
+import { handleActivityNavigation } from "@/utils/activityNavigation";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Button, Layout, Text } from "@ui-kitten/components";
 import { Redirect, useRouter } from "expo-router";
+import { useSetAtom } from "jotai";
 import React, { useEffect, useState } from "react";
 import {
   ActivityIndicator,
@@ -20,7 +26,12 @@ export default function WaitingForApprovalScreen() {
   const router = useRouter();
   const queryClient = useQueryClient();
   const { data: user } = useUser();
+  const { data: activities } = usePendingActivities();
+  const setCart = useSetAtom(cartAtom);
+  const setGoalsForCustomize = useSetAtom(goalsForCustomizeAtom);
   const [shouldPoll, setShouldPoll] = useState(true);
+
+  const firstActivity = activities?.[0];
 
   // Poll for user updates every 5 seconds, but stop if we have a final status
   const { data: currentUser, isLoading } = useQuery({
@@ -68,8 +79,18 @@ export default function WaitingForApprovalScreen() {
     router.push("/kyc/basic-details");
   };
 
-  const handleGoBack = () => {
-    router.replace("/child");
+  const handleNextPendingActivity = async () => {
+    if (firstActivity) {
+      await handleActivityNavigation(
+        firstActivity,
+        api,
+        queryClient,
+        setCart,
+        setGoalsForCustomize
+      );
+    } else {
+      router.replace("/child");
+    }
   };
 
   if (user?.kycStatus === "esign_pending") {
@@ -131,10 +152,15 @@ export default function WaitingForApprovalScreen() {
                 Your KYC verification was not successful. Please review your
                 submitted documents and try again.
               </Text>
+              {firstActivity && (
+                <View style={{ marginTop: 16, width: "100%" }}>
+                  <FirstPendingActivityCard showProceedButton={false} />
+                </View>
+              )}
               <View style={{ marginTop: 16, gap: 8, width: "100%" }}>
                 <Button onPress={handleRetry}>Retry Verification</Button>
-                <Button appearance="ghost" onPress={handleGoBack}>
-                  Go Back
+                <Button appearance="ghost" onPress={handleNextPendingActivity}>
+                  {firstActivity ? "Next Pending Activity" : "Go Back"}
                 </Button>
               </View>
             </>
@@ -179,15 +205,20 @@ export default function WaitingForApprovalScreen() {
                   appearance="hint"
                   style={{ textAlign: "center" }}
                 >
-                  KYC pending approval (usually takes 30-45 minutes) with SEBI KRA. We’ll notify you by email and in-app as soon as it's verified.
+                  KYC pending approval (usually takes 30-45 minutes) with SEBI KRA. We&apos;ll notify you by email and in-app as soon as it&apos;s verified.
                 </Text>
               </View>
+              {firstActivity && (
+                <View style={{ marginTop: 16, width: "100%" }}>
+                  <FirstPendingActivityCard showProceedButton={false} />
+                </View>
+              )}
               <Button
                 appearance="ghost"
-                onPress={handleGoBack}
+                onPress={handleNextPendingActivity}
                 style={{ marginTop: 8 }}
               >
-                Go Back
+                {firstActivity ? "Continue" : "Go Back"}
               </Button>
             </>
           )}

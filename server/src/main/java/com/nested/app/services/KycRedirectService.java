@@ -2,6 +2,7 @@ package com.nested.app.services;
 
 import com.nested.app.client.mf.KycAPIClient;
 import com.nested.app.entity.User;
+import com.nested.app.events.KycCompletedEvent;
 import com.nested.app.events.UserUpdateEvent;
 import com.nested.app.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
@@ -84,6 +85,7 @@ public class KycRedirectService {
 
     // Fire user update event
     publisher.publishEvent(new UserUpdateEvent(originalUser, user));
+    publisher.publishEvent(new KycCompletedEvent(this, user));
 
     log.info(
         "Successfully updated KYC status to SUBMITTED for user ID: {} (KYC Request ID: {})",

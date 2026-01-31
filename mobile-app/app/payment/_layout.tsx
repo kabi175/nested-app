@@ -17,13 +17,12 @@ export default function Layout() {
     }
   }, [user, createInvestorMutation]);
 
-  if (user && user.kycStatus !== "completed") {
+  if (user && !["completed", "submitted"].includes(user.kycStatus)) {
     return <Redirect href="/kyc" />;
   }
 
   if (
     user &&
-    user.kycStatus === "completed" &&
     user.is_ready_to_invest &&
     user.nominee_status === "unknown"
   ) {

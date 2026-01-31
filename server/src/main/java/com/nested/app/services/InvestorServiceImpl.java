@@ -10,7 +10,7 @@ import com.nested.app.events.KycCompletedEvent;
 import com.nested.app.repository.InvestorRepository;
 import com.nested.app.repository.UserRepository;
 import com.nested.app.services.mapper.CreateInvestorRequestMapper;
-import java.util.Objects;
+import java.util.List;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.ApplicationEventPublisher;
@@ -33,7 +33,8 @@ public class InvestorServiceImpl implements InvestorService {
   public void createInvestor(MinifiedUserDTO userDto) {
     var user = userRepository.findById(userDto.getId()).orElseThrow();
 
-    if (!Objects.equals(User.KYCStatus.COMPLETED, user.getKycStatus())) {
+    if (!List.of(User.KYCStatus.COMPLETED, User.KYCStatus.SUBMITTED)
+        .contains(user.getKycStatus())) {
       log.error("KYC check is not COMPLETED for user ID: {}", user.getId());
       throw new RuntimeException("KYC check is not COMPLETED for user ID: " + user.getId());
     }

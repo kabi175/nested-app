@@ -134,7 +134,7 @@ public class PendingActivityServiceImpl implements PendingActivityService {
     User.KYCStatus kycStatus = user.getKycStatus();
 
     // Check if KYC is not completed
-    if (kycStatus != User.KYCStatus.COMPLETED) {
+    if (!List.of(User.KYCStatus.COMPLETED, User.KYCStatus.SUBMITTED).contains(kycStatus)) {
       String title = "Complete KYC Verification";
       String actionUrl = "/api/v1/users/kyc/initiate";
 
