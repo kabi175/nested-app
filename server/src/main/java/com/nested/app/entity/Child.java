@@ -1,12 +1,5 @@
 package com.nested.app.entity;
 
-import java.sql.Date;
-import java.sql.Timestamp;
-
-import org.hibernate.annotations.CreationTimestamp;
-import org.hibernate.annotations.Filter;
-import org.hibernate.annotations.UpdateTimestamp;
-
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -18,7 +11,12 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
+import java.sql.Date;
+import java.sql.Timestamp;
 import lombok.Data;
+import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.Filter;
+import org.hibernate.annotations.UpdateTimestamp;
 
 /** Entity representing a child associated with a user */
 @Data
@@ -57,6 +55,11 @@ public class Child {
   @UpdateTimestamp
   @Column(nullable = false)
   private Timestamp updatedAt;
+
+  @Column(nullable = false)
+  private Boolean isDeleted = false;
+
+  private Timestamp deletedAt;
 
   @OneToOne
   @JoinColumn(name = "investor_id")

@@ -6,15 +6,16 @@ import com.nested.app.dto.MinifiedChildDTO;
 import com.nested.app.dto.MinifiedEducationDto;
 import com.nested.app.dto.MinifiedUserDTO;
 import com.nested.app.entity.Basket;
+import com.nested.app.entity.Child;
 import com.nested.app.entity.Goal;
 import com.nested.app.entity.User;
 import com.nested.app.enums.BasketType;
 import com.nested.app.exception.ExternalServiceException;
 import com.nested.app.repository.BasketRepository;
+import com.nested.app.repository.ChildRepository;
 import com.nested.app.repository.EducationRepository;
 import com.nested.app.repository.OrderRepository;
 import com.nested.app.repository.TenantAwareGoalRepository;
-import com.nested.app.repository.TransactionRepository;
 import java.sql.Timestamp;
 import java.time.LocalDate;
 import java.time.Period;
@@ -27,7 +28,6 @@ import java.util.Set;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -48,8 +48,7 @@ public class GoalServiceImpl implements GoalService {
   private final BasketRepository basketRepository;
   private final EducationRepository educationRepository;
   private final OrderRepository orderRepository;
-  private final TransactionRepository transactionRepository;
-  private final ApplicationEventPublisher eventPublisher;
+  private final ChildRepository childRepository;
 
   /**
    * Retrieves all goals from the system
@@ -97,10 +96,9 @@ public class GoalServiceImpl implements GoalService {
    * @param goalDTO Goal data to update
    * @param user Current user context
    * @return Updated goal data
-   * @throws Exception if update fails
    */
   @Override
-  public GoalDTO updateGoal(GoalDTO goalDTO, User user) throws Exception {
+  public GoalDTO updateGoal(GoalDTO goalDTO, User user) {
     log.info("Updating goal with ID: {} for user ID: {}", goalDTO.getId(), user.getId());
 
     try {
@@ -413,6 +411,7 @@ public class GoalServiceImpl implements GoalService {
    * @param user Current user context
    * @throws IllegalArgumentException if validation fails
    */
+  @Transactional
   @Override
   public void softDeleteGoal(Long goalId, User user) {
     log.info("Soft deleting goal ID: {}  for user ID: {}", goalId, user.getId());
@@ -439,7 +438,19 @@ public class GoalServiceImpl implements GoalService {
     // Mark source goal as deleted
     sourceGoal.setIsDeleted(true);
     sourceGoal.setDeletedAt(new Timestamp(System.currentTimeMillis()));
-    goalRepository.save(sourceGoal);
+
+    goalRepository.save(sourceGoal); // Save the goal first to avoid referencing a deleted child
+
+    var goalsForChild = goalRepository.findAllByChildId(sourceGoal.getChild().getId(), user);
+    if (goalsForChild.isEmpty()) {
+      Child child =
+          childRepository
+              .findById(sourceGoal.getChild().getId())
+              .orElseThrow(() -> new IllegalArgumentException("Child not found"));
+      child.setIsDeleted(true);
+      child.setDeletedAt(new Timestamp(System.currentTimeMillis()));
+      childRepository.save(child);
+    }
 
     log.info("Successfully soft deleted goal ID: {}", goalId);
   }

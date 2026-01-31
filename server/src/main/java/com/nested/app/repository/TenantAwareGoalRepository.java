@@ -157,6 +157,15 @@ public class TenantAwareGoalRepository extends SimpleJpaRepository<Goal, Long> {
         .getResultList();
   }
 
+  public List<Goal> findAllByChildId(Long childId, User user) {
+    enableUserFilter(user);
+    return entityManager
+        .createQuery(
+            "SELECT g FROM Goal g WHERE g.child.id = :childId AND g.isDeleted = false", Goal.class)
+        .setParameter("childId", childId)
+        .getResultList();
+  }
+
   /**
    * Enables the user filter for tenant isolation Admin users bypass the filter and can see all
    * goals
