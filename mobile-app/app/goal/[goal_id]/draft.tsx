@@ -5,7 +5,6 @@ import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
 import { useDeleteGoal } from "@/hooks/useDeleteGoal";
 import { useGoal } from "@/hooks/useGoal";
-import { useEducationGoals } from "@/hooks/useGoals";
 import { usePendingOrdersByGoalId } from "@/hooks/usePendingOrders";
 import { formatCurrency } from "@/utils/formatters";
 import { router, useLocalSearchParams } from "expo-router";
@@ -30,7 +29,6 @@ export default function DraftGoalScreen() {
     const { data: goal, isLoading: goalLoading } = useGoal(goal_id);
     const { data: pendingOrders, isLoading: ordersLoading } =
         usePendingOrdersByGoalId(goal_id);
-    const { data: educationGoals } = useEducationGoals();
     const setCart = useSetAtom(cartAtom);
     const setGoalsForCustomize = useSetAtom(goalsForCustomizeAtom);
     const deleteGoalMutation = useDeleteGoal();
@@ -62,11 +60,10 @@ export default function DraftGoalScreen() {
         }
     };
 
-    const handleDeleteConfirm = async (transferToGoalId: string) => {
+    const handleDeleteConfirm = async () => {
         try {
             await deleteGoalMutation.mutateAsync({
                 goalId: goal_id,
-                transferToGoalId,
             });
             setShowDeleteModal(false);
             router.replace("/child");
@@ -232,7 +229,6 @@ export default function DraftGoalScreen() {
             <DeleteGoalModal
                 visible={showDeleteModal}
                 goal={goal}
-                availableGoals={educationGoals || []}
                 onConfirm={handleDeleteConfirm}
                 onCancel={() => setShowDeleteModal(false)}
                 isSubmitting={deleteGoalMutation.isPending}

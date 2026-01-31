@@ -10,11 +10,9 @@ export function useDeleteGoal() {
   return useMutation({
     mutationFn: ({
       goalId,
-      transferToGoalId,
     }: {
       goalId: string;
-      transferToGoalId: string;
-    }) => deleteGoal(api, goalId, transferToGoalId),
+    }) => deleteGoal(api, goalId),
     onSuccess: () => {
       // Invalidate and refetch goals after successful deletion
       queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.educationGoals] });

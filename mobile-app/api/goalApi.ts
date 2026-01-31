@@ -14,13 +14,9 @@ export const getGoalsByBasketName = async (api: AxiosInstance, basketName: strin
 
 export const deleteGoal = async (
   api: AxiosInstance,
-  goalId: string,
-  transferToGoalId: string
+  goalId: string
 ): Promise<void> => {
-  console.log("deleting goal", goalId, "with transfer to goal", transferToGoalId);
-  await api.delete(`/goals/${goalId}`, {
-    data: { transfer_to_goal_id: transferToGoalId },
-  });
+  await api.delete(`/goals/${goalId}`);
 };
 
 export const getGoal = async (

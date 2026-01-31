@@ -2,60 +2,28 @@ import { Goal } from "@/types/investment";
 import { formatCurrency } from "@/utils/formatters";
 import { Button, Layout, Text } from "@ui-kitten/components";
 import { AlertCircle } from "lucide-react-native";
-import React, { useMemo, useState } from "react";
+import React from "react";
 import { Modal, StyleSheet, View } from "react-native";
-import { SearchableDropdown } from "../ui/SearchableDropdown";
 
 interface DeleteGoalModalProps {
     visible: boolean;
     goal: Goal | null;
-    availableGoals: Goal[];
-    onConfirm: (transferToGoalId: string) => void;
+    onConfirm: () => void;
     onCancel: () => void;
     isSubmitting?: boolean;
 }
 
 /**
  * Delete Goal Modal
- * Displays confirmation dialog before deleting a goal with transfer option
+ * Displays confirmation dialog before deleting a goal
  */
 export function DeleteGoalModal({
     visible,
     goal,
-    availableGoals,
     onConfirm,
     onCancel,
     isSubmitting = false,
 }: DeleteGoalModalProps) {
-    const [selectedTransferGoal, setSelectedTransferGoal] = useState<Goal | null>(
-        null
-    );
-
-    // Filter out the current goal and prepare dropdown data
-    const transferGoalOptions = useMemo(() => {
-        if (!goal) return [];
-        return availableGoals
-            .filter((g) => g.id !== goal.id && g.status !== "cancelled")
-            .map((g) => ({
-                id: g.id,
-                label: `${g.title} - ${formatCurrency(g.targetAmount)}`,
-                goal: g,
-            }));
-    }, [availableGoals, goal]);
-
-    // Reset selected goal when modal closes
-    React.useEffect(() => {
-        if (!visible) {
-            setSelectedTransferGoal(null);
-        }
-    }, [visible]);
-
-    const handleConfirm = () => {
-        if (selectedTransferGoal) {
-            onConfirm(selectedTransferGoal.id);
-        }
-    };
-
     if (!goal) return null;
 
     const investmentAmount = goal.investedAmount || 0;
@@ -83,38 +51,16 @@ export function DeleteGoalModal({
 
                     {/* Message */}
                     <Text category="s1" style={styles.message}>
-                        Your investment of{" "}
-                        <Text style={styles.boldText}>{formatCurrency(investmentAmount)}</Text>{" "}
-                        will be transferred to another goal.
+                        Are you sure you want to delete this goal? This action cannot be undone.
                     </Text>
 
-                    <Text category="p2" style={styles.warningText}>
-                        This action cannot be undone.
-                    </Text>
-
-                    {/* Transfer Goal Selection */}
-                    <View style={styles.transferSection}>
-                        <Text category="s1" style={styles.transferLabel}>
-                            Transfer to Goal <Text style={styles.required}>*</Text>
+                    {investmentAmount > 0 && (
+                        <Text category="p2" style={styles.warningText}>
+                            Your investment of{" "}
+                            <Text style={styles.boldText}>{formatCurrency(investmentAmount)}</Text>{" "}
+                            will be lost.
                         </Text>
-                        <SearchableDropdown
-                            data={transferGoalOptions}
-                            labelKey="label"
-                            valueKey="id"
-                            placeholder="Select a goal"
-                            onSelect={(item: { id: string; label: string; goal: Goal }) =>
-                                setSelectedTransferGoal(item.goal)
-                            }
-                            selectedValue={
-                                selectedTransferGoal
-                                    ? transferGoalOptions.find(
-                                        (opt) => opt.goal.id === selectedTransferGoal.id
-                                    ) || null
-                                    : null
-                            }
-                            disabled={isSubmitting}
-                        />
-                    </View>
+                    )}
 
                     {/* Action Buttons */}
                     <View style={styles.buttonContainer}>
@@ -130,11 +76,11 @@ export function DeleteGoalModal({
                         <Button
                             style={[styles.button]}
                             status="danger"
-                            onPress={handleConfirm}
-                            disabled={isSubmitting || !selectedTransferGoal}
+                            onPress={onConfirm}
+                            disabled={isSubmitting}
                         >
                             <Text style={styles.buttonText}>
-                                {isSubmitting ? "Processing..." : "Confirm Delete & Transfer"}
+                                {isSubmitting ? "Processing..." : "Confirm Delete"}
                             </Text>
                         </Button>
                     </View>
@@ -195,18 +141,6 @@ const styles = StyleSheet.create({
         textAlign: "center",
         marginBottom: 24,
         lineHeight: 20,
-    },
-    transferSection: {
-        marginBottom: 24,
-    },
-    transferLabel: {
-        fontSize: 14,
-        fontWeight: "600",
-        color: "#374151",
-        marginBottom: 8,
-    },
-    required: {
-        color: "#EF4444",
     },
     buttonContainer: {
         flexDirection: "column",

@@ -6,7 +6,6 @@ import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
 import { useDeleteGoal } from "@/hooks/useDeleteGoal";
 import { useGoal } from "@/hooks/useGoal";
-import { useEducationGoals } from "@/hooks/useGoals";
 import {
   usePortfolioHoldings,
   usePortfolioTransactions,
@@ -39,7 +38,6 @@ export default function GoalDetailScreen() {
   const { data: goal, isLoading: goalLoading } = useGoal(goal_id);
   const { data: holdings, isLoading: holdingsLoading } =
     usePortfolioHoldings(goal_id);
-  const { data: educationGoals } = useEducationGoals();
   const setGoalsForCustomize = useSetAtom(goalsForCustomizeAtom);
   const deleteGoalMutation = useDeleteGoal();
   const [activeTab, setActiveTab] = React.useState<TabType>(
@@ -93,11 +91,10 @@ export default function GoalDetailScreen() {
   }, [holdings]);
 
 
-  const handleDeleteConfirm = async (transferToGoalId: string) => {
+  const handleDeleteConfirm = async () => {
     try {
       await deleteGoalMutation.mutateAsync({
         goalId: goal_id,
-        transferToGoalId,
       });
       setShowDeleteModal(false);
       router.back();
@@ -258,7 +255,6 @@ export default function GoalDetailScreen() {
       <DeleteGoalModal
         visible={showDeleteModal}
         goal={goal || null}
-        availableGoals={educationGoals || []}
         onConfirm={handleDeleteConfirm}
         onCancel={() => setShowDeleteModal(false)}
         isSubmitting={deleteGoalMutation.isPending}
