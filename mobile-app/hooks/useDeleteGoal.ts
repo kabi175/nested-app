@@ -20,6 +20,7 @@ export function useDeleteGoal() {
       queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.goal] });
       queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.portfolio] });
       queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.pendingActivities] });
+      queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.children] });
     },
   });
 }
