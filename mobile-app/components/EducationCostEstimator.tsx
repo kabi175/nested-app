@@ -4,7 +4,6 @@ import { formatCurrency } from "@/utils/formatters";
 import { calculateFutureCost } from "@/utils/goalForm";
 import React, { useRef, useState } from "react";
 import { PanResponder, ScrollView, StyleSheet, Text, View } from "react-native";
-import SuperFDCard from "./SuperFDCard";
 import { SearchableDropdown } from "./ui/SearchableDropdown";
 
 interface EducationCostEstimatorProps {
@@ -96,14 +95,14 @@ export default function EducationCostEstimator({
       contentContainerStyle={styles.scrollContent}
     >
       {/* Invest In Super FD Promotion Card */}
-      <SuperFDCard
+      {/* <SuperFDCard
         onPress={() => {
           // Handle card press if needed
         }}
         onInvestNowPress={() => {
           onInvestNowPress?.();
         }}
-      />
+      /> */}
 
       {/* Plan Your Child's Future Section */}
       <View style={styles.planSection}>

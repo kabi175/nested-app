@@ -3,14 +3,13 @@ import HowNestedHelps from "@/components/HowNestedHelps";
 import KnowMore from "@/components/KnowMore";
 import NestedFooter from "@/components/NestedFooter";
 import ShareApp from "@/components/ShareApp";
-import SuperFDSection from "@/components/SuperFDList";
 import WhatParentsSay from "@/components/WhatParentsSay";
 import WhyParentTrustUs from "@/components/WhyParentTrustUs";
 import { useUser } from "@/hooks/useUser";
 import { Divider, Layout, Text } from "@ui-kitten/components";
 import { StatusBar } from "expo-status-bar";
 import React, { useRef } from "react";
-import { ScrollView, StyleSheet, View } from "react-native";
+import { ScrollView, StyleSheet } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import EducationCostEstimator from "./EducationCostEstimator";
 
@@ -51,13 +50,13 @@ export default function NestedIntro() {
             <HowNestedHelps />
             <Divider />
 
-            <View
+            {/* <View
               onLayout={(event) => {
                 superFDListYPosition.current = event.nativeEvent.layout.y;
               }}
             >
               <SuperFDSection />
-            </View>
+            </View> */}
 
             <KnowMore />
             <Divider />
