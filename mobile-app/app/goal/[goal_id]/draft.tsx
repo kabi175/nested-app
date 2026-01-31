@@ -214,15 +214,18 @@ export default function DraftGoalScreen() {
                 </View>
 
                 {/* Delete Goal Section */}
-                <View style={styles.deleteSection}>
-                    <TouchableOpacity
-                        style={styles.deleteButton}
-                        onPress={() => setShowDeleteModal(true)}
-                    >
-                        <Trash2 size={18} color="#EF4444" />
-                        <ThemedText style={styles.deleteButtonText}>Delete Goal</ThemedText>
-                    </TouchableOpacity>
-                </View>
+                {goal &&
+                    (goal.status === "draft" || goal.status === "payment_pending") && (
+                        <View style={styles.deleteSection}>
+                            <TouchableOpacity
+                                style={styles.deleteButton}
+                                onPress={() => setShowDeleteModal(true)}
+                            >
+                                <Trash2 size={18} color="#EF4444" />
+                                <ThemedText style={styles.deleteButtonText}>Delete Goal</ThemedText>
+                            </TouchableOpacity>
+                        </View>
+                    )}
             </ScrollView>
 
             {/* Delete Goal Modal */}

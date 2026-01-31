@@ -146,14 +146,16 @@ export default function GoalDetailScreen() {
         <ThemedText style={styles.headerTitle}>
           {goal?.title || "Goal"}
         </ThemedText>
-        {!secureFDTitles.includes(goal?.basket.title || "") && (
-          <TouchableOpacity
-            onPress={() => setShowDeleteModal(true)}
-            style={styles.backButton}
-          >
-            <MoreVertical size={24} color="#1F2937" />
-          </TouchableOpacity>
-        )}
+        {!secureFDTitles.includes(goal?.basket.title || "") &&
+          goal &&
+          (goal.status === "draft" || goal.status === "payment_pending") && (
+            <TouchableOpacity
+              onPress={() => setShowDeleteModal(true)}
+              style={styles.backButton}
+            >
+              <MoreVertical size={24} color="#1F2937" />
+            </TouchableOpacity>
+          )}
       </View>
 
       <ScrollView
