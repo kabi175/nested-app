@@ -31,7 +31,10 @@ public class TwilioService {
   public String sendSmsOtp(String phoneNumber, String otp) {
     try {
       String messageBody =
-          String.format("Your Nested verification code is: %s. Do not share this code.", otp);
+          String.format(
+              " Your Nested verification code is: %s. Do not share "
+                  + "this code. -GOPLUG ENTERPRISES PRIVATE LIMITED ",
+              otp);
 
       Message message =
           Message.creator(new PhoneNumber(phoneNumber), new PhoneNumber(fromNumber), messageBody)
@@ -64,7 +67,10 @@ public class TwilioService {
       }
 
       String messageBody =
-          String.format("Your Nested verification code is: %s. Do not share this code.", otp);
+          String.format(
+              " Your Nested verification code is: %s. Do not share "
+                  + "this code. -GOPLUG ENTERPRISES PRIVATE LIMITED ",
+              otp);
       String whatsappTo = "whatsapp:" + phoneNumber;
       String whatsappFrom = "whatsapp:" + whatsappFromNumber;
 
