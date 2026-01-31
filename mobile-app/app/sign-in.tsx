@@ -5,11 +5,8 @@ import LoginCarousel from "@/components/auth/LoginCarousel";
 import { OtpInput } from "@/components/ui/OtpInput";
 import {
   Button,
-  IndexPath,
   Input,
   Layout,
-  Select,
-  SelectItem,
   Spinner,
   Text,
 } from "@ui-kitten/components";
@@ -28,7 +25,7 @@ const LoadingIndicator = (props: ImageProps) => (
 
 export default function SignIn() {
   const [phoneNumber, setPhoneNumber] = useState("");
-  const [countryCode, setCountryCode] = useState("+91");
+  const countryCode = "+91"; // Fixed country code for India
   const { sendSMSCode, authorizeWithSMS } = useAuth0();
 
   // If null, no SMS has been sent
@@ -38,12 +35,6 @@ export default function SignIn() {
   const [resendTimer, setResendTimer] = useState(0);
   const [isLoading, setIsLoading] = useState(false);
   const [isVerifying, setIsVerifying] = useState(false);
-
-  const countryCodes = [
-    { title: "🇮🇳 +91", value: "+91" },
-    // { title: "🇺🇸 +1", value: "+1" },
-    // { title: "🇬🇧 +44", value: "+44" },
-  ];
 
   async function handlePhoneNumberVerification() {
     try {
@@ -185,30 +176,10 @@ export default function SignIn() {
               {/* Phone Input Row */}
               {!confirm && (
                 <Layout style={styles.inputRow}>
-                  {/* Country Code Select */}
-                  <Select
-                    style={styles.countrySelect}
-                    placeholder="Country"
-                    value={countryCode}
-                    selectedIndex={
-                      new IndexPath(
-                        countryCodes.findIndex(
-                          (item) => item.value === countryCode
-                        )
-                      )
-                    }
-                    onSelect={(index) => {
-                      const selectedIndex = Array.isArray(index)
-                        ? index[0]
-                        : index;
-                      const selectedCountry = countryCodes[selectedIndex.row];
-                      setCountryCode(selectedCountry.value);
-                    }}
-                  >
-                    {countryCodes.map((country) => (
-                      <SelectItem key={country.value} title={country.title} />
-                    ))}
-                  </Select>
+                  {/* Country Code Display */}
+                  <Layout style={styles.countryCodeContainer}>
+                    <Text style={styles.countryCodeText}>{"🇮🇳 " + countryCode}</Text>
+                  </Layout>
 
                   {/* Phone Number Input */}
                   <Input
@@ -286,8 +257,8 @@ export default function SignIn() {
                     {isLoading
                       ? "Resending..."
                       : resendTimer > 0
-                      ? `Resend OTP in ${resendTimer}s`
-                      : "Resend OTP"}
+                        ? `Resend OTP in ${resendTimer}s`
+                        : "Resend OTP"}
                   </Button>
                 </Layout>
               )}
@@ -388,10 +359,21 @@ const styles = StyleSheet.create({
     gap: 12,
     marginBottom: 20,
     backgroundColor: "transparent",
+    alignItems: "center",
   },
-  countrySelect: {
-    minWidth: 100,
+  countryCodeContainer: {
     backgroundColor: "#F8F8F8",
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    borderRadius: 4,
+    justifyContent: "center",
+    alignItems: "center",
+    minWidth: 60,
+  },
+  countryCodeText: {
+    fontSize: 16,
+    fontWeight: "600",
+    color: "#1A1A1A",
   },
   phoneInput: {
     flex: 1,
