@@ -66,9 +66,8 @@ public interface GoalService {
    * goals with BasketType.EDUCATION.
    *
    * @param goalId The ID of the goal to delete
-   * @param transferToGoalId The ID of the goal to transfer orders and transactions to
    * @param user Current user context
    * @throws IllegalArgumentException if validation fails
    */
-  void softDeleteGoal(Long goalId, Long transferToGoalId, User user);
+  void softDeleteGoal(Long goalId, User user);
 }

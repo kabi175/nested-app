@@ -4,7 +4,6 @@ import com.nested.app.context.UserContext;
 import com.nested.app.dto.Entity;
 import com.nested.app.dto.GoalCreateDTO;
 import com.nested.app.dto.GoalDTO;
-import com.nested.app.dto.GoalDeleteDTO;
 import com.nested.app.dto.GoalUpdateDTO;
 import com.nested.app.dto.OrderDTO;
 import com.nested.app.enums.BasketType;
@@ -17,7 +16,6 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import jakarta.validation.Valid;
 import java.util.List;
 import java.util.Map;
 import lombok.RequiredArgsConstructor;
@@ -299,7 +297,6 @@ public class GoalController {
    * goals with BasketType.EDUCATION.
    *
    * @param goalId The ID of the goal to delete
-   * @param requestBody Request body containing the target goal ID for transfer
    * @return ResponseEntity with success message or error
    */
   @DeleteMapping("/{goalId}")
@@ -317,16 +314,12 @@ public class GoalController {
         @ApiResponse(responseCode = "500", description = "Internal server error")
       })
   public ResponseEntity<?> deleteGoal(
-      @Parameter(description = "Goal ID to delete", required = true) @PathVariable Long goalId,
-      @Valid @RequestBody GoalDeleteDTO requestBody) {
+      @Parameter(description = "Goal ID to delete", required = true) @PathVariable Long goalId) {
 
-    log.info(
-        "DELETE /api/v1/goals/{} - Soft deleting goal with transfer to goal {}",
-        goalId,
-        requestBody.getTransferToGoalId());
+    log.info("DELETE /api/v1/goals/{} - Soft deleting goal", goalId);
 
     try {
-      goalService.softDeleteGoal(goalId, requestBody.getTransferToGoalId(), userContext.getUser());
+      goalService.softDeleteGoal(goalId, userContext.getUser());
       log.info("Successfully soft deleted goal {}", goalId);
 
       return ResponseEntity.ok(Map.of("message", "Goal deleted successfully"));

@@ -139,6 +139,8 @@ public class LumpSumPaymentCompletedListener {
               var goal = goalRepository.findById(order.getGoal().getId()).orElseThrow();
               if (goal.getStatus() == Goal.Status.PAYMENT_PENDING) {
                 goal.setStatus(Goal.Status.ACTIVE);
+                goal.setIsDeleted(false);
+                goal.setDeletedAt(null);
               }
               // currentAmount is getting updated in here, so that the uses
               // know that amount is invested, GoalSyncJob will run in

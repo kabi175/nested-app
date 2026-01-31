@@ -9,7 +9,6 @@ import com.nested.app.entity.Basket;
 import com.nested.app.entity.Goal;
 import com.nested.app.entity.User;
 import com.nested.app.enums.BasketType;
-import com.nested.app.events.GoalSyncEvent;
 import com.nested.app.exception.ExternalServiceException;
 import com.nested.app.repository.BasketRepository;
 import com.nested.app.repository.EducationRepository;
@@ -411,17 +410,12 @@ public class GoalServiceImpl implements GoalService {
    * goals with BasketType.EDUCATION.
    *
    * @param goalId The ID of the goal to delete
-   * @param transferToGoalId The ID of the goal to transfer orders and transactions to
    * @param user Current user context
    * @throws IllegalArgumentException if validation fails
    */
   @Override
-  public void softDeleteGoal(Long goalId, Long transferToGoalId, User user) {
-    log.info(
-        "Soft deleting goal ID: {} with transfer to goal ID: {} for user ID: {}",
-        goalId,
-        transferToGoalId,
-        user.getId());
+  public void softDeleteGoal(Long goalId, User user) {
+    log.info("Soft deleting goal ID: {}  for user ID: {}", goalId, user.getId());
 
     // Validate source goal
     Goal sourceGoal =
@@ -438,48 +432,15 @@ public class GoalServiceImpl implements GoalService {
       throw new IllegalArgumentException("Only education goals can be deleted");
     }
 
-    // Validate target goal
-    Goal targetGoal =
-        goalRepository
-            .findByIdIncludingDeleted(transferToGoalId, user)
-            .orElseThrow(() -> new IllegalArgumentException("Transfer goal not found"));
-
-    if (targetGoal.getIsDeleted()) {
-      throw new IllegalArgumentException("Cannot transfer to a deleted goal");
+    if (!List.of(Goal.Status.DRAFT, Goal.Status.PAYMENT_PENDING).contains(sourceGoal.getStatus())) {
+      throw new IllegalArgumentException("Only draft goals can be deleted");
     }
-
-    if (targetGoal.getBasket() == null
-        || targetGoal.getBasket().getBasketType() != BasketType.EDUCATION) {
-      throw new IllegalArgumentException(
-          "Transfer goal must be of the same basket type (education)");
-    }
-
-    // Transfer orders from source goal to target goal
-    int ordersTransferred = orderRepository.updateGoalId(goalId, transferToGoalId);
-    log.info(
-        "Transferred {} orders from goal {} to goal {}",
-        ordersTransferred,
-        goalId,
-        transferToGoalId);
-
-    // Transfer transactions from source goal to target goal
-    int transactionsTransferred = transactionRepository.updateGoalId(goalId, transferToGoalId);
-    log.info(
-        "Transferred {} transactions from goal {} to goal {}",
-        transactionsTransferred,
-        goalId,
-        transferToGoalId);
 
     // Mark source goal as deleted
     sourceGoal.setIsDeleted(true);
     sourceGoal.setDeletedAt(new Timestamp(System.currentTimeMillis()));
-    sourceGoal.setTransferredToGoal(targetGoal);
     goalRepository.save(sourceGoal);
 
     log.info("Successfully soft deleted goal ID: {}", goalId);
-
-    // Trigger recalculation of target goal
-    eventPublisher.publishEvent(new GoalSyncEvent(transferToGoalId, user));
-    log.info("Published GoalSyncEvent for target goal ID: {}", transferToGoalId);
   }
 }
