@@ -217,6 +217,10 @@ public class PaymentServiceImpl implements PaymentService {
     var mandateAmount = stepUPAmount + totalAmount;
 
     var bank = bankDetailRepository.findById(payment.getBank().getId()).orElseThrow();
+    var paymentType =
+        payment.getPaymentType() == PlaceOrderPostDTO.PaymentMethod.NET_BANKING
+            ? MandateDto.PaymentType.E_MANDATE
+            : MandateDto.PaymentType.UPI;
     var mandate =
         mandateApiClient
             .createMandate(
@@ -225,6 +229,7 @@ public class PaymentServiceImpl implements PaymentService {
                     .bankAccount(bank.getPaymentRef().toString())
                     .startDate(today)
                     .endDate(today.plusYears(29))
+                    .paymentType(paymentType)
                     .build())
             .block();
     if (mandate == null) {

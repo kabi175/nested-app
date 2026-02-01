@@ -30,7 +30,7 @@ public class MandateDto {
 
   @Builder.Default
   @JsonProperty("mandate_type")
-  String mandateType = "E_MANDATE";
+  PaymentType paymentType = PaymentType.E_MANDATE;
 
   @JsonProperty("bank_account_id")
   String bankAccount;
@@ -46,6 +46,14 @@ public class MandateDto {
   @JsonProperty("valid_to")
   @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd")
   LocalDate endDate;
+
+  @RequiredArgsConstructor
+  public enum PaymentType {
+    E_MANDATE("E_MANDATE"),
+    UPI("UPI");
+
+    @Getter @JsonValue private final String value;
+  }
 
   @RequiredArgsConstructor
   public enum State {

@@ -33,7 +33,7 @@ public class PreVerificationPollerJob implements Job {
         // Remove this job from the scheduler since verification is complete
         context.getScheduler().deleteJob(context.getJobDetail().getKey());
       } else {
-        log.debug("Verification still pending for user {}. Will retry in 5 minutes.", userId);
+        log.info("Verification still pending for user {}. Will retry in 5 minutes.", userId);
       }
     } catch (Exception e) {
       log.error("Error executing PreVerificationPollerJob: {}", e.getMessage(), e);
