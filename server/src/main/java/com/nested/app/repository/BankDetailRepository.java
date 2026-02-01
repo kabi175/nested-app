@@ -2,7 +2,6 @@ package com.nested.app.repository;
 
 import com.nested.app.entity.BankDetail;
 import java.util.List;
-import java.util.Optional;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
@@ -16,12 +15,12 @@ public interface BankDetailRepository extends JpaRepository<BankDetail, Long> {
 
     List<BankDetail> findAllByUserId(Long userId);
 
-    /**
-     * Find bank detail by account number and IFSC code
-     * @param accountNumber account number
-     * @param ifscCode IFSC code
-     * @return Optional bank detail
-     */
-    Optional<BankDetail> findByAccountNumberAndIfscCode(String accountNumber, String ifscCode);
-
+  /**
+   * Find bank detail by account number and IFSC code
+   *
+   * @param accountNumber account number
+   * @param ifscCode IFSC code
+   * @return Optional bank detail
+   */
+  List<BankDetail> findAllByAccountNumberAndIfscCode(String accountNumber, String ifscCode);
 }

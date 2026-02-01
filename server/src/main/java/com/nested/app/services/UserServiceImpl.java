@@ -204,11 +204,15 @@ public class UserServiceImpl implements UserService {
             .orElseThrow(() -> new IllegalArgumentException("User not found with ID: " + userID));
 
     // Check if same account number & IFSC code already exists for the user
-    var existingBank =
-        bankDetailRepository.findByAccountNumberAndIfscCode(
+    var existingBanks =
+        bankDetailRepository.findAllByAccountNumberAndIfscCode(
             bankAccountDto.getAccountNumber(), bankAccountDto.getIfsc());
-    if (existingBank.isPresent() && existingBank.get().getUser().getId().equals(userID)) {
-      return BankAccountDto.fromEntity(existingBank.get());
+    var duplicateBank =
+        existingBanks.stream()
+            .filter(bankDetail -> Objects.equals(bankDetail.getUser().getId(), user.getId()))
+            .findFirst();
+    if (duplicateBank.isPresent()) {
+      return BankAccountDto.fromEntity(duplicateBank.get());
     }
 
     var bank = bankAccountDto.toEntity();
