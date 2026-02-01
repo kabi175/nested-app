@@ -41,26 +41,62 @@ public class SipOrderSchedulerService {
   private final OrderItemsRepository orderItemsRepository;
   private final Scheduler scheduler;
 
+  private static final int BATCH_SIZE = 50;
+  private static final int MAX_BATCHES = 100; // Safety limit to prevent infinite loops
+
   /**
    * Scan for due SIPOrders (scheduleStatus=ACTIVE) and mark them RUNNING with a generated orderRef.
    * The due logic relies on SIPOrder#due(LocalDate) which compares nextRunDate vs today.
+   *
+   * <p>Processes items in batches to handle large datasets efficiently while avoiding
+   * memory issues and providing better observability.
    */
   @Transactional
   public void runDueOrders() {
-    var orderItems =
-        orderItemsRepository.findAllSipOrderItems(
-            List.of(TransactionStatus.ACTIVE.name()), Pageable.ofSize(10));
-    for (var orderItem : orderItems) {
-      try {
-        scheduleSipTransactionTrackerJob(orderItem);
-      } catch (Exception e) {
-        log.error(
-            "Failed to schedule SipTransactionTracker for orderItem id={}: {}",
-            orderItem.getId(),
-            e.getMessage(),
-            e);
+    int pageNumber = 0;
+    int totalProcessed = 0;
+    int totalFailed = 0;
+
+    log.info("Starting bulk processing of due SIP orders");
+
+    while (pageNumber < MAX_BATCHES) {
+      var page = orderItemsRepository.findAllSipOrderItems(
+          List.of(TransactionStatus.ACTIVE.name()),
+          Pageable.ofSize(BATCH_SIZE).withPage(pageNumber));
+
+      if (page.isEmpty()) {
+        break;
       }
+
+      log.debug("Processing batch {} with {} items (total elements: {})",
+          pageNumber + 1, page.getNumberOfElements(), page.getTotalElements());
+
+      for (var orderItem : page.getContent()) {
+        try {
+          scheduleSipTransactionTrackerJob(orderItem);
+          totalProcessed++;
+        } catch (Exception e) {
+          totalFailed++;
+          log.error(
+              "Failed to schedule SipTransactionTracker for orderItem id={}: {}",
+              orderItem.getId(),
+              e.getMessage(),
+              e);
+        }
+      }
+
+      if (!page.hasNext()) {
+        break;
+      }
+      pageNumber++;
     }
+
+    if (pageNumber >= MAX_BATCHES) {
+      log.warn("Reached maximum batch limit ({}). Some items may not have been processed.", MAX_BATCHES);
+    }
+
+    log.info("Completed bulk processing of due SIP orders. Processed: {}, Failed: {}, Batches: {}",
+        totalProcessed, totalFailed, pageNumber + 1);
   }
 
   /**
