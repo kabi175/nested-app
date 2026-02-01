@@ -30,9 +30,6 @@ public class PreVerificationServiceImpl implements PreVerificationService {
 
   public List<PreVerificationData> getVerification(UserContext userContext, Long userID) {
     var user = userRepository.findById(userID).orElseThrow();
-    if (user.getKycStatus() == User.KYCStatus.COMPLETED) {
-      return List.of();
-    }
     var data = userVerificationRepository.findByUser(user);
 
     if (!data.isEmpty()) {
