@@ -168,6 +168,21 @@ export default function CustomizeInvestmentScreen() {
       return;
     }
 
+    if (stepUpAmount > MAX_STEPUP_AMOUNT) {
+      Alert.alert("Step-Up Amount", `Please add at most ${formatCurrency(MAX_STEPUP_AMOUNT)} for step-up`);
+      return;
+    }
+
+    if (lumpSumAmount > MAX_LUMPSUM_AMOUNT) {
+      Alert.alert("Lump Sum Amount", `Please add at most ${formatCurrency(MAX_LUMPSUM_AMOUNT)} for lump sum`);
+      return;
+    }
+
+    if (normalizedSipAmount > MAX_SIP_AMOUNT) {
+      Alert.alert("SIP Amount", `Please add at most ${formatCurrency(MAX_SIP_AMOUNT)} for SIP`);
+      return;
+    }
+
     // Prepare orders array for all goals
     const orders: CreateOrderRequest[] = [];
 
@@ -347,7 +362,6 @@ export default function CustomizeInvestmentScreen() {
             initialValue={lumpSumAmount}
             onValueChange={handleLumpSumAmountChange}
             inputLabel="Lump Sum Amount"
-            max={MAX_LUMPSUM_AMOUNT}
           />
 
           {/* Add Step-Up Plan Card */}
@@ -357,7 +371,6 @@ export default function CustomizeInvestmentScreen() {
             initialValue={stepUpAmount}
             onValueChange={handleStepUpAmountChange}
             inputLabel="Annual Step-Up Amount"
-            max={MAX_STEPUP_AMOUNT}
           />
 
           {/* Continue Button */}
