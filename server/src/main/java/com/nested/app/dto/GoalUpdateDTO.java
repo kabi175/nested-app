@@ -28,6 +28,8 @@ public class GoalUpdateDTO {
   @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd")
   private Date targetDate;
 
+  private MinifiedEducationDto education;
+
   public static GoalDTO toGoalDTO(GoalUpdateDTO createDTO) {
     GoalDTO dto = new GoalDTO();
     dto.setId(createDTO.getId());
@@ -35,6 +37,7 @@ public class GoalUpdateDTO {
     dto.setTargetAmount(createDTO.getTargetAmount());
     dto.setCurrentAmount(createDTO.getCurrentAmount());
     dto.setTargetDate(createDTO.getTargetDate());
+    dto.setEducation(createDTO.getEducation());
     return dto;
   }
 }

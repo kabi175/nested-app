@@ -113,9 +113,10 @@ public class GoalServiceImpl implements GoalService {
                   () -> new RuntimeException("Goal not found with ID: " + goalDTO.getId()));
 
       // Check if goal can be updated (business rule: cannot update if orders exist)
-      if (hasActiveOrders(existingGoal)) {
-        throw new IllegalStateException("Cannot update goal when an order exists for this goal");
-      }
+      //      if (hasActiveOrders(existingGoal)) {
+      //        throw new IllegalStateException("Cannot update goal when an order exists for this
+      // goal");
+      //      }
 
       // Fetch existing titles for the user excluding the current goal
       List<String> existingTitlesList =
@@ -126,9 +127,26 @@ public class GoalServiceImpl implements GoalService {
       String uniqueTitle = generateUniqueTitle(goalDTO.getTitle(), existingTitles);
 
       // Update fields
-      existingGoal.setTitle(uniqueTitle);
-      existingGoal.setTargetAmount(goalDTO.getTargetAmount());
-      existingGoal.setTargetDate(goalDTO.getTargetDate());
+      if (uniqueTitle != null) {
+        existingGoal.setTitle(uniqueTitle);
+      }
+      if (goalDTO.getTargetAmount() != null) {
+        existingGoal.setTargetAmount(goalDTO.getTargetAmount());
+      }
+      if (goalDTO.getTargetDate() != null) {
+        existingGoal.setTargetDate(goalDTO.getTargetDate());
+      }
+
+      if (goalDTO.getEducation() != null) {
+        educationRepository
+            .findById(goalDTO.getEducation().getId())
+            .ifPresent(existingGoal::setEducation);
+      }
+
+      if (!hasActiveOrders(existingGoal)) {
+        var newBasket = computeBasketForGoal(existingGoal);
+        existingGoal.setBasket(newBasket);
+      }
 
       Goal updatedGoal = goalRepository.save(existingGoal);
       GoalDTO updatedGoalDTO = convertToDTO(updatedGoal);
@@ -178,19 +196,7 @@ public class GoalServiceImpl implements GoalService {
             existingTitles.add(uniqueTitle);
 
             goal.setUser(user);
-            Basket basket;
-            if (goal.getEducation() == null && goal.getBasket() != null) {
-              basket = basketRepository.findById(goal.getBasket().getId()).orElseThrow();
-            } else {
-              var now = LocalDate.now();
-              var futureDate = goal.getTargetDate().toLocalDate();
-              var period = Period.between(now, futureDate);
-              basket =
-                  basketRepository
-                      .findFirstByYearsGreaterThanOrderByYears((double) period.getYears())
-                      .orElseGet(basketRepository::findFirstByOrderByYearsDesc);
-            }
-
+            Basket basket = computeBasketForGoal(goal);
             goal.setBasket(basket);
 
             if (goal.getTargetAmount() == null) {
@@ -220,6 +226,19 @@ public class GoalServiceImpl implements GoalService {
     } catch (Exception e) {
       log.error("Error creating goalDtos: {}", e.getMessage(), e);
       throw new ExternalServiceException("Failed to create goalDtos", e);
+    }
+  }
+
+  private Basket computeBasketForGoal(Goal goal) {
+    if (goal.getEducation() == null && goal.getBasket() != null) {
+      return basketRepository.findById(goal.getBasket().getId()).orElseThrow();
+    } else {
+      var now = LocalDate.now();
+      var futureDate = goal.getTargetDate().toLocalDate();
+      var period = Period.between(now, futureDate);
+      return basketRepository
+          .findFirstByYearsGreaterThanOrderByYears((double) period.getYears())
+          .orElseGet(basketRepository::findFirstByOrderByYearsDesc);
     }
   }
 
@@ -324,7 +343,7 @@ public class GoalServiceImpl implements GoalService {
    */
   private boolean hasActiveOrders(Goal goal) {
     log.debug("Checking for active orders for goal ID: {}", goal.getId());
-    return orderRepository.existsByGoalId(goal.getId());
+    return Goal.Status.DRAFT != goal.getStatus();
   }
 
   /**
