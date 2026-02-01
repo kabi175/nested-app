@@ -4,6 +4,7 @@ import { useEducation } from "@/hooks/useEducation";
 import { useGoal } from "@/hooks/useGoal";
 import { useGoalFormAnimations } from "@/hooks/useGoalFormAnimations";
 import { useUpdateGoal } from "@/hooks/useUpdateGoal";
+import { Education } from "@/types/education";
 import { GoalForm } from "@/types/goalForm";
 import { calculateFutureCost } from "@/utils/goalForm";
 import * as Haptics from "expo-haptics";
@@ -50,25 +51,66 @@ export default function EditGoalScreen() {
         animateInputSection,
     } = useGoalFormAnimations();
 
-    // Convert Goal to GoalForm when goal data is loaded
+    // Convert Goal to GoalForm when goal data and education data are loaded
     useEffect(() => {
-        if (goal) {
+        if (goal && courses.length > 0 && institutions.length > 0) {
             const targetYear = goal.targetDate.getFullYear();
+
+            // Find the education from courses or institutions if educationId exists
+            let foundEducation: Education | undefined = undefined;
+            let selectionMode: "course" | "college" = "course";
+            let degree = "Choose a course";
+            let college = "Select Dream College";
+
+            if (goal.educationId) {
+                // Search in courses first
+                foundEducation = courses.find((edu) => edu.id === goal.educationId);
+                if (foundEducation) {
+                    selectionMode = "course";
+                    degree = foundEducation.name;
+                } else {
+                    // Search in institutions
+                    foundEducation = institutions.find((edu) => edu.id === goal.educationId);
+                    if (foundEducation) {
+                        selectionMode = "college";
+                        college = foundEducation.name;
+                    }
+                }
+            }
+
             setGoalForm({
                 id: goal.id,
                 type: "undergraduate", // Default, can be inferred from title or other logic
                 title: goal.title,
+                degree: degree,
+                college: college,
+                currentCost: foundEducation?.lastYearFee || 0,
+                targetYear: targetYear,
+                futureCost: foundEducation
+                    ? calculateFutureCost(foundEducation, targetYear)
+                    : goal.targetAmount,
+                selectionMode: selectionMode,
+                education: foundEducation,
+                childId: goal.childId,
+            });
+        } else if (goal && !isLoadingEducation) {
+            // If goal is loaded but education data is still loading or not available
+            const targetYear = goal.targetDate.getFullYear();
+            setGoalForm({
+                id: goal.id,
+                type: "undergraduate",
+                title: goal.title,
                 degree: "Choose a course",
                 college: "Select Dream College",
-                currentCost: 0, // Not available in Goal
+                currentCost: 0,
                 targetYear: targetYear,
                 futureCost: goal.targetAmount,
                 selectionMode: "course",
-                education: undefined, // Not available in Goal, user needs to select
+                education: undefined,
                 childId: goal.childId,
             });
         }
-    }, [goal]);
+    }, [goal, courses, institutions, isLoadingEducation]);
 
     const updateGoal = (goalId: string, field: keyof GoalForm, value: any) => {
         setGoalForm((prev) => {

@@ -19,6 +19,7 @@ export type Goal = {
   status: "draft" | "payment_pending" | "active" | "completed" | "cancelled";
   createdAt: Date;
   updatedAt: Date;
+  educationId?: string;
 };
 
 export type Order = {

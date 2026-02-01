@@ -102,6 +102,12 @@ export type GoalDTO = {
   target_date?: string;
   createdAt?: string;
   updatedAt?: string;
+  education_id?: string;
+  education?: {
+    id: string;
+    name: string;
+    type: "INSTITUTION" | "COURSE";
+  };
 };
 
 export function mapGoalToGoal(goal: GoalDTO): Goal {
@@ -118,5 +124,6 @@ export function mapGoalToGoal(goal: GoalDTO): Goal {
     createdAt: goal.createdAt ? new Date(goal.createdAt) : new Date(),
     updatedAt: goal.updatedAt ? new Date(goal.updatedAt) : new Date(),
     basket: goal.basket,
+    educationId: goal.education_id || goal.education?.id,
   };
 }
