@@ -299,6 +299,7 @@ export default function CreateGoalScreen() {
               <GoalFormCard
                 key={goal.id}
                 goal={goal}
+                showDeleteButton={true}
                 courses={courses}
                 institutions={institutions}
                 isLoadingEducation={isLoadingEducation}

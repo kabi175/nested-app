@@ -9,7 +9,7 @@ import { usePendingOrdersByGoalId } from "@/hooks/usePendingOrders";
 import { formatCurrency } from "@/utils/formatters";
 import { router, useLocalSearchParams } from "expo-router";
 import { useSetAtom } from "jotai";
-import { ArrowLeft, CreditCard, Plus, Trash2 } from "lucide-react-native";
+import { ArrowLeft, CreditCard, Edit, Plus, Trash2 } from "lucide-react-native";
 import React, { useState } from "react";
 import {
     ActivityIndicator,
@@ -213,10 +213,17 @@ export default function DraftGoalScreen() {
                     </TouchableOpacity>
                 </View>
 
-                {/* Delete Goal Section */}
+                {/* Edit and Delete Goal Section */}
                 {goal &&
                     (goal.status === "draft" || goal.status === "payment_pending") && (
-                        <View style={styles.deleteSection}>
+                        <View style={styles.editDeleteSection}>
+                            <TouchableOpacity
+                                style={styles.editButton}
+                                onPress={() => router.push(`/goal/${goal_id}/edit`)}
+                            >
+                                <Edit size={18} color="#3B82F6" />
+                                <ThemedText style={styles.editButtonText}>Edit Goal</ThemedText>
+                            </TouchableOpacity>
                             <TouchableOpacity
                                 style={styles.deleteButton}
                                 onPress={() => setShowDeleteModal(true)}
@@ -396,8 +403,26 @@ const styles = StyleSheet.create({
         fontWeight: "600",
         color: "#FFFFFF",
     },
-    deleteSection: {
+    editDeleteSection: {
         marginTop: 8,
+        gap: 12,
+    },
+    editButton: {
+        flexDirection: "row",
+        alignItems: "center",
+        justifyContent: "center",
+        paddingVertical: 14,
+        paddingHorizontal: 20,
+        borderRadius: 12,
+        backgroundColor: "#FFFFFF",
+        borderWidth: 1,
+        borderColor: "#DBEAFE",
+        gap: 8,
+    },
+    editButtonText: {
+        fontSize: 16,
+        fontWeight: "600",
+        color: "#3B82F6",
     },
     deleteButton: {
         flexDirection: "row",

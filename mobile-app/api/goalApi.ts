@@ -67,6 +67,22 @@ export const createGoal = async (
   return (data.data ?? []).map((goal: GoalDTO): Goal => mapGoalToGoal(goal));
 };
 
+export const updateGoal = async (
+  api: AxiosInstance,
+  goalId: string,
+  goal: UpdateGoalRequest
+): Promise<Goal> => {
+  const { data } = await api.patch(`/goals/${goalId}`, { data: goal });
+  return mapGoalToGoal(data.data);
+};
+
+export type UpdateGoalRequest = {
+  title: string;
+  targetAmount: number;
+  targetDate: Date;
+  educationId: string;
+}
+
 export type GoalDTO = {
   id: string;
   title: string;

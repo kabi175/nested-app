@@ -6,6 +6,7 @@ import { StyleSheet, TextInput, TouchableOpacity, View } from "react-native";
 
 interface GoalFormHeaderProps {
   title: string;
+  showDeleteButton?: boolean;
   isEditing: boolean;
   onTitleChange: (title: string) => void;
   onEditToggle: () => void;
@@ -14,6 +15,7 @@ interface GoalFormHeaderProps {
 
 export function GoalFormHeader({
   title,
+  showDeleteButton = false,
   isEditing,
   onTitleChange,
   onEditToggle,
@@ -45,9 +47,11 @@ export function GoalFormHeader({
           <Edit3 size={16} color="#6B7280" />
         </TouchableOpacity>
       </View>
-      <TouchableOpacity style={styles.deleteButton} onPress={onDelete}>
-        <Trash2 size={20} color="#EF4444" />
-      </TouchableOpacity>
+      {showDeleteButton && (
+        <TouchableOpacity style={styles.deleteButton} onPress={onDelete}>
+          <Trash2 size={20} color="#EF4444" />
+        </TouchableOpacity>
+      )}
     </View>
   );
 }

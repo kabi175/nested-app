@@ -14,7 +14,7 @@ import { formatCurrency } from "@/utils/formatters";
 import { Button } from "@ui-kitten/components";
 import { router, useLocalSearchParams } from "expo-router";
 import { useSetAtom } from "jotai";
-import { ArrowLeft, MoreVertical, TrendingDown, TrendingUp } from "lucide-react-native";
+import { ArrowLeft, Edit, MoreVertical, TrendingDown, TrendingUp } from "lucide-react-native";
 import React, { useMemo, useState } from "react";
 import {
   ActivityIndicator,
@@ -148,14 +148,25 @@ export default function GoalDetailScreen() {
         </ThemedText>
         {!secureFDTitles.includes(goal?.basket.title || "") &&
           goal &&
-          (goal.status === "draft" || goal.status === "payment_pending") && (
+          <View style={styles.headerActions}>
             <TouchableOpacity
-              onPress={() => setShowDeleteModal(true)}
-              style={styles.backButton}
+              onPress={() => router.push(`/goal/${goal_id}/edit`)}
+              style={styles.headerActionButton}
             >
-              <MoreVertical size={24} color="#1F2937" />
+              <Edit size={24} color="#3B82F6" />
             </TouchableOpacity>
-          )}
+            {
+              goal.status === "draft" || goal.status === "payment_pending" && (
+                <TouchableOpacity
+                  onPress={() => setShowDeleteModal(true)}
+                  style={styles.headerActionButton}
+                >
+                  <MoreVertical size={24} color="#1F2937" />
+                </TouchableOpacity>
+              )
+            }
+          </View>
+        }
       </View>
 
       <ScrollView
@@ -582,6 +593,17 @@ const styles = StyleSheet.create({
     borderBottomColor: "#F3F4F6",
   },
   backButton: {
+    width: 40,
+    height: 40,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  headerActions: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+  },
+  headerActionButton: {
     width: 40,
     height: 40,
     justifyContent: "center",
