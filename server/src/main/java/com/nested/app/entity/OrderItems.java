@@ -60,4 +60,6 @@ public class OrderItems {
   @Enumerated(EnumType.STRING)
   private TransactionStatus status = TransactionStatus.PENDING;
 
+  /** Last provider transaction id resolved (for idempotency) */
+  private String lastProcessedTransactionRef;
 }

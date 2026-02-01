@@ -9,6 +9,7 @@ public enum TransactionStatus {
   VERIFICATION_PENDING("verification_pending"),
   PENDING("in_progress"),
   SUBMITTED("submitted"),
+  ACTIVE("active"), // only for SIP txn
   COMPLETED("completed"),
   FAILED("failed"),
   REFUNDED("refunded");

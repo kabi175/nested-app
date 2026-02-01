@@ -369,7 +369,7 @@ public class PaymentServiceImpl implements PaymentService {
                         .fundID(item.getFund().getIsinCode())
                         .mandateID(mandateID.toString())
                         .startDate(sipOrder.getStartDate())
-                        .firstOrderToday(false)
+                        .firstOrderToday(true)
                         .accountID(accountID)
                         .amount(item.getAmount())
                         .userIP(ipAddress)

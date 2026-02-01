@@ -16,6 +16,8 @@ public interface SipOrderApiClient {
 
   Mono<Void> confirmOrder(List<String> orderIds);
 
+  Mono<SipOrderDetail> fetchSipOrderDetail(String orderRef);
+
   // returns 100 latest Transactions
   Mono<List<OrderData>> fetchTransactionDetails(String orderRef);
 }

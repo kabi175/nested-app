@@ -51,7 +51,7 @@ public class SipOrderApiClientImpl implements SipOrderApiClient {
 
     return api.withAuth()
         .patch()
-        .uri(SIP_ORDER_API_URL)
+        .uri(SIP_ORDER_API_URL + '/' + request.getOrderRef())
         .bodyValue(request)
         .retrieve()
         .bodyToMono(Void.class);
@@ -68,6 +68,15 @@ public class SipOrderApiClientImpl implements SipOrderApiClient {
         .bodyValue(request)
         .retrieve()
         .bodyToMono(Void.class);
+  }
+
+  @Override
+  public Mono<SipOrderDetail> fetchSipOrderDetail(String orderRef) {
+    return api.withAuth()
+        .get()
+        .uri(uriBuilder -> uriBuilder.path(SIP_ORDER_API_URL + "/" + orderRef).build())
+        .retrieve()
+        .bodyToMono(SipOrderDetail.class);
   }
 
   @Override

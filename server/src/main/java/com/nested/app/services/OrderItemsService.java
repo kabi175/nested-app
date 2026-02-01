@@ -3,6 +3,7 @@ package com.nested.app.services;
 import com.nested.app.dto.OrderAllocationProjection;
 import com.nested.app.dto.OrderItemsDTO;
 import com.nested.app.entity.User;
+import com.nested.app.enums.TransactionStatus;
 import com.nested.app.repository.OrderItemsRepository;
 import java.util.Arrays;
 import java.util.Collections;
@@ -40,8 +41,16 @@ public class OrderItemsService {
         pageable.getPageNumber(),
         pageable.getPageSize());
     try {
+      List<String> statuses =
+          List.of(
+              TransactionStatus.COMPLETED.name(),
+              TransactionStatus.ACTIVE.name(),
+              TransactionStatus.FAILED.name(),
+              TransactionStatus.ACTIVE.name());
       Page<OrderItemsDTO> sipOrderItems =
-          orderItemsRepository.findAllSipOrderItems(pageable).map(OrderItemsDTO::fromEntity);
+          orderItemsRepository
+              .findAllSipOrderItems(statuses, pageable)
+              .map(OrderItemsDTO::fromEntity);
       log.info(
           "Successfully retrieved {} SIP Order Items (Total: {})",
           sipOrderItems.getContent().size(),
