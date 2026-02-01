@@ -39,7 +39,7 @@ export default function NestedIntro() {
           showsVerticalScrollIndicator={false}
           contentContainerStyle={styles.scrollContent}
         >
-          <Text category="h6"> Hello, {user?.firstName} </Text>
+          <Text category="h6" style={styles.greeting}> Hello, {user?.firstName} 👋 </Text>
           <EducationCostEstimator onInvestNowPress={handleScrollToSuperFD} />
           <Layout
             style={styles.content}
@@ -110,5 +110,8 @@ const styles = StyleSheet.create({
   scrollContent: {
     flexGrow: 1,
     width: "100%",
+  },
+  greeting: {
+    paddingHorizontal: 20,
   },
 });
