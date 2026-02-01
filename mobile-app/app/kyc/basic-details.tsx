@@ -207,11 +207,11 @@ export default function BasicDetailsScreen() {
               marginBottom: 6,
             }}
           >
-            <Text category="label">Father&apos;s Name</Text>
+            <Text category="label">Father&apos;s Name/ Mother&apos;s Name/ Spouse&apos;s Name</Text>
             <InfoTooltip content="Required as per KYC regulations for identity verification." />
           </View>
           <Input
-            placeholder="Enter father's name"
+            placeholder="Enter father's Name/Mother's Name/Spouse's Name"
             value={data.basic.father_name}
             onChangeText={(v) => update("basic", { father_name: v })}
             status={errors.father_name ? "danger" : "basic"}
