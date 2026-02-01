@@ -163,7 +163,7 @@ export default function CustomizeInvestmentScreen() {
       return;
     }
 
-    if (stepUpAmount < minStepUp) {
+    if (stepUpAmount !== 0 && stepUpAmount < minStepUp) {
       Alert.alert("Step-Up Amount", `Please add at least ${formatCurrency(minStepUp)} for step-up`);
       return;
     }

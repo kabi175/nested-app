@@ -17,7 +17,7 @@ export function usePreVerification() {
     },
     enabled: !!user,
     refetchInterval: 10000, // Poll every 10 seconds
-    refetchIntervalInBackground: false,
+    retry: true,
   });
 
   const status = getValidationStatus(query.data);

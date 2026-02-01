@@ -30,10 +30,10 @@ function formatScheduledDate(
       day === 1 || day === 21 || day === 31
         ? "st"
         : day === 2 || day === 22
-        ? "nd"
-        : day === 3 || day === 23
-        ? "rd"
-        : "th";
+          ? "nd"
+          : day === 3 || day === 23
+            ? "rd"
+            : "th";
     return `${day}${suffix} every month`;
   }
   return "Not scheduled";
@@ -66,7 +66,7 @@ function getTagTextColor(type: "SIP" | "STP" | "SWP"): string {
 }
 
 export default function SIPScreen() {
-  const { data: orders, isLoading } = useSipOrders(1);
+  const { data: orders, isLoading } = useSipOrders(0);
 
   const displayOrders = orders && Array.isArray(orders) ? orders : [];
 
