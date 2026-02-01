@@ -174,7 +174,7 @@ public class SipOrderSchedulerService {
               .forJob(jobDetail)
               .withSchedule(
                   SimpleScheduleBuilder.simpleSchedule()
-                      .withIntervalInSeconds(10)
+                      .withIntervalInSeconds(60)
                       .withMisfireHandlingInstructionFireNow()
                       .withRepeatCount(0)) // Run once
               .startNow()
