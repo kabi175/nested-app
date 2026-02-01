@@ -69,17 +69,34 @@ export const createGoal = async (
 
 export const updateGoal = async (
   api: AxiosInstance,
-  goalId: string,
   goal: UpdateGoalRequest
 ): Promise<Goal> => {
-  const { data } = await api.patch(`/goals/${goalId}`, { data: goal });
-  return mapGoalToGoal(data.data);
+  const payload = {
+    id: goal.id,
+    title: goal.title,
+    target_amount: goal.target_amount,
+    target_date: goal.target_date.toLocaleDateString("en-CA"),
+    education: {
+      id: goal.educationId,
+    }
+  }
+  console.log("updateGoal payload education:", payload.education);
+
+  const { data } = await api.put(`/goals`, { data: [payload] });
+  console.log("updateGoal response:", data);
+  // Handle array response - API returns array of goals
+  const goals = (data.data ?? []).map((goal: GoalDTO): Goal => mapGoalToGoal(goal));
+  if (goals.length === 0) {
+    throw new Error("Goal not found in response");
+  }
+  return goals[0];
 };
 
 export type UpdateGoalRequest = {
+  id: string;
   title: string;
-  targetAmount: number;
-  targetDate: Date;
+  target_amount: number;
+  target_date: Date;
   educationId: string;
 }
 

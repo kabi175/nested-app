@@ -8,13 +8,13 @@ export function useUpdateGoal() {
     const queryClient = useQueryClient();
 
     return useMutation({
-        mutationFn: ({ goalId, goal }: { goalId: string; goal: UpdateGoalRequest }) =>
-            updateGoal(api, goalId, goal),
+        mutationFn: ({ goal }: { goal: UpdateGoalRequest }) =>
+            updateGoal(api, goal),
         onSuccess: (_, variables) => {
             // Invalidate and refetch goals after successful update
             queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.educationGoals] });
             queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.superFDGoals] });
-            queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.goal, variables.goalId] });
+            queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.goal, variables.goal.id] });
         },
     });
 }

@@ -35,6 +35,7 @@ export default function EditGoalScreen() {
     } = useEducation();
 
     const [goalForm, setGoalForm] = useState<GoalForm | null>(null);
+    const [isFormInitialized, setIsFormInitialized] = useState(false);
     const [expandedDropdowns, setExpandedDropdowns] = useState<{
         [key: string]: boolean;
     }>({});
@@ -51,8 +52,25 @@ export default function EditGoalScreen() {
         animateInputSection,
     } = useGoalFormAnimations();
 
-    // Convert Goal to GoalForm when goal data and education data are loaded
+    // Debug: Log goalForm changes
     useEffect(() => {
+        if (goalForm) {
+            console.log("goalForm state updated:", {
+                id: goalForm.id,
+                educationId: goalForm.education?.id,
+                educationName: goalForm.education?.name,
+                selectionMode: goalForm.selectionMode,
+                degree: goalForm.degree,
+                college: goalForm.college,
+            });
+        }
+    }, [goalForm]);
+
+    // Convert Goal to GoalForm when goal data and education data are loaded (only once)
+    useEffect(() => {
+        // Only initialize once to prevent overwriting user changes
+        if (isFormInitialized) return;
+
         if (goal && courses.length > 0 && institutions.length > 0) {
             const targetYear = goal.targetDate.getFullYear();
 
@@ -93,7 +111,8 @@ export default function EditGoalScreen() {
                 education: foundEducation,
                 childId: goal.childId,
             });
-        } else if (goal && !isLoadingEducation) {
+            setIsFormInitialized(true);
+        } else if (goal && !isLoadingEducation && !isFormInitialized) {
             // If goal is loaded but education data is still loading or not available
             const targetYear = goal.targetDate.getFullYear();
             setGoalForm({
@@ -109,12 +128,17 @@ export default function EditGoalScreen() {
                 education: undefined,
                 childId: goal.childId,
             });
+            setIsFormInitialized(true);
         }
-    }, [goal, courses, institutions, isLoadingEducation]);
+    }, [goal, courses, institutions, isLoadingEducation, isFormInitialized]);
 
     const updateGoal = (goalId: string, field: keyof GoalForm, value: any) => {
+        console.log(`updateGoal called - field: ${field}, value:`, value);
         setGoalForm((prev) => {
-            if (!prev || prev.id !== goalId) return prev;
+            if (!prev || prev.id !== goalId) {
+                console.log("updateGoal - prev is null or id mismatch", { prev, goalId });
+                return prev;
+            }
             const updatedGoal = { ...prev, [field]: value };
 
             // Recalculate future cost when education or target year changes
@@ -126,9 +150,15 @@ export default function EditGoalScreen() {
                 if (education) {
                     updatedGoal.currentCost = education.lastYearFee || 0;
                     updatedGoal.futureCost = calculateFutureCost(education, targetYear);
+                    console.log("updateGoal - recalculated costs", {
+                        currentCost: updatedGoal.currentCost,
+                        futureCost: updatedGoal.futureCost,
+                        education: education.id,
+                    });
                 }
             }
 
+            console.log("updateGoal - updated goal form:", updatedGoal);
             return updatedGoal;
         });
     };
@@ -161,6 +191,7 @@ export default function EditGoalScreen() {
     };
 
     const handleSave = async () => {
+        console.log("handleSave - goalForm:", goalForm);
         if (!goalForm) return;
 
         if (!goalForm.education?.id) {
@@ -171,15 +202,18 @@ export default function EditGoalScreen() {
             return;
         }
 
+        const updateData = {
+            id: goal_id,
+            title: goalForm.title,
+            target_amount: goalForm.futureCost,
+            target_date: new Date(goalForm.targetYear, 5, 1),
+            educationId: goalForm.education.id,
+        };
+        console.log("handleSave - sending update data:", updateData);
+
         try {
             await updateGoalMutation.mutateAsync({
-                goalId: goal_id,
-                goal: {
-                    title: goalForm.title,
-                    targetAmount: goalForm.futureCost,
-                    targetDate: new Date(goalForm.targetYear, 5, 1),
-                    educationId: goalForm.education.id,
-                },
+                goal: updateData,
             });
 
             router.back();
