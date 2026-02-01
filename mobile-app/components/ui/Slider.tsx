@@ -1,9 +1,8 @@
 import { ThemedText } from "@/components/ThemedText";
+import RNSlider from "@react-native-community/slider";
 import { useTheme } from "@ui-kitten/components";
 import React from "react";
-import { Dimensions, StyleSheet, TouchableOpacity, View } from "react-native";
-
-const { width } = Dimensions.get("window");
+import { StyleSheet, View } from "react-native";
 
 interface SliderProps {
   min: number;
@@ -27,18 +26,13 @@ export default function Slider({
   step = 500,
 }: SliderProps) {
   const theme = useTheme();
-  const percentage = ((value - min) / (max - min)) * 100;
 
-  const handleSliderPress = (event: any) => {
-    const { locationX } = event.nativeEvent;
-    const trackWidth = width - 80; // Account for padding
-    const pressPercentage = Math.max(0, Math.min(1, locationX / trackWidth));
-    const rawValue = min + pressPercentage * (max - min);
-    const newValue = Math.round(rawValue / step) * step;
-    if (newValue > max) {
-      onValueChange(max);
-    } else if (newValue < min) {
-      onValueChange(min);
+  const handleValueChange = (newValue: number) => {
+    // Apply step rounding if step is provided
+    if (step > 0) {
+      const normalized = Math.round(newValue / step) * step;
+      const clampedValue = Math.max(min, Math.min(max, normalized));
+      onValueChange(clampedValue);
     } else {
       onValueChange(newValue);
     }
@@ -61,33 +55,17 @@ export default function Slider({
 
   return (
     <View style={styles.sliderContainer}>
-      <TouchableOpacity
-        style={[
-          styles.sliderTrack,
-          { backgroundColor: theme["color-basic-300"] },
-        ]}
-        onPress={handleSliderPress}
-        activeOpacity={1}
-      >
-        <View
-          style={[
-            styles.sliderFill,
-            {
-              width: `${percentage}%`,
-              backgroundColor: theme["color-primary-500"],
-            },
-          ]}
-        />
-        <View
-          style={[
-            styles.sliderThumb,
-            {
-              left: `${percentage}%`,
-              backgroundColor: theme["color-primary-500"],
-            },
-          ]}
-        />
-      </TouchableOpacity>
+      <RNSlider
+        style={styles.slider}
+        minimumValue={min}
+        maximumValue={max}
+        value={value}
+        onValueChange={handleValueChange}
+        step={step > 0 ? step : undefined}
+        minimumTrackTintColor={theme["color-primary-500"]}
+        maximumTrackTintColor={theme["color-basic-300"]}
+        thumbTintColor={theme["color-primary-500"]}
+      />
       <View style={styles.sliderLabels}>
         <ThemedText style={styles.sliderLabel}>
           {minLabel || defaultMinLabel}
@@ -104,32 +82,9 @@ const styles = StyleSheet.create({
   sliderContainer: {
     marginTop: 20,
   },
-  sliderTrack: {
-    height: 8,
-    borderRadius: 4,
-    position: "relative",
-  },
-  sliderFill: {
-    height: "100%",
-    borderRadius: 4,
-  },
-  sliderThumb: {
-    position: "absolute",
-    top: -8,
-    width: 24,
-    height: 24,
-    borderRadius: 12,
-    shadowColor: "#000",
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.2,
-    shadowRadius: 4,
-    elevation: 4,
-    transform: [{ translateX: -12 }],
-    borderWidth: 2,
-    borderColor: "#FFFFFF",
+  slider: {
+    width: "100%",
+    height: 40,
   },
   sliderLabels: {
     flexDirection: "row",
