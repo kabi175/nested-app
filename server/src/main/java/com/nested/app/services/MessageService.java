@@ -1,17 +1,19 @@
 package com.nested.app.services;
 
+import com.nested.app.client.SmsService;
 import com.nested.app.enums.MfaChannel;
 import com.twilio.rest.api.v2010.account.Message;
 import com.twilio.type.PhoneNumber;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 @Service
 @Slf4j
 @RequiredArgsConstructor
-public class TwilioService {
+public class MessageService {
 
   private final EmailService emailService;
 
@@ -20,6 +22,8 @@ public class TwilioService {
 
   @Value("${twilio.whatsapp.from-number:}")
   private String whatsappFromNumber;
+
+  @Autowired private SmsService smsService;
 
   /**
    * Sends OTP via SMS using Twilio
@@ -30,21 +34,10 @@ public class TwilioService {
    */
   public String sendSmsOtp(String phoneNumber, String otp) {
     try {
-      String messageBody =
-          String.format(
-              " Your Nested verification code is: %s. Do not share "
-                  + "this code. -GOPLUG ENTERPRISES PRIVATE LIMITED ",
-              otp);
+      smsService.sendOTP(fromNumber, phoneNumber, otp);
 
-      Message message =
-          Message.creator(new PhoneNumber(phoneNumber), new PhoneNumber(fromNumber), messageBody)
-              .create();
-
-      log.info(
-          "SMS OTP sent to {} (masked), Message SID: {}",
-          maskPhoneNumber(phoneNumber),
-          message.getSid());
-      return message.getSid();
+      log.info("SMS OTP sent to {} (masked)", maskPhoneNumber(phoneNumber));
+      return phoneNumber;
     } catch (Exception e) {
       log.error(
           "Failed to send SMS OTP to {}: {}", maskPhoneNumber(phoneNumber), e.getMessage(), e);

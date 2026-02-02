@@ -33,7 +33,7 @@ public class MfaService {
 
   private static final String HMAC_ALGORITHM = "HmacSHA256";
   private final OtpService otpService;
-  private final TwilioService twilioService;
+  private final MessageService twilioService;
   private final MfaSessionRepository mfaSessionRepository;
   private final MfaAttemptRepository mfaAttemptRepository;
   private final UserRepository userRepository;
