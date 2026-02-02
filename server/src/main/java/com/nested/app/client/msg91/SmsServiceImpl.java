@@ -14,10 +14,10 @@ public class SmsServiceImpl implements SmsService {
 
   private final String baseUrl = "https://control.msg91.com/api/v5";
 
-  @Value("msg91.otp.template")
+  @Value("${msg91.otp.template}")
   private String templateID;
 
-  @Value("msg91.auth-token")
+  @Value("${msg91.auth-token}")
   private String authToken;
 
   public WebClient withAuth() {
