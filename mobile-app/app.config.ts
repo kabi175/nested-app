@@ -1,3 +1,5 @@
+import 'dotenv/config';
+
 module.exports = () => ({
   expo: {
     name: "NestEd",
@@ -22,6 +24,7 @@ module.exports = () => ({
       bundleIdentifier: "com.nexted.app",
       infoPlist: {
         LSApplicationQueriesSchemes: ["whatsapp"],
+        NSUserTrackingUsageDescription: "This identifier will be used to deliver personalized ads."
       },
     },
     plugins: [
@@ -58,6 +61,19 @@ module.exports = () => ({
           customScheme: "nested",
         },
       ],
+      ["expo-tracking-transparency"],
+      [
+        "react-native-fbsdk-next",
+        {
+          "appID": process.env.FB_APP_ID,
+          "clientToken": process.env.FB_CLIENT_TOKEN,
+          "displayName": "Nested",
+          "scheme": "nested",
+          "advertiserIDCollectionEnabled": true,
+          "autoLogAppEventsEnabled": true,
+          "isAutoInitEnabled": true
+        }
+      ]
     ],
     extra: {
       router: {},

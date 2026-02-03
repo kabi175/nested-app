@@ -15,9 +15,11 @@ import { usePersistRoute } from "@/hooks/usePersistRoute";
 import { QueryProvider } from "@/providers/QueryProvider";
 import * as eva from "@eva-design/eva";
 import { ApplicationProvider } from "@ui-kitten/components";
-import React from "react";
+import { requestTrackingPermissionsAsync } from 'expo-tracking-transparency';
+import React, { useEffect } from "react";
 import { ActivityIndicator, View } from "react-native";
 import { Auth0Provider, useAuth0 } from "react-native-auth0";
+import { AppEventsLogger, Settings } from 'react-native-fbsdk-next';
 import { SafeAreaProvider } from "react-native-safe-area-context";
 
 export default function RootLayout() {
@@ -26,6 +28,17 @@ export default function RootLayout() {
     SpaceMono: require("../assets/fonts/SpaceMono-Regular.ttf"),
   });
   usePersistRoute();
+
+  useEffect(() => {
+    Settings.initializeSDK();
+    requestTrackingPermissionsAsync().then(({ status }) => {
+      if (status === 'granted') {
+        Settings.setAdvertiserTrackingEnabled(true);
+      }
+    });
+
+    AppEventsLogger.logEvent('test_event');
+  }, []);
 
   if (!loaded) {
     // Async font loading only occurs in development.
