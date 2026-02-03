@@ -90,7 +90,8 @@ public class SipOrderApiClientImpl implements SipOrderApiClient {
             uriBuilder ->
                 uriBuilder.path(SIP_ORDER_TXN_API_URL).queryParam("plan", orderRef).build())
         .retrieve()
-        .bodyToMono(new ParameterizedTypeReference<List<OrderData>>() {})
+        .bodyToMono(new ParameterizedTypeReference<EntityListResponse<OrderData>>() {})
+        .map(EntityListResponse::getData)
         .onErrorResume(
             ex -> {
               log.warn(

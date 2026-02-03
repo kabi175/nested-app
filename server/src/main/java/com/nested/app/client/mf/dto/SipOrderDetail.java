@@ -10,17 +10,19 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.SuperBuilder;
 
 @Data
 @SuperBuilder
+@NoArgsConstructor
 @EqualsAndHashCode(callSuper = true)
 public class SipOrderDetail extends OrderDetail {
-  private final boolean systematic = true;
-  private final String number_of_installments = "30";
-  private final String payment_method = "mandate";
-  private final boolean auto_generate_installments = true;
+  @Builder.Default private boolean systematic = true;
+  @Builder.Default private String number_of_installments = "30";
+  @Builder.Default private String payment_method = "mandate";
+  @Builder.Default private boolean auto_generate_installments = true;
 
   @JsonProperty("payment_source")
   String mandateID;
