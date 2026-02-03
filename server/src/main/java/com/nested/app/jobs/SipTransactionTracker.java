@@ -69,6 +69,8 @@ public class SipTransactionTracker implements Job {
       default:
         log.info("Unknown state {}", purchaseOrder.getState());
     }
+
+    log.info("Tracked order {}", orderRef);
   }
 
   void trackTransaction(OrderItems orderItem, SipOrderDetail purchaseOrder) {
