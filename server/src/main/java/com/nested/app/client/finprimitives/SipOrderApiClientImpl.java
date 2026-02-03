@@ -51,7 +51,7 @@ public class SipOrderApiClientImpl implements SipOrderApiClient {
 
     return api.withAuth()
         .patch()
-        .uri(SIP_ORDER_API_URL + '/' + request.getOrderRef())
+        .uri(SIP_ORDER_API_URL)
         .bodyValue(request)
         .retrieve()
         .bodyToMono(Void.class);

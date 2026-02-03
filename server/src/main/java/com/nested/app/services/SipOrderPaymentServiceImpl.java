@@ -2,7 +2,6 @@ package com.nested.app.services;
 
 import com.nested.app.client.mf.MandateApiClient;
 import com.nested.app.client.mf.SipOrderApiClient;
-import com.nested.app.client.mf.dto.OrderConsentRequest;
 import com.nested.app.client.mf.dto.OrderDetail;
 import com.nested.app.client.mf.dto.SipOrderDetail;
 import com.nested.app.dto.OrderDTO;
@@ -11,6 +10,7 @@ import com.nested.app.entity.Order;
 import com.nested.app.entity.OrderItems;
 import com.nested.app.entity.Payment;
 import com.nested.app.entity.SIPOrder;
+import com.nested.app.enums.TransactionStatus;
 import com.nested.app.events.OrderItemsRefUpdatedEvent;
 import com.nested.app.exception.ExternalServiceException;
 import com.nested.app.repository.OrderItemsRepository;
@@ -26,7 +26,6 @@ import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.reactive.function.client.WebClientResponseException;
-import reactor.core.publisher.Flux;
 
 /**
  * Service implementation for managing SIP Order Payment operations. Handles verification and
@@ -78,25 +77,6 @@ public class SipOrderPaymentServiceImpl implements SipOrderPaymentService {
         throw new IllegalArgumentException("No SIP orders found for this payment");
       }
 
-      var confirmOrderRequests =
-          sipOrderIds.stream()
-              .map(
-                  ref ->
-                      OrderConsentRequest.builder()
-                          .orderRef(ref)
-                          .email(user.getEmail())
-                          .mobile(user.getPhoneNumber())
-                          .build())
-              .toList();
-
-      Flux.fromIterable(confirmOrderRequests)
-          .flatMap(sipOrderApiClient::updateConsent, 10) // Process 10 requests at a time
-          .doOnNext(
-              response -> log.debug("Successfully confirmed order for payment ID: {}", paymentID))
-          .doOnError(
-              error -> log.error("Error confirming order for payment ID: {}", paymentID, error))
-          .blockLast(); // Wait for all parallel requests to complete
-
       sipOrderApiClient.confirmOrder(sipOrderIds).block();
 
       sipOrders.forEach(
@@ -106,6 +86,10 @@ public class SipOrderPaymentServiceImpl implements SipOrderPaymentService {
             goal.setMonthlySip(goalSIPAmount);
             goalRepository.save(goal);
           });
+      var orderItems =
+          payment.getOrders().stream().map(Order::getItems).flatMap(List::stream).toList();
+      orderItems.forEach(orderItem -> orderItem.setStatus(TransactionStatus.ACTIVE));
+      orderItemsRepository.saveAll(orderItems);
 
       log.info(
           "Successfully verified {} SIP orders for payment ID: {}", sipOrderIds.size(), paymentID);

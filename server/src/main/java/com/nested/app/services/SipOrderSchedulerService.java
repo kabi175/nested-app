@@ -12,6 +12,7 @@ import java.time.ZonedDateTime;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.quartz.DateBuilder;
 import org.quartz.JobBuilder;
 import org.quartz.JobDetail;
 import org.quartz.Scheduler;
@@ -172,12 +173,11 @@ public class SipOrderSchedulerService {
           TriggerBuilder.newTrigger()
               .withIdentity(jobIdentity + "-trigger")
               .forJob(jobDetail)
+              .startAt(DateBuilder.futureDate(10, DateBuilder.IntervalUnit.SECOND))
               .withSchedule(
                   SimpleScheduleBuilder.simpleSchedule()
-                      .withIntervalInSeconds(60)
                       .withMisfireHandlingInstructionFireNow()
                       .withRepeatCount(0)) // Run once
-              .startNow()
               .build();
 
       scheduler.scheduleJob(jobDetail, trigger);

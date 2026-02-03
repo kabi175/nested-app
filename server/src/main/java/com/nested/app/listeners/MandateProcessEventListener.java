@@ -114,10 +114,6 @@ public class MandateProcessEventListener {
 
         sipOrderPaymentService.placeSipOrders(payment);
         payment.setSipStatus(Payment.PaymentStatus.ACTIVE);
-        var orderItems =
-            payment.getOrders().stream().map(Order::getItems).flatMap(List::stream).toList();
-        orderItems.forEach(orderItem -> orderItem.setStatus(TransactionStatus.ACTIVE));
-        orderItemsRepository.saveAll(orderItems);
 
         log.info("sip orders placed for payment ID: {} sipStatus to SUBMITTED", payment.getId());
       } else if (mandate.getStatus() == MandateDto.State.CANCELLED) {
