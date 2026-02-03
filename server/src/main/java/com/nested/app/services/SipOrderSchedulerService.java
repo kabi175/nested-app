@@ -15,6 +15,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.quartz.DateBuilder;
 import org.quartz.JobBuilder;
 import org.quartz.JobDetail;
+import org.quartz.JobKey;
 import org.quartz.Scheduler;
 import org.quartz.SimpleScheduleBuilder;
 import org.quartz.Trigger;
@@ -35,14 +36,14 @@ import org.springframework.transaction.annotation.Transactional;
  * design but consider moving provider calls outside the transaction if latency grows. - Assumes at
  * least one OrderItem exists to derive Fund for Transactions; guarded in code.
  */
+@Slf4j
 @Service
 @RequiredArgsConstructor
-@Slf4j
 public class SipOrderSchedulerService {
   private final OrderItemsRepository orderItemsRepository;
   private final Scheduler scheduler;
 
-  private static final int BATCH_SIZE = 50;
+  private static final int BATCH_SIZE = 10;
   private static final int MAX_BATCHES = 100; // Safety limit to prevent infinite loops
 
   /**
@@ -74,7 +75,7 @@ public class SipOrderSchedulerService {
 
       for (var orderItem : page.getContent()) {
         try {
-          scheduleSipTransactionTrackerJob(orderItem);
+          scheduleSipTransactionTrackerJob(orderItem, pageNumber);
           totalProcessed++;
         } catch (Exception e) {
           totalFailed++;
@@ -106,7 +107,7 @@ public class SipOrderSchedulerService {
    *
    * @param orderItem The OrderItem to track
    */
-  public void scheduleSipTransactionTrackerJob(OrderItems orderItem) {
+  public void scheduleSipTransactionTrackerJob(OrderItems orderItem, int page) {
     if (orderItem.getRef() == null || orderItem.getRef().isEmpty()) {
       log.warn(
           "OrderItem id={} has no ref, skipping SipTransactionTracker scheduling",
@@ -116,28 +117,34 @@ public class SipOrderSchedulerService {
 
     try {
       String jobIdentity = "sip-transaction-tracker-" + orderItem.getId();
-
-      JobDetail jobDetail =
-          JobBuilder.newJob(SipTransactionTracker.class)
-              .withIdentity(jobIdentity)
-              .usingJobData("orderRef", orderItem.getRef())
-              .storeDurably()
-              .requestRecovery(true)
-              .build();
+      JobKey jobKey = new JobKey(jobIdentity);
 
       Trigger trigger =
           TriggerBuilder.newTrigger()
-              .withIdentity(jobIdentity + "-trigger")
-              .forJob(jobDetail)
+              .withIdentity(jobIdentity + "-trigger-" + System.currentTimeMillis())
+              .forJob(jobKey)
+              .startAt(DateBuilder.futureDate(10 * (page + 1), DateBuilder.IntervalUnit.SECOND))
               .withSchedule(
-                  SimpleScheduleBuilder.simpleSchedule()
-                      .withIntervalInHours(6)
-                      .withMisfireHandlingInstructionFireNow()
-                      .repeatForever())
-              .startNow()
+                  SimpleScheduleBuilder.simpleSchedule().withMisfireHandlingInstructionFireNow())
               .build();
 
-      scheduler.scheduleJob(jobDetail, trigger);
+      // Check if job already exists for this order item
+      if (scheduler.checkExists(jobKey)) {
+        log.info(
+            "SipTransactionTracker job already exists for orderItem id={}. Adding new trigger.",
+            orderItem.getId());
+        scheduler.scheduleJob(trigger);
+      } else {
+        JobDetail jobDetail =
+            JobBuilder.newJob(SipTransactionTracker.class)
+                .withIdentity(jobIdentity)
+                .usingJobData("orderRef", orderItem.getRef())
+                .storeDurably()
+                .requestRecovery(true)
+                .build();
+
+        scheduler.scheduleJob(jobDetail, trigger);
+      }
       log.info(
           "Scheduled SipTransactionTracker job for orderItem id={}, ref={}",
           orderItem.getId(),
@@ -160,19 +167,12 @@ public class SipOrderSchedulerService {
   public void scheduleVerificationJob(Long paymentID) {
     try {
       String jobIdentity = "sip-verify-" + paymentID;
-
-      JobDetail jobDetail =
-          JobBuilder.newJob(SipOrderVerificationJob.class)
-              .withIdentity(jobIdentity)
-              .usingJobData("paymentID", paymentID)
-              .storeDurably()
-              .requestRecovery(true)
-              .build();
+      JobKey jobKey = new JobKey(jobIdentity);
 
       Trigger trigger =
           TriggerBuilder.newTrigger()
-              .withIdentity(jobIdentity + "-trigger")
-              .forJob(jobDetail)
+              .withIdentity(jobIdentity + "-trigger-" + System.currentTimeMillis())
+              .forJob(jobKey)
               .startAt(DateBuilder.futureDate(10, DateBuilder.IntervalUnit.SECOND))
               .withSchedule(
                   SimpleScheduleBuilder.simpleSchedule()
@@ -180,7 +180,23 @@ public class SipOrderSchedulerService {
                       .withRepeatCount(0)) // Run once
               .build();
 
-      scheduler.scheduleJob(jobDetail, trigger);
+      // Check if job already exists for this payment
+      if (scheduler.checkExists(jobKey)) {
+        log.info(
+            "SIP order verification job already exists for payment ID: {}. Adding new trigger.",
+            paymentID);
+        scheduler.scheduleJob(trigger);
+      } else {
+        JobDetail jobDetail =
+            JobBuilder.newJob(SipOrderVerificationJob.class)
+                .withIdentity(jobIdentity)
+                .usingJobData("paymentID", paymentID)
+                .storeDurably()
+                .requestRecovery(true)
+                .build();
+
+        scheduler.scheduleJob(jobDetail, trigger);
+      }
       log.info(
           "Scheduled SIP order verification job for payment ID: {} to run in 10 seconds",
           paymentID);
