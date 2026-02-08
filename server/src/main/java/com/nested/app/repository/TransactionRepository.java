@@ -3,14 +3,12 @@ package com.nested.app.repository;
 import com.nested.app.dto.GoalHoldingProjection;
 import com.nested.app.dto.GoalPortfolioProjection;
 import com.nested.app.entity.Transaction;
-import com.nested.app.enums.TransactionType;
 import java.sql.Timestamp;
 import java.util.List;
 import java.util.Optional;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
@@ -23,17 +21,9 @@ public interface TransactionRepository extends JpaRepository<Transaction, Long> 
 
   Page<Transaction> findByUserIdAndGoalId(Long userId, Long goalId, Pageable pageable);
 
-  List<Transaction> findByUserIdAndFundId(Long userId, Long fundId);
-
-  List<Transaction> findByUserIdAndExecutedAtBetween(Long userId, Timestamp start, Timestamp end);
-
-  List<Transaction> findByUserIdAndType(Long userId, TransactionType type);
-
   boolean existsBySourceOrderItemId(Long sourceOrderItemId);
 
   Optional<Transaction> findBySourceOrderItemId(Long sourceOrderItemId);
-
-  boolean existsByProviderTransactionId(String providerTransactionId);
 
   List<Transaction> findByExternalRef(String externalRef);
 
@@ -41,18 +31,6 @@ public interface TransactionRepository extends JpaRepository<Transaction, Long> 
 
   Page<Transaction> findByUserIdAndCreatedAtBetween(
       Long userId, Timestamp startDate, Timestamp endDate, Pageable pageable);
-
-  /**
-   * Transfer all transactions from source goal to target goal
-   *
-   * @param sourceGoalId Source goal ID
-   * @param targetGoalId Target goal ID
-   * @return Number of transactions updated
-   */
-  @Modifying
-  @Query("UPDATE Transaction t SET t.goal.id = :targetGoalId WHERE t.goal.id = :sourceGoalId")
-  int updateGoalId(
-      @Param("sourceGoalId") Long sourceGoalId, @Param("targetGoalId") Long targetGoalId);
 
   /**
    * Retrieves aggregated holdings data for a specific goal using database-level grouping and
