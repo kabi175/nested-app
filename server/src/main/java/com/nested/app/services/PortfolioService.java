@@ -5,8 +5,6 @@ import com.nested.app.dto.MinifiedGoalDTO;
 import com.nested.app.dto.PortfolioGoalDTO;
 import com.nested.app.dto.TransactionDTO;
 import com.nested.app.entity.User;
-import com.nested.app.repository.FundRepository;
-import com.nested.app.repository.TenantAwareGoalRepository;
 import com.nested.app.repository.TransactionRepository;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
@@ -28,8 +26,6 @@ import org.springframework.transaction.annotation.Transactional;
 public class PortfolioService {
 
   private final TransactionRepository transactionRepository;
-  private final TenantAwareGoalRepository goalRepository;
-  private final FundRepository fundRepository;
 
   
 
@@ -41,7 +37,8 @@ public class PortfolioService {
     var projection = transactionRepository.findGoalPortfolioAggregated(user.getId(), goalId);
     if (projection == null || projection.getGoalId() == null) return null;
 
-    double currentValue = projection.getCurrentValue();
+    double currentValue =
+        getGoalHoldings(goalId, user).stream().mapToDouble(GoalHoldingDTO::getCurrentValue).sum();
     double invested = projection.getInvestedAmount();
     double targetAmount = projection.getTargetAmount();
     double progress = targetAmount > 0 ? currentValue / targetAmount * 100.0 : 0.0;
