@@ -5,6 +5,7 @@ import com.nested.app.jobs.GoalSyncJob;
 import java.util.Date;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.quartz.DateBuilder;
 import org.quartz.JobBuilder;
 import org.quartz.JobDetail;
 import org.quartz.JobKey;
@@ -30,7 +31,6 @@ import org.springframework.transaction.event.TransactionalEventListener;
 public class GoalSyncListener {
 
   private static final String JOB_GROUP = "DEFAULT";
-  private static final long DELAY_MS = 10000; // 10 seconds delay
 
   private final Scheduler scheduler;
 
@@ -46,7 +46,7 @@ public class GoalSyncListener {
       JobKey jobKey = new JobKey(jobName, JOB_GROUP);
       TriggerKey triggerKey = new TriggerKey(jobName + "-trigger", JOB_GROUP);
 
-      Date startTime = new Date(System.currentTimeMillis() + DELAY_MS);
+      Date startTime = DateBuilder.futureDate(event.delay(), DateBuilder.IntervalUnit.SECOND);
 
       if (scheduler.checkExists(jobKey)) {
         // Reschedule existing job with new 5-second delay

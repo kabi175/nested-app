@@ -3,13 +3,17 @@ package com.nested.app.services;
 import com.nested.app.client.mf.ReportApiClient;
 import com.nested.app.entity.Investor;
 import com.nested.app.entity.User;
+import com.nested.app.events.GoalSyncEvent;
 import com.nested.app.repository.FundRepository;
+import com.nested.app.repository.GoalRepository;
 import com.nested.app.repository.InvestorRepository;
+import com.nested.app.repository.UserRepository;
 import java.sql.Timestamp;
 import java.time.LocalDate;
 import java.util.concurrent.atomic.AtomicInteger;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -31,6 +35,9 @@ public class SchemeWiseReportService {
   private final ReportApiClient reportApiClient;
   private final InvestorRepository investorRepository;
   private final FundRepository fundRepository;
+  private final UserRepository userRepository;
+  private final GoalRepository goalRepository;
+  private final ApplicationEventPublisher publisher;
 
   /**
    * Fetches scheme-wise reports for all investors with non-null accountRef. Uses pagination to
@@ -143,6 +150,17 @@ public class SchemeWiseReportService {
    * @return Mono containing the report response
    */
   private Mono<?> fetchReportForInvestor(Investor investor) {
+    userRepository
+        .findByInvestor(investor)
+        .ifPresent(
+            user -> {
+              var goals = goalRepository.findByUserId(user.getId());
+              goals.forEach(
+                  goal -> {
+                    publisher.publishEvent(
+                        new GoalSyncEvent(goal.getId(), user, 60)); // sync with a 1min delay
+                  });
+            });
     return reportApiClient
         .fetchSchemeWiseReport(investor.getAccountRef())
         .doOnSubscribe(

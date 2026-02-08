@@ -1,11 +1,14 @@
 package com.nested.app.listeners;
 
 import com.nested.app.entity.User;
+import com.nested.app.events.GoalSyncEvent;
 import com.nested.app.events.TransactionSuccessEvent;
+import com.nested.app.repository.GoalRepository;
 import com.nested.app.services.EmailService;
 import com.nested.app.services.SchemeWiseReportService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.event.EventListener;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
@@ -21,6 +24,8 @@ public class TransactionSuccessListener {
 
   private final EmailService emailService;
   private final SchemeWiseReportService schemeWiseReportService;
+  private final ApplicationEventPublisher publisher;
+  private final GoalRepository goalRepository;
 
   /**
    * Handles TransactionSuccessEvent by sending a confirmation email to the user. Processes
@@ -62,6 +67,11 @@ public class TransactionSuccessListener {
     try {
       log.info("Processing TransactionSuccessEvent for user ID: {}", event.user().getId());
       schemeWiseReportService.fetchReportsForUser(event.user());
+      var goals = goalRepository.findByUserId(event.user().getId());
+      goals.forEach(
+          goal -> {
+            publisher.publishEvent(new GoalSyncEvent(goal.getId(), event.user()));
+          });
     } catch (Exception e) {
       log.error("Failed to fetch reports for user ID: {}", event.user().getId(), e);
     }
