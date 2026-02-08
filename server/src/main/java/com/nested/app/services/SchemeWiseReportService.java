@@ -102,6 +102,11 @@ public class SchemeWiseReportService {
     var investor = investorRepository.findById(user.getInvestor().getId()).orElseThrow();
     if (investor.getAccountRef() != null && !investor.getAccountRef().isBlank()) {
       fetchReportForInvestor(investor).block();
+      var goals = goalRepository.findByUserId(user.getId());
+      goals.forEach(
+          goal -> {
+            publisher.publishEvent(new GoalSyncEvent(goal.getId(), user));
+          });
     }
   }
 

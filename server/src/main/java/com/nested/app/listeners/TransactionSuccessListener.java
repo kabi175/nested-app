@@ -1,7 +1,6 @@
 package com.nested.app.listeners;
 
 import com.nested.app.entity.User;
-import com.nested.app.events.GoalSyncEvent;
 import com.nested.app.events.TransactionSuccessEvent;
 import com.nested.app.repository.GoalRepository;
 import com.nested.app.services.EmailService;
@@ -67,11 +66,6 @@ public class TransactionSuccessListener {
     try {
       log.info("Processing TransactionSuccessEvent for user ID: {}", event.user().getId());
       schemeWiseReportService.fetchReportsForUser(event.user());
-      var goals = goalRepository.findByUserId(event.user().getId());
-      goals.forEach(
-          goal -> {
-            publisher.publishEvent(new GoalSyncEvent(goal.getId(), event.user()));
-          });
     } catch (Exception e) {
       log.error("Failed to fetch reports for user ID: {}", event.user().getId(), e);
     }
