@@ -3,7 +3,9 @@ package com.nested.app.controllers;
 import com.nested.app.annotation.AdminOnly;
 import com.nested.app.dto.CreateAdminRequest;
 import com.nested.app.dto.UserDTO;
+import com.nested.app.repository.UserRepository;
 import com.nested.app.services.AdminService;
+import com.nested.app.services.SchemeWiseReportService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -21,15 +23,19 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
 @Slf4j
 @Validated
+@RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/v1/admin")
 @Tag(name = "Admin Management", description = "APIs for managing admin users")
 public class AdminController {
 
     private final AdminService adminService;
+  private final UserRepository userRepository;
+  private final SchemeWiseReportService schemeWiseReportService;
 
     @PostMapping(path = "/create-admin", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
     @AdminOnly
@@ -150,6 +156,46 @@ public class AdminController {
         }
     }
 
+  @PostMapping(
+      path = "/action/refresh-portfolio/{user_id}",
+      produces = MediaType.APPLICATION_JSON_VALUE)
+  @AdminOnly
+  @Operation(
+      summary = "Refresh portfolio for a user (Admin only)",
+      description = "Triggers an async portfolio refresh for the specified user")
+  @ApiResponses(
+      value = {
+        @ApiResponse(
+            responseCode = "200",
+            description = "Portfolio refresh triggered successfully"),
+        @ApiResponse(responseCode = "403", description = "Access denied - Admin role required"),
+        @ApiResponse(responseCode = "404", description = "User not found")
+      })
+  public ResponseEntity<?> refreshPortfolio(
+      @Parameter(description = "User ID to refresh portfolio for", required = true)
+          @PathVariable("user_id")
+          Long userId) {
+
+    log.info(
+        "POST /api/v1/admin/action/refresh-portfolio/{} - Triggering portfolio refresh", userId);
+
+    return userRepository
+        .findById(userId)
+        .map(
+            user -> {
+              schemeWiseReportService.fetchReportsForUser(user);
+              return ResponseEntity.ok(
+                  createSuccessResponse(
+                      "Portfolio refresh triggered successfully for user " + userId));
+            })
+        .orElseGet(
+            () -> {
+              log.warn("User not found for portfolio refresh: {}", userId);
+              return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                  .body(createErrorResponse("User not found with id: " + userId));
+            });
+  }
+
     /**
      * Creates a success response with user data
      */
@@ -160,6 +206,14 @@ public class AdminController {
         response.put("user", user);
         return response;
     }
+
+  /** Creates a success response without user data */
+  private Map<String, Object> createSuccessResponse(String message) {
+    Map<String, Object> response = new HashMap<>();
+    response.put("success", true);
+    response.put("message", message);
+    return response;
+  }
 
     /**
      * Creates an error response
