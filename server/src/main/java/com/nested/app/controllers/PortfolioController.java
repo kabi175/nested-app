@@ -4,7 +4,6 @@ import com.nested.app.context.UserContext;
 import com.nested.app.dto.Entity;
 import com.nested.app.dto.GoalHoldingDTO;
 import com.nested.app.dto.PortfolioGoalDTO;
-import com.nested.app.dto.PortfolioOverallDTO;
 import com.nested.app.dto.TransactionDTO;
 import com.nested.app.services.PortfolioService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -36,11 +35,6 @@ public class PortfolioController {
   private final UserContext userContext;
 
   private final PortfolioService portfolioService;
-
-  @GetMapping("/overall")
-  public ResponseEntity<PortfolioOverallDTO> overall() {
-    return ResponseEntity.ok(portfolioService.getOverallPortfolio(userContext.getUser()));
-  }
 
   @GetMapping("/goals/{goalId}")
   public ResponseEntity<PortfolioGoalDTO> goal(@PathVariable Long goalId) {

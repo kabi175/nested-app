@@ -17,8 +17,6 @@ public class PortfolioGoalDTO {
   @JsonProperty("current_amount")
   private Double currentValue;
 
-  private Double units;
-
   @JsonProperty("progress_percentage")
   private Double progressPercentage; // currentValue / targetAmount
 
