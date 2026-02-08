@@ -17,6 +17,4 @@ public interface GoalPortfolioProjection {
   Double getInvestedAmount();
 
   Double getCurrentValue();
-
-  Double getTotalUnits();
 }
