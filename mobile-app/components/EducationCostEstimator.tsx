@@ -1,8 +1,9 @@
 import { useEducation } from "@/hooks/useEducation";
+import { logCalculatorViewContent } from "@/services/metaEvents";
 import { Education } from "@/types/education";
 import { formatCurrency } from "@/utils/formatters";
 import { calculateFutureCost } from "@/utils/goalForm";
-import React, { useRef, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { PanResponder, ScrollView, StyleSheet, Text, View } from "react-native";
 import { SearchableDropdown } from "./ui/SearchableDropdown";
 
@@ -30,6 +31,10 @@ export default function EducationCostEstimator({
 
   const MIN_YEARS = 1;
   const MAX_YEARS = 25;
+
+  useEffect(() => {
+    logCalculatorViewContent();
+  }, []);
 
   const handleCourseSelect = (course: Education) => {
     setSelectedCourse(course);

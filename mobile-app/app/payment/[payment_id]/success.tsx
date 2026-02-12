@@ -1,9 +1,10 @@
 import { ThemedText } from "@/components/ThemedText";
 import { usePayment } from "@/hooks/usePayment";
+import { logPurchase } from "@/services/metaEvents";
 import { LinearGradient } from "expo-linear-gradient";
 import { router, useLocalSearchParams } from "expo-router";
 import { CheckCircle } from "lucide-react-native";
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import {
   ActivityIndicator,
   Animated,
@@ -20,6 +21,7 @@ export default function PaymentSuccessScreen() {
   }>();
 
   const { data: payment, isLoading } = usePayment(payment_id || "");
+  const purchaseLoggedRef = useRef(false);
 
   const [fadeAnim] = useState(new Animated.Value(0));
   const [scaleAnim] = useState(new Animated.Value(0.5));
@@ -40,6 +42,20 @@ export default function PaymentSuccessScreen() {
     ]).start();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  // Log Meta Purchase once when payment is completed
+  useEffect(() => {
+    if (!payment_id || !payment || isLoading || purchaseLoggedRef.current) return;
+    const isBuyCompleted = payment.buy_status === "completed";
+    const isSipCompleted = payment.sip_status === "completed";
+    if (isBuyCompleted || isSipCompleted) {
+      purchaseLoggedRef.current = true;
+      const amount = (payment as { amount?: number }).amount ?? 0;
+      logPurchase(amount, "INR", {
+        content_type: isBuyCompleted && isSipCompleted ? "buy_sip" : isBuyCompleted ? "buy" : "sip",
+      });
+    }
+  }, [payment_id, payment, isLoading]);
 
   const handleContinue = () => {
     if (type === "buy" && payment?.sip_status === "pending") {

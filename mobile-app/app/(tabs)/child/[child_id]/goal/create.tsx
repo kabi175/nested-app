@@ -8,6 +8,7 @@ import { useChildren } from "@/hooks/useChildren";
 import { useEducation } from "@/hooks/useEducation";
 import { useGoalCreation } from "@/hooks/useGoalCreation";
 import { useGoalFormAnimations } from "@/hooks/useGoalFormAnimations";
+import { logGoalCreation } from "@/services/metaEvents";
 import { GoalForm } from "@/types/goalForm";
 import { calculateFutureCost } from "@/utils/goalForm";
 import * as Haptics from "expo-haptics";
@@ -243,6 +244,11 @@ export default function CreateGoalScreen() {
       }));
 
       const createdGoals = await createGoalMutation.mutateAsync(data);
+
+      logGoalCreation({
+        num_items: createdGoals.length,
+        content_type: "goal",
+      });
 
       setGoalsForCustomize(createdGoals);
       //TODO: redirect to
