@@ -4,6 +4,7 @@ import { goalsForCustomizeAtom } from "@/atoms/goals";
 import { FirstPendingActivityCard } from "@/components/FirstPendingActivityCard";
 import { useAuthAxios } from "@/hooks/useAuthAxios";
 import { usePendingActivities } from "@/hooks/usePendingActivities";
+import { logAddPaymentInfo } from "@/services/metaEvents";
 import { handleActivityNavigation } from "@/utils/activityNavigation";
 import { useQueryClient } from "@tanstack/react-query";
 import { Button, Layout, Text } from "@ui-kitten/components";
@@ -12,6 +13,7 @@ import { router } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import { useSetAtom } from "jotai";
 import { CheckCircle } from "lucide-react-native";
+import { useEffect } from "react";
 import { StyleSheet, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
@@ -23,6 +25,10 @@ export default function BankAccountSuccessScreen() {
   const setGoalsForCustomize = useSetAtom(goalsForCustomizeAtom);
 
   const firstActivity: Activity | undefined = activities?.[0];
+
+  useEffect(() => {
+    logAddPaymentInfo();
+  }, []);
 
   const handleContinue = async () => {
     if (firstActivity) {

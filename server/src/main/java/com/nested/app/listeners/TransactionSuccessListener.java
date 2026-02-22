@@ -2,10 +2,12 @@ package com.nested.app.listeners;
 
 import com.nested.app.entity.User;
 import com.nested.app.events.TransactionSuccessEvent;
+import com.nested.app.repository.GoalRepository;
 import com.nested.app.services.EmailService;
 import com.nested.app.services.SchemeWiseReportService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.event.EventListener;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
@@ -21,6 +23,8 @@ public class TransactionSuccessListener {
 
   private final EmailService emailService;
   private final SchemeWiseReportService schemeWiseReportService;
+  private final ApplicationEventPublisher publisher;
+  private final GoalRepository goalRepository;
 
   /**
    * Handles TransactionSuccessEvent by sending a confirmation email to the user. Processes

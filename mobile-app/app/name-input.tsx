@@ -2,6 +2,7 @@ import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
 import { useUser } from "@/hooks/useUser";
 import { useUpdateUser } from "@/hooks/useUserMutations";
+import { logCompleteRegistration } from "@/services/metaEvents";
 import { Button } from "@ui-kitten/components";
 import { Redirect, router } from "expo-router";
 import React, { useState } from "react";
@@ -39,6 +40,7 @@ export default function NameInputScreen() {
           firstName: name.trim(),
         },
       });
+      logCompleteRegistration({ registration_method: "phone" });
       router.replace("/child");
     } catch (error) {
       console.log("Error saving name", error);

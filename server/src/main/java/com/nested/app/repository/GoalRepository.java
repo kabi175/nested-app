@@ -22,4 +22,6 @@ public interface GoalRepository extends JpaRepository<Goal, Long> {
    * @return List of goals for the specified user with the specified status
    */
   List<Goal> findByUserIdAndStatus(Long userId, Goal.Status status);
+
+  List<Goal> findByUserId(Long userId);
 }

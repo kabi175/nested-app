@@ -1,5 +1,6 @@
 package com.nested.app.repository;
 
+import com.nested.app.entity.Investor;
 import com.nested.app.entity.User;
 import java.util.Optional;
 import org.springframework.data.domain.Page;
@@ -21,4 +22,6 @@ public interface UserRepository extends JpaRepository<User, Long> {
 
   @Query("SELECT u FROM User u WHERE u.investor.kycRequestRef = :kycRequestRef")
   Optional<User> findByInvestor_KycRequestRef(@Param("kycRequestRef") String kycRequestRef);
+
+  Optional<User> findByInvestor(Investor investor);
 }

@@ -1,5 +1,6 @@
 import { useInitKyc } from "@/hooks/useInitKyc";
 import { useUser } from "@/hooks/useUser";
+import { logKycInitiation } from "@/services/metaEvents";
 import { Button, Layout, Text } from "@ui-kitten/components";
 import { useRouter } from "expo-router";
 import { CheckCircle } from "lucide-react-native";
@@ -54,6 +55,7 @@ export default function ValidationSuccessScreen() {
         kycStatus === undefined;
 
       if (needsKycInit) {
+        logKycInitiation();
         await initKyc(user);
         const refreshedUser = await refetchUser();
         kycStatus = refreshedUser.data?.kycStatus || "aadhaar_pending";

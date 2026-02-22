@@ -1,3 +1,4 @@
+import { logKycCompletion } from "@/services/metaEvents";
 import { Button, Layout, Text } from "@ui-kitten/components";
 import { router } from "expo-router";
 import { CheckCircle } from "lucide-react-native";
@@ -8,6 +9,10 @@ import { SafeAreaView } from "react-native-safe-area-context";
 export default function KycSuccessScreen() {
   const [fadeAnim] = useState(new Animated.Value(0));
   const [scaleAnim] = useState(new Animated.Value(0.5));
+
+  useEffect(() => {
+    logKycCompletion();
+  }, []);
 
   useEffect(() => {
     Animated.parallel([
