@@ -1,5 +1,6 @@
 import { NetworkErrorScreen } from "@/components/NetworkErrorScreen";
 import RestoreLastRoute from "@/components/RestoreLastRoute";
+import { useOnboardingSeen } from "@/hooks/useOnboardingSeen";
 import { useUser } from "@/hooks/useUser";
 import { AxiosError } from "axios";
 import { Redirect } from "expo-router";
@@ -9,6 +10,7 @@ import { useAuth0 } from "react-native-auth0";
 export default function Home() {
   const { isLoading: isAuthLoading, user: authUser } = useAuth0();
   const { data: user, isLoading, isError, error, refetch } = useUser();
+  const { seen: onboardingSeen } = useOnboardingSeen();
 
   const isSignedIn = !!authUser;
 
@@ -64,8 +66,9 @@ export default function Home() {
     return <RestoreLastRoute />;
   }
 
-  console.log("redirecting to sign-in");
-  return <Redirect href="/sign-in" />;
+  // Not signed in — first-time users see onboarding, returning users see sign-in
+  console.log("redirecting to", onboardingSeen === false ? "onboarding" : "sign-in");
+  return <Redirect href={onboardingSeen === false ? "/onboarding" : "/sign-in"} />;
 }
 
 const styles = StyleSheet.create({

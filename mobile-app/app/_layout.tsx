@@ -17,6 +17,7 @@ import { QueryProvider } from "@/providers/QueryProvider";
 import * as eva from "@eva-design/eva";
 import { ApplicationProvider } from "@ui-kitten/components";
 import { requestTrackingPermissionsAsync } from 'expo-tracking-transparency';
+import { useOnboardingSeen } from "@/hooks/useOnboardingSeen";
 import React, { useEffect, useState } from "react";
 import { ActivityIndicator, View } from "react-native";
 import { Auth0Provider, useAuth0 } from "react-native-auth0";
@@ -100,6 +101,16 @@ export const unstable_settings = {
 
 function RootNavigator() {
   const { user } = useAuth0();
+  const { seen } = useOnboardingSeen();
+
+  // Still reading AsyncStorage — show a brief spinner
+  if (seen === null) {
+    return (
+      <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
+        <ActivityIndicator size="large" color="#3137D5" />
+      </View>
+    );
+  }
 
   return (
     <Stack
@@ -120,6 +131,12 @@ function RootNavigator() {
       </Stack.Protected>
 
       <Stack.Protected guard={!user}>
+        {/* First-time visitors see onboarding; returning visitors go to sign-in */}
+        <Stack.Screen
+          name="onboarding"
+          options={{ headerShown: false, presentation: "card" }}
+          redirect={seen}
+        />
         <Stack.Screen
           name="sign-in"
           options={{ headerShown: false, presentation: "card" }}
