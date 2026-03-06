@@ -9,6 +9,7 @@ import { StatusBar } from "expo-status-bar";
 import "react-native-reanimated";
 
 import { ForceUpdateScreen } from "@/components/ForceUpdateScreen";
+import SplashScreenComponent from "@/components/v2/SplashScreen";
 import { useColorScheme } from "@/hooks/useColorScheme";
 import { useForceUpdate } from "@/hooks/useForceUpdate";
 import { usePersistRoute } from "@/hooks/usePersistRoute";
@@ -16,7 +17,7 @@ import { QueryProvider } from "@/providers/QueryProvider";
 import * as eva from "@eva-design/eva";
 import { ApplicationProvider } from "@ui-kitten/components";
 import { requestTrackingPermissionsAsync } from 'expo-tracking-transparency';
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { ActivityIndicator, View } from "react-native";
 import { Auth0Provider, useAuth0 } from "react-native-auth0";
 import { Settings } from 'react-native-fbsdk-next';
@@ -27,6 +28,7 @@ export default function RootLayout() {
   const [loaded] = useFonts({
     SpaceMono: require("../assets/fonts/SpaceMono-Regular.ttf"),
   });
+  const [showSplash, setShowSplash] = useState(true);
   usePersistRoute();
 
   useEffect(() => {
@@ -66,6 +68,9 @@ export default function RootLayout() {
           </ThemeProvider>
         </Auth0Provider>
       </QueryProvider>
+      {showSplash && (
+        <SplashScreenComponent onFinish={() => setShowSplash(false)} />
+      )}
     </ApplicationProvider>
   );
 }
@@ -88,8 +93,9 @@ function VersionCheckGuard({ children }: { children: React.ReactNode }) {
   return <>{children}</>;
 }
 
+const StorybookEnabled = process.env.EXPO_PUBLIC_STORYBOOK_ENABLED === "true";
 export const unstable_settings = {
-  initialRouteName: "(tabs)",
+  initialRouteName: StorybookEnabled ? "(storybook)/index" : "(tabs)",
 };
 
 function RootNavigator() {
@@ -101,6 +107,10 @@ function RootNavigator() {
         headerShown: false,
       }}
     >
+      <Stack.Protected guard={StorybookEnabled}>
+        <Stack.Screen name="(storybook)/index" />
+      </Stack.Protected>
+
       <Stack.Protected guard={!!user}>
         <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
         <Stack.Screen name="payment" />

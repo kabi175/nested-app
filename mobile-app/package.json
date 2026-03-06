@@ -10,7 +10,8 @@
     "web": "expo start --web",
     "lint": "expo lint",
     "preview:android": "eas build --profile preview --platform android",
-    "production:android": "eas build --profile production --platform android"
+    "production:android": "eas build --profile production --platform android",
+    "storybook-generate": "sb-rn-get-stories"
   },
   "dependencies": {
     "@eva-design/eva": "^2.2.0",
@@ -59,7 +60,14 @@
     "react-native-screens": "~4.11.1",
     "react-native-svg": "15.11.2",
     "react-native-web": "~0.20.0",
-    "react-native-webview": "13.13.5"
+    "react-native-webview": "13.13.5",
+    "babel-loader": "^8.4.1",
+    "@react-native-community/datetimepicker": "^8.6.0",
+    "@gorhom/bottom-sheet": "^5.2.8",
+    "@storybook/addon-ondevice-controls": "^10.2.3",
+    "@storybook/addon-ondevice-actions": "^10.2.3",
+    "@storybook/react-native": "^10.2.3",
+    "storybook": "^10.2.16"
   },
   "devDependencies": {
     "@babel/core": "^7.25.2",
