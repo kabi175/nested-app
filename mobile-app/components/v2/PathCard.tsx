@@ -1,11 +1,11 @@
+import { LinearGradient } from "expo-linear-gradient";
 import React, { useEffect } from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
-import { LinearGradient } from "expo-linear-gradient";
 import Animated, {
-  useSharedValue,
-  useAnimatedStyle,
-  withSpring,
   interpolate,
+  useAnimatedStyle,
+  useSharedValue,
+  withSpring,
 } from "react-native-reanimated";
 
 // ─── Props ────────────────────────────────────────────────────────────────────
@@ -151,10 +151,10 @@ const styles = StyleSheet.create({
   decorativeShape: {
     position: "absolute",
     bottom: -20,
-    width: "120%",
+    width: "100%",
     height: 100,
-    borderTopLeftRadius: 999,
-    borderTopRightRadius: 999,
+    borderTopLeftRadius: 40,
+    borderTopRightRadius: 40,
   },
   iconContainer: {
     zIndex: 1,

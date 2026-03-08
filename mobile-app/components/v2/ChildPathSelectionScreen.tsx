@@ -1,60 +1,59 @@
+import { ArrowLeft } from "lucide-react-native";
 import React, { useState } from "react";
 import {
   Pressable,
   ScrollView,
   StyleSheet,
   Text,
-  View,
-  Dimensions,
+  View
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { ArrowLeft } from "lucide-react-native";
 
-import PathCard from "./PathCard";
-import CollegeDropdown from "./CollegeDropdown";
 import Button from "./Button";
+import CollegeDropdown from "./CollegeDropdown";
+import PathCard from "./PathCard";
 
 // ─── SVG illustrations ────────────────────────────────────────────────────────
-import TopCollegesIcon from "@/assets/images/v2/education-plan/top-colleges.svg";
-import StudyAbroadIcon from "@/assets/images/v2/education-plan/study-abroad.svg";
-import MedicalIcon from "@/assets/images/v2/education-plan/medical.svg";
-import MbaIcon from "@/assets/images/v2/education-plan/mba.svg";
 import ArtsIcon from "@/assets/images/v2/education-plan/art-design.svg";
 import IitsIcon from "@/assets/images/v2/education-plan/iit-nit.svg";
+import MbaIcon from "@/assets/images/v2/education-plan/mba.svg";
+import MedicalIcon from "@/assets/images/v2/education-plan/medical.svg";
+import StudyAbroadIcon from "@/assets/images/v2/education-plan/study-abroad.svg";
+import TopCollegesIcon from "@/assets/images/v2/education-plan/top-colleges.svg";
 
 // ─── Path data ────────────────────────────────────────────────────────────────
-const ICON_SIZE = 80;
+const ICON_SIZE = 120;
 
 const PATHS = [
   {
     id: "top-colleges",
     title: "Top colleges India",
-    icon: <TopCollegesIcon width={ICON_SIZE} height={ICON_SIZE} />,
+    icon: <TopCollegesIcon width={ICON_SIZE} height={ICON_SIZE} style={{ bottom: -15 }} />,
   },
   {
     id: "study-abroad",
     title: "Study Abroad",
-    icon: <StudyAbroadIcon width={ICON_SIZE} height={ICON_SIZE} />,
+    icon: <StudyAbroadIcon width={ICON_SIZE} height={ICON_SIZE} style={{ bottom: -15 }} />,
   },
   {
     id: "medical",
     title: "Medical/MBBS",
-    icon: <MedicalIcon width={ICON_SIZE} height={ICON_SIZE} />,
+    icon: <MedicalIcon width={ICON_SIZE} height={ICON_SIZE} style={{ bottom: -15 }} />,
   },
   {
     id: "mba",
     title: "MBA/IIM",
-    icon: <MbaIcon width={ICON_SIZE} height={ICON_SIZE} />,
+    icon: <MbaIcon width={ICON_SIZE} height={ICON_SIZE} style={{ bottom: -18 }} />,
   },
   {
     id: "arts",
     title: "Arts & Design",
-    icon: <ArtsIcon width={ICON_SIZE} height={ICON_SIZE} />,
+    icon: <ArtsIcon width={ICON_SIZE} height={ICON_SIZE} style={{ bottom: -15 }} />,
   },
   {
     id: "iits",
     title: "IITs/NITs",
-    icon: <IitsIcon width={ICON_SIZE} height={ICON_SIZE} />,
+    icon: <IitsIcon width={ICON_SIZE} height={ICON_SIZE} style={{ bottom: -30 }} />,
   },
 ];
 
