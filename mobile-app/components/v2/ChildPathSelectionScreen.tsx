@@ -157,27 +157,26 @@ export default function ChildPathSelectionScreen({
               onSelectCollege={handleCollegeSelect}
             />
           </View>
+          {/* ── Bottom buttons ───────────────────────────── */}
+          <View style={styles.buttonsContainer}>
+            <Button
+              title={`Start planning for ${childName}`}
+              disabled={!canContinue}
+              onPress={() =>
+                onStartPlanning?.(selectedPath, selectedCollege)
+              }
+            />
+
+            {/* Not sure yet — outlined */}
+            <Pressable
+              onPress={onNotSure}
+              style={styles.notSureButton}
+              accessibilityRole="button"
+            >
+              <Text style={styles.notSureLabel}>Not sure yet</Text>
+            </Pressable>
+          </View>
         </ScrollView>
-
-        {/* ── Bottom buttons (fixed) ───────────────────────────── */}
-        <View style={styles.buttonsContainer}>
-          <Button
-            title={`Start planning for ${childName}`}
-            disabled={!canContinue}
-            onPress={() =>
-              onStartPlanning?.(selectedPath, selectedCollege)
-            }
-          />
-
-          {/* Not sure yet — outlined */}
-          <Pressable
-            onPress={onNotSure}
-            style={styles.notSureButton}
-            accessibilityRole="button"
-          >
-            <Text style={styles.notSureLabel}>Not sure yet</Text>
-          </Pressable>
-        </View>
       </View>
     </SafeAreaView>
   );
@@ -275,11 +274,8 @@ const styles = StyleSheet.create({
   // Buttons
   buttonsContainer: {
     gap: 12,
-    paddingHorizontal: 24,
+    marginTop: 12,
     paddingTop: 12,
-    paddingBottom: 16,
-    borderTopWidth: 1,
-    borderTopColor: "#F5F5F5",
   },
   notSureButton: {
     width: "100%",
