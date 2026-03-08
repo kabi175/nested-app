@@ -54,83 +54,76 @@ export default function PendingActionScreen({
     return (
         <View style={styles.container}>
             <View style={styles.contentArea}>
-                <View style={styles.illustrationArea}>
 
-                    {/* Background Fort */}
-                    <View style={styles.fortWrapper}>
-                        <Fort width={SCREEN_WIDTH} height={SCREEN_WIDTH * 1.18} preserveAspectRatio="xMidYMin slice" />
-                    </View>
-
-                    {/* Money SVG on top of Fort roof */}
-                    <View style={styles.moneyWrapper}>
-                        <Money width={93} height={93} />
-                    </View>
-
-                    {/* Dynamic Month Pills */}
-                    <View style={styles.monthsContainer}>
-                        {visibleMonths.map((m, idx) => {
-                            const isPast = m.offset < 0;
-                            const isCurrent = m.offset === 0;
-                            const isFuture = m.offset > 0;
-
-                            return (
-                                <View
-                                    key={`${m.name}-${idx}`}
-                                    style={[
-                                        styles.monthPill,
-                                        isPast && styles.monthPillPast,
-                                        isCurrent && styles.monthPillCurrent,
-                                        isFuture && styles.monthPillFuture,
-                                    ]}
-                                >
-                                    <Text style={[
-                                        styles.monthText,
-                                        isPast && styles.monthTextPast,
-                                        isCurrent && styles.monthTextCurrent,
-                                        isFuture && styles.monthTextFuture,
-                                    ]}>
-                                        {m.name}
-                                    </Text>
-                                </View>
-                            );
-                        })}
-                    </View>
+                {/* Circular clipping container for the fort */}
+                <View style={styles.fortCircle}>
+                    <Fort width={SCREEN_WIDTH * 1.4} height={SCREEN_WIDTH * 1.4} preserveAspectRatio="xMidYMin slice" />
                 </View>
 
-                {/* Path and Nest below Fort */}
-                <View style={styles.pathAndNestArea}>
+                {/* Money SVG on top of Fort roof */}
+                <View style={styles.moneyWrapper}>
+                    <Money width={93} height={93} />
+                </View>
 
-                    {/* Destination SVG: The Flag and dotted line connecting nest & fort */}
-                    <View style={styles.destinationWrapper}>
-                        <Destination width={227} height={373} preserveAspectRatio="xMidYMid meet" />
-                    </View>
+                {/* Dynamic Month Pills */}
+                <View style={styles.monthsContainer}>
+                    {visibleMonths.map((m, idx) => {
+                        const isPast = m.offset < 0;
+                        const isCurrent = m.offset === 0;
+                        const isFuture = m.offset > 0;
 
-                    {/* Nest Component */}
-                    <View style={styles.nestWrapper}>
-                        {/* We keep the container width equal to the original egg-pair box, but shrink it for the whole nest layout. */}
-                        <View style={{ width: 180, height: 180, position: 'relative' }}>
-                            {/* Left Egg (Yellow) - Further back, slightly lower */}
-                            <View style={{ position: 'absolute', left: 34, top: 32, width: 65, height: 85, zIndex: 1, opacity: 0.85 }}>
-                                <Egg width={65} height={85} color="#F2BC79" animated={false} />
+                        return (
+                            <View
+                                key={`${m.name}-${idx}`}
+                                style={[
+                                    styles.monthPill,
+                                    isPast && styles.monthPillPast,
+                                    isCurrent && styles.monthPillCurrent,
+                                    isFuture && styles.monthPillFuture,
+                                ]}
+                            >
+                                <Text style={[
+                                    styles.monthText,
+                                    isPast && styles.monthTextPast,
+                                    isCurrent && styles.monthTextCurrent,
+                                    isFuture && styles.monthTextFuture,
+                                ]}>
+                                    {m.name}
+                                </Text>
                             </View>
-                            {/* Left Cap */}
-                            <View style={{ position: 'absolute', left: 36, top: 4, width: 62, height: 62, zIndex: 2 }}>
-                                <Cap width={62} height={62} />
-                            </View>
+                        );
+                    })}
+                </View>
 
-                            {/* Right Egg (Blue) - In front, slightly taller */}
-                            <View style={{ position: 'absolute', left: 88, top: 20, width: 75, height: 95, zIndex: 3, opacity: 0.9 }}>
-                                <Egg width={75} height={95} color="#63B0F2" animated={false} />
-                            </View>
-                            {/* Right Cap */}
-                            <View style={{ position: 'absolute', left: 95, top: -14, width: 64, height: 64, zIndex: 4, transform: [{ rotate: '-12deg' }] }}>
-                                <Cap width={64} height={64} />
-                            </View>
+                {/* Destination SVG: The Flag and dotted line connecting nest & fort */}
+                <View style={styles.destinationWrapper}>
+                    <Destination width={227} height={373} preserveAspectRatio="xMidYMid meet" />
+                </View>
 
-                            {/* Nest over front of lower egg halves */}
-                            <View style={{ position: 'absolute', left: -5, top: 55, width: 190, height: 110, zIndex: 5 }}>
-                                <Nest width={190} height={110} />
-                            </View>
+                {/* Nest Component */}
+                <View style={styles.nestWrapper}>
+                    <View style={{ width: 180, height: 180, position: 'relative' }}>
+                        {/* Left Egg (Yellow) - Further back, slightly lower */}
+                        <View style={{ position: 'absolute', left: 34, top: 32, width: 65, height: 85, zIndex: 1, opacity: 0.85 }}>
+                            <Egg width={65} height={85} color="#F2BC79" animated={false} />
+                        </View>
+                        {/* Left Cap */}
+                        <View style={{ position: 'absolute', left: 36, top: 4, width: 62, height: 62, zIndex: 2 }}>
+                            <Cap width={62} height={62} />
+                        </View>
+
+                        {/* Right Egg (Blue) - In front, slightly taller */}
+                        <View style={{ position: 'absolute', left: 88, top: 20, width: 75, height: 95, zIndex: 3, opacity: 0.9 }}>
+                            <Egg width={75} height={95} color="#63B0F2" animated={false} />
+                        </View>
+                        {/* Right Cap */}
+                        <View style={{ position: 'absolute', left: 95, top: -14, width: 64, height: 64, zIndex: 4, transform: [{ rotate: '-12deg' }] }}>
+                            <Cap width={64} height={64} />
+                        </View>
+
+                        {/* Nest over front of lower egg halves */}
+                        <View style={{ position: 'absolute', left: -5, top: 55, width: 190, height: 110, zIndex: 5 }}>
+                            <Nest width={190} height={110} />
                         </View>
                     </View>
                 </View>
@@ -157,31 +150,27 @@ export default function PendingActionScreen({
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: "#EFF1F4", // Light gray background
+        backgroundColor: "#EFF1F4",
     },
     contentArea: {
         flex: 1,
         position: 'relative',
         overflow: 'hidden',
     },
-    illustrationArea: {
-        width: SCREEN_WIDTH,
-        height: SCREEN_WIDTH * 1.18, // Matches Fort's rough aspect ratio
-        alignItems: 'center',
-        position: 'relative',
-    },
-    fortWrapper: {
+    fortCircle: {
+        width: SCREEN_WIDTH * 1.45,
+        height: SCREEN_WIDTH * 1.45,
+        borderRadius: SCREEN_WIDTH,
+        overflow: 'hidden',
         position: 'absolute',
-        top: 0,
-        left: 0,
-        right: 0,
+        top: -SCREEN_WIDTH * 0.55,
+        alignSelf: 'center',
         zIndex: 1,
     },
     moneyWrapper: {
         position: 'absolute',
-        top: '20%',
-        left: '50%',
-        marginLeft: -46.5, // Center it visually 
+        top: '18%',
+        alignSelf: 'center',
         zIndex: 2,
     },
 
@@ -191,10 +180,10 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         justifyContent: 'center',
         position: 'absolute',
-        top: '32%',
-        zIndex: 10,
-        gap: 12,
+        top: '33%',
         width: '100%',
+        zIndex: 3,
+        gap: 12,
     },
     monthPill: {
         borderRadius: 24,
@@ -206,13 +195,11 @@ const styles = StyleSheet.create({
         backgroundColor: '#4E6BF2',
         paddingVertical: 10,
         paddingHorizontal: 16,
-        opacity: 0.8, // Add a bit of opacity for the blur effect
+        opacity: 0.8,
         shadowColor: "#4E6BF2",
         shadowOffset: { width: 0, height: 4 },
         shadowOpacity: 0.4,
         shadowRadius: 10,
-        // Since react-native doesn't have a built-in backdrop blur easily, 
-        // we simulate the look with opacity and shadow or skip the literal blur.
         transform: [{ scale: 0.9 }],
     },
     monthPillCurrent: {
@@ -255,22 +242,20 @@ const styles = StyleSheet.create({
         color: '#1A1A1A',
     },
 
-    // -- Path & Nest --
-    pathAndNestArea: {
-    },
+    // -- Destination & Nest --
     destinationWrapper: {
         position: 'absolute',
-        top: -65,
-        right: 48,
-        zIndex: 5,
-        transform: [{ scale: 0.88 }],
+        bottom: 90,
+        right: 40,
+        zIndex: 4,
+        transform: [{ scale: 0.85 }],
     },
     nestWrapper: {
         position: 'absolute',
-        bottom: 20,
-        left: 20,
-        zIndex: 10,
-        transform: [{ scale: 0.8 }],
+        bottom: 60,
+        left: 30,
+        zIndex: 5,
+        transform: [{ scale: 0.75 }],
     },
 
     // -- Bottom Section --
