@@ -110,10 +110,14 @@ export default function ChildPathSelectionScreen({
               <ArrowLeft size={22} color="#1A1A1A" />
             </Pressable>
 
-            <Text style={styles.title}>
-              What path do you see for{"\n"}
-              {childName}?
-            </Text>
+            <View style={styles.titleContainer} >
+              <Text style={styles.title}>
+                What path do you see for
+              </Text>
+              <Text style={styles.title}>
+                {childName}?
+              </Text>
+            </View>
             <Text style={styles.subtitle}>
               Every plan we build is as unique as they are.
             </Text>
@@ -210,17 +214,23 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     marginBottom: 20,
   },
+  titleContainer: {
+    display: "flex",
+    justifyContent: "center",
+    alignItems: "center",
+    marginBottom: 8,
+  },
   title: {
     fontSize: 24,
     fontWeight: "700",
     color: "#1A1A1A",
-    marginBottom: 8,
-    lineHeight: 32,
   },
   subtitle: {
+    width: "100%",
     fontSize: 14,
     color: "#7A7A7A",
     lineHeight: 20,
+    textAlign: "center",
   },
 
   // Grid
