@@ -35,11 +35,11 @@ const TESTIMONIALS = [
         name: "Rahul & Deepa",
         subtitle: "Business Owners, Indore",
         rating: 5,
-        text: "“We were putting money in FDs 'for the kids'. Our FD would have covered barely 40% of the actual cost. Nested opened our eyes.”",
+        text: "“We were putting money in FDs 'for the kids' would have covered barely 40% of the actual cost. Nested opened our eyes.”",
         label: null,
         rotation: -2,
         zIndex: 2,
-        topOffset: 200,
+        topOffset: 185,
     },
     {
         id: "3",
@@ -50,7 +50,7 @@ const TESTIMONIALS = [
         label: "Switched from RDs",
         rotation: 7,
         zIndex: 3,
-        topOffset: 360,
+        topOffset: 328,
     },
 ];
 
@@ -135,7 +135,7 @@ export default function TestimonialScreen({
                                         {/* Stars */}
                                         <View style={styles.starsContainer}>
                                             {[...Array(t.rating)].map((_, i) => (
-                                                <Star key={i} size={14} color="#FBBF24" fill="#FBBF24" strokeWidth={0} />
+                                                <Star key={i} size={11} color="#FBBF24" fill="#FBBF24" strokeWidth={0} />
                                             ))}
                                         </View>
                                     </View>
@@ -233,7 +233,7 @@ const styles = StyleSheet.create({
     },
     cardWrapper: {
         position: "absolute",
-        width: SCREEN_WIDTH - 64, // matched to design lateral padding
+        width: SCREEN_WIDTH - 120, // made cards even more compact based on feedback
         alignItems: "center",
     },
     cardShadow: {
@@ -274,13 +274,13 @@ const styles = StyleSheet.create({
         flex: 1,
     },
     profileName: {
-        fontSize: 15,
+        fontSize: 13,
         fontWeight: "600",
         color: "#1A1A1A",
         marginBottom: 2,
     },
     profileSubtitle: {
-        fontSize: 12,
+        fontSize: 10,
         color: "#8E8E93",
     },
     starsContainer: {
@@ -289,21 +289,21 @@ const styles = StyleSheet.create({
         marginLeft: 8,
     },
     reviewText: {
-        fontSize: 15,
+        fontSize: 13,
         color: "#1A1A1A",
-        lineHeight: 22,
+        lineHeight: 16,
         fontWeight: "400",
         marginBottom: 16,
     },
     labelWrapper: {
         backgroundColor: "#F4F6FF", // Softer blue pill
-        paddingHorizontal: 12,
-        paddingVertical: 6,
-        borderRadius: 16,
+        paddingHorizontal: 10,
+        paddingVertical: 5,
+        borderRadius: 14,
         alignSelf: "flex-start",
     },
     labelText: {
-        fontSize: 11,
+        fontSize: 9,
         color: "#4E6BF2",
         fontWeight: "600",
     },
