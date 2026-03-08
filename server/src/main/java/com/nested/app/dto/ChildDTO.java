@@ -34,7 +34,6 @@ public class ChildDTO {
   @JsonProperty("date_of_birth")
   private Date dateOfBirth;
 
-  @NotEmpty
   @Enumerated(EnumType.STRING)
   private User.Gender gender;
 
