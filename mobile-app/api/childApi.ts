@@ -1,7 +1,7 @@
 import type { Child } from "@/types/child";
 import type { AxiosInstance } from "axios";
 
-export const createChild = async (api: AxiosInstance, payload: Child): Promise<Child> => {
+export const createChild = async (api: AxiosInstance, payload: Omit<Child, "id">): Promise<Child> => {
   const childDTO = {
     first_name: payload.firstName,
     last_name: payload.lastName,

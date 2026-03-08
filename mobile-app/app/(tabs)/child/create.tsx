@@ -1,21 +1,20 @@
+import { router } from "expo-router";
+import { ArrowLeft } from "lucide-react-native";
 import React, { useState } from "react";
 import {
-  Image,
   KeyboardAvoidingView,
   Platform,
   Pressable,
   ScrollView,
   StyleSheet,
   Text,
-  View,
+  View
 } from "react-native";
 import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
-import { ArrowLeft } from "lucide-react-native";
-import { router } from "expo-router";
 
+import AnimatedNest from "@/components/v2/AnimatedNest";
 import Button from "@/components/v2/Button";
 import TextInput from "@/components/v2/TextInput";
-import AnimatedNest from "@/components/v2/AnimatedNest";
 import { useCreateChild } from "@/hooks/useChildMutations";
 
 // Local form state
@@ -37,7 +36,7 @@ export default function CreateChild() {
     name: false,
     age: false,
   });
-  
+
   const [submitError, setSubmitError] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { mutateAsync: createChildMutation } = useCreateChild();
@@ -58,7 +57,7 @@ export default function CreateChild() {
   // Local Validation
   const getErrors = () => {
     const errs: Partial<ChildFormState> = {};
-    
+
     // Name validation: 3-50 chars
     if (!values.name) {
       errs.name = "Name is required.";
@@ -106,12 +105,11 @@ export default function CreateChild() {
         firstName: values.name.trim(),
         lastName: " ",
         dateOfBirth: dob,
-        gender: "other" as const,
         investUnderChild: false,
       };
 
       const child = await createChildMutation(payload);
-      router.push(`/child/${child.id}/goal/create`);
+      router.replace(`/child/select`);
     } catch (error: any) {
       console.error("Error creating child:", error);
       if (error.response?.status === 401) {
@@ -128,8 +126,8 @@ export default function CreateChild() {
 
   return (
     <SafeAreaView style={styles.safeArea} edges={["top", "bottom"]}>
-      <KeyboardAvoidingView 
-        style={styles.container} 
+      <KeyboardAvoidingView
+        style={styles.container}
         behavior={Platform.OS === "ios" ? "padding" : "height"}
       >
         <ScrollView
@@ -148,7 +146,7 @@ export default function CreateChild() {
             >
               <ArrowLeft size={24} color="#1F2937" />
             </Pressable>
-            
+
             <Text style={styles.title}>Tell us about your little one</Text>
             <Text style={styles.subtitle}>
               Every plan we build is as unique as they are.
@@ -172,7 +170,7 @@ export default function CreateChild() {
               touched={touched.name}
               autoCapitalize="words"
             />
-            
+
             <TextInput
               label="Age"
               placeholder="How old are they?"

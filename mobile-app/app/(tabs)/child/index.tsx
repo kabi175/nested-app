@@ -7,7 +7,7 @@ import {
 import { useChildren } from "@/hooks/useChildren";
 import { useEducationGoals } from "@/hooks/useGoals";
 import { Button } from "@ui-kitten/components";
-import { router } from "expo-router";
+import { Redirect, router } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import React, { useCallback } from "react";
 import { ActivityIndicator, ScrollView, StyleSheet, View } from "react-native";
@@ -54,6 +54,14 @@ export default function GoalScreen() {
         </View>
       </SafeAreaView>
     );
+  }
+
+  if (!hasChildren) {
+    return <Redirect href="/child/create" />
+  }
+
+  if (!hasGoals) {
+    return <Redirect href="/child/select" />
   }
 
   const currentValue =
