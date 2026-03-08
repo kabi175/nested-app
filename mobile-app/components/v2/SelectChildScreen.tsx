@@ -1,14 +1,13 @@
+import { router } from "expo-router";
+import { ArrowLeft } from "lucide-react-native";
 import React, { useMemo, useState } from "react";
 import {
   Pressable,
-  ScrollView,
   StyleSheet,
   Text,
-  View,
+  View
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { router } from "expo-router";
-import { ArrowLeft } from "lucide-react-native";
 
 import { useChildren } from "@/hooks/useChildren";
 import type { Child } from "@/types/child";
@@ -47,6 +46,8 @@ export default function SelectChildScreen({
   const { data: children = [], isLoading } = useChildren();
   const [selectedChildId, setSelectedChildId] = useState<string | null>(null);
 
+  const hideAddChild = children.length === 1 || children.length >= MAX_CHILDREN;
+
   // Map children to nest-egg data with assigned colours
   const nestChildren = useMemo(
     () =>
@@ -56,6 +57,12 @@ export default function SelectChildScreen({
       })),
     [children]
   );
+
+  React.useEffect(() => {
+    if (children.length === 1 && !selectedChildId) {
+      setSelectedChildId(children[0].id);
+    }
+  }, [children, selectedChildId]);
 
   const canAddChild = children.length < MAX_CHILDREN;
   const canContinue = selectedChildId !== null;
@@ -75,31 +82,11 @@ export default function SelectChildScreen({
             <ArrowLeft size={22} color="#1A1A1A" />
           </Pressable>
 
-          <Text style={styles.title}>Tell us about your little ones</Text>
-          <Text style={styles.subtitle}>
-            Every plan we build is as unique as they are.
+          <Text style={styles.title}>
+            {children[0].firstName}’s future starts today
           </Text>
+          <Text style={styles.subtitle}>Let's figure out what it needs</Text>
         </View>
-
-        {/* ── Child chips ───────────────────────────────────── */}
-        {children.length > 0 && (
-          <ScrollView
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            contentContainerStyle={styles.chipsRow}
-            style={styles.chipsScroll}
-          >
-            {children.slice(0, MAX_CHILDREN).map((child: Child) => (
-              <ChildChip
-                key={child.id}
-                name={child.firstName}
-                age={getAge(child.dateOfBirth)}
-                selected={selectedChildId === child.id}
-                onPress={() => setSelectedChildId(child.id)}
-              />
-            ))}
-          </ScrollView>
-        )}
 
         {/* ── Nest illustration area ────────────────────────── */}
         <View style={styles.nestArea}>
@@ -114,29 +101,52 @@ export default function SelectChildScreen({
               {isLoading ? "Loading…" : "No children added yet."}
             </Text>
           )}
+
+          {/* ── Child chips ───────────────────────────────────── */}
+          {children.length > 0 && (
+            <View style={styles.chipsContainer}>
+              {children.slice(0, MAX_CHILDREN).map((child: Child) => (
+                <ChildChip
+                  key={child.id}
+                  name={child.firstName}
+                  age={getAge(child.dateOfBirth)}
+                  selected={selectedChildId === child.id}
+                  onPress={() => setSelectedChildId(child.id)}
+                />
+              ))}
+            </View>
+          )}
         </View>
 
         {/* ── Buttons ───────────────────────────────────────── */}
         <View style={styles.buttonsContainer}>
           {/* Add child — outlined */}
-          <Pressable
-            onPress={canAddChild ? onAddChild : undefined}
-            style={[
-              styles.addChildButton,
-              !canAddChild && styles.addChildButtonDisabled,
-            ]}
-            accessibilityRole="button"
-            accessibilityState={{ disabled: !canAddChild }}
-          >
-            <Text
+          {hideAddChild ? (
+            <View style={styles.dashedBox}>
+              <Text style={styles.dashedBoxText}>
+                Got another little one? You can add them after {children[0].firstName}’s nest is ready
+              </Text>
+            </View>
+          ) : (
+            <Pressable
+              onPress={canAddChild ? onAddChild : undefined}
               style={[
-                styles.addChildLabel,
-                !canAddChild && styles.addChildLabelDisabled,
+                styles.addChildButton,
+                !canAddChild && styles.addChildButtonDisabled,
               ]}
+              accessibilityRole="button"
+              accessibilityState={{ disabled: !canAddChild }}
             >
-              Add child
-            </Text>
-          </Pressable>
+              <Text
+                style={[
+                  styles.addChildLabel,
+                  !canAddChild && styles.addChildLabelDisabled,
+                ]}
+              >
+                Add child
+              </Text>
+            </Pressable>
+          )}
 
           {/* Continue — primary */}
           <Button
@@ -192,14 +202,16 @@ const styles = StyleSheet.create({
   },
 
   // Chips
-  chipsScroll: {
-    flexGrow: 0,
-    marginBottom: 8,
-  },
-  chipsRow: {
+  chipsContainer: {
     flexDirection: "row",
+    flexWrap: "wrap",
+    justifyContent: "center",
+    alignItems: "center",
     gap: 10,
-    paddingVertical: 4,
+    marginTop: -20,
+    marginBottom: 8,
+    width: "100%",
+    paddingHorizontal: 16,
   },
 
   // Nest area
@@ -239,5 +251,21 @@ const styles = StyleSheet.create({
   },
   addChildLabelDisabled: {
     color: "#C0C0C0",
+  },
+  dashedBox: {
+    borderWidth: 1,
+    borderStyle: "dashed",
+    borderColor: "#D4D4D4",
+    backgroundColor: "#F8F8F8",
+    paddingVertical: 14,
+    paddingHorizontal: 16,
+    borderRadius: 8,
+    alignItems: "center",
+  },
+  dashedBoxText: {
+    fontSize: 13,
+    color: "#1A1A1A",
+    textAlign: "center",
+    lineHeight: 18,
   },
 });
