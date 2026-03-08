@@ -1,5 +1,5 @@
 import React, { useEffect } from "react";
-import { Pressable, StyleSheet } from "react-native";
+import { Pressable } from "react-native";
 import Animated, {
   Easing,
   useAnimatedStyle,
@@ -9,7 +9,7 @@ import Animated, {
   withSpring,
   withTiming,
 } from "react-native-reanimated";
-import Svg, { Ellipse, Defs, RadialGradient, Stop } from "react-native-svg";
+import Svg, { Ellipse } from "react-native-svg";
 
 // ─── Props ────────────────────────────────────────────────────────────────────
 export interface EggProps {
@@ -23,6 +23,8 @@ export interface EggProps {
   width?: number;
   /** Egg height. Default 90. */
   height?: number;
+  /** Whether the egg should float and bounce. Default true. */
+  animated?: boolean;
 }
 
 // ─── Component ────────────────────────────────────────────────────────────────
@@ -32,11 +34,13 @@ export default function Egg({
   onPress,
   width = 70,
   height = 90,
+  animated = true,
 }: EggProps) {
   // ── Floating idle animation ────────────────────────────────────────────────
   const floatY = useSharedValue(0);
 
   useEffect(() => {
+    if (!animated) return;
     floatY.value = withRepeat(
       withSequence(
         withTiming(-4, { duration: 1400, easing: Easing.inOut(Easing.ease) }),
@@ -45,12 +49,13 @@ export default function Egg({
       -1, // infinite
       true // reverse
     );
-  }, []);
+  }, [animated]);
 
   // ── Selection bounce animation ─────────────────────────────────────────────
   const scale = useSharedValue(1);
 
   useEffect(() => {
+    if (!animated) return;
     if (selected) {
       scale.value = withSequence(
         withSpring(1.08, { damping: 6, stiffness: 200 }),
@@ -59,7 +64,7 @@ export default function Egg({
     } else {
       scale.value = withSpring(1, { damping: 10, stiffness: 150 });
     }
-  }, [selected]);
+  }, [selected, animated]);
 
   const animatedStyle = useAnimatedStyle(() => ({
     transform: [
@@ -80,33 +85,12 @@ export default function Egg({
     <Pressable onPress={onPress}>
       <Animated.View style={[{ width, height }, animatedStyle]}>
         <Svg width={width} height={height} viewBox={`0 0 ${width} ${height}`}>
-          <Defs>
-            <RadialGradient
-              id={`eggGrad-${color}`}
-              cx="40%"
-              cy="35%"
-              rx="50%"
-              ry="50%"
-            >
-              <Stop offset="0%" stopColor="#FFFFFF" stopOpacity={0.55} />
-              <Stop offset="100%" stopColor={color} stopOpacity={1} />
-            </RadialGradient>
-          </Defs>
           <Ellipse
             cx={cx}
             cy={cy}
             rx={rx}
             ry={ry}
-            fill={`url(#eggGrad-${color})`}
-          />
-          {/* Subtle highlight ellipse for gloss effect */}
-          <Ellipse
-            cx={cx - rx * 0.15}
-            cy={cy - ry * 0.22}
-            rx={rx * 0.35}
-            ry={ry * 0.25}
-            fill="#FFFFFF"
-            opacity={0.35}
+            fill={color}
           />
         </Svg>
       </Animated.View>

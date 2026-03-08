@@ -7,9 +7,15 @@ import {
     View
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import Svg, { Path } from "react-native-svg";
 import Button from "./Button";
-import NestEggs from "./NestEggs"; // Using the nest from the other conversation
+
+// SVGs
+import Nest from "../../assets/images/v2/nest.svg";
+import Cap from "../../assets/images/v2/pending-actions/cap.svg";
+import Destination from "../../assets/images/v2/pending-actions/destination.svg";
+import Fort from "../../assets/images/v2/pending-actions/fort.svg";
+import Money from "../../assets/images/v2/pending-actions/money.svg";
+import Egg from "./Egg";
 
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
 
@@ -26,7 +32,7 @@ interface PendingActionScreenProps {
 export default function PendingActionScreen({
     onContinue,
     onDoLater,
-    currentMonthIndex = new Date().getMonth(),
+    currentMonthIndex = 2, // Default to MAR for matching design visually
 }: PendingActionScreenProps) {
     const insets = useSafeAreaInsets();
 
@@ -34,13 +40,12 @@ export default function PendingActionScreen({
     const visibleMonths = useMemo(() => {
         const months = [];
         for (let i = -2; i <= 2; i++) {
-            // Handle wrap-around for month indexing
             let index = (currentMonthIndex + i) % 12;
             if (index < 0) index += 12;
 
             months.push({
                 name: MONTHS[index],
-                offset: i, // -2, -1, 0, 1, 2
+                offset: i,
             });
         }
         return months;
@@ -49,75 +54,85 @@ export default function PendingActionScreen({
     return (
         <View style={styles.container}>
             <View style={styles.contentArea}>
+                <View style={styles.illustrationArea}>
 
-                {/* --- Background Placeholder (Building & Flag) --- */}
-                <View style={styles.backgroundIllustration}>
-                    <View style={styles.skyPlaceholder} />
-                    <View style={styles.buildingPlaceholder}>
-                        <View style={styles.buildingPillar} />
-                        <View style={styles.buildingPillar} />
-                        <View style={styles.buildingPillar} />
+                    {/* Background Fort */}
+                    <View style={styles.fortWrapper}>
+                        <Fort width={SCREEN_WIDTH} height={SCREEN_WIDTH * 1.18} preserveAspectRatio="xMidYMin slice" />
+                    </View>
+
+                    {/* Money SVG on top of Fort roof */}
+                    <View style={styles.moneyWrapper}>
+                        <Money width={93} height={93} />
+                    </View>
+
+                    {/* Dynamic Month Pills */}
+                    <View style={styles.monthsContainer}>
+                        {visibleMonths.map((m, idx) => {
+                            const isPast = m.offset < 0;
+                            const isCurrent = m.offset === 0;
+                            const isFuture = m.offset > 0;
+
+                            return (
+                                <View
+                                    key={`${m.name}-${idx}`}
+                                    style={[
+                                        styles.monthPill,
+                                        isPast && styles.monthPillPast,
+                                        isCurrent && styles.monthPillCurrent,
+                                        isFuture && styles.monthPillFuture,
+                                    ]}
+                                >
+                                    <Text style={[
+                                        styles.monthText,
+                                        isPast && styles.monthTextPast,
+                                        isCurrent && styles.monthTextCurrent,
+                                        isFuture && styles.monthTextFuture,
+                                    ]}>
+                                        {m.name}
+                                    </Text>
+                                </View>
+                            );
+                        })}
                     </View>
                 </View>
 
+                {/* Path and Nest below Fort */}
+                <View style={styles.pathAndNestArea}>
 
-                {/* --- Dynamic Month Pills --- */}
-                <View style={styles.monthsContainer}>
-                    {visibleMonths.map((m, idx) => {
-                        const isPast = m.offset < 0;
-                        const isCurrent = m.offset === 0;
-                        const isFuture = m.offset > 0;
+                    {/* Destination SVG: The Flag and dotted line connecting nest & fort */}
+                    <View style={styles.destinationWrapper}>
+                        <Destination width={227} height={373} preserveAspectRatio="xMidYMid meet" />
+                    </View>
 
-                        return (
-                            <View
-                                key={`${m.name}-${idx}`}
-                                style={[
-                                    styles.monthPill,
-                                    isPast && styles.monthPillPast,
-                                    isCurrent && styles.monthPillCurrent,
-                                    isFuture && styles.monthPillFuture,
-                                ]}
-                            >
-                                <Text style={[
-                                    styles.monthText,
-                                    isPast && styles.monthTextPast,
-                                    isCurrent && styles.monthTextCurrent,
-                                    isFuture && styles.monthTextFuture,
-                                ]}>
-                                    {m.name}
-                                </Text>
+                    {/* Nest Component */}
+                    <View style={styles.nestWrapper}>
+                        {/* We keep the container width equal to the original egg-pair box, but shrink it for the whole nest layout. */}
+                        <View style={{ width: 180, height: 180, position: 'relative' }}>
+                            {/* Left Egg (Yellow) - Further back, slightly lower */}
+                            <View style={{ position: 'absolute', left: 34, top: 32, width: 65, height: 85, zIndex: 1, opacity: 0.85 }}>
+                                <Egg width={65} height={85} color="#F2BC79" animated={false} />
                             </View>
-                        );
-                    })}
-                </View>
+                            {/* Left Cap */}
+                            <View style={{ position: 'absolute', left: 36, top: 4, width: 62, height: 62, zIndex: 2 }}>
+                                <Cap width={62} height={62} />
+                            </View>
 
-                {/* --- Dotted Path (S-Curve) --- */}
-                <View style={styles.pathContainer}>
-                    <Svg width="100%" height="150" viewBox="0 0 200 150">
-                        <Path
-                            d="M180,20 C180,60 40,60 40,100 C40,140 180,140 180,140"
-                            fill="none"
-                            stroke="#5A6C82" // Dark greyish-blue for dots
-                            strokeWidth="8"
-                            strokeLinecap="round"
-                            strokeDasharray="0, 15" // Creates the dotted effect
-                        />
-                    </Svg>
-                </View>
+                            {/* Right Egg (Blue) - In front, slightly taller */}
+                            <View style={{ position: 'absolute', left: 88, top: 20, width: 75, height: 95, zIndex: 3, opacity: 0.9 }}>
+                                <Egg width={75} height={95} color="#63B0F2" animated={false} />
+                            </View>
+                            {/* Right Cap */}
+                            <View style={{ position: 'absolute', left: 95, top: -14, width: 64, height: 64, zIndex: 4, transform: [{ rotate: '-12deg' }] }}>
+                                <Cap width={64} height={64} />
+                            </View>
 
-                {/* --- Nest with Eggs (Placeholder since missing grad-cap eggs) --- */}
-                <View style={styles.nestContainer}>
-                    {/* The NestEggs component likely animates or displays the eggs. 
-                We place it relatively positioned to align with the bottom of the dotted path */}
-                    <NestEggs
-                        children={[
-                            { id: '1', color: '#4E6BF2' },
-                            { id: '2', color: '#4E6BF2' },
-                            { id: '3', color: '#4E6BF2' }
-                        ]}
-                        selectedChildId="3"
-                        onSelectChild={() => { }}
-                    />
+                            {/* Nest over front of lower egg halves */}
+                            <View style={{ position: 'absolute', left: -5, top: 55, width: 190, height: 110, zIndex: 5 }}>
+                                <Nest width={190} height={110} />
+                            </View>
+                        </View>
+                    </View>
                 </View>
 
             </View>
@@ -142,44 +157,32 @@ export default function PendingActionScreen({
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: "#EFF1F4", // Light gray overall background matching the image edges
+        backgroundColor: "#EFF1F4", // Light gray background
     },
     contentArea: {
         flex: 1,
         position: 'relative',
         overflow: 'hidden',
-        backgroundColor: '#F5F5F5',
-        borderBottomLeftRadius: 40,
-        borderBottomRightRadius: 40,
     },
-
-    // -- Background Illustration --
-    backgroundIllustration: {
+    illustrationArea: {
+        width: SCREEN_WIDTH,
+        height: SCREEN_WIDTH * 1.18, // Matches Fort's rough aspect ratio
+        alignItems: 'center',
+        position: 'relative',
+    },
+    fortWrapper: {
         position: 'absolute',
         top: 0,
         left: 0,
         right: 0,
-        height: '60%', // Takes up top half roughly
-        backgroundColor: '#E8E4DD',
-        zIndex: 0,
+        zIndex: 1,
     },
-    skyPlaceholder: {
-        height: '40%',
-        backgroundColor: '#9ED3F2', // Light blue sky color from image
-        borderTopLeftRadius: 24,
-        borderTopRightRadius: 24,
-    },
-    buildingPlaceholder: {
-        flex: 1,
-        flexDirection: 'row',
-        justifyContent: 'space-evenly',
-        paddingTop: 40,
-        backgroundColor: '#EAE6DF',
-    },
-    buildingPillar: {
-        width: 60,
-        height: '100%',
-        backgroundColor: '#D1CCDA', // Column color
+    moneyWrapper: {
+        position: 'absolute',
+        top: '20%',
+        left: '50%',
+        marginLeft: -46.5, // Center it visually 
+        zIndex: 2,
     },
 
     // -- Months Container --
@@ -187,42 +190,54 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'center',
-        marginTop: 100, // Positioned over the building
+        position: 'absolute',
+        top: '32%',
         zIndex: 10,
         gap: 12,
+        width: '100%',
     },
     monthPill: {
-        paddingVertical: 10,
-        paddingHorizontal: 16,
         borderRadius: 24,
         alignItems: 'center',
         justifyContent: 'center',
-        // Default fallback styles
         backgroundColor: 'white',
     },
     monthPillPast: {
-        backgroundColor: '#4E6BF2', // Blue for past
-        opacity: 0.8, // Slight blur effect substitute
+        backgroundColor: '#4E6BF2',
+        paddingVertical: 10,
+        paddingHorizontal: 16,
+        opacity: 0.8, // Add a bit of opacity for the blur effect
+        shadowColor: "#4E6BF2",
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.4,
+        shadowRadius: 10,
+        // Since react-native doesn't have a built-in backdrop blur easily, 
+        // we simulate the look with opacity and shadow or skip the literal blur.
+        transform: [{ scale: 0.9 }],
     },
     monthPillCurrent: {
         backgroundColor: '#FFFFFF',
         borderWidth: 2,
-        borderColor: '#3137D5', // Blue border
-        paddingVertical: 14, // Slightly larger
-        paddingHorizontal: 20,
+        borderColor: '#3137D5',
+        paddingVertical: 12,
+        paddingHorizontal: 22,
         shadowColor: "#000",
         shadowOffset: { width: 0, height: 4 },
         shadowOpacity: 0.1,
         shadowRadius: 8,
         elevation: 4,
+        transform: [{ scale: 1.1 }],
     },
     monthPillFuture: {
         backgroundColor: '#FFFFFF',
+        paddingVertical: 10,
+        paddingHorizontal: 16,
         shadowColor: "#000",
         shadowOffset: { width: 0, height: 2 },
         shadowOpacity: 0.05,
         shadowRadius: 4,
         elevation: 2,
+        transform: [{ scale: 0.9 }],
     },
 
     monthText: {
@@ -234,36 +249,36 @@ const styles = StyleSheet.create({
     },
     monthTextCurrent: {
         color: '#1A1A1A',
-        fontSize: 16, // Slightly larger text
+        fontSize: 16,
     },
     monthTextFuture: {
         color: '#1A1A1A',
     },
 
     // -- Path & Nest --
-    pathContainer: {
-        width: '100%',
-        marginTop: 80,
-        paddingHorizontal: 20,
-        alignItems: 'center',
-        zIndex: 5,
+    pathAndNestArea: {
     },
-    nestContainer: {
+    destinationWrapper: {
+        position: 'absolute',
+        top: -65,
+        right: 48,
+        zIndex: 5,
+        transform: [{ scale: 0.88 }],
+    },
+    nestWrapper: {
         position: 'absolute',
         bottom: 20,
         left: 20,
-        width: 150,
-        height: 150,
-        zIndex: 20,
-        transform: [{ scale: 0.8 }], // Adjust size
+        zIndex: 10,
+        transform: [{ scale: 0.8 }],
     },
 
     // -- Bottom Section --
     bottomSection: {
         paddingHorizontal: 24,
-        paddingTop: 24,
+        paddingTop: 0,
         alignItems: "center",
-        backgroundColor: "#EFF1F4", // Matches the bottom container color in image
+        backgroundColor: "#EFF1F4",
     },
     buttonWrapper: {
         width: "100%",
