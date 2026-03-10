@@ -22,6 +22,22 @@ export const Default = () => {
   );
 };
 
+export const Minimal = () => {
+  const [value, setValue] = useState(6000);
+  return (
+    <View style={styles.container}>
+      <Slider
+        variant="minimal"
+        min={3000}
+        max={11000}
+        initialValue={6000}
+        step={10}
+        onValueChange={setValue}
+      />
+    </View>
+  );
+};
+
 const styles = StyleSheet.create({
   container: {
     padding: 24,

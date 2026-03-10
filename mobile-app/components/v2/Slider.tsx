@@ -5,6 +5,7 @@ import { StyleSheet, Text, View } from 'react-native';
 
 // ─── Props ────────────────────────────────────────────────────────────────────
 export interface SliderProps {
+  variant?: 'default' | 'minimal';
   label?: string;
   min?: number;
   max?: number;
@@ -15,6 +16,7 @@ export interface SliderProps {
 
 // ─── Component ────────────────────────────────────────────────────────────────
 export default function Slider({
+  variant = 'default',
   label = 'MONTHLY SIP',
   min = 3000,
   max = 11000,
@@ -50,59 +52,76 @@ export default function Slider({
   const thumbRadius = 16;
   const thumbPosition = percentage * sliderWidth;
 
+  const isMinimal = variant === 'minimal';
+
+  const content = (
+    <>
+      {!isMinimal && <Text style={styles.label}>{label}</Text>}
+      {!isMinimal && <Text style={styles.value}>₹{formatNumber(value)}</Text>}
+
+      <View
+        style={styles.sliderWrapper}
+        onLayout={(e) => setSliderWidth(e.nativeEvent.layout.width)}
+      >
+        {/* Custom Track - Background (White) */}
+        <View style={styles.trackBackground} />
+
+        {/* Custom Track - Active (Blue with Gradient) */}
+        <LinearGradient
+          colors={['#2848F1', '#6F85F5']}
+          locations={[0, 1]}
+          start={{ x: 0, y: 0.5 }}
+          end={{ x: 1, y: 0.5 }}
+          style={[styles.trackActive, { width: `${percentage * 100}%` }]}
+        />
+
+        {/* Custom Thumb - perfectly centered over the current position */}
+        {sliderWidth > 0 && (
+          <View
+            style={[
+              styles.customThumb,
+              { transform: [{ translateX: thumbPosition - thumbRadius }] },
+            ]}
+            pointerEvents="none"
+          >
+            <View style={styles.thumbInner} />
+          </View>
+        )}
+
+        {/* Invisible Native Slider for interaction and accessibility */}
+        <NativeSlider
+          style={StyleSheet.absoluteFillObject}
+          minimumValue={min}
+          maximumValue={max}
+          step={step}
+          value={value}
+          onValueChange={handleValueChange}
+          minimumTrackTintColor="transparent"
+          maximumTrackTintColor="transparent"
+          thumbTintColor="transparent"
+        />
+      </View>
+
+      <View style={styles.minMaxContainer}>
+        <Text style={[styles.minMaxText, { textAlign: 'left', flex: 1 }]}>{formatMinMax(min)}</Text>
+        {isMinimal && (
+          <Text style={[styles.currentText, { textAlign: 'center', flex: 1 }]}>
+            {formatMinMax(value)}
+          </Text>
+        )}
+        <Text style={[styles.minMaxText, { textAlign: 'right', flex: 1 }]}>{formatMinMax(max)}</Text>
+      </View>
+    </>
+  );
+
+  if (isMinimal) {
+    return <View style={styles.minimalContainer}>{content}</View>;
+  }
+
   return (
     <View style={styles.outerBorder}>
       <View style={styles.container}>
-        <Text style={styles.label}>{label}</Text>
-        <Text style={styles.value}>₹{formatNumber(value)}</Text>
-
-        <View
-          style={styles.sliderWrapper}
-          onLayout={(e) => setSliderWidth(e.nativeEvent.layout.width)}
-        >
-          {/* Custom Track - Background (White) */}
-          <View style={styles.trackBackground} />
-
-          {/* Custom Track - Active (Blue with Gradient) */}
-          <LinearGradient
-            colors={['#2848F1', '#6F85F5']}
-            locations={[0, 1]}
-            start={{ x: 0, y: 0.5 }}
-            end={{ x: 1, y: 0.5 }}
-            style={[styles.trackActive, { width: `${percentage * 100}%` }]}
-          />
-
-          {/* Custom Thumb - perfectly centered over the current position */}
-          {sliderWidth > 0 && (
-            <View
-              style={[
-                styles.customThumb,
-                { transform: [{ translateX: thumbPosition - thumbRadius }] },
-              ]}
-              pointerEvents="none"
-            >
-              <View style={styles.thumbInner} />
-            </View>
-          )}
-
-          {/* Invisible Native Slider for interaction and accessibility */}
-          <NativeSlider
-            style={StyleSheet.absoluteFillObject}
-            minimumValue={min}
-            maximumValue={max}
-            step={step}
-            value={value}
-            onValueChange={handleValueChange}
-            minimumTrackTintColor="transparent"
-            maximumTrackTintColor="transparent"
-            thumbTintColor="transparent"
-          />
-        </View>
-
-        <View style={styles.minMaxContainer}>
-          <Text style={styles.minMaxText}>{formatMinMax(min)}</Text>
-          <Text style={styles.minMaxText}>{formatMinMax(max)}</Text>
-        </View>
+        {content}
       </View>
     </View>
   );
@@ -188,5 +207,14 @@ const styles = StyleSheet.create({
     color: '#A0A0A5',
     fontSize: 12,
     fontWeight: '500',
+  },
+  minimalContainer: {
+    width: '100%',
+    paddingVertical: 16,
+  },
+  currentText: {
+    color: '#1D1E20',
+    fontSize: 13,
+    fontWeight: '600',
   },
 });
