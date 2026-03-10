@@ -1,7 +1,7 @@
 import {
-    Fraunces_700Bold,
+    InstrumentSans_700Bold,
     useFonts,
-} from "@expo-google-fonts/fraunces";
+} from "@expo-google-fonts/instrument-sans";
 import { ChevronLeft } from "lucide-react-native";
 import React, { useEffect } from "react";
 import {
@@ -121,7 +121,7 @@ export default function StudyAbroadScreen({
     onStartPlanning,
 }: StudyAbroadScreenProps) {
     // ── Fonts ──────────────────────────────────────────────────────────────────
-    const [fontsLoaded] = useFonts({ Fraunces_700Bold });
+    const [fontsLoaded] = useFonts({ InstrumentSans_700Bold });
 
     // ── Shared animation values ────────────────────────────────────────────────
     const headlineOpacity = useSharedValue(0);
@@ -181,7 +181,7 @@ export default function StudyAbroadScreen({
     }));
 
     // ── Render ─────────────────────────────────────────────────────────────────
-    const headlineFont = fontsLoaded ? "Fraunces_700Bold" : undefined;
+    const headlineFont = fontsLoaded ? "InstrumentSans_700Bold" : undefined;
 
     return (
         <SafeAreaView style={styles.safeArea}>

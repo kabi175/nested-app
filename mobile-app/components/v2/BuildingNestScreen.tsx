@@ -1,4 +1,4 @@
-import { Lora_600SemiBold, useFonts } from "@expo-google-fonts/lora";
+import { InstrumentSans_600SemiBold, useFonts } from "@expo-google-fonts/instrument-sans";
 import React, { useEffect } from "react";
 import { StyleSheet, Text, View } from "react-native";
 import Animated, {
@@ -28,7 +28,7 @@ export default function BuildingNestScreen({
   onComplete,
 }: BuildingNestScreenProps) {
   const [fontsLoaded] = useFonts({
-    Lora_600SemiBold,
+    InstrumentSans_600SemiBold,
   });
 
   // Entry Animations
@@ -442,7 +442,7 @@ const styles = StyleSheet.create({
     marginBottom: 40, // spacing above the nest
   },
   title: {
-    fontFamily: "Lora_600SemiBold",
+    fontFamily: "InstrumentSans_600SemiBold",
     fontSize: 24, // Refined ~22-24px humanist serif title
     color: "#1a1a1a", // near-black
     textAlign: "center",
