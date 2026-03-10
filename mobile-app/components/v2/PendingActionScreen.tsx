@@ -1,6 +1,7 @@
 import React, { useMemo } from "react";
 import {
     Dimensions,
+    Image,
     Pressable,
     StyleSheet,
     Text,
@@ -13,7 +14,6 @@ import Button from "./Button";
 import Nest from "../../assets/images/v2/nest.svg";
 import Cap from "../../assets/images/v2/pending-actions/cap.svg";
 import Destination from "../../assets/images/v2/pending-actions/destination.svg";
-import Fort from "../../assets/images/v2/pending-actions/fort.svg";
 import Money from "../../assets/images/v2/pending-actions/money.svg";
 import Egg from "./Egg";
 
@@ -57,7 +57,11 @@ export default function PendingActionScreen({
 
                 {/* Circular clipping container for the fort */}
                 <View style={styles.fortCircle}>
-                    <Fort width={SCREEN_WIDTH * 1.4} height={SCREEN_WIDTH * 1.4} preserveAspectRatio="xMidYMin slice" />
+                    <Image
+                        source={require('../../assets/images/v2/fort.png')}
+                        style={styles.fortImage}
+                        resizeMode="cover"
+                    />
                 </View>
 
                 {/* Money SVG on top of Fort roof */}
@@ -163,13 +167,17 @@ const styles = StyleSheet.create({
         borderRadius: SCREEN_WIDTH,
         overflow: 'hidden',
         position: 'absolute',
-        top: -SCREEN_WIDTH * 0.35,
+        top: -65,
         alignSelf: 'center',
         zIndex: 1,
     },
+    fortImage: {
+        width: '100%',
+        height: '100%',
+    },
     moneyWrapper: {
         position: 'absolute',
-        top: '22%',
+        top: '10%',
         alignSelf: 'center',
         zIndex: 2,
     },
@@ -180,7 +188,7 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         justifyContent: 'center',
         position: 'absolute',
-        top: '33%',
+        top: '20%',
         width: '100%',
         zIndex: 3,
         gap: 12,
@@ -245,17 +253,16 @@ const styles = StyleSheet.create({
     // -- Destination & Nest --
     destinationWrapper: {
         position: 'absolute',
-        bottom: 90,
-        right: 40,
+        bottom: 0,
+        right: 20,
         zIndex: 4,
         transform: [{ scale: 0.85 }],
     },
     nestWrapper: {
         position: 'absolute',
-        bottom: 60,
-        left: 30,
+        bottom: -30,
+        left: 10,
         zIndex: 5,
-        transform: [{ scale: 0.75 }],
     },
 
     // -- Bottom Section --
