@@ -1,4 +1,3 @@
-import React from 'react';
 import { StyleSheet, View } from 'react-native';
 import { EducationGoalCard } from '../../components/v2/planner/EducationGoalCard';
 
