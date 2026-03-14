@@ -7,6 +7,7 @@ export const LAST_ROUTE_KEY = "last_active_route";
 export const BLOCKED_ROUTES: RegExp[] = [
   /^\/$/,          // "/"
   /^\/name-input$/,     // "/login"
+  /^\/onboarding$/,     // "/onboarding"
   /^\/sign-in$/,     // "/sign-in"
   /^\/splash$/,    // "/splash"
   /^\/child\/.*$/  // "/child/*"
