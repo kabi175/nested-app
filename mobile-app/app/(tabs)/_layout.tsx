@@ -6,7 +6,7 @@ import { HapticTab } from "@/components/HapticTab";
 import TabBarBackground from "@/components/ui/TabBarBackground";
 import { Colors } from "@/constants/Colors";
 import { useColorScheme } from "@/hooks/useColorScheme";
-import { Goal, House, UserCog, Zap } from "lucide-react-native";
+import { House, UserCog, Zap } from "lucide-react-native";
 import { useAuth0 } from "react-native-auth0";
 
 export default function TabLayout() {
@@ -39,13 +39,6 @@ export default function TabLayout() {
         options={{
           title: "Home",
           tabBarIcon: ({ color }) => <House size={24} color={color} />,
-        }}
-      />
-      <Tabs.Screen
-        name="child"
-        options={{
-          title: "Goals",
-          tabBarIcon: ({ color }) => <Goal size={24} color={color} />,
         }}
       />
       <Tabs.Screen
