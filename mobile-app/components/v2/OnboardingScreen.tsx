@@ -1,5 +1,6 @@
-import React, { useCallback, useRef, useState } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import {
+  Animated,
   Dimensions,
   FlatList,
   Image,
@@ -189,6 +190,28 @@ export default function OnboardingScreen({
   const [currentIndex, setCurrentIndex] = useState(0);
   const [listHeight, setListHeight] = useState(0);
   const flatListRef = useRef<FlatList<OnboardingSlide>>(null);
+  const fillProgress = useRef(new Animated.Value(0)).current;
+
+  // Start/restart the 10 s fill animation whenever the slide changes
+  useEffect(() => {
+    fillProgress.setValue(0);
+    const anim = Animated.timing(fillProgress, {
+      toValue: 1,
+      duration: 10_000,
+      useNativeDriver: false,
+    });
+    anim.start(({ finished }) => {
+      if (!finished) return;
+      const next = currentIndex + 1;
+      if (next < SLIDES.length) {
+        flatListRef.current?.scrollToIndex({ index: next, animated: true });
+        setCurrentIndex(next);
+      } else {
+        onFinish?.();
+      }
+    });
+    return () => anim.stop();
+  }, [currentIndex]);
 
   const onListLayout = useCallback((e: LayoutChangeEvent) => {
     setListHeight(e.nativeEvent.layout.height);
@@ -208,7 +231,6 @@ export default function OnboardingScreen({
 
   const handleSkip = () => {
     onSkip?.();
-    // Jump to last slide or let parent handle
   };
 
   const renderSlide = ({ item, listHeight }: { item: OnboardingSlide; listHeight: number }) => (
@@ -240,7 +262,7 @@ export default function OnboardingScreen({
     <SafeAreaView style={styles.safeArea}>
       {/* ── Top bar: progress + skip ── */}
       <View style={styles.topBar}>
-        <ProgressBar total={SLIDES.length} currentIndex={currentIndex} />
+        <ProgressBar total={SLIDES.length} currentIndex={currentIndex} fillProgress={fillProgress} />
         <Pressable style={styles.skipBtn} onPress={handleSkip} hitSlop={12}>
           <Text style={styles.skipText}>skip {">"}</Text>
         </Pressable>
