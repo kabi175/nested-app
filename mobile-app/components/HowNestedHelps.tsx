@@ -52,7 +52,7 @@ const timelineSteps: TimelineStep[] = [
 export default function HowNestedHelps() {
   const handleStartGoal = () => {
     // Navigate to goal creation screen
-    router.push("/(tabs)/child/create");
+    router.push("/child/create");
   };
 
   return (

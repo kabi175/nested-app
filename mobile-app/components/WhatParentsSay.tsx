@@ -279,7 +279,7 @@ export default function WhatParentsSay() {
     );
 
     // Navigate to goal creation
-    router.push("/(tabs)/child/create");
+    router.push("/child/create");
   };
 
   const visibleTestimonials = getVisibleTestimonials();

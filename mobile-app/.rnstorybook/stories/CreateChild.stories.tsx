@@ -1,9 +1,8 @@
 import type { Meta, StoryObj } from "@storybook/react";
-import React from "react";
-import { View } from "react-native";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { View } from "react-native";
 
-import CreateChild from "../../app/(tabs)/child/create";
+import CreateChild from "../../app/child/create";
 
 // Mock Query Client for the useCreateChild hook
 const queryClient = new QueryClient({

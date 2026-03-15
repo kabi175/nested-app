@@ -33,7 +33,7 @@ export default function ShareApp() {
   };
 
   const handleStartJourney = () => {
-    router.push("/(tabs)/child/create");
+    router.push("/child/create");
   };
 
   return (
