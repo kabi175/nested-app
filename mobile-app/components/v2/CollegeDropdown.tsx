@@ -1,3 +1,5 @@
+import { Education } from "@/types/education";
+import { ChevronDown, X } from "lucide-react-native";
 import React, { useState } from "react";
 import {
   FlatList,
@@ -7,35 +9,18 @@ import {
   Text,
   View,
 } from "react-native";
-import { ChevronDown, X } from "lucide-react-native";
 
-// ─── Sample colleges ──────────────────────────────────────────────────────────
-const COLLEGES = [
-  "IIT Bombay",
-  "IIT Delhi",
-  "IIT Madras",
-  "IIT Kanpur",
-  "IIT Kharagpur",
-  "IIM Ahmedabad",
-  "IIM Bangalore",
-  "IIM Calcutta",
-  "BITS Pilani",
-  "NIT Trichy",
-  "NIT Warangal",
-  "Delhi University",
-  "St. Xavier's College",
-  "AIIMS Delhi",
-  "NID Ahmedabad",
-];
 
 // ─── Props ────────────────────────────────────────────────────────────────────
 export interface CollegeDropdownProps {
+  colleges?: Education[];
   selectedCollege: string | null;
   onSelectCollege: (college: string | null) => void;
 }
 
 // ─── Component ────────────────────────────────────────────────────────────────
 export default function CollegeDropdown({
+  colleges,
   selectedCollege,
   onSelectCollege,
 }: CollegeDropdownProps) {
@@ -91,8 +76,8 @@ export default function CollegeDropdown({
 
             {/* List */}
             <FlatList
-              data={COLLEGES}
-              keyExtractor={(item) => item}
+              data={colleges?.map((college) => college.name) || []}
+              keyExtractor={(_item, index) => index.toString()}
               renderItem={({ item }) => (
                 <Pressable
                   style={[

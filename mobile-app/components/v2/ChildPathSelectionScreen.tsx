@@ -20,6 +20,7 @@ import MbaIcon from "@/assets/images/v2/education-plan/mba.svg";
 import MedicalIcon from "@/assets/images/v2/education-plan/medical.svg";
 import StudyAbroadIcon from "@/assets/images/v2/education-plan/study-abroad.svg";
 import TopCollegesIcon from "@/assets/images/v2/education-plan/top-colleges.svg";
+import { Education } from "@/types/education";
 
 // ─── Path data ────────────────────────────────────────────────────────────────
 const ICON_SIZE = 120;
@@ -63,6 +64,8 @@ export interface ChildPathSelectionScreenProps {
   onStartPlanning?: (pathId: string | null, college: string | null) => void;
   onNotSure?: () => void;
   onBack?: () => void;
+  courses?: Education[];
+  institutions?: Education[];
 }
 
 // ─── Component ────────────────────────────────────────────────────────────────
@@ -71,6 +74,7 @@ export default function ChildPathSelectionScreen({
   onStartPlanning,
   onNotSure,
   onBack,
+  institutions,
 }: ChildPathSelectionScreenProps) {
   const [selectedPath, setSelectedPath] = useState<string | null>(null);
   const [selectedCollege, setSelectedCollege] = useState<string | null>(null);
@@ -153,6 +157,7 @@ export default function ChildPathSelectionScreen({
           <View style={styles.collegeSection}>
             <Text style={styles.collegeLabel}>Have a college in mind?</Text>
             <CollegeDropdown
+              colleges={institutions}
               selectedCollege={selectedCollege}
               onSelectCollege={handleCollegeSelect}
             />
@@ -163,7 +168,9 @@ export default function ChildPathSelectionScreen({
               title={`Start planning for ${childName}`}
               disabled={!canContinue}
               onPress={() =>
+
                 onStartPlanning?.(selectedPath, selectedCollege)
+
               }
             />
 
