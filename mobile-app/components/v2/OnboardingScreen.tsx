@@ -59,39 +59,54 @@ function Slide1Illustration() {
  * (not percentage) so children's absolute positions are reliable.
  */
 function Slide2Illustration() {
+  // branch.png already contains the hanging green leaf — no separate leaf needed.
+  // branch rail sits at ~35% from top of the image; at h=100 that's y≈35 within the image.
+  // We place the branch so its rail aligns with the nest bottom.
+  const branchTop = 108; // image top; rail at branchTop+35 = 143
+  const nestH = 82;
+  const nestTop = branchTop + 35 - nestH; // nest bottom lands on rail → 61
+  const eggH = 65;
+  const eggTop = nestTop - 22; // egg sticks 22px above nest rim, lower half sits in the cup
+
   return (
-    <View style={{ width: 240, height: 260 }}>
-      {/* Branch — wide, sits below the nest */}
-      <Image
-        source={require("../../assets/images/v2/onboarding/branch.png")}
-        style={[illStyles.abs, { width: 240, height: 100, top: 120, left: 0 }]}
-        resizeMode="contain"
-      />
-      {/* Nest — rests on the branch */}
+    <View style={{ width: 240, height: 250 }}>
+      {/* Nest — behind egg but in front of branch */}
       <Image
         source={require("../../assets/images/v2/onboarding/nest.png")}
-        style={[illStyles.abs, { width: 160, height: 80, top: 108, left: 40 }]}
+        style={[illStyles.abs, { width: 182, height: nestH, top: nestTop, left: 29 }]}
         resizeMode="contain"
       />
-      {/* Egg — peeks out of the nest cup (positioned above nest centre) */}
+      {/* Egg — sits inside the nest cup */}
       <Image
         source={require("../../assets/images/v2/onboarding/egg.png")}
-        style={[illStyles.abs, { width: 52, height: 60, top: 72, left: 94 }]}
+        style={[illStyles.abs, { width: 52, height: eggH, top: eggTop, left: 94 }]}
         resizeMode="contain"
       />
-      {/* Leaf — falling bottom-right */}
+      {/* Branch (includes the built-in hanging green leaf) — on top so it overlaps nest base */}
       <Image
-        source={require("../../assets/images/v2/onboarding/leaves.png")}
-        style={[illStyles.abs, { width: 36, height: 36, top: 196, right: 28 }]}
+        source={require("../../assets/images/v2/onboarding/branch.png")}
+        style={[illStyles.abs, { width: 240, height: 100, top: branchTop, left: 0 }]}
         resizeMode="contain"
       />
-      {/* Leaf — falling bottom-left, rotated */}
+      {/* Scattered twig decorations */}
       <Image
         source={require("../../assets/images/v2/onboarding/leaves.png")}
-        style={[
-          illStyles.abs,
-          { width: 26, height: 26, top: 220, left: 28, transform: [{ rotate: "55deg" }] },
-        ]}
+        style={[illStyles.abs, { width: 14, height: 14, top: 210, left: 52, transform: [{ rotate: "80deg" }] }]}
+        resizeMode="contain"
+      />
+      <Image
+        source={require("../../assets/images/v2/onboarding/leaves.png")}
+        style={[illStyles.abs, { width: 12, height: 12, top: 228, left: 110, transform: [{ rotate: "130deg" }] }]}
+        resizeMode="contain"
+      />
+      <Image
+        source={require("../../assets/images/v2/onboarding/leaves.png")}
+        style={[illStyles.abs, { width: 14, height: 14, top: 208, right: 42, transform: [{ rotate: "30deg" }] }]}
+        resizeMode="contain"
+      />
+      <Image
+        source={require("../../assets/images/v2/onboarding/leaves.png")}
+        style={[illStyles.abs, { width: 11, height: 11, top: 232, right: 62, transform: [{ rotate: "160deg" }] }]}
         resizeMode="contain"
       />
     </View>
