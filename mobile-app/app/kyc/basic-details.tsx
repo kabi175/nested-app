@@ -1,12 +1,13 @@
 import Button from "@/components/v2/Button";
 import DateInput from "@/components/v2/DateInput";
+import KycHeader from "@/components/v2/kyc/KycHeader";
+import KycSecurityNotice from "@/components/v2/kyc/KycSecurityNotice";
 import SelectInput from "@/components/v2/SelectInput";
 import TextInput from "@/components/v2/TextInput";
 import { useUser } from "@/hooks/useUser";
 import { useUpdateUser } from "@/hooks/useUserMutations";
 import { useKyc } from "@/providers/KycProvider";
 import { useRouter } from "expo-router";
-import { ChevronLeft } from "lucide-react-native";
 import React, { useEffect, useState } from "react";
 import {
   Alert,
@@ -14,9 +15,6 @@ import {
   Platform,
   ScrollView,
   StyleSheet,
-  Text,
-  TouchableOpacity,
-  View,
 } from "react-native";
 
 const genderOptions = [
@@ -87,6 +85,7 @@ export default function BasicDetailsScreen() {
     const combinedErrors = { ...vBasic.errors, ...vIdentity.errors };
     setErrors(combinedErrors);
 
+    console.log("Validation Errors:", combinedErrors);
     if (!vBasic.isValid || !vIdentity.isValid) return;
 
     try {
@@ -123,31 +122,12 @@ export default function BasicDetailsScreen() {
       behavior={Platform.select({ ios: "padding", android: undefined })}
       style={styles.root}
     >
-      {/* Header */}
-      <View style={styles.header}>
-        <TouchableOpacity
-          onPress={() => router.back()}
-          style={styles.backButton}
-          accessibilityRole="button"
-          accessibilityLabel="Go back"
-        >
-          <ChevronLeft size={20} color="#222B45" />
-        </TouchableOpacity>
-        <Text style={styles.headerTitle}>KYC Basic Details</Text>
-        <View style={styles.headerSpacer} />
-      </View>
-
-      {/* Progress */}
-      <View style={styles.progressContainer}>
-        <View style={styles.progressLabels}>
-          <Text style={styles.progressLabel}>KYC Progress</Text>
-          <Text style={styles.progressDone}>1 of 5 done</Text>
-        </View>
-        <View style={styles.progressTrack}>
-          <View style={styles.progressFill} />
-        </View>
-      </View>
-
+      <KycHeader
+        title="KYC Basic Details"
+        current={1}
+        total={5}
+        onBack={() => router.back()}
+      />
       <ScrollView
         contentContainerStyle={styles.scroll}
         showsVerticalScrollIndicator={false}
@@ -184,7 +164,7 @@ export default function BasicDetailsScreen() {
 
         <TextInput
           label="Father's Name/Spouse's Name"
-          placeholder="Enter father's Name/Mother's Name/Spouse's Name"
+          placeholder="Enter father's Name/Spouse's Name"
           value={data.basic.father_name}
           onChangeText={(v) => update("basic", { father_name: v })}
           error={errors.father_name}
@@ -209,6 +189,20 @@ export default function BasicDetailsScreen() {
           autoCapitalize="characters"
           error={errors.pan}
           touched={!!errors.pan}
+        />
+
+        <TextInput
+          label="Aadhaar (last 4 digits)"
+          placeholder="1234"
+          value={data.identity.aadhaarLast4}
+          onChangeText={(v) =>
+            update("identity", { aadhaarLast4: v.replace(/[^0-9]/g, "") })
+          }
+          keyboardType="number-pad"
+          maxLength={4}
+          secureTextEntry
+          error={errors.aadhaarLast4}
+          touched={!!errors.aadhaarLast4}
         />
 
         <TextInput
@@ -237,11 +231,7 @@ export default function BasicDetailsScreen() {
           touched={!!errors.mobile}
         />
 
-        <View style={styles.securityNote}>
-          <Text style={styles.securityText}>
-            Your data is end-to-end encrypted and stored securely.
-          </Text>
-        </View>
+        <KycSecurityNotice />
 
         <Button
           title="Continue"
