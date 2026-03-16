@@ -1,17 +1,21 @@
-import { GenericSelect } from "@/components/ui/GenericSelect";
-import { InfoTooltip } from "@/components/ui/InfoTooltip";
-import { StepProgress } from "@/components/ui/StepProgress";
+import Button from "@/components/v2/Button";
+import DateInput from "@/components/v2/DateInput";
+import SelectInput from "@/components/v2/SelectInput";
+import TextInput from "@/components/v2/TextInput";
 import { useUser } from "@/hooks/useUser";
 import { useUpdateUser } from "@/hooks/useUserMutations";
 import { useKyc } from "@/providers/KycProvider";
-import { Button, Datepicker, Input, Text } from "@ui-kitten/components";
 import { useRouter } from "expo-router";
+import { ChevronLeft } from "lucide-react-native";
 import React, { useEffect, useState } from "react";
 import {
   Alert,
   KeyboardAvoidingView,
   Platform,
   ScrollView,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
   View,
 } from "react-native";
 
@@ -34,8 +38,6 @@ export default function BasicDetailsScreen() {
     useUpdateUser();
   const router = useRouter();
   const [errors, setErrors] = useState<Record<string, string>>({});
-  const totalSteps = 5;
-  const currentStep = 1;
   const maxDate = new Date();
   maxDate.setFullYear(maxDate.getFullYear() - 18);
 
@@ -43,7 +45,6 @@ export default function BasicDetailsScreen() {
     let mounted = true;
     (async () => {
       if (mounted && apiUser) {
-        // Map API user to form values
         const fullName = [apiUser.firstName, apiUser.lastName]
           .filter(Boolean)
           .join(" ")
@@ -58,7 +59,6 @@ export default function BasicDetailsScreen() {
           marital_status: apiUser.marital_status || "",
         });
 
-        // Map identity data
         const hasExistingIdentityValues = Boolean(
           data.identity.pan || data.identity.aadhaarLast4
         );
@@ -90,15 +90,12 @@ export default function BasicDetailsScreen() {
     if (!vBasic.isValid || !vIdentity.isValid) return;
 
     try {
-      // Split full name
       const parts = (data.basic.fullName || "").trim().split(/\s+/);
       const firstName = parts[0] || "";
       const lastName = parts.slice(1).join(" ");
-      // Map gender to API
       const genderLower = data.basic.gender;
-      if (!apiUser) {
-        return;
-      }
+      if (!apiUser) return;
+
       await updateUser({
         id: apiUser.id,
         payload: {
@@ -124,228 +121,214 @@ export default function BasicDetailsScreen() {
   return (
     <KeyboardAvoidingView
       behavior={Platform.select({ ios: "padding", android: undefined })}
-      style={{ flex: 1 }}
+      style={styles.root}
     >
-      <StepProgress current={currentStep} total={totalSteps} />
-      <ScrollView contentContainerStyle={{ padding: 16, gap: 16 }}>
-        <View
-          style={{ padding: 12, backgroundColor: "#F7F9FC", borderRadius: 8 }}
+      {/* Header */}
+      <View style={styles.header}>
+        <TouchableOpacity
+          onPress={() => router.back()}
+          style={styles.backButton}
+          accessibilityRole="button"
+          accessibilityLabel="Go back"
         >
-          <Text category="c2" appearance="hint">
+          <ChevronLeft size={20} color="#222B45" />
+        </TouchableOpacity>
+        <Text style={styles.headerTitle}>KYC Basic Details</Text>
+        <View style={styles.headerSpacer} />
+      </View>
+
+      {/* Progress */}
+      <View style={styles.progressContainer}>
+        <View style={styles.progressLabels}>
+          <Text style={styles.progressLabel}>KYC Progress</Text>
+          <Text style={styles.progressDone}>1 of 5 done</Text>
+        </View>
+        <View style={styles.progressTrack}>
+          <View style={styles.progressFill} />
+        </View>
+      </View>
+
+      <ScrollView
+        contentContainerStyle={styles.scroll}
+        showsVerticalScrollIndicator={false}
+      >
+        <TextInput
+          label="Full Name (As per PAN)"
+          placeholder="As per PAN"
+          value={data.basic.fullName}
+          onChangeText={(v) => update("basic", { fullName: v })}
+          error={errors.fullName}
+          touched={!!errors.fullName}
+        />
+
+        <DateInput
+          label="Date of Birth (As per PAN)"
+          value={data.basic.dateOfBirth ?? null}
+          onChange={(date) => update("basic", { dateOfBirth: date })}
+          min={new Date("1920-01-01")}
+          max={maxDate}
+          placeholder="DD/MM/YYYY"
+          error={errors.dateOfBirth}
+          touched={!!errors.dateOfBirth}
+        />
+
+        <SelectInput
+          label="Gender"
+          options={genderOptions}
+          value={data.basic.gender}
+          onChange={(val) => update("basic", { gender: val as any })}
+          placeholder="Select"
+          error={errors.gender}
+          touched={!!errors.gender}
+        />
+
+        <TextInput
+          label="Father's Name/Spouse's Name"
+          placeholder="Enter father's Name/Mother's Name/Spouse's Name"
+          value={data.basic.father_name}
+          onChangeText={(v) => update("basic", { father_name: v })}
+          error={errors.father_name}
+          touched={!!errors.father_name}
+        />
+
+        <SelectInput
+          label="Marital Status"
+          options={maritalStatusOptions}
+          value={data.basic.marital_status}
+          onChange={(val) => update("basic", { marital_status: val as any })}
+          placeholder="Select"
+          error={errors.marital_status}
+          touched={!!errors.marital_status}
+        />
+
+        <TextInput
+          label="PAN Number"
+          placeholder="ABCDE1234F"
+          value={data.identity.pan}
+          onChangeText={(v) => update("identity", { pan: v.toUpperCase() })}
+          autoCapitalize="characters"
+          error={errors.pan}
+          touched={!!errors.pan}
+        />
+
+        <TextInput
+          label="Email ID"
+          value={apiUser?.email || ""}
+          onChangeText={(v) =>
+            update("basic", { email: v, emailOtpVerified: false })
+          }
+          autoCapitalize="none"
+          keyboardType="email-address"
+          editable={false}
+          error={errors.email}
+          touched={!!errors.email}
+        />
+
+        <TextInput
+          label="Mobile Number"
+          placeholder="10-digit mobile number"
+          value={data.basic.mobile}
+          onChangeText={(v) =>
+            update("basic", { mobile: v, mobileOtpVerified: false })
+          }
+          keyboardType="phone-pad"
+          editable={false}
+          error={errors.mobile}
+          touched={!!errors.mobile}
+        />
+
+        <View style={styles.securityNote}>
+          <Text style={styles.securityText}>
             Your data is end-to-end encrypted and stored securely.
           </Text>
         </View>
 
-        <View>
-          <View
-            style={{
-              flexDirection: "row",
-              alignItems: "center",
-              marginBottom: 6,
-            }}
-          >
-            <Text category="label">Full Name (As per PAN)</Text>
-            <InfoTooltip content="Your name helps us verify your identity as per your PAN." />
-          </View>
-          <Input
-            placeholder="As per PAN"
-            value={data.basic.fullName}
-            onChangeText={(v) => update("basic", { fullName: v })}
-            status={errors.fullName ? "danger" : "basic"}
-            caption={errors.fullName}
-          />
-        </View>
-
-        <View>
-          <View
-            style={{
-              flexDirection: "row",
-              alignItems: "center",
-              marginBottom: 6,
-            }}
-          >
-            <Text category="label">Date of Birth (As per PAN)</Text>
-            <InfoTooltip content="Used to confirm age eligibility and identity verification." />
-          </View>
-          <Datepicker
-            placeholder="Pick Date"
-            date={data.basic.dateOfBirth || undefined}
-            min={new Date("1920-01-01")}
-            max={maxDate}
-            onSelect={(nextDate) => update("basic", { dateOfBirth: nextDate })}
-            status={errors.dateOfBirth ? "danger" : "basic"}
-            caption={errors.dateOfBirth}
-          />
-        </View>
-
-        <View>
-          <View
-            style={{
-              flexDirection: "row",
-              alignItems: "center",
-              marginBottom: 6,
-            }}
-          >
-            <Text category="label">Gender</Text>
-            <InfoTooltip content="Required for demographic and identity matching." />
-          </View>
-          <GenericSelect
-            options={genderOptions}
-            value={data.basic.gender}
-            onChange={(val) => update("basic", { gender: val as any })}
-            status={errors.gender ? "danger" : "basic"}
-            caption={errors.gender}
-            placeholder="Select"
-          />
-        </View>
-
-        <View>
-          <View
-            style={{
-              flexDirection: "row",
-              alignItems: "center",
-              marginBottom: 6,
-            }}
-          >
-            <Text category="label">Father&apos;s Name/ Mother&apos;s Name/ Spouse&apos;s Name</Text>
-            <InfoTooltip content="Required as per KYC regulations for identity verification." />
-          </View>
-          <Input
-            placeholder="Enter father's Name/Mother's Name/Spouse's Name"
-            value={data.basic.father_name}
-            onChangeText={(v) => update("basic", { father_name: v })}
-            status={errors.father_name ? "danger" : "basic"}
-            caption={errors.father_name}
-          />
-        </View>
-
-        <View>
-          <View
-            style={{
-              flexDirection: "row",
-              alignItems: "center",
-              marginBottom: 6,
-            }}
-          >
-            <Text category="label">Marital Status</Text>
-            <InfoTooltip content="Required for KYC compliance and demographic information." />
-          </View>
-          <GenericSelect
-            options={maritalStatusOptions}
-            value={data.basic.marital_status}
-            onChange={(val) => update("basic", { marital_status: val as any })}
-            status={errors.marital_status ? "danger" : "basic"}
-            caption={errors.marital_status}
-            placeholder="Select"
-          />
-        </View>
-
-        <View>
-          <View
-            style={{
-              flexDirection: "row",
-              alignItems: "center",
-              marginBottom: 6,
-            }}
-          >
-            <Text category="label">PAN Number</Text>
-            <InfoTooltip content="Your PAN is required to verify your tax identity with government databases." />
-          </View>
-          <Input
-            autoCapitalize="characters"
-            placeholder="ABCDE1234F"
-            value={data.identity.pan}
-            onChangeText={(v) => update("identity", { pan: v.toUpperCase() })}
-            status={errors.pan ? "danger" : "basic"}
-            caption={errors.pan}
-          />
-        </View>
-
-        <View>
-          <View
-            style={{
-              flexDirection: "row",
-              alignItems: "center",
-              marginBottom: 6,
-            }}
-          >
-            <Text category="label">Aadhaar (last 4 digits)</Text>
-            <InfoTooltip content="Your Aadhaar last 4 digit helps verify your address and identity." />
-          </View>
-          <Input
-            placeholder="1234"
-            value={data.identity.aadhaarLast4}
-            onChangeText={(v) =>
-              update("identity", { aadhaarLast4: v.replace(/[^0-9]/g, "") })
-            }
-            keyboardType="number-pad"
-            maxLength={4}
-            secureTextEntry
-            status={errors.aadhaarLast4 ? "danger" : "basic"}
-            caption={errors.aadhaarLast4}
-          />
-        </View>
-
-        <View style={{ gap: 8 }}>
-          <View style={{ flexDirection: "row", alignItems: "center" }}>
-            <Text category="label">Email</Text>
-            <InfoTooltip content="We'll send verification and KYC status updates to this email." />
-          </View>
-          <Input
-            value={apiUser?.email || ""}
-            onChangeText={(v) =>
-              update("basic", { email: v, emailOtpVerified: false })
-            }
-            autoCapitalize="none"
-            keyboardType="email-address"
-            status={errors.email ? "danger" : "basic"}
-            caption={errors.email}
-            disabled={true}
-          />
-        </View>
-
-        <View style={{ gap: 8 }}>
-          <View style={{ flexDirection: "row", alignItems: "center" }}>
-            <Text category="label">Mobile Number</Text>
-            <InfoTooltip content="Used for OTP verification and secure communication." />
-          </View>
-          <Input
-            placeholder="10-digit mobile number"
-            value={data.basic.mobile}
-            onChangeText={(v) =>
-              update("basic", { mobile: v, mobileOtpVerified: false })
-            }
-            keyboardType="phone-pad"
-            status={errors.mobile ? "danger" : "basic"}
-            caption={errors.mobile}
-            disabled={true}
-          />
-        </View>
-
-        <View
-          style={{
-            flexDirection: "row",
-            justifyContent: "space-between",
-            gap: 12,
-            marginTop: 12,
-          }}
-        >
-          <Button
-            style={{ flex: 1 }}
-            appearance="ghost"
-            onPress={() => router.back()}
-          >
-            Back
-          </Button>
-          <Button
-            style={{ flex: 1 }}
-            disabled={isUpdatePending}
-            onPress={onContinue}
-          >
-            Continue
-          </Button>
-        </View>
+        <Button
+          title="Continue"
+          loading={isUpdatePending}
+          onPress={onContinue}
+        />
       </ScrollView>
     </KeyboardAvoidingView>
   );
 }
+
+const styles = StyleSheet.create({
+  root: {
+    flex: 1,
+    backgroundColor: "#FFFFFF",
+  },
+  header: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+  },
+  backButton: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: "#F7F9FC",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  headerTitle: {
+    flex: 1,
+    textAlign: "center",
+    fontSize: 17,
+    fontWeight: "600",
+    color: "#1A1A1A",
+  },
+  headerSpacer: {
+    width: 36,
+  },
+  progressContainer: {
+    paddingHorizontal: 16,
+    paddingBottom: 12,
+  },
+  progressLabels: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    marginBottom: 6,
+  },
+  progressLabel: {
+    fontSize: 12,
+    color: "#8F9BB3",
+  },
+  progressDone: {
+    fontSize: 12,
+    color: "#3366FF",
+    fontWeight: "500",
+  },
+  progressTrack: {
+    height: 6,
+    backgroundColor: "#EDF1F7",
+    borderRadius: 999,
+    overflow: "hidden",
+  },
+  progressFill: {
+    width: "20%",
+    height: "100%",
+    backgroundColor: "#3366FF",
+    borderRadius: 999,
+  },
+  scroll: {
+    paddingHorizontal: 16,
+    paddingTop: 8,
+    paddingBottom: 32,
+  },
+  securityNote: {
+    borderWidth: 1,
+    borderColor: "#C5CEE0",
+    borderStyle: "dashed",
+    borderRadius: 8,
+    padding: 12,
+    alignItems: "center",
+    marginBottom: 16,
+  },
+  securityText: {
+    fontSize: 12,
+    color: "#8F9BB3",
+    textAlign: "center",
+  },
+});
