@@ -32,7 +32,7 @@ interface PendingActionScreenProps {
 export default function PendingActionScreen({
     onContinue,
     onDoLater,
-    currentMonthIndex = 2, // Default to MAR for matching design visually
+    currentMonthIndex = new Date().getMonth(),
 }: PendingActionScreenProps) {
     const insets = useSafeAreaInsets();
 
