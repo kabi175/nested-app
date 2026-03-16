@@ -1,6 +1,6 @@
 import { GoalFormCard } from "@/components/goal/create/GoalFormCard";
 import { ThemedText } from "@/components/ThemedText";
-import { useEducation } from "@/hooks/useEducation";
+import { useEducations } from "@/hooks/useEducations";
 import { useGoal } from "@/hooks/useGoal";
 import { useGoalFormAnimations } from "@/hooks/useGoalFormAnimations";
 import { useUpdateGoal } from "@/hooks/useUpdateGoal";
@@ -32,7 +32,7 @@ export default function EditGoalScreen() {
         courses,
         institutions,
         isLoading: isLoadingEducation,
-    } = useEducation();
+    } = useEducations();
 
     const [goalForm, setGoalForm] = useState<GoalForm | null>(null);
     const [isFormInitialized, setIsFormInitialized] = useState(false);

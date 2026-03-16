@@ -5,7 +5,7 @@ import { CreateGoalHeader } from "@/components/goal/create/CreateGoalHeader";
 import { GoalFormCard } from "@/components/goal/create/GoalFormCard";
 import { SaveGoalButton } from "@/components/goal/create/SaveGoalButton";
 import { useChildren } from "@/hooks/useChildren";
-import { useEducation } from "@/hooks/useEducation";
+import { useEducations } from "@/hooks/useEducations";
 import { useGoalCreation } from "@/hooks/useGoalCreation";
 import { useGoalFormAnimations } from "@/hooks/useGoalFormAnimations";
 import { logGoalCreation } from "@/services/metaEvents";
@@ -35,7 +35,7 @@ export default function CreateGoalScreen() {
     courses,
     institutions,
     isLoading: isLoadingEducation,
-  } = useEducation();
+  } = useEducations();
 
   const [goals, setGoals] = useState<GoalForm[]>([]);
 

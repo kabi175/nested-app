@@ -78,7 +78,6 @@ public class EducationController {
      * @return ResponseEntity containing education details
      */
     @GetMapping("/{id}")
-    @AdminOnly
     @Operation(
         summary = "Get education record by ID (Admin only)",
         description = "Retrieves detailed information about a specific education record")
