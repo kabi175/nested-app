@@ -1,12 +1,13 @@
 import React from "react";
 import { StyleSheet, Text, View } from "react-native";
 import GraduationCap from "@/assets/images/v2/planner/graduation-cap.svg";
+import { formatCompactCurrency } from "@/utils/formatters";
 
 interface EducationGoalCardProps {
-  year?: number; // default: 2037
-  amount?: string; // default: "₹48.6L"
-  collegeType?: string; // default: "Top College (IIT/NIT/Private)"
-  yearsFromNow?: number; // default: 12
+  year?: number;
+  amount?: number;
+  collegeType?: string;
+  yearsFromNow?: number;
 }
 
 /**
@@ -24,7 +25,7 @@ const BulletSeparator = () => (
  */
 export const EducationGoalCard: React.FC<EducationGoalCardProps> = ({
   year = 2037,
-  amount = "₹48.6L",
+  amount = 4860000,
   collegeType = "Top College (IIT/NIT/Private)",
   yearsFromNow = 12,
 }) => {
@@ -41,7 +42,7 @@ export const EducationGoalCard: React.FC<EducationGoalCardProps> = ({
 
         {/* Amount row: Large Goal Amount */}
         <View style={styles.amountRow}>
-          <Text style={styles.amountText}>{amount}</Text>
+          <Text style={styles.amountText}>{formatCompactCurrency(amount)}</Text>
         </View>
 
         {/* Bottom row: College Type and Timeframe */}

@@ -2,7 +2,6 @@ import React, { useEffect, useRef, useState } from 'react';
 import {
   Animated,
   Pressable,
-  ScrollView,
   StyleSheet,
   Text,
   View,
@@ -21,10 +20,10 @@ type PlanMode = 'ideal' | 'custom';
 interface EducationBasedGoalPlannerProps {
   childName?: string;
   goalYear?: number;
-  goalAmount?: string;
+  goalAmount?: number;
   collegeType?: string;
-  yearsFromNow?: number;
   idealSipAmount?: number;
+  error?: string;
   onBack?: () => void;
   onBegin?: (params: {
     mode: PlanMode;
@@ -37,13 +36,14 @@ interface EducationBasedGoalPlannerProps {
 export default function EducationBasedGoalPlanner({
   childName = 'Aanya',
   goalYear = 2037,
-  goalAmount = '₹48.6L',
+  goalAmount = 4860000,
   collegeType = 'Top College (IIT/NIT/Private)',
-  yearsFromNow = 12,
   idealSipAmount = 6200,
+  error,
   onBack,
   onBegin,
 }: EducationBasedGoalPlannerProps) {
+  const yearsFromNow = goalYear - new Date().getFullYear();
   const [mode, setMode] = useState<PlanMode>('ideal');
   const [sipAmount, setSipAmount] = useState(idealSipAmount);
   const [lumpSumEnabled, setLumpSumEnabled] = useState(false);
@@ -106,6 +106,7 @@ export default function EducationBasedGoalPlanner({
             collegeType={collegeType}
             yearsFromNow={yearsFromNow}
           />
+
         </View>
 
         {/* Stats row */}
@@ -185,6 +186,11 @@ export default function EducationBasedGoalPlanner({
 
       {/* Sticky CTA */}
       <View style={styles.footer}>
+        {error && (
+          <View style={styles.errorBanner}>
+            <Text style={styles.errorText}>{error}</Text>
+          </View>
+        )}
         <Button title="Let's begin  →" onPress={handleBegin} />
       </View>
     </SafeAreaView>
@@ -306,6 +312,20 @@ const styles = StyleSheet.create({
     paddingBottom: 16,
     paddingTop: 8,
     backgroundColor: '#FFFFFF',
+    gap: 8,
+  },
+  errorBanner: {
+    backgroundColor: '#FEF2F2',
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: '#FECACA',
+    paddingVertical: 10,
+    paddingHorizontal: 14,
+  },
+  errorText: {
+    fontSize: 14,
+    color: '#DC2626',
+    fontWeight: '500',
   },
   disclaimer: {
     borderWidth: 1.5,
