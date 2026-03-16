@@ -4,8 +4,32 @@ import {
   StyleSheet,
   Text,
   TextStyle,
+  View,
   ViewStyle,
 } from "react-native";
+
+// ─── Tokens ───────────────────────────────────────────────────────────────────
+const T = {
+  borderNormal: "#C4C4C4",
+  borderPressed: "#A0A0A0",
+  borderDisabled: "#E5E7EB",
+
+  shadowNormal: "#C4C4C4",
+  shadowPressed: "#A0A0A0",
+  shadowDisabled: "#E5E7EB",
+
+  bgNormal: "#FFFFFF",
+  bgPressed: "#F8F8F8",
+  bgDisabled: "#FAFAFA",
+
+  textNormal: "#1A1A1A",
+  textDisabled: "#9CA3AF",
+
+  radius: 14,
+  height: 55,
+  shadowHeight: 4,
+  shadowHeightPressed: 1,
+} as const;
 
 export interface OutlineButtonProps {
   title: string;
@@ -20,55 +44,90 @@ export default function OutlineButton({
 }: OutlineButtonProps) {
   const [pressed, setPressed] = useState(false);
 
+  const isDisabled = disabled;
+  const isPressed = !isDisabled && pressed;
+
+  const shadowH = isPressed ? T.shadowHeightPressed : T.shadowHeight;
+  const pressShift = T.shadowHeight - T.shadowHeightPressed; // 3px
+
+  const outerBorderColor = isDisabled
+    ? T.borderDisabled
+    : isPressed
+      ? T.borderPressed
+      : T.borderNormal;
+
+  const innerBg = isDisabled
+    ? T.bgDisabled
+    : isPressed
+      ? T.bgPressed
+      : T.bgNormal;
+
   return (
-    <Pressable
-      onPressIn={() => !disabled && setPressed(true)}
-      onPressOut={() => setPressed(false)}
-      onPress={disabled ? undefined : onPress}
-      accessibilityRole="button"
-      accessibilityState={{ disabled }}
-      accessibilityLabel={title}
+    <View
       style={[
-        styles.button,
-        pressed && styles.buttonPressed,
-        disabled && styles.buttonDisabled,
+        styles.outer,
+        {
+          backgroundColor: outerBorderColor,
+          height: T.height + shadowH,
+          borderColor: outerBorderColor,
+        },
       ]}
     >
-      <Text
-        style={[styles.label, disabled && styles.labelDisabled]}
-        numberOfLines={1}
+      <Pressable
+        onPressIn={() => { if (!isDisabled) setPressed(true); }}
+        onPressOut={() => setPressed(false)}
+        onPress={isDisabled ? undefined : onPress}
+        accessibilityRole="button"
+        accessibilityState={{ disabled: isDisabled }}
+        accessibilityLabel={title}
+        style={[
+          styles.inner,
+          {
+            backgroundColor: innerBg,
+            transform: isPressed ? [{ translateY: pressShift }] : [],
+          },
+        ]}
       >
-        {title}
-      </Text>
-    </Pressable>
+        <Text
+          style={[
+            styles.label,
+            isDisabled && styles.labelDisabled,
+          ]}
+          numberOfLines={1}
+        >
+          {title}
+        </Text>
+      </Pressable>
+    </View>
   );
 }
 
+// ─── Styles ───────────────────────────────────────────────────────────────────
 const styles = StyleSheet.create({
-  button: {
+  outer: {
     width: "100%",
-    height: 55,
-    borderRadius: 14,
+    borderRadius: T.radius,
     borderWidth: 1.5,
-    borderColor: "#D1D5DB",
+    overflow: "hidden",
+  } as ViewStyle,
+
+  inner: {
+    width: "100%",
+    height: T.height,
+    borderRadius: T.radius,
     alignItems: "center",
     justifyContent: "center",
     paddingHorizontal: 24,
-    backgroundColor: "#FFFFFF",
   } as ViewStyle,
-  buttonPressed: {
-    backgroundColor: "#F3F4F6",
-  } as ViewStyle,
-  buttonDisabled: {
-    borderColor: "#E5E7EB",
-  } as ViewStyle,
+
   label: {
     fontSize: 17,
     fontWeight: "600",
-    color: "#1A1A1A",
+    color: T.textNormal,
     letterSpacing: 0.3,
   } as TextStyle,
+
   labelDisabled: {
-    color: "#9CA3AF",
+    color: T.textDisabled,
   } as TextStyle,
 });

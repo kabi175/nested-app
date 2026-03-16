@@ -1,8 +1,8 @@
-import { Text } from "@ui-kitten/components";
+import BackButton from "@/components/v2/BackButton";
 import { router } from "expo-router";
-import { ChevronLeft, Plus } from "lucide-react-native";
+import { Plus } from "lucide-react-native";
 import React from "react";
-import { StyleSheet, TouchableOpacity, View } from "react-native";
+import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
 
 interface NomineeScreenHeaderProps {
   onAddPress: () => void;
@@ -15,24 +15,19 @@ export function NomineeScreenHeader({
 }: NomineeScreenHeaderProps) {
   return (
     <View style={styles.header}>
-      <TouchableOpacity
-        style={styles.backButton}
-        onPress={() => router.back()}
-        activeOpacity={0.7}
-      >
-        <ChevronLeft size={24} color="#000000" />
-      </TouchableOpacity>
-      <Text category="h4" style={styles.title}>
-        Nominee Management
-      </Text>
-      <TouchableOpacity
-        style={styles.addButton}
-        onPress={onAddPress}
-        activeOpacity={0.7}
-        disabled={!showAddMoreButton}
-      >
-        <Plus size={24} color={!showAddMoreButton ? "#9CA3AF" : "#000000"} />
-      </TouchableOpacity>
+      <BackButton onPress={() => router.back()} />
+      <Text style={styles.title}>{"Nominee\nManagement"}</Text>
+      {showAddMoreButton ? (
+        <TouchableOpacity
+          style={styles.addButton}
+          onPress={onAddPress}
+          activeOpacity={0.7}
+        >
+          <Plus size={24} color="#000000" />
+        </TouchableOpacity>
+      ) : (
+        <View style={styles.addButton} />
+      )}
     </View>
   );
 }
@@ -46,24 +41,18 @@ const styles = StyleSheet.create({
     paddingVertical: 16,
     backgroundColor: "#FFFFFF",
   },
-  backButton: {
-    width: 40,
-    height: 40,
-    justifyContent: "center",
-    alignItems: "flex-start",
-  },
   title: {
-    fontSize: 20,
-    fontWeight: "600",
-    color: "#000000",
+    fontSize: 22,
+    fontWeight: "700",
+    color: "#0D0D0D",
     flex: 1,
     textAlign: "center",
+    lineHeight: 30,
   },
   addButton: {
-    width: 40,
-    height: 40,
+    width: 38,
+    height: 38,
     borderRadius: 8,
-    backgroundColor: "#F3F4F6",
     justifyContent: "center",
     alignItems: "center",
   },
