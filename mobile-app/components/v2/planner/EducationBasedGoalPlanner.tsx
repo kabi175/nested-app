@@ -17,6 +17,8 @@ import { LumpSumInput } from './LumpSumInput';
 import PlanProjection from './PlanProjection';
 import { StepUpInput } from './StepUpInput';
 
+const MAX_SIP_AMOUNT = 1_00_000;
+
 type PlanMode = 'ideal' | 'custom';
 
 interface EducationBasedGoalPlannerProps {
@@ -25,6 +27,8 @@ interface EducationBasedGoalPlannerProps {
   goalAmount?: number;
   collegeType?: string;
   idealSipAmount?: number;
+  minSip?: number;
+  sipStep?: number;
   error?: string;
   onBack?: () => void;
   onBegin?: (params: {
@@ -41,6 +45,8 @@ export default function EducationBasedGoalPlanner({
   goalAmount = 4860000,
   collegeType = 'Top College (IIT/NIT/Private)',
   idealSipAmount = 6200,
+  minSip = 500,
+  sipStep = 100,
   error,
   onBack,
   onBegin,
@@ -48,6 +54,12 @@ export default function EducationBasedGoalPlanner({
   const yearsFromNow = goalYear - new Date().getFullYear();
   const [mode, setMode] = useState<PlanMode>('ideal');
   const [sipAmount, setSipAmount] = useState(idealSipAmount);
+
+  const normalizedSipAmount = Math.max(minSip, Math.round(sipAmount / sipStep) * sipStep);
+
+  const handleSipAmountChange = (value: number) => {
+    setSipAmount(Math.round(value / sipStep) * sipStep);
+  };
   const [lumpSumEnabled, setLumpSumEnabled] = useState(false);
   const [lumpSumAmount, setLumpSumAmount] = useState('');
   const [stepUp, setStepUp] = useState(10);
@@ -62,13 +74,13 @@ export default function EducationBasedGoalPlanner({
     ]).start();
   }, []);
 
-  const formattedSip = sipAmount.toLocaleString('en-IN');
-  const totalInvestedLakhs = ((sipAmount * 12 * yearsFromNow) / 100000).toFixed(1);
+  const formattedSip = normalizedSipAmount.toLocaleString('en-IN');
+  const totalInvestedLakhs = ((normalizedSipAmount * 12 * yearsFromNow) / 100000).toFixed(1);
 
   const handleBegin = () => {
     onBegin?.({
       mode,
-      sipAmount,
+      sipAmount: normalizedSipAmount,
       lumpSum: lumpSumEnabled ? parseFloat(lumpSumAmount) || 0 : undefined,
       stepUp: mode === 'custom' ? stepUp : undefined,
     });
@@ -156,11 +168,11 @@ export default function EducationBasedGoalPlanner({
           <View style={styles.customControls}>
             <Slider
               variant="minimal"
-              min={3000}
-              max={11000}
-              step={100}
-              initialValue={sipAmount}
-              onValueChange={setSipAmount}
+              min={minSip}
+              max={MAX_SIP_AMOUNT}
+              step={sipStep}
+              initialValue={normalizedSipAmount}
+              onValueChange={handleSipAmountChange}
             />
             <LumpSumInput
               enabled={lumpSumEnabled}

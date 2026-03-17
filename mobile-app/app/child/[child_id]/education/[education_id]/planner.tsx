@@ -122,6 +122,7 @@ export default function GoalPlannerScreen() {
     };
 
 
+    //TODO: minSip needs to be handled properly based on goal.basket.min_sip
 
     return (
         <EducationBasedGoalPlanner
