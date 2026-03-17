@@ -66,6 +66,8 @@ export default function EducationBasedGoalPlanner({
 
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const slideAnim = useRef(new Animated.Value(24)).current;
+  const subtitleFade = useRef(new Animated.Value(0)).current;
+  const subtitleSlide = useRef(new Animated.Value(8)).current;
 
   useEffect(() => {
     Animated.parallel([
@@ -73,6 +75,19 @@ export default function EducationBasedGoalPlanner({
       Animated.timing(slideAnim, { toValue: 0, duration: 400, useNativeDriver: true }),
     ]).start();
   }, []);
+
+  useEffect(() => {
+    if (mode === 'custom') {
+      subtitleFade.setValue(0);
+      subtitleSlide.setValue(8);
+      Animated.parallel([
+        Animated.timing(subtitleFade, { toValue: 1, duration: 250, useNativeDriver: true }),
+        Animated.timing(subtitleSlide, { toValue: 0, duration: 250, useNativeDriver: true }),
+      ]).start();
+    } else {
+      Animated.timing(subtitleFade, { toValue: 0, duration: 150, useNativeDriver: true }).start();
+    }
+  }, [mode]);
 
   const formattedSip = normalizedSipAmount.toLocaleString('en-IN');
   const totalInvestedLakhs = ((normalizedSipAmount * 12 * yearsFromNow) / 100000).toFixed(1);
@@ -95,7 +110,7 @@ export default function EducationBasedGoalPlanner({
         showsVerticalScrollIndicator={false}
       >
         {/* Back button */}
-        <BackButton onPress={onBack ?? (() => {})} />
+        <BackButton onPress={onBack ?? (() => { })} />
 
         {/* Title + subtitle */}
         <Animated.View style={[styles.titleBlock, { transform: [{ translateY: slideAnim }] }]}>
@@ -103,12 +118,15 @@ export default function EducationBasedGoalPlanner({
             Here's what we're planning{'\n'}for{' '}
             <Text style={styles.titleBold}>{childName}</Text>
           </Text>
-          {mode === 'custom' && (
-            <Text style={styles.subtitle}>
-              Taking into account the possible inflation,{'\n'}
-              and based on the child's age & dream.
-            </Text>
-          )}
+          <Animated.Text
+            style={[
+              styles.subtitle,
+              { opacity: subtitleFade, transform: [{ translateY: subtitleSlide }] },
+            ]}
+          >
+            Taking into account the possible inflation,{'\n'}
+            and based on the child's age & dream.
+          </Animated.Text>
         </Animated.View>
 
         {/* Goal card */}
@@ -140,7 +158,10 @@ export default function EducationBasedGoalPlanner({
         <View style={styles.toggleRow}>
           <Pressable
             style={[styles.toggleBtn, mode === 'ideal' && styles.toggleBtnActive]}
-            onPress={() => setMode('ideal')}
+            onPress={() => {
+              setSipAmount(idealSipAmount);
+              setMode('ideal');
+            }}
           >
             <Text style={[styles.toggleTitle, mode === 'ideal' && styles.toggleTitleActive]}>
               Ideal
