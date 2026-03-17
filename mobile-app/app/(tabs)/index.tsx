@@ -12,6 +12,7 @@ import { useChild, useChildren } from "@/hooks/useChildren";
 import { useEducationGoals } from "@/hooks/useGoals";
 import { useUser } from "@/hooks/useUser";
 import { Goal } from "@/types/investment";
+import { StatusBar } from "expo-status-bar";
 
 function getAge(dateOfBirth: Date): number {
   const today = new Date();
@@ -80,6 +81,7 @@ export default function HomeScreen() {
 
   return (
     <View style={[styles.screen, { paddingTop: insets.top }]}>
+      <StatusBar style="light" backgroundColor="#2848F1" />
       <ScrollView
         style={styles.scroll}
         contentContainerStyle={[
@@ -89,7 +91,9 @@ export default function HomeScreen() {
         showsVerticalScrollIndicator={false}
       >
         {/* ── Blue fund value header ── */}
-        <FundValueHeader />
+        <View style={styles.headerWrapper}>
+          <FundValueHeader />
+        </View>
 
         {/* ── KYC steps ── */}
         {showKycCard && (
@@ -167,6 +171,12 @@ const styles = StyleSheet.create({
     backgroundColor: "#FFFFFF",
     borderRadius: 24,
     overflow: "hidden",
+  },
+  headerWrapper: {
+    backgroundColor: "#2848F1",
+    paddingBottom: 20,
+    marginTop: -16,
+    paddingTop: 16,
   },
   planCardWrapper: {
     marginHorizontal: 16,

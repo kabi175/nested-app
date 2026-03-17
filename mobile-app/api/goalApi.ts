@@ -1,31 +1,37 @@
 import type { Goal } from "@/types/investment";
 import type { AxiosInstance } from "axios";
 
-export const getGoals = async (api: AxiosInstance, type: "education" | "super_fd"): Promise<Goal[]> => {
-  console.log("fetching goals for type", type);
+export const getGoals = async (
+  api: AxiosInstance,
+  type: "education" | "super_fd",
+): Promise<Goal[]> => {
+  console.debug("fetching goals for type", type);
   const { data } = await api.get(`/goals?type=${type}`);
   return (data.data ?? []).map((goal: GoalDTO): Goal => mapGoalToGoal(goal));
 };
 
-export const getGoalsByBasketName = async (api: AxiosInstance, basketName: string): Promise<Goal[]> => {
+export const getGoalsByBasketName = async (
+  api: AxiosInstance,
+  basketName: string,
+): Promise<Goal[]> => {
   const { data } = await api.get(`/goals/by-basket/${basketName}`);
   return (data.data ?? []).map((goal: GoalDTO): Goal => mapGoalToGoal(goal));
 };
 
 export const deleteGoal = async (
   api: AxiosInstance,
-  goalId: string
+  goalId: string,
 ): Promise<void> => {
   await api.delete(`/goals/${goalId}`);
 };
 
 export const getGoal = async (
   api: AxiosInstance,
-  id: string
+  id: string,
 ): Promise<Goal> => {
   const { data } = await api.get(`/goals/${id}`);
   const goals = (data.data ?? []).map(
-    (goal: GoalDTO): Goal => mapGoalToGoal(goal)
+    (goal: GoalDTO): Goal => mapGoalToGoal(goal),
   );
   if (goals.length === 0) {
     throw new Error("Goal not found");
@@ -43,7 +49,7 @@ export type CreateGoalRequest = {
 };
 export const createGoal = async (
   api: AxiosInstance,
-  goals: CreateGoalRequest[]
+  goals: CreateGoalRequest[],
 ): Promise<Goal[]> => {
   const payload = goals.map((goal) => {
     const payloadItem: any = {
@@ -69,7 +75,7 @@ export const createGoal = async (
 
 export const updateGoal = async (
   api: AxiosInstance,
-  goal: UpdateGoalRequest
+  goal: UpdateGoalRequest,
 ): Promise<Goal> => {
   const payload = {
     id: goal.id,
@@ -78,14 +84,16 @@ export const updateGoal = async (
     target_date: goal.target_date.toLocaleDateString("en-CA"),
     education: {
       id: goal.educationId,
-    }
-  }
+    },
+  };
   console.log("updateGoal payload education:", payload.education);
 
   const { data } = await api.put(`/goals`, { data: [payload] });
   console.log("updateGoal response:", data);
   // Handle array response - API returns array of goals
-  const goals = (data.data ?? []).map((goal: GoalDTO): Goal => mapGoalToGoal(goal));
+  const goals = (data.data ?? []).map(
+    (goal: GoalDTO): Goal => mapGoalToGoal(goal),
+  );
   if (goals.length === 0) {
     throw new Error("Goal not found in response");
   }
@@ -98,7 +106,7 @@ export type UpdateGoalRequest = {
   target_amount: number;
   target_date: Date;
   educationId: string;
-}
+};
 
 export type GoalDTO = {
   id: string;

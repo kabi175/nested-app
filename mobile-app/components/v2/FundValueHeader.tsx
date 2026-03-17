@@ -1,10 +1,10 @@
-import { TrendingDown, TrendingUp } from "lucide-react-native";
-import React from "react";
-import { StyleSheet, Text, View } from "react-native";
 import { useChildren } from "@/hooks/useChildren";
 import { useEducationGoals } from "@/hooks/useGoals";
 import { Child } from "@/types/child";
 import { Goal } from "@/types/investment";
+import { TrendingDown, TrendingUp } from "lucide-react-native";
+import React from "react";
+import { StyleSheet, Text, View } from "react-native";
 
 // ─── Helpers ────────────────────────────────────────────────────────────────
 function getAge(dateOfBirth: Date): number {
@@ -124,7 +124,7 @@ function Chip({ dot, label }: { dot: string; label: string }) {
 // ─── Styles ─────────────────────────────────────────────────────────────────
 const styles = StyleSheet.create({
   card: {
-    backgroundColor: "#3137D5",
+    backgroundColor: "#5a7df6",
     borderRadius: 24,
     padding: 20,
     paddingBottom: 18,
