@@ -2,6 +2,7 @@ import { router } from "expo-router";
 import { ArrowLeft } from "lucide-react-native";
 import React, { useMemo, useState } from "react";
 import {
+  ActivityIndicator,
   Pressable,
   StyleSheet,
   Text,
@@ -45,6 +46,14 @@ export default function SelectChildScreen({
 }: SelectChildScreenProps) {
   const { data: children = [], isLoading } = useChildren();
   const [selectedChildId, setSelectedChildId] = useState<string | null>(null);
+
+  if (isLoading && children.length === 0) {
+    return (
+      <SafeAreaView style={styles.safeArea} edges={["top", "bottom"]}>
+        <ActivityIndicator style={{ flex: 1 }} size="large" color="#4F8BD6" />
+      </SafeAreaView>
+    );
+  }
 
   const hideAddChild = children.length === 1 || children.length >= MAX_CHILDREN;
 
@@ -97,9 +106,7 @@ export default function SelectChildScreen({
               onSelectChild={setSelectedChildId}
             />
           ) : (
-            <Text style={styles.emptyText}>
-              {isLoading ? "Loading…" : "No children added yet."}
-            </Text>
+            <Text style={styles.emptyText}>No children added yet.</Text>
           )}
 
           {/* ── Child chips ───────────────────────────────────── */}
