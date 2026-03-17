@@ -63,59 +63,68 @@ export default function FundValueHeader({ currentFundValue }: FundValueHeaderPro
   const isPositive = returnsPercent !== null && returnsPercent >= 0;
 
   return (
-    <View style={styles.card}>
-      {/* ── Fund value ── */}
-      <Text style={styles.eyebrow}>CURRENT FUND VALUE</Text>
-      <View style={styles.amountRow}>
-        <Text style={styles.lockIcon}>🔒</Text>
-        <Text style={styles.amount}>
-          {fundValue === 0 ? "₹0.00" : formatCurrency(fundValue)}
-        </Text>
-      </View>
-
-      {/* ── Monthly promise + Growth ── */}
-      <View style={styles.statsRow}>
-        <View>
-          <Text style={styles.statLabel}>MONTHLY PROMISE</Text>
-          <Text style={styles.statValue}>
-            {monthlyPromise > 0 ? formatCurrency(monthlyPromise) : "—"}
+    <View>
+      {/* ── Frosted card ── */}
+      <View style={styles.card}>
+        {/* ── Fund value ── */}
+        <Text style={styles.eyebrow}>CURRENT FUND VALUE</Text>
+        <View style={styles.amountRow}>
+          <View style={styles.lockBadge}>
+            <Text style={styles.lockIcon}>🔒</Text>
+          </View>
+          <Text style={styles.amount}>
+            {fundValue === 0 ? "₹0.00" : formatCurrency(fundValue)}
           </Text>
         </View>
-        <View style={styles.divider} />
-        <View>
-          <Text style={styles.statLabel}>GROWTH</Text>
-          <View style={styles.growthRow}>
-            {returnsPercent !== null ? (
-              <>
-                {isPositive
-                  ? <TrendingUp size={16} color="#4ADE80" strokeWidth={2.5} />
-                  : <TrendingDown size={16} color="#F87171" strokeWidth={2.5} />}
-                <Text style={[styles.statValue, { color: isPositive ? "#4ADE80" : "#F87171" }]}>
-                  {isPositive ? "+" : ""}{returnsPercent.toFixed(1)}%
-                </Text>
-              </>
-            ) : (
-              <Text style={styles.statValue}>—</Text>
-            )}
+
+        {/* ── Horizontal separator ── */}
+        <View style={styles.separator} />
+
+        {/* ── Monthly promise + Growth ── */}
+        <View style={styles.statsRow}>
+          <View>
+            <Text style={styles.statLabel}>MONTHLY PROMISE</Text>
+            <Text style={styles.statValue}>
+              {monthlyPromise > 0 ? formatCurrency(monthlyPromise) : "—"}
+            </Text>
+          </View>
+          <View style={styles.growthBlock}>
+            <Text style={[styles.statLabel, styles.statLabelRight]}>GROWTH</Text>
+            <View style={styles.growthRow}>
+              {returnsPercent !== null ? (
+                <>
+                  {isPositive
+                    ? <TrendingUp size={16} color="#4ADE80" strokeWidth={2.5} />
+                    : <TrendingDown size={16} color="#F87171" strokeWidth={2.5} />}
+                  <Text style={[styles.statValue, { color: isPositive ? "#4ADE80" : "#F87171" }]}>
+                    {isPositive ? "+" : ""}{returnsPercent.toFixed(1)}%
+                  </Text>
+                </>
+              ) : (
+                <Text style={styles.statValue}>—</Text>
+              )}
+            </View>
           </View>
         </View>
       </View>
 
-      {/* ── Info chips ── */}
-      <View style={styles.chipsRow}>
-        <Chip dot="#FF8B8B" label={`${childName} · Age ${childAge}`} />
-        <Chip dot="#A78BFA" label={`Goal ${goalAmount}`} />
-        <Chip dot="#A78BFA" label={`${goalYear}`} />
-      </View>
+      {/* ── Info chips — outside the card on the blue bg ── */}
+      {child && goal && (
+        <View style={styles.chipsRow}>
+          <Chip label={`${childName} · Age ${childAge}`} />
+          <Chip label={`Goal ${goalAmount}`} />
+          <Chip label={`${goalYear}`} />
+        </View>
+      )}
     </View>
   );
 }
 
 // ─── Chip ───────────────────────────────────────────────────────────────────
-function Chip({ dot, label }: { dot: string; label: string }) {
+function Chip({ label }: { label: string }) {
   return (
     <View style={styles.chip}>
-      <View style={[styles.chipDot, { backgroundColor: dot }]} />
+      <View style={styles.chipDot} />
       <Text style={styles.chipLabel}>{label}</Text>
     </View>
   );
@@ -124,10 +133,10 @@ function Chip({ dot, label }: { dot: string; label: string }) {
 // ─── Styles ─────────────────────────────────────────────────────────────────
 const styles = StyleSheet.create({
   card: {
-    backgroundColor: "#5a7df6",
+    backgroundColor: "rgba(255,255,255,0.15)",
     borderRadius: 24,
     padding: 20,
-    paddingBottom: 18,
+    paddingBottom: 20,
     marginHorizontal: 16,
   },
   eyebrow: {
@@ -135,40 +144,53 @@ const styles = StyleSheet.create({
     fontWeight: "600",
     color: "rgba(255,255,255,0.65)",
     letterSpacing: 1.1,
-    marginBottom: 8,
+    marginBottom: 10,
   },
   amountRow: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 6,
-    marginBottom: 16,
+    gap: 10,
+    marginBottom: 18,
+  },
+  lockBadge: {
+    width: 44,
+    height: 44,
+    borderRadius: 12,
+    backgroundColor: "rgba(255,255,255,0.2)",
+    alignItems: "center",
+    justifyContent: "center",
   },
   lockIcon: {
     fontSize: 22,
   },
   amount: {
-    fontSize: 36,
+    fontSize: 38,
     fontWeight: "700",
     color: "#FFFFFF",
     letterSpacing: -0.5,
   },
+  separator: {
+    height: StyleSheet.hairlineWidth,
+    backgroundColor: "rgba(255,255,255,0.25)",
+    marginBottom: 16,
+  },
   statsRow: {
     flexDirection: "row",
-    alignItems: "center",
-    gap: 16,
-    marginBottom: 18,
+    alignItems: "flex-start",
+    justifyContent: "space-between",
   },
-  divider: {
-    width: 1,
-    height: 28,
-    backgroundColor: "rgba(255,255,255,0.25)",
+  growthBlock: {
+    alignItems: "flex-end",
   },
   statLabel: {
     fontSize: 10,
     fontWeight: "600",
     color: "rgba(255,255,255,0.6)",
     letterSpacing: 0.8,
-    marginBottom: 2,
+    marginBottom: 4,
+  },
+  statLabelRight: {
+    textAlign: "right",
   },
   statValue: {
     fontSize: 15,
@@ -178,27 +200,30 @@ const styles = StyleSheet.create({
   growthRow: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 2,
+    gap: 4,
   },
-
   chipsRow: {
     flexDirection: "row",
     gap: 8,
     flexWrap: "wrap",
+    paddingHorizontal: 16,
+    paddingTop: 16,
   },
   chip: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 5,
-    backgroundColor: "rgba(255,255,255,0.15)",
+    gap: 6,
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.4)",
     borderRadius: 20,
-    paddingHorizontal: 10,
-    paddingVertical: 5,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
   },
   chipDot: {
     width: 7,
     height: 7,
     borderRadius: 4,
+    backgroundColor: "rgba(255,255,255,0.7)",
   },
   chipLabel: {
     fontSize: 12,
