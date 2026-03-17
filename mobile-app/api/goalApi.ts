@@ -136,7 +136,6 @@ export type GoalDTO = {
 };
 
 export function mapGoalToGoal(goal: GoalDTO): Goal {
-  console.debug("Mapping GoalDTO to Goal:", goal);
   return {
     id: goal.id,
     title: goal.title,
