@@ -6,7 +6,7 @@ module.exports = () => ({
     slug: "nested",
     owner: "kabi175",
     version: "1.5.2",
-    icon: "./assets/images/v2/logo-default.svg",
+    icon: "./assets/images/v2/logo-with-bg.png",
     scheme: "nested",
     android: {
       package: "com.nexted.app",
@@ -42,10 +42,10 @@ module.exports = () => ({
       [
         "expo-splash-screen",
         {
-          image: "./assets/images/v2/logo-default.svg",
-          imageWidth: 200,
-          resizeMode: "contain",
-          backgroundColor: "#ffffff",
+          image: "./assets/images/v2/splash.png",
+          imageWidth: 778,
+          resizeMode: "cover",
+          backgroundColor: "#2F4BFF",
         },
       ],
       [
