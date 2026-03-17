@@ -14,18 +14,26 @@ import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context"
 
 import AnimatedNest from "@/components/v2/AnimatedNest";
 import Button from "@/components/v2/Button";
+import DateInput from "@/components/v2/DateInput";
 import TextInput from "@/components/v2/TextInput";
 import { useCreateChild } from "@/hooks/useChildMutations";
+import { StatusBar } from "expo-status-bar";
+
+const MIN_DOB = (() => {
+  const d = new Date();
+  d.setFullYear(d.getFullYear() - 25);
+  return d;
+})();
 
 // Local form state
 interface ChildFormState {
   name: string;
-  age: string;
+  dob: Date | null;
 }
 
 const defaultLocalValues: ChildFormState = {
   name: "",
-  age: "",
+  dob: null,
 };
 
 export default function CreateChild() {
@@ -34,7 +42,7 @@ export default function CreateChild() {
   // Touched state to only show errors after the user interacts
   const [touched, setTouched] = useState<Record<keyof ChildFormState, boolean>>({
     name: false,
-    age: false,
+    dob: false,
   });
 
   const [submitError, setSubmitError] = useState("");
@@ -49,7 +57,7 @@ export default function CreateChild() {
     }
   };
 
-  const handleFieldChange = (field: keyof ChildFormState, value: string) => {
+  const handleFieldChange = (field: "name", value: string) => {
     setValues((prev) => ({ ...prev, [field]: value }));
     setSubmitError("");
   };
@@ -58,9 +66,15 @@ export default function CreateChild() {
     setTouched((prev) => ({ ...prev, [field]: true }));
   };
 
+  const handleDobChange = (date: Date) => {
+    setValues((prev) => ({ ...prev, dob: date }));
+    setSubmitError("");
+    setTouched((prev) => ({ ...prev, dob: true }));
+  };
+
   // Local Validation
   const getErrors = () => {
-    const errs: Partial<ChildFormState> = {};
+    const errs: Partial<Record<keyof ChildFormState, string>> = {};
 
     // Name validation: 3-50 chars
     if (!values.name) {
@@ -71,17 +85,13 @@ export default function CreateChild() {
       errs.name = "Name must be less than 50 characters.";
     }
 
-    // Age validation: 0-25
-    if (!values.age) {
-      errs.age = "Age is required.";
-    } else {
-      const ageNum = parseInt(values.age, 10);
-      if (isNaN(ageNum)) {
-        errs.age = "Age must be a valid number.";
-      } else if (ageNum < 0 || ageNum > 25) {
-        errs.age = "Age must be between 0 and 25.";
-      }
+    // DOB validation
+    if (!values.dob) {
+      errs.dob = "Date of birth is required.";
+    } else if (values.dob > new Date()) {
+      errs.dob = "Date of birth cannot be in the future.";
     }
+
     return errs;
   };
 
@@ -89,8 +99,7 @@ export default function CreateChild() {
   const isValid = Object.keys(errors).length === 0;
 
   const handleSubmit = async () => {
-    // Mark all as touched
-    setTouched({ name: true, age: true });
+    setTouched({ name: true, dob: true });
 
     if (!isValid) return;
 
@@ -98,21 +107,14 @@ export default function CreateChild() {
     setSubmitError("");
 
     try {
-      // Calculate approximate DOB based on simple year subtraction
-      const ageNum = parseInt(values.age, 10);
-      const dob = new Date();
-      dob.setFullYear(dob.getFullYear() - ageNum);
-      dob.setMonth(0);
-      dob.setDate(1);
-
       const payload = {
         firstName: values.name.trim(),
         lastName: " ",
-        dateOfBirth: dob,
+        dateOfBirth: values.dob!,
         investUnderChild: false,
       };
 
-      const child = await createChildMutation(payload);
+      await createChildMutation(payload);
       router.replace(`/child/select`);
     } catch (error: any) {
       console.error("Error creating child:", error);
@@ -130,6 +132,7 @@ export default function CreateChild() {
 
   return (
     <SafeAreaView style={styles.safeArea} edges={["top", "bottom"]}>
+      <StatusBar style="dark" backgroundColor="#F9FAF9" />
       <KeyboardAvoidingView
         style={styles.container}
         behavior={Platform.OS === "ios" ? "padding" : "height"}
@@ -175,16 +178,15 @@ export default function CreateChild() {
               autoCapitalize="words"
             />
 
-            <TextInput
-              label="Age"
-              placeholder="How old are they?"
-              value={values.age}
-              onChangeText={(val) => handleFieldChange("age", val)}
-              onBlur={() => handleBlur("age")}
-              error={errors.age}
-              touched={touched.age}
-              keyboardType="number-pad"
-              maxLength={2}
+            <DateInput
+              label="Date of birth"
+              value={values.dob}
+              onChange={handleDobChange}
+              max={new Date()}
+              min={MIN_DOB}
+              placeholder="DD/MM/YYYY"
+              error={errors.dob}
+              touched={touched.dob}
             />
 
             {submitError ? (
@@ -199,7 +201,7 @@ export default function CreateChild() {
             title="Add to nest"
             onPress={handleSubmit}
             loading={isSubmitting}
-            disabled={!isValid && (touched.name || touched.age)}
+            disabled={!isValid && (touched.name || touched.dob)}
           />
         </View>
       </KeyboardAvoidingView>

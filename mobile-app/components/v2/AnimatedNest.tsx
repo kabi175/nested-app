@@ -1,3 +1,4 @@
+import { useFocusEffect } from "expo-router";
 import React, { useCallback, useRef, useState } from "react";
 import { Image, StyleSheet, View } from "react-native";
 import Animated, {
@@ -6,7 +7,7 @@ import Animated, {
   useSharedValue,
   withTiming,
 } from "react-native-reanimated";
-import { useFocusEffect } from "expo-router";
+import Egg from "./Egg";
 
 interface AnimatedNestProps {
   width?: number;
@@ -24,6 +25,19 @@ const NEST_FRAMES = [
 ];
 
 const TOTAL_FRAMES = NEST_FRAMES.length;
+
+const NEST_ASPECT = 388 / 188; // source frame aspect ratio
+const EGG_W = 44;
+const EGG_H = 58;
+
+function getEggLayout(containerW: number, containerH: number) {
+  const renderedNestH = containerW / NEST_ASPECT;
+  const nestTop = (containerH - renderedNestH) / 2;
+  return {
+    eggLeft: containerW / 2 - EGG_W / 2,
+    eggTop: nestTop + renderedNestH * 0.20 - EGG_H / 2,
+  };
+}
 
 export default function AnimatedNest({
   width = 220,
@@ -85,23 +99,25 @@ export default function AnimatedNest({
     transform: [{ scale: eggScale.value }],
   }));
 
+  const { eggTop, eggLeft } = getEggLayout(width, height);
+
   return (
     <View style={[styles.container, { width, height }]}>
-      {/* Egg Layer — only mounted after nest finishes */}
-      {showEgg && (
-        <Animated.Image
-          source={require("../../assets/images/v2/onboarding/egg.png")}
-          style={[styles.egg, animatedEggStyle]}
-          resizeMode="contain"
-        />
-      )}
-
       {/* Active nest frame — simple swap, no stacking needed */}
       <Image
         source={NEST_FRAMES[currentFrame]}
         style={styles.nestFrame}
         resizeMode="contain"
       />
+
+      {/* Egg Layer — only mounted after nest finishes */}
+      {showEgg && (
+        <Animated.View
+          style={[styles.egg, { top: eggTop, left: eggLeft, width: EGG_W, height: EGG_H }, animatedEggStyle]}
+        >
+          <Egg color="#75b7ee" width={EGG_W} height={EGG_H} animated={false} />
+        </Animated.View>
+      )}
     </View>
   );
 }
@@ -113,10 +129,7 @@ const styles = StyleSheet.create({
     position: "relative",
   },
   egg: {
-    width: "40%",
-    height: "60%",
     position: "absolute",
-    top: "10%",
     zIndex: 1,
   },
   nestFrame: {
