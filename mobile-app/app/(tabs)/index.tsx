@@ -91,7 +91,7 @@ export default function HomeScreen() {
         style={styles.scroll}
         contentContainerStyle={[
           styles.content,
-          { paddingBottom: Math.max(insets.bottom + 100, 120) },
+          { paddingBottom: Math.max(insets.bottom, 32) },
         ]}
         showsVerticalScrollIndicator={false}
       >
@@ -129,12 +129,12 @@ export default function HomeScreen() {
 
         {/* ── What activates after KYC ── */}
         {showKycCard && <WhatActivatesSection />}
-      </ScrollView>
 
-      {/* ── Sticky bottom CTA ── */}
-      <View style={[styles.stickyBottom, { paddingBottom: Math.max(insets.bottom, 16) }]}>
-        <Button title="Start Saving Now →" onPress={handleStartSaving} />
-      </View>
+        {/* ── Bottom CTA ── */}
+        <View style={styles.bottomCta}>
+          <Button title="Start Saving Now →" onPress={handleStartSaving} />
+        </View>
+      </ScrollView>
     </View>
   );
 }
@@ -199,15 +199,7 @@ const styles = StyleSheet.create({
     marginHorizontal: 16,
     gap: 12,
   },
-  stickyBottom: {
-    position: "absolute",
-    bottom: 0,
-    left: 0,
-    right: 0,
-    paddingHorizontal: 16,
-    paddingTop: 12,
-    backgroundColor: "#F5F5FA",
-    borderTopWidth: StyleSheet.hairlineWidth,
-    borderTopColor: "#E5E5EA",
+  bottomCta: {
+    marginHorizontal: 16,
   },
 });
