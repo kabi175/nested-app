@@ -111,7 +111,7 @@ export type UpdateGoalRequest = {
 export type GoalDTO = {
   id: string;
   title: string;
-  child_id: string;
+  child: { id: string; name: string };
   target_amount: number;
   current_amount: number;
   invested_amount: number;
@@ -136,10 +136,11 @@ export type GoalDTO = {
 };
 
 export function mapGoalToGoal(goal: GoalDTO): Goal {
+  console.debug("Mapping GoalDTO to Goal:", goal);
   return {
     id: goal.id,
     title: goal.title,
-    childId: goal.child_id,
+    childId: goal.child.id,
     targetAmount: goal.target_amount,
     currentAmount: goal.current_amount,
     investedAmount: goal.invested_amount,
