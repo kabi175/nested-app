@@ -45,17 +45,19 @@ export const EducationGoalCard: React.FC<EducationGoalCardProps> = ({
           <Text style={styles.amountText}>{formatCompactCurrency(amount)}</Text>
         </View>
 
-        {/* Bottom row: College Type and Timeframe */}
+        {/* Bottom row: College Type */}
         <View style={styles.bottomRow}>
           <Text style={styles.detailText}>{collegeType}</Text>
-          <BulletSeparator />
-          <Text style={styles.detailText}>{yearsFromNow} years from now</Text>
         </View>
       </View>
 
-      {/* Right Section: Visual Asset */}
+      {/* Right Section: Visual Asset + Timeframe */}
       <View style={styles.rightView}>
         <GraduationCap width={90} height={90} />
+        <View style={styles.yearsFromNowRow}>
+          <BulletSeparator />
+          <Text style={styles.detailText}>{yearsFromNow} years from now</Text>
+        </View>
       </View>
     </View>
   );
@@ -63,8 +65,7 @@ export const EducationGoalCard: React.FC<EducationGoalCardProps> = ({
 
 const styles = StyleSheet.create({
   card: {
-    width: 340,
-    height: 110,
+    width: '100%',
     backgroundColor: "#3D3DE8",
     borderRadius: 16,
     flexDirection: "row",
@@ -115,6 +116,11 @@ const styles = StyleSheet.create({
     color: "#FFFFFF",
     fontSize: 12,
     opacity: 0.85,
+  },
+  yearsFromNowRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginTop: 8,
   },
   bulletSeparator: {
     color: "#FFFFFF",

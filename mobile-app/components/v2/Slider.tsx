@@ -167,7 +167,7 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     height: 10,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: '#EAEAF2',
     borderRadius: 5,
   },
   trackActive: {

@@ -68,6 +68,10 @@ export default function EducationBasedGoalPlanner({
   const slideAnim = useRef(new Animated.Value(24)).current;
   const subtitleFade = useRef(new Animated.Value(0)).current;
   const subtitleSlide = useRef(new Animated.Value(8)).current;
+  const subtitleMaxHeight = useRef(new Animated.Value(0)).current;
+  const [customMounted, setCustomMounted] = useState(false);
+  const customFade = useRef(new Animated.Value(0)).current;
+  const customSlide = useRef(new Animated.Value(12)).current;
 
   useEffect(() => {
     Animated.parallel([
@@ -78,14 +82,31 @@ export default function EducationBasedGoalPlanner({
 
   useEffect(() => {
     if (mode === 'custom') {
+      // Subtitle in
       subtitleFade.setValue(0);
       subtitleSlide.setValue(8);
+      subtitleMaxHeight.setValue(0);
       Animated.parallel([
         Animated.timing(subtitleFade, { toValue: 1, duration: 250, useNativeDriver: true }),
         Animated.timing(subtitleSlide, { toValue: 0, duration: 250, useNativeDriver: true }),
       ]).start();
+      Animated.timing(subtitleMaxHeight, { toValue: 60, duration: 250, useNativeDriver: false }).start();
+      // Custom controls in
+      setCustomMounted(true);
+      customFade.setValue(0);
+      customSlide.setValue(12);
+      Animated.parallel([
+        Animated.timing(customFade, { toValue: 1, duration: 250, useNativeDriver: true }),
+        Animated.timing(customSlide, { toValue: 0, duration: 250, useNativeDriver: true }),
+      ]).start();
     } else {
+      // Subtitle out
       Animated.timing(subtitleFade, { toValue: 0, duration: 150, useNativeDriver: true }).start();
+      Animated.timing(subtitleMaxHeight, { toValue: 0, duration: 150, useNativeDriver: false }).start();
+      // Custom controls out then unmount
+      Animated.timing(customFade, { toValue: 0, duration: 200, useNativeDriver: true }).start(() => {
+        setCustomMounted(false);
+      });
     }
   }, [mode]);
 
@@ -118,15 +139,17 @@ export default function EducationBasedGoalPlanner({
             Here's what we're planning{'\n'}for{' '}
             <Text style={styles.titleBold}>{childName}</Text>
           </Text>
-          <Animated.Text
-            style={[
-              styles.subtitle,
-              { opacity: subtitleFade, transform: [{ translateY: subtitleSlide }] },
-            ]}
-          >
-            Taking into account the possible inflation,{'\n'}
-            and based on the child's age & dream.
-          </Animated.Text>
+          <Animated.View style={{ maxHeight: subtitleMaxHeight, overflow: 'hidden' }}>
+            <Animated.Text
+              style={[
+                styles.subtitle,
+                { opacity: subtitleFade, transform: [{ translateY: subtitleSlide }] },
+              ]}
+            >
+              Taking into account the possible inflation,{'\n'}
+              and based on the child's age & dream.
+            </Animated.Text>
+          </Animated.View>
         </Animated.View>
 
         {/* Goal card */}
@@ -185,8 +208,10 @@ export default function EducationBasedGoalPlanner({
         </View>
 
         {/* Custom controls */}
-        {mode === 'custom' && (
-          <View style={styles.customControls}>
+        {customMounted && (
+          <Animated.View
+            style={[styles.customControls, { opacity: customFade, transform: [{ translateY: customSlide }] }]}
+          >
             <Slider
               variant="minimal"
               min={minSip}
@@ -202,7 +227,7 @@ export default function EducationBasedGoalPlanner({
               onAmountChange={setLumpSumAmount}
             />
             <StepUpInput value={stepUp} onChange={setStepUp} />
-          </View>
+          </Animated.View>
         )}
 
         {/* Projection */}
@@ -261,9 +286,7 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     lineHeight: 22,
   },
-  goalCardWrapper: {
-    alignItems: 'center',
-  },
+  goalCardWrapper: {},
   statsRow: {
     flexDirection: 'row',
     gap: 12,
