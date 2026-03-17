@@ -5,9 +5,11 @@ import Slider from "@/components/v2/Slider";
 import { LumpSumInput } from "@/components/v2/planner/LumpSumInput";
 import ModeToggle, { PlannerMode } from "@/components/v2/planner/ModeToggle";
 import NestGrowthCard from "@/components/v2/planner/NestGrowthCard";
+import { cartAtom } from "@/atoms/cart";
 import { useChild } from "@/hooks/useChildren";
 import { useCreateOrders } from "@/hooks/useCreateOrders";
 import { useGoalCreation } from "@/hooks/useGoalCreation";
+import { useSetAtom } from "jotai";
 import { formatCurrency } from "@/utils/formatters";
 import { computeMinimumSIPAmount } from "@/utils/sip";
 import { router, useLocalSearchParams } from "expo-router";
@@ -76,6 +78,7 @@ export default function Planner() {
     const { data: child } = useChild(child_id);
     const createGoalMutation = useGoalCreation();
     const createOrdersMutation = useCreateOrders();
+    const setCart = useSetAtom(cartAtom);
 
     const sipMin = 4000; //TODO: compute this value based on goal
     const quickSelectOptions = computeQuickSelectOptions(sipMin);
@@ -185,8 +188,9 @@ export default function Planner() {
                 });
             }
 
-            await createOrdersMutation.mutateAsync({ orders });
-            router.replace("/child");
+            const createdOrders = await createOrdersMutation.mutateAsync({ orders });
+            setCart(createdOrders);
+            router.replace({ pathname: "/child/[child_id]/loader", params: { child_id } });
         } catch {
             Alert.alert("Something went wrong", "Please try again.");
         }

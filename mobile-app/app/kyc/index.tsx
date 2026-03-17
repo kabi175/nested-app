@@ -56,8 +56,12 @@ export default function KycIntroScreen() {
     }
   };
 
+  const onDoLater = () => {
+    router.replace("/(tabs)");
+  }
+
   return (
-    <PendingActionScreen onContinue={handleContinue} />
+    <PendingActionScreen onContinue={handleContinue} onDoLater={onDoLater} />
   );
 }
 

@@ -118,7 +118,11 @@ export default function GoalPlannerScreen() {
         setCart(orderResponse);
 
         // 6. Navigate
-        router.push("/testimonials");
+        router.push({
+            pathname: "/child/[child_id]/testimonials",
+            params: { child_id }
+        }
+        );
     };
 
 

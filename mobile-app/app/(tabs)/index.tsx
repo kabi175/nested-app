@@ -59,6 +59,7 @@ export default function HomeScreen() {
   const showKycCard = !isKycCompleted || isGoalsEmpty;
 
   function handleContinueKyc() {
+    console.log("kycStatus", user?.kycStatus)
     if (isKycCompleted) {
       handleStartSaving();
     } else {
