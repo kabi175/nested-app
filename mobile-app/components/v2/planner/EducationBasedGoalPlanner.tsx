@@ -8,6 +8,8 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { StatusBar } from 'expo-status-bar';
+import BackButton from '../BackButton';
 import Button from '../Button';
 import Slider from '../Slider';
 import { EducationGoalCard } from './EducationGoalCard';
@@ -74,15 +76,14 @@ export default function EducationBasedGoalPlanner({
 
   return (
     <SafeAreaView style={styles.safe}>
+      <StatusBar style="dark" backgroundColor="#FFFFFF" />
       <Animated.ScrollView
         style={{ opacity: fadeAnim }}
         contentContainerStyle={styles.content}
         showsVerticalScrollIndicator={false}
       >
         {/* Back button */}
-        <Pressable style={styles.backBtn} onPress={onBack} hitSlop={12}>
-          <Text style={styles.backArrow}>←</Text>
-        </Pressable>
+        <BackButton onPress={onBack ?? (() => {})} />
 
         {/* Title + subtitle */}
         <Animated.View style={[styles.titleBlock, { transform: [{ translateY: slideAnim }] }]}>
@@ -207,20 +208,6 @@ const styles = StyleSheet.create({
     paddingTop: 16,
     paddingBottom: 24,
     gap: 16,
-  },
-  backBtn: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    backgroundColor: '#F0F0F8',
-    alignItems: 'center',
-    justifyContent: 'center',
-    alignSelf: 'flex-start',
-  },
-  backArrow: {
-    fontSize: 18,
-    color: '#3137D5',
-    lineHeight: 22,
   },
   titleBlock: {
     alignItems: 'center',
