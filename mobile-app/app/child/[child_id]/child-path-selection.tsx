@@ -4,6 +4,7 @@ import LoadingScreen from "@/components/v2/LoadingScreen";
 import { useChild } from "@/hooks/useChildren";
 import { useEducations } from "@/hooks/useEducations";
 import { router, useLocalSearchParams } from "expo-router";
+import { StatusBar } from "expo-status-bar";
 
 export default function ChildPathSelectionRoute() {
   const { child_id } = useLocalSearchParams<{
@@ -24,27 +25,30 @@ export default function ChildPathSelectionRoute() {
   }
 
   return (
-    <ChildPathSelectionScreen
-      childName={child?.firstName}
-      courses={courses}
-      institutions={institutions}
-      onBack={() => router.back()}
-      onStartPlanning={(pathId, college) => {
+    <>
+      <StatusBar style="dark" backgroundColor="#FFFFFF" />
+      <ChildPathSelectionScreen
+        childName={child?.firstName}
+        courses={courses}
+        institutions={institutions}
+        onBack={() => router.back()}
+        onStartPlanning={(pathId, college) => {
 
-        const education = college
-          ? institutions?.find((i) => i.name === college)
-          : courses?.find((c) => c.name === pathId);
+          const education = college
+            ? institutions?.find((i) => i.name === college)
+            : courses?.find((c) => c.name === pathId);
 
-        if (!education) return;
-        router.push({
-          pathname: "/child/[child_id]/education/[education_id]",
-          params: { child_id, education_id: education.id },
-        });
-      }}
-      onNotSure={() => {
-        // Navigate forward without a specific path
-        router.push("/goal/create" as any);
-      }}
-    />
+          if (!education) return;
+          router.push({
+            pathname: "/child/[child_id]/education/[education_id]",
+            params: { child_id, education_id: education.id },
+          });
+        }}
+        onNotSure={() => {
+          // Navigate forward without a specific path
+          router.push("/goal/create" as any);
+        }}
+      />
+    </>
   );
 }

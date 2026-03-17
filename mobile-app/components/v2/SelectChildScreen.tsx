@@ -12,6 +12,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 
 import { useChildren } from "@/hooks/useChildren";
 import type { Child } from "@/types/child";
+import { StatusBar } from "expo-status-bar";
 import Button from "./Button";
 import ChildChip from "./ChildChip";
 import NestEggs from "./NestEggs";
@@ -78,6 +79,7 @@ export default function SelectChildScreen({
 
   return (
     <SafeAreaView style={styles.safeArea} edges={["top", "bottom"]}>
+      <StatusBar style="dark" backgroundColor="#FFFFFF" />
       <View style={styles.root}>
         {/* ── Header ────────────────────────────────────────── */}
         <View style={styles.header}>

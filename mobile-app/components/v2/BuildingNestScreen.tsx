@@ -11,6 +11,7 @@ import Animated, {
 } from "react-native-reanimated";
 
 // SVGs
+import { StatusBar } from "expo-status-bar";
 import LeafImage from "../../assets/images/v2/loading-screen/leaf.svg";
 import NestImage from "../../assets/images/v2/loading-screen/nest.svg";
 import BranchImage from "../../assets/images/v2/loading-screen/stick.svg";
@@ -331,6 +332,7 @@ export default function BuildingNestScreen({
 
   return (
     <View style={styles.container}>
+      <StatusBar style="dark" backgroundColor="#FAFAF7" />
       {/* Container aligning everything in the center */}
       <View style={styles.contentWrapper}>
         {/* Title */}
