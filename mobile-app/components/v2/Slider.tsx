@@ -11,6 +11,7 @@ export interface SliderProps {
   max?: number;
   step?: number;
   initialValue?: number;
+  value?: number;
   onValueChange?: (value: number) => void;
 }
 
@@ -22,10 +23,17 @@ export default function Slider({
   max = 11000,
   step = 10,
   initialValue = 5840,
+  value: controlledValue,
   onValueChange,
 }: SliderProps) {
-  const [value, setValue] = useState(initialValue);
+  const [value, setValue] = useState(controlledValue ?? initialValue);
   const [sliderWidth, setSliderWidth] = useState(0);
+
+  React.useEffect(() => {
+    if (controlledValue !== undefined) {
+      setValue(controlledValue);
+    }
+  }, [controlledValue]);
 
   const handleValueChange = (newValue: number) => {
     setValue(newValue);

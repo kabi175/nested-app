@@ -45,8 +45,10 @@ export default function ChildPathSelectionRoute() {
           });
         }}
         onNotSure={() => {
-          // Navigate forward without a specific path
-          router.push("/goal/create" as any);
+          router.push({
+            pathname: "/child/[child_id]/planner",
+            params: { child_id },
+          });
         }}
       />
     </>
