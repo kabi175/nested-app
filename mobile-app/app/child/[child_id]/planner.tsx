@@ -1,7 +1,6 @@
 import { CreateOrderRequest } from "@/api/paymentAPI";
 import BackButton from "@/components/v2/BackButton";
 import Button from "@/components/v2/Button";
-import OutlineButton from "@/components/v2/OutlineButton";
 import Slider from "@/components/v2/Slider";
 import { LumpSumInput } from "@/components/v2/planner/LumpSumInput";
 import ModeToggle, { PlannerMode } from "@/components/v2/planner/ModeToggle";
@@ -200,7 +199,7 @@ export default function Planner() {
 
     return (
         <SafeAreaView style={styles.safe} edges={["top"]}>
-            <StatusBar barStyle="dark-content" />
+            <StatusBar backgroundColor="#FAFAFA" />
 
             <ScrollView
                 style={styles.scroll}
@@ -286,24 +285,24 @@ export default function Planner() {
                     />
                 </View>
 
-                {/* Outline CTA */}
+                {/* Push notice + CTA to bottom */}
+                <View style={{ flex: 1 }} />
+
+                {/* Notice + CTA */}
                 <View style={styles.section}>
-                    <OutlineButton title="Small contribution, big growth" />
+                    <View style={styles.noticeCard}>
+                        <Text style={styles.noticeText}>Small contribution, big growth</Text>
+                    </View>
                 </View>
-
-                {/* Spacer for fixed bottom button */}
-                <View style={{ height: 90 + insets.bottom }} />
+                <View style={[styles.section, { paddingBottom: insets.bottom + 16 }]}>
+                    <Button
+                        title="That works for me"
+                        onPress={handleSubmit}
+                        loading={isLoading}
+                        disabled={isLoading}
+                    />
+                </View>
             </ScrollView>
-
-            {/* Fixed bottom button */}
-            <View style={[styles.bottomBar, { paddingBottom: insets.bottom + 16 }]}>
-                <Button
-                    title="That works for me"
-                    onPress={handleSubmit}
-                    loading={isLoading}
-                    disabled={isLoading}
-                />
-            </View>
         </SafeAreaView>
     );
 }
@@ -318,6 +317,7 @@ const styles = StyleSheet.create({
         flex: 1,
     },
     scrollContent: {
+        flexGrow: 1,
         paddingHorizontal: 20,
         paddingTop: 16,
     },
@@ -391,15 +391,18 @@ const styles = StyleSheet.create({
     quickChipTextActive: {
         color: "#FFFFFF",
     },
-    bottomBar: {
-        position: "absolute",
-        bottom: 0,
-        left: 0,
-        right: 0,
-        backgroundColor: "#FAFAFA",
-        paddingHorizontal: 20,
-        paddingTop: 12,
-        borderTopWidth: StyleSheet.hairlineWidth,
-        borderTopColor: "#E5E5E5",
+    noticeCard: {
+        borderWidth: 1,
+        borderColor: "#C5CEE0",
+        borderStyle: "dashed",
+        borderRadius: 8,
+        padding: 12,
+        alignItems: "center",
+        backgroundColor: "#6F85F50F",
+    },
+    noticeText: {
+        fontSize: 14,
+        color: "#6E6F7A",
+        textAlign: "center",
     },
 });
