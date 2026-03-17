@@ -42,7 +42,11 @@ export default function CreateChild() {
   const { mutateAsync: createChildMutation } = useCreateChild();
 
   const handleBack = () => {
-    router.back();
+    if (router.canGoBack()) {
+      router.back();
+    } else {
+      router.replace("/")
+    }
   };
 
   const handleFieldChange = (field: keyof ChildFormState, value: string) => {
