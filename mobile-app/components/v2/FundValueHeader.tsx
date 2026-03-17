@@ -1,3 +1,4 @@
+import { TrendingDown, TrendingUp } from "lucide-react-native";
 import React from "react";
 import { StyleSheet, Text, View } from "react-native";
 import { useChildren } from "@/hooks/useChildren";
@@ -52,8 +53,14 @@ export default function FundValueHeader({ currentFundValue }: FundValueHeaderPro
   const childAge = child ? getAge(child.dateOfBirth) : 0;
   const goalAmount = goal ? formatAmount(goal.targetAmount) : "—";
   const goalYear = goal ? new Date(goal.targetDate).getFullYear() : "—";
-  const monthlyPromise = goal?.monthlySip ?? 0;
-  const fundValue = currentFundValue ?? (goal?.currentAmount ?? 0);
+  const monthlyPromise = goals?.map(g => g.monthlySip ?? 0).reduce((a, b) => a + b, 0) ?? 0;
+
+  const currentValue = currentFundValue ?? (goals?.reduce((sum, g) => sum + g.currentAmount, 0) || 0);
+  const invested = goals?.reduce((sum, g) => sum + g.investedAmount, 0) || 0;
+  const fundValue = currentValue;
+
+  const returnsPercent = invested > 0 ? ((currentValue - invested) / invested) * 100 : null;
+  const isPositive = returnsPercent !== null && returnsPercent >= 0;
 
   return (
     <View style={styles.card}>
@@ -78,8 +85,18 @@ export default function FundValueHeader({ currentFundValue }: FundValueHeaderPro
         <View>
           <Text style={styles.statLabel}>GROWTH</Text>
           <View style={styles.growthRow}>
-            <Text style={styles.growthArrow}>↑</Text>
-            <Text style={styles.statValue}>14.2%</Text>
+            {returnsPercent !== null ? (
+              <>
+                {isPositive
+                  ? <TrendingUp size={16} color="#4ADE80" strokeWidth={2.5} />
+                  : <TrendingDown size={16} color="#F87171" strokeWidth={2.5} />}
+                <Text style={[styles.statValue, { color: isPositive ? "#4ADE80" : "#F87171" }]}>
+                  {isPositive ? "+" : ""}{returnsPercent.toFixed(1)}%
+                </Text>
+              </>
+            ) : (
+              <Text style={styles.statValue}>—</Text>
+            )}
           </View>
         </View>
       </View>
@@ -163,11 +180,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     gap: 2,
   },
-  growthArrow: {
-    fontSize: 14,
-    color: "#4ADE80",
-    fontWeight: "700",
-  },
+
   chipsRow: {
     flexDirection: "row",
     gap: 8,

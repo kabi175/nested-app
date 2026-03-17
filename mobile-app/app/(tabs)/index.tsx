@@ -1,4 +1,4 @@
-import { Redirect, useRouter } from "expo-router";
+import { router, useRouter } from "expo-router";
 import React from "react";
 import { ScrollView, StyleSheet, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -8,8 +8,10 @@ import ChildPlanCard from "@/components/v2/ChildPlanCard";
 import CompleteKycComponent from "@/components/v2/CompleteKycComponent";
 import FundValueHeader from "@/components/v2/FundValueHeader";
 import WhatActivatesSection from "@/components/v2/WhatActivatesSection";
-import { useChildren } from "@/hooks/useChildren";
+import { useChild, useChildren } from "@/hooks/useChildren";
 import { useEducationGoals } from "@/hooks/useGoals";
+import { useUser } from "@/hooks/useUser";
+import { Goal } from "@/types/investment";
 
 function getAge(dateOfBirth: Date): number {
   const today = new Date();
@@ -36,40 +38,45 @@ export default function HomeScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
 
+  const { data: user } = useUser();
   const { data: children, isLoading: isChildrenLoading } = useChildren();
   const { data: goals, isLoading: isGoalsLoading } = useEducationGoals();
 
   const child = children?.[0];
-  const goal = goals?.[0];
 
-  const childName = child?.firstName ?? "—";
-  const childAge = child ? getAge(child.dateOfBirth) : 0;
-  const goalAmount = goal ? formatGoalAmount(goal.targetAmount) : "₹50L";
-  const goalYear = goal ? new Date(goal.targetDate).getFullYear() : 2037;
-  const monthlyAmount = goal?.monthlySip
-    ? `₹${goal.monthlySip.toLocaleString("en-IN")}/mo`
+  const childName = child?.firstName;
+
+  const totalMonthlySip = goals?.map(g => g.monthlySip).filter((v): v is number => !!v).reduce((a, b) => a + b, 0);
+  const monthlyAmount = totalMonthlySip
+    ? `₹${totalMonthlySip.toLocaleString("en-IN")}/mo`
     : undefined;
 
+  const isKycCompleted = user?.kycStatus === "completed";
+  const isGoalsEmpty = goals && goals.length === 0;
+
+  const showKycCard = !isKycCompleted || isGoalsEmpty;
+
   function handleContinueKyc() {
-    router.push("/kyc");
+    if (isKycCompleted) {
+      handleStartSaving();
+    } else {
+      router.push("/kyc");
+    }
   }
 
   function handleStartSaving() {
-    router.push("/payment");
+    if (children?.length === 0) {
+      router.push("/child/create")
+      return;
+    }
+
+    if (goals?.length === 0) {
+      router.push("/child/select")
+      return;
+    }
   }
 
   const isLoading = isChildrenLoading || isGoalsLoading;
-  if (!isLoading) {
-    if(children?.length === 0 ) {
-      return (
-        <Redirect href="/child/create" />
-      )
-    }
-
-    if(goals?.length === 0) {
-      return <Redirect href="/child/select" />
-    }
-  }
 
   return (
     <View style={[styles.screen, { paddingTop: insets.top }]}>
@@ -85,27 +92,27 @@ export default function HomeScreen() {
         <FundValueHeader />
 
         {/* ── KYC steps ── */}
-        <View style={styles.card}>
-          <CompleteKycComponent
-            childName={childName}
-            monthlyAmount={monthlyAmount}
-            onPressContinue={handleContinueKyc}
-          />
-        </View>
+        {showKycCard && (
+          <View style={styles.card}>
+            <CompleteKycComponent
+              childName={childName}
+              monthlyAmount={monthlyAmount}
+              onPressContinue={handleContinueKyc}
+            />
+          </View>
+        )}
 
-        {/* ── Child plan card ── */}
-        <View style={styles.planCardWrapper}>
-          <ChildPlanCard
-            childName={childName}
-            childAge={childAge}
-            goalYear={goalYear}
-            goalAmount={goalAmount}
-            onPress={handleStartSaving}
-          />
-        </View>
+        {/* ── Child plan cards ── */}
+        {goals && goals.length > 0 && (
+          <View style={styles.planCardWrapper}>
+            {goals.map((g) => (
+              <GoalPlanCard key={g.id} goal={g} />
+            ))}
+          </View>
+        )}
 
         {/* ── What activates after KYC ── */}
-        <WhatActivatesSection />
+        {showKycCard && <WhatActivatesSection />}
       </ScrollView>
 
       {/* ── Sticky bottom CTA ── */}
@@ -114,6 +121,33 @@ export default function HomeScreen() {
       </View>
     </View>
   );
+}
+
+const GoalPlanCard = ({ goal }: { goal: Goal }) => {
+  const { data: child } = useChild(goal.childId);
+
+  const childName = child?.firstName ?? "—";
+  const childAge = child ? getAge(child.dateOfBirth) : 0;
+  const goalAmount = goal ? formatGoalAmount(goal.targetAmount) : "₹50L";
+  const goalYear = goal ? new Date(goal.targetDate).getFullYear() : 2037;
+  const monthlyAmount = goal?.monthlySip
+    ? `₹${goal.monthlySip.toLocaleString("en-IN")}/mo`
+    : undefined;
+
+  function handleStartSaving() {
+    router.push("/kyc");
+  }
+
+
+  return (
+    <ChildPlanCard
+      childName={childName}
+      childAge={childAge}
+      goalYear={goalYear}
+      goalAmount={goalAmount}
+      onPress={handleStartSaving}
+    />
+  )
 }
 
 const styles = StyleSheet.create({
@@ -136,6 +170,7 @@ const styles = StyleSheet.create({
   },
   planCardWrapper: {
     marginHorizontal: 16,
+    gap: 12,
   },
   stickyBottom: {
     position: "absolute",

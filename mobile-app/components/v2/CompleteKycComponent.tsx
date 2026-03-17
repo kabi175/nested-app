@@ -1,9 +1,9 @@
-import React from "react";
-import { StyleSheet, Text, View } from "react-native";
+import Button from "@/components/v2/Button";
 import { useBankAccounts } from "@/hooks/useBankAccount";
 import { useUser } from "@/hooks/useUser";
 import { User } from "@/types/auth";
-import Button from "@/components/v2/Button";
+import React from "react";
+import { StyleSheet, Text, View } from "react-native";
 
 // ─── Tokens ────────────────────────────────────────────────────────────────
 const T = {
@@ -37,14 +37,14 @@ function getKycIndex(status: User["kycStatus"]): number {
 
 // ─── Props ─────────────────────────────────────────────────────────────────
 interface CompleteKycComponentProps {
-  childName: string;
+  childName?: string;
   monthlyAmount?: string;
   onPressContinue?: () => void;
 }
 
 // ─── Component ─────────────────────────────────────────────────────────────
 export default function CompleteKycComponent({
-  childName,
+  childName = "Child",
   monthlyAmount,
   onPressContinue,
 }: CompleteKycComponentProps) {
@@ -52,15 +52,16 @@ export default function CompleteKycComponent({
   const { data: bankAccounts } = useBankAccounts();
 
   const kycStatus = user?.kycStatus ?? "unknown";
+  const isKycCompleted = kycStatus === "completed";
   const kycIndex = getKycIndex(kycStatus);
   const hasBankAccount = (bankAccounts?.length ?? 0) > 0;
 
   const steps: { label: string; done: boolean }[] = [
-    { label: "Mobile verified",    done: true },
-    { label: "PAN card linking",   done: kycIndex >= 2 },
-    { label: "Aadhar verification",done: kycIndex >= 3 },
-    { label: "Verify your details",done: kycIndex >= 4 },
-    { label: "Link bank account",  done: hasBankAccount },
+    { label: "Mobile verified", done: true },
+    { label: "PAN card linking", done: kycIndex >= 2 },
+    { label: "Aadhar verification", done: kycIndex >= 3 },
+    { label: "Verify your details", done: kycIndex >= 4 },
+    { label: "Link bank account", done: hasBankAccount },
   ];
 
   const completedCount = steps.filter((s) => s.done).length;
@@ -111,7 +112,7 @@ export default function CompleteKycComponent({
       </Text>
 
       {/* ── CTA ── */}
-      <Button title="Continue KYC →" onPress={onPressContinue} />
+      <Button title={isKycCompleted ? "Start Saving now →" : "Continue KYC "} onPress={onPressContinue} />
     </View>
   );
 }
