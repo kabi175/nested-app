@@ -183,17 +183,15 @@ export default function EducationBasedGoalPlanner({
               : `Nested auto-rebalances your portfolio every year as '${childName.charAt(0).toLowerCase()}' grows, shifting from high growth to stability closer to college.`}
           </Text>
         </View>
-      </Animated.ScrollView>
 
-      {/* Sticky CTA */}
-      <View style={styles.footer}>
+        {/* CTA */}
         {error && (
           <View style={styles.errorBanner}>
             <Text style={styles.errorText}>{error}</Text>
           </View>
         )}
         <Button title="Let's begin  →" onPress={handleBegin} />
-      </View>
+      </Animated.ScrollView>
     </SafeAreaView>
   );
 }
@@ -293,13 +291,6 @@ const styles = StyleSheet.create({
   },
   customControls: {
     gap: 12,
-  },
-  footer: {
-    paddingHorizontal: 24,
-    paddingBottom: 16,
-    paddingTop: 8,
-    backgroundColor: '#FFFFFF',
-    gap: 8,
   },
   errorBanner: {
     backgroundColor: '#FEF2F2',
