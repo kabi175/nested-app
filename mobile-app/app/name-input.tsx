@@ -41,7 +41,7 @@ export default function NameInputScreen() {
         },
       });
       logCompleteRegistration({ registration_method: "phone" });
-      router.replace("/child");
+      router.replace("/child/create");
     } catch (error) {
       console.log("Error saving name", error);
     } finally {
