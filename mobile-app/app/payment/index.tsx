@@ -91,7 +91,7 @@ export default function PaymentMethodScreen() {
   }, [selectedMethod, selectedBank, bankAccounts]);
 
   if (cart == null || cart.length === 0) {
-    return <Redirect href="/child" />;
+    return <Redirect href="/(tab)" />;
   }
 
   // Check if banks are available when any payment method is selected

@@ -6,7 +6,7 @@ export default function SelectChildRoute() {
     <SelectChildScreen
       onAddChild={() => {
         // Navigate to the add-child flow
-        router.push("/child" as any);
+        router.push("/(tab)" as any);
       }}
       onContinue={(childId) => {
         // Navigate forward with the selected child
