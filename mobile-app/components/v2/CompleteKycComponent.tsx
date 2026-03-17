@@ -1,4 +1,3 @@
-import PendingActivity from "@/assets/images/v2/pending-activity.svg";
 import Button from "@/components/v2/Button";
 import { useBankAccounts } from "@/hooks/useBankAccount";
 import { useUser } from "@/hooks/useUser";
@@ -90,11 +89,6 @@ export default function CompleteKycComponent({
           Complete KYC under 2 min and your auto-balancing plan will begin immediately after.
         </Text>
       )}
-
-      {/* ── Illustration ── */}
-      <View style={styles.illustrationWrapper}>
-        <PendingActivity width={180} height={120} />
-      </View>
 
       {/* ── Steps ── */}
       <View style={styles.steps}>
@@ -248,9 +242,5 @@ const styles = StyleSheet.create({
     color: T.primary,
     textAlign: "right",
     marginBottom: 24,
-  },
-  illustrationWrapper: {
-    alignItems: "center",
-    marginBottom: 28,
   },
 });

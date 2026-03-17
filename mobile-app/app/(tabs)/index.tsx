@@ -3,6 +3,7 @@ import React from "react";
 import { ScrollView, StyleSheet, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
+import PendingActivity from "@/assets/images/v2/pending-activity.svg";
 import Button from "@/components/v2/Button";
 import ChildPlanCard from "@/components/v2/ChildPlanCard";
 import CompleteKycComponent from "@/components/v2/CompleteKycComponent";
@@ -66,6 +67,10 @@ export default function HomeScreen() {
   }
 
   function handleStartSaving() {
+    if (!isKycCompleted) {
+      router.push("/kyc");
+    }
+
     if (children?.length === 0) {
       router.push("/child/create")
       return;
@@ -94,6 +99,13 @@ export default function HomeScreen() {
         <View style={styles.headerWrapper}>
           <FundValueHeader />
         </View>
+
+        {/* ── KYC illustration ── */}
+        {showKycCard && (
+          <View style={styles.illustrationWrapper}>
+            <PendingActivity width={180} height={120} />
+          </View>
+        )}
 
         {/* ── KYC steps ── */}
         {showKycCard && (
@@ -177,6 +189,11 @@ const styles = StyleSheet.create({
     paddingBottom: 20,
     marginTop: -16,
     paddingTop: 16,
+  },
+  illustrationWrapper: {
+    alignItems: "center",
+    marginTop: -16,
+    marginBottom: -8,
   },
   planCardWrapper: {
     marginHorizontal: 16,
