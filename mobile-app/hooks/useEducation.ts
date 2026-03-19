@@ -3,7 +3,11 @@ import { QUERY_KEYS } from "@/constants/queryKeys";
 import { useQuery } from "@tanstack/react-query";
 import { useAuthAxios } from "./useAuthAxios";
 
-export const useEducation = (educationId: string) => {
+export const useEducation = (educationId?: string) => {
+  if (!educationId) {
+    return { data: undefined, isLoading: false, error: undefined };
+  }
+
   const api = useAuthAxios();
   return useQuery({
     queryKey: [QUERY_KEYS.education, educationId],
