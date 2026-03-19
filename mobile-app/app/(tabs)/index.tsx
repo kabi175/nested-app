@@ -7,7 +7,6 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import ChildPlanCard from "@/components/v2/ChildPlanCard";
 import CompleteKycComponent from "@/components/v2/CompleteKycComponent";
 import { useChild, useChildren } from "@/hooks/useChildren";
-import { useEducation } from "@/hooks/useEducation";
 import { useEducationGoals } from "@/hooks/useGoals";
 import { useUser } from "@/hooks/useUser";
 import { Goal } from "@/types/investment";
@@ -139,9 +138,13 @@ export default function HomeScreen() {
 
 const GoalPlanCard = ({ goal }: { goal: Goal }) => {
   const { data: child } = useChild(goal.childId);
-  const { data: education } = useEducation(goal.educationId as string);
   const onPress = () => {
-    console.log("Navigating to goal details for goal ID:", goal.id);
+
+    if (!goal.nextSipAmount) {
+      //TODO: redirect to planner screen
+      return;
+    }
+
     router.push(`/goal/${goal.id}`);
   }
 
@@ -149,8 +152,8 @@ const GoalPlanCard = ({ goal }: { goal: Goal }) => {
     <ChildPlanCard
       childName={child?.firstName ?? "—"}
       childAge={child ? getAge(child.dateOfBirth) : 0}
-      educationId={goal.educationId}
-      collegeType={education?.name}
+      educationId={goal.education?.id}
+      collegeType={goal.education?.name}
       goalYear={new Date(goal.targetDate).getFullYear()}
       goalAmount={formatGoalAmount(goal.targetAmount)}
       savedAmount={`₹${goal.currentAmount.toLocaleString("en-IN")}`}

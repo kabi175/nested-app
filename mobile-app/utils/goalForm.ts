@@ -3,10 +3,9 @@ import { expectedFee } from "./education";
 
 export const calculateFutureCost = (
   education: Education | undefined,
-  targetYear: number
+  targetYear: number,
 ): number => {
-  if (!education) return 0;
+  if (!education) return 25_00_000;
   const targetDate = new Date(targetYear, 0, 1);
   return Math.round(expectedFee(targetDate, education));
 };
-

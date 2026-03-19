@@ -1,18 +1,19 @@
 import { CreateOrderRequest } from "@/api/paymentAPI";
+import { cartAtom } from "@/atoms/cart";
 import BackButton from "@/components/v2/BackButton";
 import Button from "@/components/v2/Button";
 import Slider from "@/components/v2/Slider";
 import { LumpSumInput } from "@/components/v2/planner/LumpSumInput";
 import ModeToggle, { PlannerMode } from "@/components/v2/planner/ModeToggle";
 import NestGrowthCard from "@/components/v2/planner/NestGrowthCard";
-import { cartAtom } from "@/atoms/cart";
-import { useChild } from "@/hooks/useChildren";
 import { useCreateOrders } from "@/hooks/useCreateOrders";
+import { useGoal } from "@/hooks/useGoal";
 import { useGoalCreation } from "@/hooks/useGoalCreation";
-import { useSetAtom } from "jotai";
+import { useUpdateGoal } from "@/hooks/useUpdateGoal";
 import { formatCurrency } from "@/utils/formatters";
 import { computeMinimumSIPAmount } from "@/utils/sip";
 import { router, useLocalSearchParams } from "expo-router";
+import { useSetAtom } from "jotai";
 import React, { useMemo, useState } from "react";
 import {
     Alert,
@@ -72,22 +73,22 @@ function computeTargetFromSIP(
 
 // ─── Screen ───────────────────────────────────────────────────────────────────
 export default function Planner() {
-    const { child_id } = useLocalSearchParams<{ child_id: string }>();
+    const { goal_id } = useLocalSearchParams<{ goal_id: string }>();
     const insets = useSafeAreaInsets();
 
-    const { data: child } = useChild(child_id);
+    const { data: goal } = useGoal(goal_id);
+    const child_id = goal?.child.id;
+    // const { data: child } = useChild(child_id);
     const createGoalMutation = useGoalCreation();
+    const updateGoalMutation = useUpdateGoal();
     const createOrdersMutation = useCreateOrders();
     const setCart = useSetAtom(cartAtom);
 
-    const sipMin = 4000; //TODO: compute this value based on goal
+    const sipMin = goal?.basket.min_sip || 4000; //TODO: compute this value based on goal
     const quickSelectOptions = computeQuickSelectOptions(sipMin);
     const sliderMax = computeSliderMax(sipMin);
 
-    const targetYear = useMemo(() => {
-        if (!child?.dateOfBirth) return new Date().getFullYear() + 18;
-        return child.dateOfBirth.getFullYear() + 18;
-    }, [child]);
+    const targetYear = goal?.targetDate.getFullYear() || (new Date().getFullYear() + 1)
 
     const remainingYears = targetYear - new Date().getFullYear();
 
@@ -161,15 +162,19 @@ export default function Planner() {
         }
 
         try {
-            const [goal] = await createGoalMutation.mutateAsync([
-                {
-                    childId: child_id,
-                    educationId: "",
-                    title: `${child?.firstName ?? "Child"}'s Nest`,
-                    targetAmount: displayTarget,
-                    targetDate: new Date(targetYear, 5, 1),
-                },
-            ]);
+
+            if (!goal) {
+                return;
+            }
+
+            updateGoalMutation.mutateAsync({
+                goal: {
+                    id: goal.id,
+                    target_amount: displayTarget,
+                    title: goal.title,
+                    target_date: goal.targetDate
+                }
+            })
 
             const orders: CreateOrderRequest[] = [
                 {
@@ -199,7 +204,7 @@ export default function Planner() {
     const isLoading =
         createGoalMutation.isPending || createOrdersMutation.isPending;
 
-    const childName = child?.firstName ?? "your child";
+    const childName = goal?.child.name ?? "your child";
 
     return (
         <SafeAreaView style={styles.safe} edges={["top"]}>

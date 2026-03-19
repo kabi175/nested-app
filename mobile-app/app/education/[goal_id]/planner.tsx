@@ -1,50 +1,34 @@
-import { CreateGoalRequest } from "@/api/goalApi";
 import { CreateOrderRequest } from "@/api/paymentAPI";
 import { cartAtom } from "@/atoms/cart";
 import EducationBasedGoalPlanner from "@/components/v2/planner/EducationBasedGoalPlanner";
-import { useChild } from "@/hooks/useChildren";
 import { useCreateOrders } from "@/hooks/useCreateOrders";
-import { useEducation } from "@/hooks/useEducation";
-import { useGoalCreation } from "@/hooks/useGoalCreation";
+import { useGoal } from "@/hooks/useGoal";
 import { formatCurrency } from "@/utils/formatters";
-import { calculateFutureCost } from "@/utils/goalForm";
 import { computeMinimumSIPAmount } from "@/utils/sip";
 import { router, useLocalSearchParams } from "expo-router";
 import { useSetAtom } from "jotai";
 import { useState } from "react";
 
 export default function GoalPlannerScreen() {
-    const { child_id, education_id } = useLocalSearchParams<{
-        child_id: string;
-        education_id: string;
+    const { goal_id } = useLocalSearchParams<{
+        goal_id: string;
     }>();
 
-    const { data: child } = useChild(child_id);
-    const { data: education } = useEducation(education_id);
-    const goalCreation = useGoalCreation();
+    const { data: goal } = useGoal(goal_id);
+
     const createOrdersMutation = useCreateOrders();
     const setCart = useSetAtom(cartAtom);
     const [errorMessage, setErrorMessage] = useState<string | undefined>();
 
-    if (!child || !education) {
+    if (!goal) {
         return null;
     }
 
-    const targetYear = child.dateOfBirth.getFullYear() + 18;
-    const targetDate = new Date();
-    targetDate.setFullYear(targetYear);
+    const targetYear = goal.targetDate.getFullYear();
 
     const yearsFromNow = targetYear - new Date().getFullYear();
-    const targetAmount = calculateFutureCost(education, targetYear);
+    const targetAmount = goal.targetAmount;
     const idealSipAmount = computeMinimumSIPAmount(yearsFromNow, 0, 0, 12, targetAmount);
-
-    const goal: CreateGoalRequest = {
-        childId: child.id,
-        educationId: education.id,
-        title: `${child.firstName}'s Graduation`,
-        targetAmount,
-        targetDate,
-    };
 
     const onBegin = async ({ sipAmount, lumpSum, stepUp }: {
         sipAmount: number;
@@ -72,9 +56,7 @@ export default function GoalPlannerScreen() {
         }
 
         // 2. Create goal
-        const createdGoals = await goalCreation.mutateAsync([goal]);
-        const createdGoal = createdGoals[0];
-        const { min_investment, min_sip, min_step_up } = createdGoal.basket;
+        const { min_investment, min_sip, min_step_up } = goal.basket;
 
         // 3. Validate against basket minimums
         if (sipAmount < min_sip) {
@@ -106,10 +88,10 @@ export default function GoalPlannerScreen() {
                 amount: sipAmount,
                 start_date: sipStartDate,
                 yearly_setup: stepUp && stepUp > 0 ? stepUp : undefined,
-                goalId: createdGoal.id,
+                goalId: goal.id,
             },
             ...(lumpSum && lumpSum > 0
-                ? [{ type: "buy" as const, amount: lumpSum, goalId: createdGoal.id }]
+                ? [{ type: "buy" as const, amount: lumpSum, goalId: goal.id }]
                 : []),
         ];
 
@@ -120,7 +102,7 @@ export default function GoalPlannerScreen() {
         // 6. Navigate
         router.push({
             pathname: "/child/[child_id]/testimonials",
-            params: { child_id }
+            params: { child_id: goal.child.id }
         }
         );
     };
@@ -130,10 +112,10 @@ export default function GoalPlannerScreen() {
 
     return (
         <EducationBasedGoalPlanner
-            childName={child.firstName}
+            childName={goal.child.name}
             goalYear={targetYear}
             goalAmount={targetAmount}
-            collegeType={education.name}
+            collegeType={goal.education?.name}
             idealSipAmount={idealSipAmount}
             error={errorMessage}
             onBegin={onBegin}

@@ -80,15 +80,15 @@ export default function EditGoalScreen() {
             let degree = "Choose a course";
             let college = "Select Dream College";
 
-            if (goal.educationId) {
+            if (goal.education) {
                 // Search in courses first
-                foundEducation = courses.find((edu) => edu.id === goal.educationId);
+                foundEducation = courses.find((edu) => edu.id === goal.education?.id);
                 if (foundEducation) {
                     selectionMode = "course";
                     degree = foundEducation.name;
                 } else {
                     // Search in institutions
-                    foundEducation = institutions.find((edu) => edu.id === goal.educationId);
+                    foundEducation = institutions.find((edu) => edu.id === goal.education?.id);
                     if (foundEducation) {
                         selectionMode = "college";
                         college = foundEducation.name;

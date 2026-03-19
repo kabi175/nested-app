@@ -1,5 +1,5 @@
 import BuildingNestScreen from "@/components/v2/BuildingNestScreen";
-import { useChild } from "@/hooks/useChildren";
+import { useGoal } from "@/hooks/useGoal";
 import { router, useLocalSearchParams } from "expo-router";
 import { useEffect } from "react";
 
@@ -7,18 +7,19 @@ import { useEffect } from "react";
 const TIMEOUT_DURATION = 15 * 1000; // 15 seconds
 
 export default function EducationDetailLoader() {
-    const { child_id, education_id } = useLocalSearchParams<{
-        child_id: string;
-        education_id: string;
+    const { goal_id } = useLocalSearchParams<{
+        goal_id: string;
     }>();
 
-    const { data: child } = useChild(child_id);
+    const { data: goal } = useGoal(goal_id);
+
+
 
     const onComplete = () => {
         router.push(
             {
-                pathname: "/child/[child_id]/education/[education_id]/planner",
-                params: { child_id, education_id }
+                pathname: "/education/[goal_id]/planner",
+                params: { goal_id }
             }
         );
     }
@@ -28,5 +29,5 @@ export default function EducationDetailLoader() {
         return () => clearTimeout(timer);
     }, []);
 
-    return <BuildingNestScreen userName={child?.firstName || "Child"} />;
+    return <BuildingNestScreen userName={goal?.child.name || "Child"} />;
 }

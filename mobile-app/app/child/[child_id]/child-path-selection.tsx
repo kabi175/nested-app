@@ -39,16 +39,18 @@ export default function ChildPathSelectionRoute() {
             : courses?.find((c) => c.name === pathId);
 
           if (!education) return;
+
           router.push({
-            pathname: "/child/[child_id]/education/[education_id]",
+            pathname: "/child/[child_id]/need-age",
             params: { child_id, education_id: education.id },
           });
         }}
         onNotSure={() => {
           router.push({
-            pathname: "/child/[child_id]/planner",
+            pathname: "/child/[child_id]/need-age",
             params: { child_id },
           });
+
         }}
       />
     </>
