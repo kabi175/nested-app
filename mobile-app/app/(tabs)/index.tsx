@@ -173,15 +173,15 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
   },
   greeting: {
-    fontSize: 26,
-    fontWeight: "700",
-    color: "#111111",
+    fontSize: 14,
+    fontWeight: "400",
+    color: "#666666",
   },
   corpus: {
-    fontSize: 18,
-    fontWeight: "400",
+    fontSize: 28,
+    fontWeight: "700",
     color: "#111111",
-    marginTop: 4,
+    marginTop: 2,
   },
   corpusAmount: {
     fontWeight: "700",
