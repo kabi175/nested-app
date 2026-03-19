@@ -1,4 +1,4 @@
-import { useRouter } from "expo-router";
+import { router, useRouter } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import React from "react";
 import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
@@ -140,6 +140,10 @@ export default function HomeScreen() {
 const GoalPlanCard = ({ goal }: { goal: Goal }) => {
   const { data: child } = useChild(goal.childId);
   const { data: education } = useEducation(goal.educationId as string);
+  const onPress = () => {
+    console.log("Navigating to goal details for goal ID:", goal.id);
+    router.push(`/goal/${goal.id}`);
+  }
 
   return (
     <ChildPlanCard
@@ -153,6 +157,7 @@ const GoalPlanCard = ({ goal }: { goal: Goal }) => {
       savedFraction={goal.targetAmount > 0 ? goal.currentAmount / goal.targetAmount : 0}
       nextSipAmount={goal.nextSipAmount != null ? `₹${goal.nextSipAmount.toLocaleString("en-IN")}` : null}
       nextSipDate={goal.nextSipDate != null ? formatSipDate(goal.nextSipDate) : null}
+      onPress={onPress}
     />
   );
 };

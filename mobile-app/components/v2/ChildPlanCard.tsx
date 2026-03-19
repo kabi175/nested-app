@@ -5,7 +5,7 @@ import Medical from "@/assets/images/v2/education-plan/medical.svg";
 import StudyAbroad from "@/assets/images/v2/education-plan/study-abroad.svg";
 import TopColleges from "@/assets/images/v2/education-plan/top-colleges.svg";
 import React from "react";
-import { StyleSheet, Text, View } from "react-native";
+import { Pressable, StyleSheet, Text, View } from "react-native";
 import { SvgProps } from "react-native-svg";
 
 const EDUCATION_ICONS: Record<string, React.FC<SvgProps>> = {
@@ -55,13 +55,14 @@ export default function ChildPlanCard({
   savedFraction = 0,
   nextSipAmount,
   nextSipDate,
+  onPress,
 }: ChildPlanCardProps) {
   const clampedFraction = Math.min(Math.max(savedFraction, 0), 1);
   const hasSip = !!nextSipAmount && !!nextSipDate;
   const Icon = (educationId && EDUCATION_ICONS[educationId]) || TopColleges;
 
   return (
-    <View style={styles.card}>
+    <Pressable onPress={onPress} style={styles.card}>
       {/* ── College icon (absolute top-right) ── */}
       <View style={styles.capIconWrapper}>
         <Icon width={40} height={40} />
@@ -108,7 +109,7 @@ export default function ChildPlanCard({
           </View>
         </>
       )}
-    </View>
+    </Pressable>
   );
 }
 
