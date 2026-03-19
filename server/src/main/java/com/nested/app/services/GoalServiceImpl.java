@@ -384,7 +384,7 @@ public class GoalServiceImpl implements GoalService {
     }
 
     if (goal.getEducation() != null) {
-      dto.setEducation(new MinifiedEducationDto(goal.getEducation().getId()));
+      dto.setEducation(MinifiedEducationDto.fromEntity(goal.getEducation()));
     }
 
     // Populate next SIP info from the earliest active SIPOrder for this goal

@@ -85,9 +85,7 @@ public class GoalDTO {
       dto.setBasket(MinifiedBasketDto.fromEntity(goal.getBasket()));
     }
     if (goal.getEducation() != null) {
-      MinifiedEducationDto educationDto = new MinifiedEducationDto();
-      educationDto.setId(goal.getEducation().getId());
-      dto.setEducation(educationDto);
+      dto.setEducation(MinifiedEducationDto.fromEntity(goal.getEducation()));
     }
     if (goal.getUser() != null) {
       dto.setUser(MinifiedUserDTO.fromEntity(goal.getUser()));

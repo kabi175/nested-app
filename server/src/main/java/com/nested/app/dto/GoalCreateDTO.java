@@ -44,7 +44,7 @@ public class GoalCreateDTO {
     dto.setChild(createDTO.getChild());
 
     if (createDTO.getEducation() != null) {
-      var educationDto = new MinifiedEducationDto(createDTO.getEducation().getId());
+      var educationDto = new MinifiedEducationDto(createDTO.getEducation().getId(), null);
       dto.setEducation(educationDto);
     }
     dto.setBasket(createDTO.getBasket());

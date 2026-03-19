@@ -13,6 +13,12 @@ public class MinifiedEducationDto {
   @JsonFormat(shape = JsonFormat.Shape.STRING)
   private Long id;
 
+  private String name;
+
+  public static MinifiedEducationDto fromEntity(Education education) {
+    return new MinifiedEducationDto(education.getId(), education.getName());
+  }
+
   public Education toEntity() {
     Education education = new Education();
     education.setId(this.id);
