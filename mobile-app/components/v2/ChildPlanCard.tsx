@@ -62,6 +62,11 @@ export default function ChildPlanCard({
 
   return (
     <View style={styles.card}>
+      {/* ── College icon (absolute top-right) ── */}
+      <View style={styles.capIconWrapper}>
+        <Icon width={40} height={40} />
+      </View>
+
       {/* ── Header row ── */}
       <View style={styles.headerRow}>
         <View style={styles.headerLeft}>
@@ -73,11 +78,6 @@ export default function ChildPlanCard({
             <Text style={styles.capEmoji}>🎓</Text>
             <Text style={styles.subtitle}>{`${collegeType} · ${goalYear}`}</Text>
           </View>
-        </View>
-
-        {/* ── College icon ── */}
-        <View style={styles.capIconWrapper}>
-          <Icon width={40} height={40} />
         </View>
       </View>
 
@@ -119,19 +119,15 @@ const styles = StyleSheet.create({
     borderRadius: 24,
     padding: 20,
     paddingBottom: 20,
+    overflow: "visible",
   },
 
   // ── Header ──
   headerRow: {
-    flexDirection: "row",
-    alignItems: "flex-start",
-    justifyContent: "space-between",
     marginBottom: 20,
+    paddingRight: 72,
   },
-  headerLeft: {
-    flex: 1,
-    paddingRight: 12,
-  },
+  headerLeft: {},
   childName: {
     fontSize: 22,
     color: T.textDark,
@@ -153,9 +149,12 @@ const styles = StyleSheet.create({
     color: T.textMuted,
   },
   capIconWrapper: {
-    width: 60,
-    height: 60,
-    borderRadius: 14,
+    position: "absolute",
+    top: 16,
+    right: 16,
+    width: 56,
+    height: 56,
+    borderRadius: 16,
     backgroundColor: T.capIconBg,
     alignItems: "center",
     justifyContent: "center",

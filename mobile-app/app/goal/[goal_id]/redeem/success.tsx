@@ -41,7 +41,7 @@ export default function RedeemSuccessScreen() {
     } else if (goalId) {
       router.replace(`/goal/${goalId}`);
     } else {
-      router.replace("/(tabs)/child");
+      router.replace("/(tabs)");
     }
   };
 
