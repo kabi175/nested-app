@@ -82,14 +82,16 @@ export const updateGoal = async (
     title: goal.title,
     target_amount: goal.target_amount,
     target_date: goal.target_date.toLocaleDateString("en-CA"),
-    education: {
-      id: goal.educationId,
-    },
+    education: null as any,
   };
-  console.log("updateGoal payload education:", payload.education);
+
+  if (goal.educationId) {
+    payload.education = {
+      id: goal.educationId,
+    };
+  }
 
   const { data } = await api.put(`/goals`, { data: [payload] });
-  console.log("updateGoal response:", data);
   // Handle array response - API returns array of goals
   const goals = (data.data ?? []).map(
     (goal: GoalDTO): Goal => mapGoalToGoal(goal),
@@ -105,7 +107,7 @@ export type UpdateGoalRequest = {
   title: string;
   target_amount: number;
   target_date: Date;
-  educationId: string;
+  educationId?: string;
 };
 
 export type GoalDTO = {
@@ -142,6 +144,7 @@ export function mapGoalToGoal(goal: GoalDTO): Goal {
     id: goal.id,
     title: goal.title,
     childId: goal.child.id,
+    child: goal.child,
     targetAmount: goal.target_amount,
     currentAmount: goal.current_amount,
     investedAmount: goal.invested_amount,
@@ -152,6 +155,7 @@ export function mapGoalToGoal(goal: GoalDTO): Goal {
     updatedAt: goal.updatedAt ? new Date(goal.updatedAt) : new Date(),
     basket: goal.basket,
     educationId: goal.education_id || goal.education?.id,
+    education: goal.education,
 
     nextSipAmount: goal.next_sip_amount,
     nextSipDate: goal.next_sip_date ? new Date(goal.next_sip_date) : null,
