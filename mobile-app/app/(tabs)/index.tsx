@@ -1,4 +1,4 @@
-import { router, useRouter } from "expo-router";
+import { useRouter } from "expo-router";
 import React from "react";
 import { ScrollView, StyleSheet, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -10,6 +10,7 @@ import CompleteKycComponent from "@/components/v2/CompleteKycComponent";
 import FundValueHeader from "@/components/v2/FundValueHeader";
 import WhatActivatesSection from "@/components/v2/WhatActivatesSection";
 import { useChild, useChildren } from "@/hooks/useChildren";
+import { useEducation } from "@/hooks/useEducation";
 import { useEducationGoals } from "@/hooks/useGoals";
 import { useUser } from "@/hooks/useUser";
 import { Goal } from "@/types/investment";
@@ -140,31 +141,41 @@ export default function HomeScreen() {
   );
 }
 
+function formatSipDate(date: Date): string {
+  const d = new Date(date);
+  const day = d.getDate();
+  const month = d.toLocaleString("en-IN", { month: "short" }).toUpperCase();
+  return `${day} ${month}`;
+}
+
 const GoalPlanCard = ({ goal }: { goal: Goal }) => {
   const { data: child } = useChild(goal.childId);
+  const { data: education } = useEducation(goal.educationId as string);
 
   const childName = child?.firstName ?? "—";
   const childAge = child ? getAge(child.dateOfBirth) : 0;
-  const goalAmount = goal ? formatGoalAmount(goal.targetAmount) : "₹50L";
-  const goalYear = goal ? new Date(goal.targetDate).getFullYear() : 2037;
-  const monthlyAmount = goal?.monthlySip
-    ? `₹${goal.monthlySip.toLocaleString("en-IN")}/mo`
-    : undefined;
-
-  function handleStartSaving() {
-    router.push("/kyc");
-  }
-
+  const goalAmount = formatGoalAmount(goal.targetAmount);
+  const goalYear = new Date(goal.targetDate).getFullYear();
+  const savedAmount = `₹${goal.currentAmount.toLocaleString("en-IN")}`;
+  const savedFraction = goal.targetAmount > 0 ? goal.currentAmount / goal.targetAmount : 0;
+  const nextSipAmount = goal.nextSipAmount != null
+    ? `₹${goal.nextSipAmount.toLocaleString("en-IN")}`
+    : null;
+  const nextSipDate = goal.nextSipDate != null ? formatSipDate(goal.nextSipDate) : null;
 
   return (
     <ChildPlanCard
+      collegeType={education?.name}
       childName={childName}
       childAge={childAge}
       goalYear={goalYear}
       goalAmount={goalAmount}
-      onPress={handleStartSaving}
+      savedAmount={savedAmount}
+      savedFraction={savedFraction}
+      nextSipAmount={nextSipAmount}
+      nextSipDate={nextSipDate}
     />
-  )
+  );
 }
 
 const styles = StyleSheet.create({

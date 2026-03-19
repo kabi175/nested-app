@@ -6,6 +6,7 @@ import com.nested.app.entity.Goal;
 import jakarta.validation.constraints.NotEmpty;
 import java.sql.Date;
 import java.sql.Timestamp;
+import java.time.LocalDate;
 import lombok.Data;
 
 /**
@@ -48,6 +49,13 @@ public class GoalDTO {
   private MinifiedChildDTO child;
 
   private Goal.Status status;
+
+  @JsonProperty("next_sip_amount")
+  private Double nextSipAmount;
+
+  @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd")
+  @JsonProperty("next_sip_date")
+  private LocalDate nextSipDate;
 
   private Timestamp createdAt;
 

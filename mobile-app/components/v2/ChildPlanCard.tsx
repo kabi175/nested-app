@@ -1,7 +1,6 @@
+import TopColleges from "@/assets/images/v2/education-plan/top-colleges.svg";
 import React from "react";
 import { StyleSheet, Text, View } from "react-native";
-import GraduationCap from "@/assets/images/v2/planner/graduation-cap.svg";
-import Button from "@/components/v2/Button";
 
 // ─── Tokens ─────────────────────────────────────────────────────────────────
 const T = {
@@ -10,19 +9,21 @@ const T = {
   textDark: "#111111",
   textMuted: "#8A8A9A",
   trackBg: "#D9D9D9",
-  circleBg: "#E3E3F0",
   capIconBg: "#E8E8F4",
+  divider: "#D9D9E3",
 } as const;
-
-const MILESTONES = [6, 10, 14, 18];
 
 // ─── Props ──────────────────────────────────────────────────────────────────
 interface ChildPlanCardProps {
   childName: string;
   childAge: number;
   collegeType?: string;
-  goalYear?: number;
-  goalAmount?: string;
+  goalYear: number;
+  goalAmount: string;
+  savedAmount?: string;
+  savedFraction?: number; // 0–1
+  nextSipAmount?: string | null;
+  nextSipDate?: string | null;
   onPress?: () => void;
 }
 
@@ -31,15 +32,15 @@ export default function ChildPlanCard({
   childName,
   childAge,
   collegeType = "Top College",
-  goalYear = 2037,
+  goalYear,
   goalAmount = "₹50L",
-  onPress,
+  savedAmount = "₹0",
+  savedFraction = 0,
+  nextSipAmount,
+  nextSipDate,
 }: ChildPlanCardProps) {
-  // Clamp current age to the milestone range for progress calculation
-  const minAge = MILESTONES[0];
-  const maxAge = MILESTONES[MILESTONES.length - 1];
-  const clampedAge = Math.min(Math.max(childAge, minAge), maxAge);
-  const progressFraction = (clampedAge - minAge) / (maxAge - minAge);
+  const clampedFraction = Math.min(Math.max(savedFraction, 0), 1);
+  const hasSip = !!nextSipAmount && !!nextSipDate;
 
   return (
     <View style={styles.card}>
@@ -52,60 +53,54 @@ export default function ChildPlanCard({
           </Text>
           <View style={styles.subtitleRow}>
             <Text style={styles.capEmoji}>🎓</Text>
-            <Text style={styles.subtitle}>
-              {`${collegeType} · ${goalYear} Goal `}
-              <Text style={styles.goalAmount}>{goalAmount}</Text>
-            </Text>
+            <Text style={styles.subtitle}>{`${collegeType} · ${goalYear}`}</Text>
           </View>
         </View>
 
-        {/* ── Graduation cap icon ── */}
+        {/* ── College icon ── */}
         <View style={styles.capIconWrapper}>
-          <GraduationCap width={48} height={48} />
+          <TopColleges width={40} height={40} />
         </View>
       </View>
 
-      {/* ── Age timeline ── */}
-      <View style={styles.timelineContainer}>
-        {/* Track */}
-        <View style={styles.track}>
-          {/* Blue fill up to current age */}
-          <View style={[styles.trackFill, { width: `${progressFraction * 100}%` }]} />
-        </View>
-
-        {/* Milestone circles (absolutely overlaid on track) */}
-        {MILESTONES.map((age, i) => {
-          const fraction = (age - minAge) / (maxAge - minAge);
-          return (
-            <View
-              key={age}
-              style={[styles.milestoneWrapper, { left: `${fraction * 100}%` }]}
-            >
-              <View style={styles.circle} />
-              <Text style={styles.ageLabel}>{`Age ${age}`}</Text>
-            </View>
-          );
-        })}
+      {/* ── Progress bar ── */}
+      <View style={styles.track}>
+        <View style={[styles.trackFill, { width: `${clampedFraction * 100}%` }]} />
       </View>
 
-      {/* ── CTA ── */}
-      <View style={styles.buttonWrapper}>
-        <Button title="Start Saving Now →" onPress={onPress} />
+      {/* ── Saved / Goal row ── */}
+      <View style={[styles.savingsRow, !hasSip && { marginBottom: 0 }]}>
+        <Text style={styles.savedText}>
+          <Text style={styles.savedAmount}>{savedAmount}</Text>
+          {" saved"}
+        </Text>
+        <Text style={styles.goalText}>
+          {"Goal "}
+          <Text style={styles.goalAmount}>{goalAmount}</Text>
+        </Text>
       </View>
+
+      {/* ── Next SIP (only when data is available) ── */}
+      {hasSip && (
+        <>
+          <View style={styles.divider} />
+          <View style={styles.sipRow}>
+            <Text style={styles.sipLabel}>Next SIP</Text>
+            <Text style={styles.sipValue}>{`${nextSipAmount} · ${nextSipDate}`}</Text>
+          </View>
+        </>
+      )}
     </View>
   );
 }
 
 // ─── Styles ─────────────────────────────────────────────────────────────────
-const CIRCLE_SIZE = 28;
-const CIRCLE_OFFSET = CIRCLE_SIZE / 2;
-
 const styles = StyleSheet.create({
   card: {
     backgroundColor: T.cardBg,
     borderRadius: 24,
     padding: 20,
-    paddingBottom: 24,
+    paddingBottom: 20,
   },
 
   // ── Header ──
@@ -139,61 +134,74 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: T.textMuted,
   },
-  goalAmount: {
-    fontWeight: "700",
-    color: T.textDark,
-  },
   capIconWrapper: {
-    width: 64,
-    height: 64,
-    borderRadius: 16,
+    width: 60,
+    height: 60,
+    borderRadius: 14,
     backgroundColor: T.capIconBg,
     alignItems: "center",
     justifyContent: "center",
   },
 
-  // ── Timeline ──
-  timelineContainer: {
-    position: "relative",
-    height: CIRCLE_SIZE + 28, // circle + label below
-    marginHorizontal: CIRCLE_OFFSET,
-    marginBottom: 24,
-  },
+  // ── Progress ──
   track: {
-    position: "absolute",
-    top: CIRCLE_SIZE / 2 - 3,
-    left: -CIRCLE_OFFSET,
-    right: -CIRCLE_OFFSET,
-    height: 6,
-    borderRadius: 3,
+    height: 10,
+    borderRadius: 5,
     backgroundColor: T.trackBg,
     overflow: "hidden",
+    marginBottom: 10,
   },
   trackFill: {
     height: "100%",
     backgroundColor: T.primary,
-    borderRadius: 3,
-  },
-  milestoneWrapper: {
-    position: "absolute",
-    alignItems: "center",
-    transform: [{ translateX: -CIRCLE_OFFSET }],
-  },
-  circle: {
-    width: CIRCLE_SIZE,
-    height: CIRCLE_SIZE,
-    borderRadius: CIRCLE_SIZE / 2,
-    backgroundColor: T.circleBg,
-  },
-  ageLabel: {
-    marginTop: 6,
-    fontSize: 12,
-    color: T.textMuted,
-    fontWeight: "500",
+    borderRadius: 5,
   },
 
-  // ── Button ──
-  buttonWrapper: {
-    // full-width button
+  // ── Savings row ──
+  savingsRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: 16,
+  },
+  savedText: {
+    fontSize: 14,
+    color: T.textMuted,
+  },
+  savedAmount: {
+    fontWeight: "700",
+    color: T.textDark,
+    fontSize: 14,
+  },
+  goalText: {
+    fontSize: 14,
+    color: T.textMuted,
+  },
+  goalAmount: {
+    fontWeight: "700",
+    color: T.textDark,
+  },
+
+  // ── Divider ──
+  divider: {
+    height: 1,
+    backgroundColor: T.divider,
+    marginBottom: 14,
+  },
+
+  // ── Next SIP ──
+  sipRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+  },
+  sipLabel: {
+    fontSize: 15,
+    color: T.textDark,
+  },
+  sipValue: {
+    fontSize: 15,
+    fontWeight: "700",
+    color: T.textDark,
   },
 });

@@ -124,6 +124,8 @@ export type GoalDTO = {
     min_sip: number;
     min_step_up: number;
   };
+  next_sip_amount: number | null;
+  next_sip_date: string | null;
   target_date?: string;
   createdAt?: string;
   updatedAt?: string;
@@ -150,5 +152,8 @@ export function mapGoalToGoal(goal: GoalDTO): Goal {
     updatedAt: goal.updatedAt ? new Date(goal.updatedAt) : new Date(),
     basket: goal.basket,
     educationId: goal.education_id || goal.education?.id,
+
+    nextSipAmount: goal.next_sip_amount,
+    nextSipDate: goal.next_sip_date ? new Date(goal.next_sip_date) : null,
   };
 }

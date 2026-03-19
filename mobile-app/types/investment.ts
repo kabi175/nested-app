@@ -15,6 +15,9 @@ export type Goal = {
     min_step_up: number;
   };
 
+  nextSipAmount: number | null;
+  nextSipDate: Date | null;
+
   targetDate: Date;
   status: "draft" | "payment_pending" | "active" | "completed" | "cancelled";
   createdAt: Date;
