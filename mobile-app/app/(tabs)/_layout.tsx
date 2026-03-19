@@ -6,7 +6,7 @@ import { HapticTab } from "@/components/HapticTab";
 import TabBarBackground from "@/components/ui/TabBarBackground";
 import { Colors } from "@/constants/Colors";
 import { useColorScheme } from "@/hooks/useColorScheme";
-import { House, UserCog, Zap } from "lucide-react-native";
+import { Database, House, User } from "lucide-react-native";
 import { useAuth0 } from "react-native-auth0";
 
 export default function TabLayout() {
@@ -45,14 +45,14 @@ export default function TabLayout() {
         name="super-fd"
         options={{
           title: "Super FD",
-          tabBarIcon: ({ color }) => <Zap size={24} color={color} />,
+          tabBarIcon: ({ color }) => <Database size={24} color={color} />,
         }}
       />
       <Tabs.Screen
         name="account"
         options={{
           title: "Account",
-          tabBarIcon: ({ color }) => <UserCog size={24} color={color} />,
+          tabBarIcon: ({ color }) => <User size={24} color={color} />,
         }}
       />
     </Tabs>
