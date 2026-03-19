@@ -1,6 +1,21 @@
+import ArtDesign from "@/assets/images/v2/education-plan/art-design.svg";
+import IitNit from "@/assets/images/v2/education-plan/iit-nit.svg";
+import Mba from "@/assets/images/v2/education-plan/mba.svg";
+import Medical from "@/assets/images/v2/education-plan/medical.svg";
+import StudyAbroad from "@/assets/images/v2/education-plan/study-abroad.svg";
 import TopColleges from "@/assets/images/v2/education-plan/top-colleges.svg";
 import React from "react";
 import { StyleSheet, Text, View } from "react-native";
+import { SvgProps } from "react-native-svg";
+
+const EDUCATION_ICONS: Record<string, React.FC<SvgProps>> = {
+  "top-colleges": TopColleges,
+  "medical": Medical,
+  "mba": Mba,
+  "study-abroad": StudyAbroad,
+  "arts": ArtDesign,
+  "iits": IitNit,
+};
 
 // ─── Tokens ─────────────────────────────────────────────────────────────────
 const T = {
@@ -17,6 +32,7 @@ const T = {
 interface ChildPlanCardProps {
   childName: string;
   childAge: number;
+  educationId?: string;
   collegeType?: string;
   goalYear: number;
   goalAmount: string;
@@ -31,6 +47,7 @@ interface ChildPlanCardProps {
 export default function ChildPlanCard({
   childName,
   childAge,
+  educationId,
   collegeType = "Top College",
   goalYear,
   goalAmount = "₹50L",
@@ -41,6 +58,7 @@ export default function ChildPlanCard({
 }: ChildPlanCardProps) {
   const clampedFraction = Math.min(Math.max(savedFraction, 0), 1);
   const hasSip = !!nextSipAmount && !!nextSipDate;
+  const Icon = (educationId && EDUCATION_ICONS[educationId]) || TopColleges;
 
   return (
     <View style={styles.card}>
@@ -59,7 +77,7 @@ export default function ChildPlanCard({
 
         {/* ── College icon ── */}
         <View style={styles.capIconWrapper}>
-          <TopColleges width={40} height={40} />
+          <Icon width={40} height={40} />
         </View>
       </View>
 

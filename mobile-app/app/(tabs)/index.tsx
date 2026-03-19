@@ -1,20 +1,16 @@
 import { useRouter } from "expo-router";
+import { StatusBar } from "expo-status-bar";
 import React from "react";
-import { ScrollView, StyleSheet, View } from "react-native";
+import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
-import PendingActivity from "@/assets/images/v2/pending-activity.svg";
-import Button from "@/components/v2/Button";
 import ChildPlanCard from "@/components/v2/ChildPlanCard";
 import CompleteKycComponent from "@/components/v2/CompleteKycComponent";
-import FundValueHeader from "@/components/v2/FundValueHeader";
-import WhatActivatesSection from "@/components/v2/WhatActivatesSection";
 import { useChild, useChildren } from "@/hooks/useChildren";
 import { useEducation } from "@/hooks/useEducation";
 import { useEducationGoals } from "@/hooks/useGoals";
 import { useUser } from "@/hooks/useUser";
 import { Goal } from "@/types/investment";
-import { StatusBar } from "expo-status-bar";
 
 function getAge(dateOfBirth: Date): number {
   const today = new Date();
@@ -37,58 +33,59 @@ function formatGoalAmount(amount: number): string {
   return `₹${amount.toLocaleString("en-IN")}`;
 }
 
+function formatSipDate(date: Date): string {
+  const d = new Date(date);
+  const month = d.toLocaleString("en-IN", { month: "short" }).toUpperCase();
+  return `${d.getDate()} ${month}`;
+}
+
+function getGreeting(): string {
+  const hour = new Date().getHours();
+  if (hour < 12) return "Good morning";
+  if (hour < 17) return "Good afternoon";
+  return "Good evening";
+}
+
 export default function HomeScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
 
   const { data: user } = useUser();
-  const { data: children, isLoading: isChildrenLoading } = useChildren();
-  const { data: goals, isLoading: isGoalsLoading } = useEducationGoals();
+  const { data: children } = useChildren();
+  const { data: goals } = useEducationGoals();
 
-  const child = children?.[0];
+  const isKycCompleted = user?.kycStatus === "completed";
+  const hasGoals = !!goals && goals.length > 0;
+  const showKycCard = !isKycCompleted || !hasGoals;
 
-  const childName = child?.firstName;
+  const totalCorpus = goals
+    ? formatGoalAmount(goals.reduce((sum, g) => sum + g.currentAmount, 0))
+    : null;
 
-  const totalMonthlySip = goals?.map(g => g.monthlySip).filter((v): v is number => !!v).reduce((a, b) => a + b, 0);
+  const childName = children?.[0]?.firstName;
+  const totalMonthlySip = goals
+    ?.map((g) => g.monthlySip)
+    .filter((v): v is number => !!v)
+    .reduce((a, b) => a + b, 0);
   const monthlyAmount = totalMonthlySip
     ? `₹${totalMonthlySip.toLocaleString("en-IN")}/mo`
     : undefined;
 
-  const isKycCompleted = user?.kycStatus === "completed";
-  const isGoalsEmpty = goals && goals.length === 0;
-
-  const showKycCard = !isKycCompleted || isGoalsEmpty;
-
   function handleContinueKyc() {
-    console.log("kycStatus", user?.kycStatus)
     if (isKycCompleted) {
-      handleStartSaving();
+      if (children?.length === 0) {
+        router.push("/child/create");
+      } else {
+        router.push("/child/select");
+      }
     } else {
       router.push("/kyc");
     }
   }
 
-  function handleStartSaving() {
-    if (!isKycCompleted) {
-      router.push("/kyc");
-    }
-
-    if (children?.length === 0) {
-      router.push("/child/create")
-      return;
-    }
-
-    if (goals?.length === 0) {
-      router.push("/child/select")
-      return;
-    }
-  }
-
-  const isLoading = isChildrenLoading || isGoalsLoading;
-
   return (
     <View style={[styles.screen, { paddingTop: insets.top }]}>
-      <StatusBar style="light" backgroundColor="#2848F1" />
+      <StatusBar style="dark" backgroundColor="#FFFFFF" />
       <ScrollView
         style={styles.scroll}
         contentContainerStyle={[
@@ -97,21 +94,22 @@ export default function HomeScreen() {
         ]}
         showsVerticalScrollIndicator={false}
       >
-        {/* ── Blue fund value header ── */}
-        <View style={styles.headerWrapper}>
-          <FundValueHeader />
+        {/* ── Greeting ── */}
+        <View style={styles.greetingWrapper}>
+          <Text style={styles.greeting}>
+            {getGreeting()}, {user?.firstName ?? ""}
+          </Text>
+          {isKycCompleted && hasGoals && (
+            <Text style={styles.corpus}>
+              {"Total Corpus: "}
+              <Text style={styles.corpusAmount}>{totalCorpus}</Text>
+            </Text>
+          )}
         </View>
 
-        {/* ── KYC illustration ── */}
+        {/* ── KYC card ── */}
         {showKycCard && (
-          <View style={styles.illustrationWrapper}>
-            <PendingActivity width={180} height={120} />
-          </View>
-        )}
-
-        {/* ── KYC steps ── */}
-        {showKycCard && (
-          <View style={styles.card}>
+          <View style={styles.kycCard}>
             <CompleteKycComponent
               childName={childName}
               monthlyAmount={monthlyAmount}
@@ -121,97 +119,94 @@ export default function HomeScreen() {
         )}
 
         {/* ── Child plan cards ── */}
-        {goals && goals.length > 0 && (
+        {isKycCompleted && hasGoals && (
           <View style={styles.planCardWrapper}>
-            {goals.map((g) => (
+            {goals!.map((g) => (
               <GoalPlanCard key={g.id} goal={g} />
             ))}
+            <TouchableOpacity
+              style={styles.addGoalButton}
+              onPress={() => router.push("/child/select")}
+            >
+              <Text style={styles.addGoalText}>+ Add Goal</Text>
+            </TouchableOpacity>
           </View>
         )}
-
-        {/* ── What activates after KYC ── */}
-        {showKycCard && <WhatActivatesSection />}
-
-        {/* ── Bottom CTA ── */}
-        <View style={styles.bottomCta}>
-          <Button title="Start Saving Now →" onPress={handleStartSaving} />
-        </View>
       </ScrollView>
     </View>
   );
-}
-
-function formatSipDate(date: Date): string {
-  const d = new Date(date);
-  const day = d.getDate();
-  const month = d.toLocaleString("en-IN", { month: "short" }).toUpperCase();
-  return `${day} ${month}`;
 }
 
 const GoalPlanCard = ({ goal }: { goal: Goal }) => {
   const { data: child } = useChild(goal.childId);
   const { data: education } = useEducation(goal.educationId as string);
 
-  const childName = child?.firstName ?? "—";
-  const childAge = child ? getAge(child.dateOfBirth) : 0;
-  const goalAmount = formatGoalAmount(goal.targetAmount);
-  const goalYear = new Date(goal.targetDate).getFullYear();
-  const savedAmount = `₹${goal.currentAmount.toLocaleString("en-IN")}`;
-  const savedFraction = goal.targetAmount > 0 ? goal.currentAmount / goal.targetAmount : 0;
-  const nextSipAmount = goal.nextSipAmount != null
-    ? `₹${goal.nextSipAmount.toLocaleString("en-IN")}`
-    : null;
-  const nextSipDate = goal.nextSipDate != null ? formatSipDate(goal.nextSipDate) : null;
-
   return (
     <ChildPlanCard
+      childName={child?.firstName ?? "—"}
+      childAge={child ? getAge(child.dateOfBirth) : 0}
+      educationId={goal.educationId}
       collegeType={education?.name}
-      childName={childName}
-      childAge={childAge}
-      goalYear={goalYear}
-      goalAmount={goalAmount}
-      savedAmount={savedAmount}
-      savedFraction={savedFraction}
-      nextSipAmount={nextSipAmount}
-      nextSipDate={nextSipDate}
+      goalYear={new Date(goal.targetDate).getFullYear()}
+      goalAmount={formatGoalAmount(goal.targetAmount)}
+      savedAmount={`₹${goal.currentAmount.toLocaleString("en-IN")}`}
+      savedFraction={goal.targetAmount > 0 ? goal.currentAmount / goal.targetAmount : 0}
+      nextSipAmount={goal.nextSipAmount != null ? `₹${goal.nextSipAmount.toLocaleString("en-IN")}` : null}
+      nextSipDate={goal.nextSipDate != null ? formatSipDate(goal.nextSipDate) : null}
     />
   );
-}
+};
 
 const styles = StyleSheet.create({
   screen: {
     flex: 1,
-    backgroundColor: "#F5F5FA",
+    backgroundColor: "#FFFFFF",
   },
   scroll: {
     flex: 1,
   },
   content: {
     gap: 16,
-    paddingTop: 16,
+    paddingTop: 24,
   },
-  card: {
+  greetingWrapper: {
+    paddingHorizontal: 20,
+  },
+  greeting: {
+    fontSize: 26,
+    fontWeight: "700",
+    color: "#111111",
+  },
+  corpus: {
+    fontSize: 18,
+    fontWeight: "400",
+    color: "#111111",
+    marginTop: 4,
+  },
+  corpusAmount: {
+    fontWeight: "700",
+  },
+  kycCard: {
     marginHorizontal: 16,
-    backgroundColor: "#FFFFFF",
+    backgroundColor: "#F5F5FA",
     borderRadius: 24,
     overflow: "hidden",
-  },
-  headerWrapper: {
-    backgroundColor: "#2848F1",
-    paddingBottom: 20,
-    marginTop: -16,
-    paddingTop: 16,
-  },
-  illustrationWrapper: {
-    alignItems: "center",
-    marginTop: -16,
-    marginBottom: -8,
   },
   planCardWrapper: {
     marginHorizontal: 16,
     gap: 12,
   },
-  bottomCta: {
-    marginHorizontal: 16,
+  addGoalButton: {
+    borderWidth: 1.5,
+    borderColor: "#C8C8D8",
+    borderStyle: "dashed",
+    borderRadius: 20,
+    backgroundColor: "#FFFFFF",
+    paddingVertical: 18,
+    alignItems: "center",
+  },
+  addGoalText: {
+    fontSize: 16,
+    color: "#444444",
   },
 });
