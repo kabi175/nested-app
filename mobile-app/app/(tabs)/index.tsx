@@ -85,7 +85,7 @@ export default function HomeScreen() {
 
   return (
     <View style={[styles.screen, { paddingTop: insets.top }]}>
-      <StatusBar style="dark" backgroundColor="#FFFFFF" />
+      <StatusBar backgroundColor="#FFFFFF" />
       <ScrollView
         style={styles.scroll}
         contentContainerStyle={[
@@ -200,8 +200,8 @@ const styles = StyleSheet.create({
     borderWidth: 1.5,
     borderColor: "#C8C8D8",
     borderStyle: "dashed",
-    borderRadius: 20,
-    backgroundColor: "#FFFFFF",
+    borderRadius: 16,
+    backgroundColor: "#6F85F50F",
     paddingVertical: 18,
     alignItems: "center",
   },

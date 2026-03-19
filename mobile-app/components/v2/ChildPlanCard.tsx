@@ -19,7 +19,7 @@ const EDUCATION_ICONS: Record<string, React.FC<SvgProps>> = {
 
 // ─── Tokens ─────────────────────────────────────────────────────────────────
 const T = {
-  cardBg: "#EEEEF5",
+  cardBg: "#F4F4F4",
   primary: "#3137D5",
   textDark: "#111111",
   textMuted: "#8A8A9A",

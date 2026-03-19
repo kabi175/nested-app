@@ -4,13 +4,10 @@ import { Platform } from "react-native";
 
 import { HapticTab } from "@/components/HapticTab";
 import TabBarBackground from "@/components/ui/TabBarBackground";
-import { Colors } from "@/constants/Colors";
-import { useColorScheme } from "@/hooks/useColorScheme";
 import { Database, House, User } from "lucide-react-native";
 import { useAuth0 } from "react-native-auth0";
 
 export default function TabLayout() {
-  const colorScheme = useColorScheme();
   const { user } = useAuth0();
 
   if (!user) {
@@ -21,17 +18,33 @@ export default function TabLayout() {
   return (
     <Tabs
       screenOptions={{
-        tabBarActiveTintColor: Colors[colorScheme ?? "light"].tint,
+        tabBarActiveTintColor: "#141B34",
         headerShown: false,
         tabBarButton: HapticTab,
         tabBarBackground: TabBarBackground,
         tabBarStyle: Platform.select({
           ios: {
-            // Use a transparent background on iOS to show the blur effect
             position: "absolute",
+            backgroundColor: "#F4F4F4",
+            height: 80,
+            paddingTop: 12,
+            paddingBottom: 20,
           },
-          default: {},
+          default: {
+            backgroundColor: "#F4F4F4",
+            height: 70,
+            paddingTop: 10,
+            paddingBottom: 10,
+          },
         }),
+        tabBarLabelStyle: {
+          fontSize: 12,
+          fontWeight: "500",
+          marginTop: 4,
+        },
+        tabBarIconStyle: {
+          marginBottom: 0,
+        },
       }}
     >
       <Tabs.Screen
