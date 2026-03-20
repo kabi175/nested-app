@@ -25,22 +25,14 @@ const T = {
   dropdownBg: "#FFFFFF",
   selectedOptionBg: "#F5F5FA",
   infoBorder: "#D4D4D4",
-  infoBg: "#FFFFFF",
+  infoBg: "#6F85F50F",
   divider: "#E5E7EB",
 } as const;
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 function getAge(dateOfBirth: Date): number {
   const today = new Date();
-  const dob = new Date(dateOfBirth);
-  let age = today.getFullYear() - dob.getFullYear();
-  if (
-    today.getMonth() < dob.getMonth() ||
-    (today.getMonth() === dob.getMonth() && today.getDate() < dob.getDate())
-  ) {
-    age--;
-  }
-  return age;
+  return today.getFullYear() - dateOfBirth.getFullYear();
 }
 
 // ─── Props ────────────────────────────────────────────────────────────────────
@@ -58,11 +50,10 @@ export default function WhenNeededScreen({ child, loading = false, onBack, onSta
   const [isOpen, setIsOpen] = useState(false);
 
   const currentAge = getAge(child.dateOfBirth);
-  const minAge = Math.max(currentAge + 1, 15);
-  const ageOptions: number[] = Array.from(
-    { length: 25 - minAge + 1 },
-    (_, i) => minAge + i,
-  );
+  const ageOptions: number[] =
+    currentAge >= 18
+      ? Array.from({ length: 8 }, (_, i) => currentAge + 1 + i)
+      : Array.from({ length: 25 - 18 + 1 }, (_, i) => 18 + i);
   const yearsFromNow = selectedAge !== null ? selectedAge - currentAge : null;
 
   const handleSelectAge = (age: number) => {
@@ -73,7 +64,6 @@ export default function WhenNeededScreen({ child, loading = false, onBack, onSta
   return (
     <View style={[styles.root, { paddingTop: insets.top }]}>
       {/* ── Header label ── */}
-      <Text style={styles.headerLabel}>Child's info</Text>
 
       <ScrollView
         style={styles.scroll}
@@ -158,15 +148,6 @@ export default function WhenNeededScreen({ child, loading = false, onBack, onSta
           )}
         </View>
 
-        {/* ── Info box ── */}
-        {yearsFromNow !== null && (
-          <View style={styles.infoBox}>
-            <Text style={styles.infoText}>
-              That's {yearsFromNow} years from now — plenty of time to build.
-            </Text>
-          </View>
-        )}
-
         <View style={styles.spacer} />
       </ScrollView>
 
@@ -177,6 +158,14 @@ export default function WhenNeededScreen({ child, loading = false, onBack, onSta
           { paddingBottom: insets.bottom > 0 ? insets.bottom : 24 },
         ]}
       >
+        {/* ── Info box ── */}
+        {yearsFromNow !== null && (
+          <View style={styles.infoBox}>
+            <Text style={styles.infoText}>
+              That's {yearsFromNow} years from now — plenty of time to build.
+            </Text>
+          </View>
+        )}
         <Button
           title={`Start planning for ${child.firstName}`}
           disabled={selectedAge === null}
@@ -317,6 +306,7 @@ const styles = StyleSheet.create({
     backgroundColor: T.infoBg,
     paddingHorizontal: 16,
     paddingVertical: 14,
+    marginBottom: 12,
     marginTop: 8,
   } as ViewStyle,
 
