@@ -141,7 +141,15 @@ const GoalPlanCard = ({ goal }: { goal: Goal }) => {
   const onPress = () => {
 
     if (!goal.nextSipAmount) {
-      //TODO: redirect to planner screen
+      if (goal.education) {
+        router.push({ pathname: "/education/[goal_id]/planner", params: { goal_id: goal.id } });
+      } else {
+        router.push({
+          pathname: "/child/[child_id]/[goal_id]/planner",
+          params: { child_id: child?.id, goal_id: goal.id }
+        });
+      }
+
       return;
     }
 
