@@ -44,7 +44,6 @@ module.exports = () => ({
         {
           image: "./assets/images/v2/splash.png",
           imageWidth: 778,
-          resizeMode: "cover",
           backgroundColor: "#2F4BFF",
         },
       ],
