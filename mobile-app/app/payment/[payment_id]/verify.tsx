@@ -196,7 +196,7 @@ export default function PaymentVerificationScreen() {
   }
 
   if (payment == null || payment.verification_status !== "pending") {
-    return <Redirect href="/(tab)" />;
+    return <Redirect href="/(tabs)" />;
   }
 
   return (

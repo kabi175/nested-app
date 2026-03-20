@@ -10,7 +10,7 @@ export const BLOCKED_ROUTES: RegExp[] = [
   /^\/onboarding$/, // "/onboarding"
   /^\/sign-in$/, // "/sign-in"
   /^\/splash$/, // "/splash"
-  /^\/child$/, // "/(tab)"
+  /^\/child$/, // "/(child)"
   /^\/child\/.*$/, // "/child/*"
   /^\/goal\/.*$/, // "/goal/*"
 ];

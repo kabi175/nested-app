@@ -66,7 +66,7 @@ export default function DraftGoalScreen() {
                 goalId: goal_id,
             });
             setShowDeleteModal(false);
-            router.replace("/(tab)");
+            router.replace("/(tabs)");
         } catch (error) {
             console.error("Error deleting goal:", error);
             Alert.alert(
@@ -82,7 +82,7 @@ export default function DraftGoalScreen() {
             <SafeAreaView style={styles.container} edges={["top"]}>
                 <View style={styles.header}>
                     <TouchableOpacity
-                        onPress={() => router.replace("/(tab)")}
+                        onPress={() => router.replace("/(tabs)")}
                         style={styles.backButton}
                     >
                         <ArrowLeft size={24} color="#1F2937" />
@@ -102,7 +102,7 @@ export default function DraftGoalScreen() {
             <SafeAreaView style={styles.container} edges={["top"]}>
                 <View style={styles.header}>
                     <TouchableOpacity
-                        onPress={() => router.replace("/(tab)")}
+                        onPress={() => router.replace("/(tabs)")}
                         style={styles.backButton}
                     >
                         <ArrowLeft size={24} color="#1F2937" />
@@ -125,7 +125,7 @@ export default function DraftGoalScreen() {
             {/* Header */}
             <View style={styles.header}>
                 <TouchableOpacity
-                    onPress={() => router.replace("/(tab)")}
+                    onPress={() => router.replace("/(tabs)")}
                     style={styles.backButton}
                 >
                     <ArrowLeft size={24} color="#1F2937" />

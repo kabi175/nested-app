@@ -277,7 +277,7 @@ export default function CustomizeInvestmentScreen() {
         <View style={styles.headerSection}>
           <TouchableOpacity
             style={styles.backButton}
-            onPress={() => router.replace("/(tab)")}
+            onPress={() => router.replace("/(tabs)")}
           >
             <Ionicons name="arrow-back" size={24} color="#2563EB" />
           </TouchableOpacity>

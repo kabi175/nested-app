@@ -28,7 +28,9 @@ export default function GoalPlannerScreen() {
 
     const yearsFromNow = targetYear - new Date().getFullYear();
     const targetAmount = goal.targetAmount;
-    const idealSipAmount = computeMinimumSIPAmount(yearsFromNow, 0, 0, 12, targetAmount);
+
+    const minSip = Math.max(goal.basket.min_sip, 1_000);
+    const idealSipAmount = Math.max(Math.min(computeMinimumSIPAmount(yearsFromNow, 0, 0, 12, targetAmount), 1_00_000), minSip);
 
     const onBegin = async ({ sipAmount, lumpSum, stepUp }: {
         sipAmount: number;
@@ -36,6 +38,8 @@ export default function GoalPlannerScreen() {
         stepUp?: number;
     }) => {
         setErrorMessage(undefined);
+
+        const stepUpAmount = stepUp !== undefined ? Math.round((stepUp / 100) * sipAmount) : undefined;
 
         // 1. Validate before creating goal
         if (sipAmount <= 0) {
@@ -50,7 +54,7 @@ export default function GoalPlannerScreen() {
             setErrorMessage(`Lump sum cannot exceed ${formatCurrency(5_00_000)}.`);
             return;
         }
-        if (stepUp !== undefined && stepUp > 10_000) {
+        if (stepUpAmount !== undefined && stepUpAmount > 10_000) {
             setErrorMessage(`Step-up cannot exceed ${formatCurrency(10_000)}.`);
             return;
         }
@@ -67,7 +71,7 @@ export default function GoalPlannerScreen() {
             setErrorMessage(`Minimum lump sum is ${formatCurrency(min_investment)}.`);
             return;
         }
-        if (stepUp && stepUp > 0 && stepUp < min_step_up) {
+        if (stepUpAmount && stepUpAmount > 0 && stepUpAmount < min_step_up) {
             setErrorMessage(`Minimum step-up is ${formatCurrency(min_step_up)}.`);
             return;
         }
@@ -87,7 +91,7 @@ export default function GoalPlannerScreen() {
                 type: "sip",
                 amount: sipAmount,
                 start_date: sipStartDate,
-                yearly_setup: stepUp && stepUp > 0 ? stepUp : undefined,
+                yearly_setup: stepUpAmount && stepUpAmount > 0 ? stepUpAmount : undefined,
                 goalId: goal.id,
             },
             ...(lumpSum && lumpSum > 0
@@ -108,8 +112,6 @@ export default function GoalPlannerScreen() {
     };
 
 
-    //TODO: minSip needs to be handled properly based on goal.basket.min_sip
-
     return (
         <EducationBasedGoalPlanner
             childName={goal.child.name}
@@ -117,9 +119,10 @@ export default function GoalPlannerScreen() {
             goalAmount={targetAmount}
             collegeType={goal.education?.name}
             idealSipAmount={idealSipAmount}
+            minSip={minSip}
             error={errorMessage}
             onBegin={onBegin}
-            onBack={() => router.back()}
+            onBack={() => router.replace("/(tabs)")}
         />
     );
 }

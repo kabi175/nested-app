@@ -27,7 +27,7 @@ export function FooterActions({
     if (onReturnLaterPress) {
       onReturnLaterPress();
     } else {
-      router.replace("/(tab)");
+      router.replace("/(tabs)");
     }
   };
 

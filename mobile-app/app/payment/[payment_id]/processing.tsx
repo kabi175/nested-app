@@ -37,7 +37,7 @@ export default function PaymentProcessingScreen() {
       clearInterval(intervalRef.current);
       intervalRef.current = null;
     }
-    router.replace("/(tab)");
+    router.replace("/(tabs)");
   };
 
   useEffect(() => {

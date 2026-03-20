@@ -89,7 +89,7 @@ export default function WaitingForApprovalScreen() {
         setGoalsForCustomize
       );
     } else {
-      router.replace("/(tab)");
+      router.replace("/(tabs)");
     }
   };
 
