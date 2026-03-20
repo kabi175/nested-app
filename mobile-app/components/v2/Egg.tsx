@@ -9,6 +9,7 @@ import Animated, {
   withSpring,
   withTiming,
 } from "react-native-reanimated";
+import Svg, { Path } from "react-native-svg";
 
 export interface EggProps {
   color: string;
@@ -57,20 +58,24 @@ export default function Egg({
     transform: [{ translateY: floatY.value }, { scale: scale.value }],
   }));
 
+  // Egg path: pointed top, rounded bottom
+  const w = width;
+  const h = height;
+  const d = [
+    `M ${w / 2} 0`,
+    `C ${w * 0.9} 0, ${w} ${h * 0.3}, ${w} ${h * 0.5}`,
+    `C ${w} ${h * 0.8}, ${w * 0.7} ${h}, ${w / 2} ${h}`,
+    `C ${w * 0.3} ${h}, 0 ${h * 0.8}, 0 ${h * 0.5}`,
+    `C 0 ${h * 0.3}, ${w * 0.1} 0, ${w / 2} 0 Z`,
+  ].join(" ");
+
   return (
     <Pressable onPress={onPress}>
-      <Animated.View
-        style={[
-          {
-            width,
-            height,
-            borderRadius: width / 2,
-            backgroundColor: color,
-            opacity: 0.85,
-          },
-          style,
-        ]}
-      />
+      <Animated.View style={style}>
+        <Svg width={width} height={height} viewBox={`0 0 ${width} ${height}`}>
+          <Path d={d} fill={color} opacity={0.85} />
+        </Svg>
+      </Animated.View>
     </Pressable>
   );
 }
