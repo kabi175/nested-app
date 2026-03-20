@@ -1,11 +1,12 @@
 import { router, useRouter } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import React from "react";
-import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { Image, ScrollView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import ChildPlanCard from "@/components/v2/ChildPlanCard";
 import CompleteKycComponent from "@/components/v2/CompleteKycComponent";
+import OutlineButton from "@/components/v2/OutlineButton";
 import { useChild, useChildren } from "@/hooks/useChildren";
 import { useEducationGoals } from "@/hooks/useGoals";
 import { useUser } from "@/hooks/useUser";
@@ -95,15 +96,26 @@ export default function HomeScreen() {
       >
         {/* ── Greeting ── */}
         <View style={styles.greetingWrapper}>
-          <Text style={styles.greeting}>
-            {getGreeting()}, {user?.firstName ?? ""}
-          </Text>
-          {isKycCompleted && hasGoals && (
-            <Text style={styles.corpus}>
-              {"Total Corpus: "}
-              <Text style={styles.corpusAmount}>{totalCorpus}</Text>
-            </Text>
-          )}
+          <View style={styles.greetingRow}>
+            <View>
+              <Text style={styles.greeting}>
+                {getGreeting()}, {user?.firstName ?? ""}
+              </Text>
+              {isKycCompleted && hasGoals && (
+                <Text style={styles.corpus}>
+                  {"Total Corpus: "}
+                  <Text style={styles.corpusAmount}>{totalCorpus}</Text>
+                </Text>
+              )}
+            </View>
+            {isKycCompleted && hasGoals && (
+              <Image
+                source={require("@/assets/images/v2/nest-with-egg.png")}
+                style={styles.nestImage}
+                resizeMode="contain"
+              />
+            )}
+          </View>
         </View>
 
         {/* ── KYC card ── */}
@@ -127,8 +139,12 @@ export default function HomeScreen() {
               style={styles.addGoalButton}
               onPress={() => router.push("/child/select")}
             >
-              <Text style={styles.addGoalText}>+ Add Goal</Text>
+              <Text style={styles.addGoalText}>+ Add goal</Text>
             </TouchableOpacity>
+            <OutlineButton
+              title="Add child"
+              onPress={() => router.push("/child/create")}
+            />
           </View>
         )}
       </ScrollView>
@@ -224,5 +240,14 @@ const styles = StyleSheet.create({
   addGoalText: {
     fontSize: 16,
     color: "#444444",
+  },
+  greetingRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+  },
+  nestImage: {
+    width: 100,
+    height: 80,
   },
 });
