@@ -5,11 +5,14 @@ import { useEffect } from "react";
 
 export const LAST_ROUTE_KEY = "last_active_route";
 export const BLOCKED_ROUTES: RegExp[] = [
-  /^\/$/,          // "/"
-  /^\/name-input$/,     // "/login"
-  /^\/sign-in$/,     // "/sign-in"
-  /^\/splash$/,    // "/splash"
-  /^\/child\/.*$/  // "/child/*"
+  /^\/$/, // "/"
+  /^\/name-input$/, // "/login"
+  /^\/onboarding$/, // "/onboarding"
+  /^\/sign-in$/, // "/sign-in"
+  /^\/splash$/, // "/splash"
+  /^\/child$/, // "/(child)"
+  /^\/child\/.*$/, // "/child/*"
+  /^\/goal\/.*$/, // "/goal/*"
 ];
 
 export const isBlocked = (route: string) =>
@@ -23,10 +26,13 @@ export function usePersistRoute() {
     if (!pathname) return;
 
     const query = new URLSearchParams(
-      Object.entries(params).reduce((acc, [k, v]) => {
-        if (typeof v === "string") acc[k] = v;
-        return acc;
-      }, {} as Record<string, string>)
+      Object.entries(params).reduce(
+        (acc, [k, v]) => {
+          if (typeof v === "string") acc[k] = v;
+          return acc;
+        },
+        {} as Record<string, string>,
+      ),
     ).toString();
 
     if (isBlocked(pathname)) {

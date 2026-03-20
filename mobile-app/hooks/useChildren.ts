@@ -10,3 +10,11 @@ export function useChildren() {
     queryFn: () => getChildren(api),
   });
 }
+
+export function useChild(childId: string) {
+  const api = useAuthAxios();
+  return useQuery({
+    queryKey: [QUERY_KEYS.children, childId],
+    queryFn: () => getChildren(api).then((children) => children.find((child) => child.id === childId))
+  });
+}

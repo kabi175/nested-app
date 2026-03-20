@@ -1,7 +1,8 @@
 import { updateUser } from "@/api/userApi";
-import { GenericSelect } from "@/components/ui/GenericSelect";
-import { InfoTooltip } from "@/components/ui/InfoTooltip";
-import { StepProgress } from "@/components/ui/StepProgress";
+import Button from "@/components/v2/Button";
+import SelectInput from "@/components/v2/SelectInput";
+import KycHeader from "@/components/v2/kyc/KycHeader";
+import KycSecurityNotice from "@/components/v2/kyc/KycSecurityNotice";
 import {
   incomeSlabOptions,
   incomeSourceOptions,
@@ -13,10 +14,17 @@ import { useUser } from "@/hooks/useUser";
 import { useKyc } from "@/providers/KycProvider";
 import type { User } from "@/types/auth";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { Button, Text, Toggle } from "@ui-kitten/components";
 import { useRouter } from "expo-router";
 import React, { useEffect, useRef, useState } from "react";
-import { KeyboardAvoidingView, Platform, ScrollView, View } from "react-native";
+import {
+  KeyboardAvoidingView,
+  Platform,
+  ScrollView,
+  StyleSheet,
+  Switch,
+  Text,
+  View,
+} from "react-native";
 
 export default function FinancialScreen() {
   const { data, update, validateFinancial } = useKyc();
@@ -25,8 +33,6 @@ export default function FinancialScreen() {
   const { data: user, isLoading: isLoadingUser } = useUser();
   const [errors, setErrors] = useState<Record<string, string>>({});
   const hasPrefilledRef = useRef(false);
-  const totalSteps = 5;
-  const currentStep = 4;
   const api = useAuthAxios();
 
   useEffect(() => {
@@ -84,7 +90,6 @@ export default function FinancialScreen() {
     }
 
     try {
-      // Update user financial information
       await updateFinancialData({
         userId: user.id,
         financialData: {
@@ -99,136 +104,122 @@ export default function FinancialScreen() {
 
       router.push("/kyc/validation-in-progress");
     } catch (error) {
-      // TODO: surface error to user (toast/snackbar) if needed
       console.error("Error saving financial information:", error);
     }
   };
 
+  const isLoading = isUpdatingFinancial || isLoadingUser;
+
   return (
     <KeyboardAvoidingView
       behavior={Platform.select({ ios: "padding", android: undefined })}
-      style={{ flex: 1 }}
+      style={styles.root}
     >
-      <StepProgress current={currentStep} total={totalSteps} />
-      <ScrollView contentContainerStyle={{ padding: 16, gap: 16 }}>
-        <View>
-          <View
-            style={{
-              flexDirection: "row",
-              alignItems: "center",
-              marginBottom: 6,
-            }}
-          >
-            <Text category="label">Occupation Type</Text>
-            <InfoTooltip content="Regulators require us to classify your occupation type." />
-          </View>
-          <GenericSelect
-            options={occupationOptions}
-            value={data.financial.occupation || undefined}
-            onChange={(val) => update("financial", { occupation: val as any })}
-            status={errors.occupation ? "danger" : "basic"}
-            caption={errors.occupation}
-            placeholder="Select"
-            disabled={isUpdatingFinancial || isLoadingUser}
+      <KycHeader
+        title="KYC Basic Details"
+        current={4}
+        total={5}
+        onBack={() => router.back()}
+      />
+      <ScrollView
+        contentContainerStyle={styles.scroll}
+        showsVerticalScrollIndicator={false}
+        style={{ flex: 1 }}
+      >
+        <SelectInput
+          label="Occupation Type"
+          options={occupationOptions}
+          value={data.financial.occupation || ""}
+          onChange={(val) => update("financial", { occupation: val as any })}
+          placeholder="Select"
+          error={errors.occupation}
+          touched={!!errors.occupation}
+          disabled={isLoading}
+        />
+
+        <SelectInput
+          label="Income Source"
+          options={incomeSourceOptions}
+          value={data.financial.incomeSource || ""}
+          onChange={(val) =>
+            update("financial", { incomeSource: val as any })
+          }
+          placeholder="Select"
+          error={errors.incomeSource}
+          touched={!!errors.incomeSource}
+          disabled={isLoading}
+        />
+
+        <SelectInput
+          label="Income Slab"
+          options={incomeSlabOptions}
+          value={data.financial.incomeSlab || ""}
+          onChange={(val) => update("financial", { incomeSlab: val as any })}
+          placeholder="Select"
+          error={errors.incomeSlab}
+          touched={!!errors.incomeSlab}
+          disabled={isLoading}
+        />
+
+        <View style={styles.pepRow}>
+          <Text style={styles.pepLabel}>PEP Status</Text>
+          <Switch
+            value={data.financial.pep}
+            onValueChange={(v) => update("financial", { pep: v })}
+            trackColor={{ false: "#D1D5DB", true: "#3137D5" }}
+            thumbColor="#FFFFFF"
           />
         </View>
-
-        <View>
-          <View
-            style={{
-              flexDirection: "row",
-              alignItems: "center",
-              marginBottom: 6,
-            }}
-          >
-            <Text category="label">Income Source</Text>
-            <InfoTooltip content="Required to assess the origin of funds for compliance." />
-          </View>
-          <GenericSelect
-            options={incomeSourceOptions}
-            value={data.financial.incomeSource || undefined}
-            onChange={(val) =>
-              update("financial", { incomeSource: val as any })
-            }
-            status={errors.incomeSource ? "danger" : "basic"}
-            caption={errors.incomeSource}
-            placeholder="Select"
-            disabled={isUpdatingFinancial || isLoadingUser}
-          />
-        </View>
-
-        <View>
-          <View
-            style={{
-              flexDirection: "row",
-              alignItems: "center",
-              marginBottom: 6,
-            }}
-          >
-            <Text category="label">Income Slab</Text>
-            <InfoTooltip content="Helps us evaluate investment suitability." />
-          </View>
-          <GenericSelect
-            options={incomeSlabOptions}
-            value={data.financial.incomeSlab || undefined}
-            onChange={(val) => update("financial", { incomeSlab: val as any })}
-            status={errors.incomeSlab ? "danger" : "basic"}
-            caption={errors.incomeSlab}
-            placeholder="Select"
-            disabled={isUpdatingFinancial || isLoadingUser}
-          />
-        </View>
-
-        <View
-          style={{
-            flexDirection: "row",
-            alignItems: "center",
-            justifyContent: "space-between",
-          }}
-        >
-          <View style={{ flexDirection: "row", alignItems: "center" }}>
-            <Text category="label" style={{ marginRight: 8 }}>
-              PEP Status
-            </Text>
-            <InfoTooltip content="Required to determine if you are a Politically Exposed Person." />
-          </View>
-          <Toggle
-            checked={data.financial.pep}
-            onChange={(c) => update("financial", { pep: c })}
-          >
-            {data.financial.pep ? "Yes" : "No"}
-          </Toggle>
-        </View>
-        {!!errors.pep && (
-          <Text category="c2" status="danger">
-            {errors.pep}
-          </Text>
-        )}
-
-        <View
-          style={{
-            flexDirection: "row",
-            justifyContent: "space-between",
-            gap: 12,
-            marginTop: 12,
-          }}
-        >
-          <Button
-            style={{ flex: 1 }}
-            appearance="ghost"
-            onPress={() => router.back()}
-          >
-            Back
-          </Button>
-          <Button
-            style={{ flex: 1 }}
-            onPress={onContinue}
-            disabled={isUpdatingFinancial || isLoadingUser}
-          >
-            Continue
-          </Button>
-        </View>
+        {!!errors.pep && <Text style={styles.errorText}>{errors.pep}</Text>}
       </ScrollView>
+
+      <View style={styles.footer}>
+        <KycSecurityNotice />
+        <Button
+          title="Continue"
+          loading={isLoading}
+          onPress={onContinue}
+        />
+      </View>
     </KeyboardAvoidingView>
   );
 }
+
+const styles = StyleSheet.create({
+  root: {
+    flex: 1,
+    backgroundColor: "#FFFFFF",
+  },
+  scroll: {
+    paddingHorizontal: 16,
+    paddingTop: 8,
+    paddingBottom: 32,
+  },
+  pepRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    backgroundColor: "#F7F9FC",
+    borderRadius: 8,
+    padding: 14,
+    marginBottom: 16,
+  },
+  pepLabel: {
+    fontSize: 14,
+    fontWeight: "500",
+    color: "#374151",
+  },
+  errorText: {
+    color: "#EF4444",
+    fontSize: 13,
+    marginTop: -10,
+    marginBottom: 12,
+    marginLeft: 4,
+  },
+  footer: {
+    paddingHorizontal: 16,
+    paddingBottom: 32,
+    paddingTop: 8,
+    backgroundColor: "#FFFFFF",
+  },
+});

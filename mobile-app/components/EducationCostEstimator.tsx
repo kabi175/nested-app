@@ -1,4 +1,4 @@
-import { useEducation } from "@/hooks/useEducation";
+import { useEducations } from "@/hooks/useEducations";
 import { logCalculatorViewContent } from "@/services/metaEvents";
 import { Education } from "@/types/education";
 import { formatCurrency } from "@/utils/formatters";
@@ -27,7 +27,7 @@ export default function EducationCostEstimator({
   const [timeline, setTimeline] = useState<number>(10);
   const sliderTrackRef = useRef<View>(null);
   const sliderLayout = useRef({ width: 0, pageX: 0 });
-  const { courses, institutions } = useEducation();
+  const { courses, institutions } = useEducations();
 
   const MIN_YEARS = 1;
   const MAX_YEARS = 25;

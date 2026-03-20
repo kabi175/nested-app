@@ -1,28 +1,21 @@
 import { NetworkErrorScreen } from "@/components/NetworkErrorScreen";
 import RestoreLastRoute from "@/components/RestoreLastRoute";
+import SplashScreenComponent from "@/components/v2/SplashScreen";
+import { useOnboardingSeen } from "@/hooks/useOnboardingSeen";
 import { useUser } from "@/hooks/useUser";
 import { AxiosError } from "axios";
 import { Redirect } from "expo-router";
-import { Image, StyleSheet, View } from "react-native";
 import { useAuth0 } from "react-native-auth0";
 
 export default function Home() {
   const { isLoading: isAuthLoading, user: authUser } = useAuth0();
   const { data: user, isLoading, isError, error, refetch } = useUser();
+  const { seen: onboardingSeen } = useOnboardingSeen();
 
   const isSignedIn = !!authUser;
 
   if (isAuthLoading || isLoading) {
-    // show logo
-    return (
-      <View style={styles.container}>
-        <Image
-          source={require("@/assets/images/icon.png")} // 👈 put your logo image here
-          style={styles.logo}
-          resizeMode="contain"
-        />
-      </View>
-    );
+    return <SplashScreenComponent />;
   }
 
   // Check if it's a network error (not authentication errors)
@@ -64,25 +57,7 @@ export default function Home() {
     return <RestoreLastRoute />;
   }
 
-  console.log("redirecting to sign-in");
-  return <Redirect href="/sign-in" />;
+  // Not signed in — first-time users see onboarding, returning users see sign-in
+  console.log("redirecting to", onboardingSeen === false ? "onboarding" : "sign-in");
+  return <Redirect href={onboardingSeen === false ? "/onboarding" : "/sign-in"} />;
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-    backgroundColor: "#fff", // ✅ white background
-  },
-  logo: {
-    width: 150,
-    height: 150,
-    marginBottom: 20,
-  },
-  title: {
-    color: "#333", // dark gray text
-    fontSize: 20,
-    fontWeight: "600",
-  },
-});

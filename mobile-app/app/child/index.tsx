@@ -1,0 +1,171 @@
+import { ThemedText } from "@/components/ThemedText";
+import {
+  EmptyGoalState,
+  GoalsList,
+  PortfolioSummaryCard,
+} from "@/components/goal";
+import { useChildren } from "@/hooks/useChildren";
+import { useEducationGoals } from "@/hooks/useGoals";
+import { Button } from "@ui-kitten/components";
+import { Redirect, router } from "expo-router";
+import { StatusBar } from "expo-status-bar";
+import React, { useCallback } from "react";
+import { ActivityIndicator, ScrollView, StyleSheet, View } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
+
+export default function GoalScreen() {
+  const { data: children, isLoading: childrenLoading } = useChildren();
+  const { data: goals, isLoading: goalsLoading } = useEducationGoals();
+
+  const isLoading = childrenLoading || goalsLoading;
+  const hasChildren = Boolean(children && children.length > 0);
+  const hasGoals = Boolean(goals && goals.length > 0);
+  const firstChild = hasChildren && children ? children[0] : null;
+
+  const handleCreateChild = useCallback(() => {
+    router.push("/child/create");
+  }, []);
+
+  const handleCreateGoal = useCallback(() => {
+    if (firstChild) {
+      router.push(`/child/${firstChild.id}/goal/create`);
+    }
+  }, [firstChild]);
+
+  const handleInvestMore = useCallback(() => {
+    if (hasGoals && goals && goals.length > 0) {
+      // Navigate to first goal or create new goal
+      if (firstChild) {
+        router.push(`/child/${firstChild.id}/goal/create`);
+      } else {
+        handleCreateChild();
+      }
+    } else {
+      handleCreateGoal();
+    }
+  }, [hasGoals, goals, firstChild, handleCreateGoal, handleCreateChild]);
+
+  if (isLoading) {
+    return (
+      <SafeAreaView style={styles.container}>
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="large" color="#2563EB" />
+          <ThemedText style={styles.loadingText}>Loading goals...</ThemedText>
+        </View>
+      </SafeAreaView>
+    );
+  }
+
+  if (!hasChildren) {
+    return <Redirect href="/child/create" />
+  }
+
+  if (!hasGoals) {
+    return <Redirect href="/child/select" />
+  }
+
+  const currentValue =
+    goals?.reduce((sum, goal) => sum + goal.currentAmount, 0) || 0;
+  const invested = goals?.reduce((sum, goal) => sum + goal.investedAmount, 0) || 0;
+
+  return (
+    <SafeAreaView style={styles.container}>
+      <StatusBar style="auto" backgroundColor="#F8F7FF" />
+      <View style={styles.header}>
+        <ThemedText style={styles.headerTitle}>My Portfolio</ThemedText>
+      </View>
+      <ScrollView
+        style={styles.scrollContainer}
+        contentContainerStyle={styles.scrollContent}
+        showsVerticalScrollIndicator={false}
+      >
+        {hasGoals && goals ? (
+          <>
+            <View style={styles.contentContainer}>
+              {currentValue > 0 && (
+                <PortfolioSummaryCard
+                  currentValue={currentValue}
+                  investedAmount={invested}
+                  returnsAmount={currentValue - invested}
+                />
+              )}
+              <GoalsList goals={goals} />
+            </View>
+            <Button
+              style={styles.investMoreButton}
+              onPress={handleInvestMore}
+              size="large"
+              status="primary"
+            >
+              Invest More
+            </Button>
+          </>
+        ) : (
+          <EmptyGoalState
+            hasChildren={hasChildren}
+            firstChild={firstChild}
+            onCreateChild={handleCreateChild}
+            onCreateGoal={handleCreateGoal}
+          />
+        )}
+      </ScrollView>
+    </SafeAreaView>
+  );
+}
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: "#F8F7FF",
+  },
+  header: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    paddingHorizontal: 20,
+    paddingTop: 16,
+    paddingBottom: 16,
+    backgroundColor: "#F8F7FF",
+  },
+  headerTitle: {
+    fontSize: 24,
+    fontWeight: "bold",
+    color: "#1F2937",
+  },
+  headerIcons: {
+    flexDirection: "row",
+    alignItems: "center",
+  },
+  iconButton: {
+    padding: 4,
+    marginLeft: 16,
+  },
+  lastIconButton: {
+    marginLeft: 12,
+  },
+  scrollContainer: {
+    flex: 1,
+  },
+  scrollContent: {
+    paddingBottom: 20,
+  },
+  contentContainer: {
+    paddingHorizontal: 20,
+  },
+  investMoreButton: {
+    marginHorizontal: 20,
+    marginTop: 8,
+    marginBottom: 20,
+    borderRadius: 12,
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  loadingText: {
+    marginTop: 16,
+    fontSize: 16,
+    color: "#6B7280",
+  },
+});

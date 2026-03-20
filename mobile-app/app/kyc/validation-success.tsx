@@ -1,11 +1,11 @@
 import { useInitKyc } from "@/hooks/useInitKyc";
 import { useUser } from "@/hooks/useUser";
 import { logKycInitiation } from "@/services/metaEvents";
-import { Button, Layout, Text } from "@ui-kitten/components";
+import Button from "@/components/v2/Button";
 import { useRouter } from "expo-router";
 import { CheckCircle } from "lucide-react-native";
 import React, { useState } from "react";
-import { StyleSheet, View } from "react-native";
+import { StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function ValidationSuccessScreen() {
@@ -35,7 +35,6 @@ export default function ValidationSuccessScreen() {
         router.push("/kyc/waiting-for-approval");
         break;
       default:
-        // Default fallback if status is not recognized
         router.push("/kyc/waiting-for-approval");
         break;
     }
@@ -71,30 +70,27 @@ export default function ValidationSuccessScreen() {
 
   return (
     <SafeAreaView style={styles.safeArea} edges={["bottom"]}>
-      <Layout level="1" style={styles.container}>
+      <View style={styles.container}>
         <View style={styles.content}>
           <View style={styles.iconContainer}>
             <CheckCircle size={80} color="#10B981" />
           </View>
           <View style={styles.textContainer}>
-            <Text category="h4" style={styles.title}>
-              Verification Successful!
-            </Text>
-            <Text appearance="hint" category="s1" style={styles.subtitle}>
-              Your details have been successfully verified. You can now proceed to
-              complete your KYC application.
+            <Text style={styles.title}>Verification Successful!</Text>
+            <Text style={styles.subtitle}>
+              Your details have been successfully verified. You can now proceed
+              to complete your KYC application.
             </Text>
           </View>
         </View>
-        <Button
-          size="large"
-          onPress={handleContinue}
-          style={styles.button}
-          disabled={isContinuing}
-        >
-          {isContinuing ? "Please wait..." : "Continue"}
-        </Button>
-      </Layout>
+        <View style={styles.footer}>
+          <Button
+            title={isContinuing ? "Please wait..." : "Continue"}
+            loading={isContinuing}
+            onPress={handleContinue}
+          />
+        </View>
+      </View>
     </SafeAreaView>
   );
 }
@@ -107,9 +103,8 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     paddingHorizontal: 24,
-    paddingVertical: 24,
+    paddingTop: 24,
     justifyContent: "space-between",
-    backgroundColor: "transparent",
   },
   content: {
     flex: 1,
@@ -126,14 +121,18 @@ const styles = StyleSheet.create({
   },
   title: {
     textAlign: "center",
+    fontSize: 24,
     fontWeight: "700",
+    color: "#222B45",
   },
   subtitle: {
     textAlign: "center",
+    fontSize: 15,
     lineHeight: 22,
+    color: "#8F9BB3",
     paddingHorizontal: 16,
   },
-  button: {
-    width: "100%",
+  footer: {
+    paddingBottom: 16,
   },
 });

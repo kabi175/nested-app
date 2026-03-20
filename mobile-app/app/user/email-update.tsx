@@ -209,7 +209,7 @@ export default function EmailUpdateScreen() {
       if (redirectUrl) {
         router.replace(redirectUrl);
       } else {
-        router.replace("/(tabs)/child");
+        router.replace("/(tabs)");
       }
     } catch (error: any) {
       console.error("Verification error", error);
@@ -497,7 +497,7 @@ export default function EmailUpdateScreen() {
                   {/* Back Button */}
                   <View style={styles.successButtonContainer}>
                     <TouchableOpacity
-                      onPress={() => router.replace("/(tabs)/child")}
+                      onPress={() => router.replace("/(tabs)")}
                       style={styles.backToProfileButton}
                       activeOpacity={0.8}
                     >

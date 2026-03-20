@@ -1,6 +1,6 @@
 import { GoalFormCard } from "@/components/goal/create/GoalFormCard";
 import { ThemedText } from "@/components/ThemedText";
-import { useEducation } from "@/hooks/useEducation";
+import { useEducations } from "@/hooks/useEducations";
 import { useGoal } from "@/hooks/useGoal";
 import { useGoalFormAnimations } from "@/hooks/useGoalFormAnimations";
 import { useUpdateGoal } from "@/hooks/useUpdateGoal";
@@ -32,7 +32,7 @@ export default function EditGoalScreen() {
         courses,
         institutions,
         isLoading: isLoadingEducation,
-    } = useEducation();
+    } = useEducations();
 
     const [goalForm, setGoalForm] = useState<GoalForm | null>(null);
     const [isFormInitialized, setIsFormInitialized] = useState(false);
@@ -80,15 +80,15 @@ export default function EditGoalScreen() {
             let degree = "Choose a course";
             let college = "Select Dream College";
 
-            if (goal.educationId) {
+            if (goal.education) {
                 // Search in courses first
-                foundEducation = courses.find((edu) => edu.id === goal.educationId);
+                foundEducation = courses.find((edu) => edu.id === goal.education?.id);
                 if (foundEducation) {
                     selectionMode = "course";
                     degree = foundEducation.name;
                 } else {
                     // Search in institutions
-                    foundEducation = institutions.find((edu) => edu.id === goal.educationId);
+                    foundEducation = institutions.find((edu) => edu.id === goal.education?.id);
                     if (foundEducation) {
                         selectionMode = "college";
                         college = foundEducation.name;

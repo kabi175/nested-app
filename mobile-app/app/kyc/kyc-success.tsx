@@ -31,7 +31,7 @@ export default function KycSuccessScreen() {
   }, []);
 
   const handleGoToGoals = () => {
-    router.replace("/(tabs)/child");
+    router.replace("/(tabs)");
   };
 
   return (

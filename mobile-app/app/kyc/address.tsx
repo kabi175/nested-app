@@ -1,19 +1,14 @@
 import { updateUser } from "@/api/userApi";
-import { InfoTooltip } from "@/components/ui/InfoTooltip";
-import { StepProgress } from "@/components/ui/StepProgress";
+import Button from "@/components/v2/Button";
+import KycHeader from "@/components/v2/kyc/KycHeader";
+import KycSecurityNotice from "@/components/v2/kyc/KycSecurityNotice";
+import SelectInput, { SelectOption } from "@/components/v2/SelectInput";
+import TextInput from "@/components/v2/TextInput";
 import { QUERY_KEYS } from "@/constants/queryKeys";
 import { useAuthAxios } from "@/hooks/useAuthAxios";
 import { useUser } from "@/hooks/useUser";
 import { useKyc } from "@/providers/KycProvider";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import {
-  Button,
-  IndexPath,
-  Input,
-  Select,
-  SelectItem,
-  Text,
-} from "@ui-kitten/components";
 import { useRouter } from "expo-router";
 import React, { useEffect, useMemo, useState } from "react";
 import {
@@ -21,7 +16,6 @@ import {
   KeyboardAvoidingView,
   Platform,
   ScrollView,
-  View,
 } from "react-native";
 
 export default function AddressScreen() {
@@ -29,11 +23,10 @@ export default function AddressScreen() {
   const { data, update, validateAddress } = useKyc();
   const router = useRouter();
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [submitted, setSubmitted] = useState(false);
   const { data: user } = useUser();
   const queryClient = useQueryClient();
   const [hasPrefilled, setHasPrefilled] = useState(false);
-  const totalSteps = 5;
-  const currentStep = 2;
 
   const states = useMemo(
     () => [
@@ -71,6 +64,11 @@ export default function AddressScreen() {
     []
   );
 
+  const stateOptions = useMemo<SelectOption[]>(
+    () => states.map((s) => ({ label: s, value: s })),
+    [states]
+  );
+
   useEffect(() => {
     if (!user?.address || hasPrefilled) {
       return;
@@ -102,14 +100,6 @@ export default function AddressScreen() {
     setHasPrefilled(true);
   }, [user, hasPrefilled, data.address, update]);
 
-  const selectedStateIndex = useMemo(() => {
-    if (!data.address.state) {
-      return undefined;
-    }
-    const index = states.indexOf(data.address.state);
-    return index >= 0 ? new IndexPath(index) : undefined;
-  }, [data.address.state, states]);
-
   const { mutateAsync: saveAddress, isPending: isUpdating } = useMutation({
     mutationFn: async (addressValues: typeof data.address) => {
       if (!user?.id) {
@@ -138,17 +128,8 @@ export default function AddressScreen() {
     },
   });
 
-  // const useCurrentLocation = () => {
-  //   // Mock filling address using GPS - integrate with expo-location if needed
-  //   update("address", {
-  //     addressLine1: data.address.addressLine1 || "221B Baker Street",
-  //     city: data.address.city || "Mumbai",
-  //     state: data.address.state || "Maharashtra",
-  //     pin_code: data.address.pin_code || "400001",
-  //   });
-  // };
-
   const onContinue = async () => {
+    setSubmitted(true);
     const v = validateAddress();
     setErrors(v.errors);
     if (v.isValid) {
@@ -178,129 +159,62 @@ export default function AddressScreen() {
       behavior={Platform.select({ ios: "padding", android: undefined })}
       style={{ flex: 1 }}
     >
-      <StepProgress current={currentStep} total={totalSteps} />
-      <ScrollView contentContainerStyle={{ padding: 16, gap: 16 }}>
-        <View>
-          <View
-            style={{
-              flexDirection: "row",
-              alignItems: "center",
-              marginBottom: 6,
-            }}
-          >
-            <Text category="label">Address Line 1</Text>
-            <InfoTooltip content="We need your address for regulatory communication." />
-          </View>
-          <Input
-            placeholder="House / Flat / Street"
-            value={data.address.addressLine1}
-            onChangeText={(v) => update("address", { addressLine1: v })}
-            status={errors.addressLine1 ? "danger" : "basic"}
-            caption={errors.addressLine1}
-          />
-        </View>
+      <KycHeader
+        title="KYC Basic Details"
+        current={2}
+        total={5}
+        onBack={() => router.back()}
+      />
+      <ScrollView contentContainerStyle={{ padding: 16 }}>
+        <TextInput
+          label="Address Line 1"
+          placeholder="Address"
+          value={data.address.addressLine1}
+          onChangeText={(v) => update("address", { addressLine1: v })}
+          error={errors.addressLine1}
+          touched={submitted}
+        />
 
-        <View>
-          <View
-            style={{
-              flexDirection: "row",
-              alignItems: "center",
-              marginBottom: 6,
-            }}
-          >
-            <Text category="label">City</Text>
-            <InfoTooltip content="Used for jurisdiction-based compliance." />
-          </View>
-          <Input
-            placeholder="City"
-            value={data.address.city}
-            onChangeText={(v) => update("address", { city: v })}
-            status={errors.city ? "danger" : "basic"}
-            caption={errors.city}
-          />
-        </View>
+        <TextInput
+          label="City"
+          placeholder="Enter city"
+          value={data.address.city}
+          onChangeText={(v) => update("address", { city: v })}
+          error={errors.city}
+          touched={submitted}
+        />
 
-        <View>
-          <View
-            style={{
-              flexDirection: "row",
-              alignItems: "center",
-              marginBottom: 6,
-            }}
-          >
-            <Text category="label">State</Text>
-            <InfoTooltip content="Required for legal identification." />
-          </View>
-          <Select
-            selectedIndex={selectedStateIndex}
-            value={data.address.state || undefined}
-            onSelect={(index) => {
-              const row = Array.isArray(index) ? index[0].row : index.row;
-              update("address", { state: states[row] });
-            }}
-            status={errors.state ? "danger" : "basic"}
-            caption={errors.state}
-            placeholder="Select"
-          >
-            {states.map((s) => (
-              <SelectItem key={s} title={s} />
-            ))}
-          </Select>
-        </View>
+        <SelectInput
+          label="State"
+          options={stateOptions}
+          value={data.address.state}
+          onChange={(v) => update("address", { state: v })}
+          placeholder="Select"
+          error={errors.state}
+          touched={submitted}
+        />
 
-        <View>
-          <View
-            style={{
-              flexDirection: "row",
-              alignItems: "center",
-              marginBottom: 6,
-            }}
-          >
-            <Text category="label">Pincode</Text>
-            <InfoTooltip content="Ensures correct address verification." />
-          </View>
-          <Input
-            placeholder="6-digit PIN"
-            value={data.address.pin_code}
-            onChangeText={(v) =>
-              update("address", { pin_code: v.replace(/[^0-9]/g, "") })
-            }
-            keyboardType="number-pad"
-            maxLength={6}
-            status={errors.pin_code ? "danger" : "basic"}
-            caption={errors.pin_code}
-          />
-        </View>
+        <TextInput
+          label="Pincode"
+          placeholder="6-digit PIN"
+          value={data.address.pin_code}
+          onChangeText={(v) =>
+            update("address", { pin_code: v.replace(/[^0-9]/g, "") })
+          }
+          keyboardType="number-pad"
+          maxLength={6}
+          error={errors.pin_code}
+          touched={submitted}
+        />
 
-        {/** TODO: auto fill address from location service */}
-        {/* <Button appearance="outline" onPress={useCurrentLocation}>
-          Use Current Location
-        </Button> */}
+        <KycSecurityNotice />
 
-        <View
-          style={{
-            flexDirection: "row",
-            justifyContent: "space-between",
-            gap: 12,
-            marginTop: 12,
-          }}
-        >
-          <Button
-            style={{ flex: 1 }}
-            appearance="ghost"
-            onPress={() => router.back()}
-          >
-            Back
-          </Button>
-          <Button
-            style={{ flex: 1 }}
-            onPress={onContinue}
-            disabled={isUpdating}
-            appearance={isUpdating ? "outline" : "filled"}
-          >
-            Continue
-          </Button>
-        </View>
+        <Button
+          title="Continue"
+          onPress={onContinue}
+          loading={isUpdating}
+          disabled={isUpdating}
+        />
       </ScrollView>
     </KeyboardAvoidingView>
   );

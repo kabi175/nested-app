@@ -62,7 +62,7 @@ export default function PaymentFailureScreen() {
       return;
     }
 
-    router.replace("/(tabs)/child");
+    router.replace("/(tabs)");
   };
 
   // Determine failure message based on type

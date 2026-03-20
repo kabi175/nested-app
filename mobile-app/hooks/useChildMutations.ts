@@ -9,7 +9,7 @@ export function useCreateChild() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (payload: Child) => createChild(api, payload),
+    mutationFn: (payload: Omit<Child, "id">) => createChild(api, payload),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.children] });
     },

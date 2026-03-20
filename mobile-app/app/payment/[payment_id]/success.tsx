@@ -78,7 +78,7 @@ export default function PaymentSuccessScreen() {
       return;
     }
 
-    router.replace("/(tabs)/child");
+    router.replace("/(tabs)");
   };
 
   // Determine success message based on type

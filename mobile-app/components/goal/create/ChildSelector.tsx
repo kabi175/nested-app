@@ -64,7 +64,7 @@ export function ChildSelector({
         {childList.length < 3 && (
           <TouchableOpacity
             style={[styles.childPill, styles.addChildPill]}
-            onPress={() => router.push("/(tabs)/child/create")}
+            onPress={() => router.push("/child/create")}
           >
             <ThemedText
               style={[styles.childPillText, { color: "#2563EB" }]}

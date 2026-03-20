@@ -15,3 +15,12 @@ export const getInstitutions = async (
   const { data } = await api.get(`/education?type=INSTITUTION${searchParam}`);
   return (data.data || []) as Education[];
 };
+
+
+export const getEducationById = async (api: AxiosInstance, id: string): Promise<Education> => {
+  const { data } = await api.get(`/education/${id}`);
+  if (!data.data || data.data.length === 0) {
+    throw new Error("Education not found");
+  }
+  return data.data[0];
+}

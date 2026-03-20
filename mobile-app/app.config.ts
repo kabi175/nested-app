@@ -1,4 +1,4 @@
-import 'dotenv/config';
+import "dotenv/config";
 
 module.exports = () => ({
   expo: {
@@ -6,7 +6,7 @@ module.exports = () => ({
     slug: "nested",
     owner: "kabi175",
     version: "1.5.2",
-    icon: "./assets/images/icon.png",
+    icon: "./assets/images/v2/logo-with-bg.png",
     scheme: "nested",
     android: {
       package: "com.nexted.app",
@@ -24,7 +24,8 @@ module.exports = () => ({
       bundleIdentifier: "com.nexted.app",
       infoPlist: {
         LSApplicationQueriesSchemes: ["whatsapp"],
-        NSUserTrackingUsageDescription: "This identifier will be used to deliver personalized ads."
+        NSUserTrackingUsageDescription:
+          "This identifier will be used to deliver personalized ads.",
       },
     },
     plugins: [
@@ -41,10 +42,9 @@ module.exports = () => ({
       [
         "expo-splash-screen",
         {
-          image: "./assets/images/splash-icon.png",
-          imageWidth: 200,
-          resizeMode: "contain",
-          backgroundColor: "#ffffff",
+          image: "./assets/images/v2/splash.png",
+          imageWidth: 778,
+          backgroundColor: "#2F4BFF",
         },
       ],
       [
@@ -65,15 +65,15 @@ module.exports = () => ({
       [
         "react-native-fbsdk-next",
         {
-          "appID": process.env.FB_APP_ID,
-          "clientToken": process.env.FB_CLIENT_TOKEN,
-          "displayName": "Nested",
-          "scheme": "nested",
-          "advertiserIDCollectionEnabled": true,
-          "autoLogAppEventsEnabled": true,
-          "isAutoInitEnabled": true
-        }
-      ]
+          appID: process.env.FB_APP_ID,
+          clientToken: process.env.FB_CLIENT_TOKEN,
+          displayName: "Nested",
+          scheme: "nested",
+          advertiserIDCollectionEnabled: true,
+          autoLogAppEventsEnabled: true,
+          isAutoInitEnabled: true,
+        },
+      ],
     ],
     extra: {
       router: {},

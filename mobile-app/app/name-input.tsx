@@ -1,12 +1,11 @@
-import { ThemedText } from "@/components/ThemedText";
-import { ThemedView } from "@/components/ThemedView";
+import Button from "@/components/v2/Button";
+import TextInput from "@/components/v2/TextInput";
 import { useUser } from "@/hooks/useUser";
 import { useUpdateUser } from "@/hooks/useUserMutations";
 import { logCompleteRegistration } from "@/services/metaEvents";
-import { Button } from "@ui-kitten/components";
 import { Redirect, router } from "expo-router";
 import React, { useState } from "react";
-import { Alert, StyleSheet, TextInput, View } from "react-native";
+import { Alert, StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function NameInputScreen() {
@@ -33,7 +32,6 @@ export default function NameInputScreen() {
     try {
       if (!user) return;
 
-      // Navigate back or to next screen
       await updateUser({
         id: user.id,
         payload: {
@@ -41,62 +39,41 @@ export default function NameInputScreen() {
         },
       });
       logCompleteRegistration({ registration_method: "phone" });
-      router.replace("/child");
+      router.replace("/view-story");
     } catch (error) {
       console.log("Error saving name", error);
-    } finally {
     }
   };
 
   return (
     <SafeAreaView style={styles.container} edges={["top", "bottom"]}>
-      <ThemedView style={styles.content}>
-        {/* Header */}
-        <View style={styles.header}>
-          <ThemedText style={styles.title}>What&apos;s your name?</ThemedText>
-          <ThemedText style={styles.subtitle}>
-            We&apos;d love to personalize your experience
-          </ThemedText>
-        </View>
+      <View style={styles.content}>
+        {/* Title */}
+        <Text style={styles.title}>What is your name?</Text>
 
-        {/* Input Section */}
-        <View style={styles.inputSection}>
-          <View style={styles.inputContainer}>
-            <TextInput
-              style={styles.textInput}
-              placeholder="Enter your full name"
-              value={name}
-              onChangeText={setName}
-              autoCapitalize="words"
-              autoCorrect={false}
-              returnKeyType="done"
-              onSubmitEditing={handleSubmit}
-              editable={!isUpdatingUser}
-              placeholderTextColor="#9CA3AF"
-            />
-          </View>
+        {/* Input */}
+        <TextInput
+          placeholder="Your name"
+          value={name}
+          onChangeText={setName}
+          autoCapitalize="words"
+          autoCorrect={false}
+          returnKeyType="done"
+          onSubmitEditing={handleSubmit}
+          editable={!isUpdatingUser}
+        />
 
-          <ThemedText style={styles.helperText}>
-            This helps us provide a more personalized experience
-          </ThemedText>
-        </View>
+        {/* Push button to bottom */}
+        <View style={styles.spacer} />
 
-        {/* Action Buttons */}
-        <View style={styles.buttonContainer}>
-          <Button
-            style={[
-              styles.submitButton,
-              (!name.trim() || isUpdatingUser) && styles.submitButtonDisabled,
-            ]}
-            onPress={handleSubmit}
-            disabled={!name.trim() || isUpdatingUser}
-            size="large"
-            status="primary"
-          >
-            {isUpdatingUser ? "Saving..." : "Continue"}
-          </Button>
-        </View>
-      </ThemedView>
+        {/* Next button */}
+        <Button
+          title="Next"
+          onPress={handleSubmit}
+          disabled={!name.trim()}
+          loading={isUpdatingUser}
+        />
+      </View>
     </SafeAreaView>
   );
 }
@@ -104,102 +81,21 @@ export default function NameInputScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#F9FAFB",
+    backgroundColor: "#FFFFFF",
   },
   content: {
     flex: 1,
     paddingHorizontal: 24,
-    paddingTop: 40,
-    backgroundColor: "transparent",
-  },
-  header: {
-    alignItems: "center",
-    marginBottom: 48,
+    paddingTop: 16,
+    paddingBottom: 24,
   },
   title: {
-    fontSize: 28,
-    fontWeight: "bold",
-    textAlign: "center",
-    marginBottom: 12,
+    fontSize: 26,
+    fontWeight: "700",
     color: "#111827",
+    marginBottom: 24,
   },
-  subtitle: {
-    fontSize: 16,
-    textAlign: "center",
-    color: "#6B7280",
-    lineHeight: 24,
-    paddingHorizontal: 20,
-  },
-  inputSection: {
-    marginBottom: 48,
-  },
-  inputContainer: {
-    backgroundColor: "#FFFFFF",
-    borderRadius: 12,
-    borderWidth: 2,
-    borderColor: "#E5E7EB",
-    marginBottom: 12,
-    shadowColor: "#000",
-    shadowOffset: {
-      width: 0,
-      height: 1,
-    },
-    shadowOpacity: 0.05,
-    shadowRadius: 2,
-    elevation: 2,
-  },
-  textInput: {
-    paddingHorizontal: 16,
-    paddingVertical: 16,
-    fontSize: 16,
-    color: "#111827",
-    minHeight: 56,
-  },
-  helperText: {
-    fontSize: 14,
-    color: "#6B7280",
-    textAlign: "center",
-    lineHeight: 20,
-  },
-  buttonContainer: {
-    gap: 16,
-  },
-  submitButton: {
-    backgroundColor: "#2563EB",
-    borderRadius: 12,
-    paddingVertical: 16,
-    paddingHorizontal: 24,
-    alignItems: "center",
-    shadowColor: "#2563EB",
-    shadowOffset: {
-      width: 0,
-      height: 4,
-    },
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
-    elevation: 6,
-  },
-  submitButtonDisabled: {
-    backgroundColor: "#D1D5DB",
-    shadowOpacity: 0,
-    elevation: 0,
-  },
-  submitButtonText: {
-    color: "#FFFFFF",
-    fontSize: 16,
-    fontWeight: "600",
-  },
-  submitButtonTextDisabled: {
-    color: "#9CA3AF",
-  },
-  skipButton: {
-    paddingVertical: 12,
-    paddingHorizontal: 24,
-    alignItems: "center",
-  },
-  skipButtonText: {
-    color: "#6B7280",
-    fontSize: 16,
-    fontWeight: "500",
+  spacer: {
+    flex: 1,
   },
 });

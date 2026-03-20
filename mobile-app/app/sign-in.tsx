@@ -1,27 +1,22 @@
 import { Ionicons } from "@expo/vector-icons";
 import { Link, router } from "expo-router";
 
-import LoginCarousel from "@/components/auth/LoginCarousel";
+import Logo from "@/assets/images/v2/logo-varient.svg";
+import Button from "@/components/v2/Button";
 import { OtpInput } from "@/components/ui/OtpInput";
-import {
-  Button,
-  Input,
-  Layout,
-  Spinner,
-  Text,
-} from "@ui-kitten/components";
 import { useEffect, useState } from "react";
-import { Alert, ImageProps, ScrollView, StyleSheet, View } from "react-native";
+import {
+  Alert,
+  KeyboardAvoidingView,
+  Platform,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+  View,
+} from "react-native";
 import { useAuth0 } from "react-native-auth0";
 import { SafeAreaView } from "react-native-safe-area-context";
-
-const LoadingIndicator = (props: ImageProps) => (
-  <View
-    style={[props.style, { justifyContent: "center", alignItems: "center" }]}
-  >
-    <Spinner size="small" />
-  </View>
-);
 
 export default function SignIn() {
   const [phoneNumber, setPhoneNumber] = useState("");
@@ -140,161 +135,127 @@ export default function SignIn() {
 
   return (
     <SafeAreaView style={styles.safeArea} edges={["top", "bottom"]}>
-      <Layout style={styles.container}>
+      <KeyboardAvoidingView
+        style={styles.keyboardAvoidingView}
+        behavior={Platform.OS === "ios" ? "padding" : undefined}
+      >
         <ScrollView
           style={styles.scrollView}
           contentContainerStyle={styles.scrollContent}
           showsVerticalScrollIndicator={false}
+          bounces={false}
         >
-          {/* Login Carousel */}
-          <LoginCarousel />
+          {/* Top Section */}
+          <View style={styles.topSection}>
+            <View style={styles.logoWrapper}>
+              <Logo width={65} height={65} />
+            </View>
 
-          {/* Main Content Card */}
-          <Layout style={styles.contentCard}>
-            {/* Main Title */}
-            <Layout style={styles.headerContainer}>
-              <Text category="h4" style={styles.mainTitle}>
-                Secure your child&apos;s future
-              </Text>
-              <Text category="s1" appearance="hint" style={styles.mainSubtitle}>
-                Start your investment journey today
-              </Text>
-            </Layout>
+            <Text style={styles.mainTitle}>
+              Building your child's future{"\n"}starts here
+            </Text>
 
-            {/* Form Section */}
-            <Layout style={styles.formContainer}>
-              {/* Field Label */}
-              <Text category="s2" style={styles.fieldLabel}>
-                {confirm ? "Enter OTP" : "Enter Your Mobile Number"}
-              </Text>
-              <Text category="c1" appearance="hint" style={styles.fieldHint}>
-                {confirm
-                  ? `We've sent a 6-digit code to ${countryCode} ${phoneNumber}`
-                  : "We'll send you an OTP to verify your number"}
-              </Text>
+            <Text style={styles.mainSubtitle}>
+              Join 40,000+ Indian parents who plan{"\n"}with purpose
+            </Text>
 
-              {/* Phone Input Row */}
-              {!confirm && (
-                <Layout style={styles.inputRow}>
-                  {/* Country Code Display */}
-                  <Layout style={styles.countryCodeContainer}>
-                    <Text style={styles.countryCodeText}>{"🇮🇳 " + countryCode}</Text>
-                  </Layout>
+            <View style={styles.badgesRow}>
+              <View style={styles.badge}>
+                <View style={styles.greenCheckSquare}>
+                  <Ionicons name="checkmark" size={10} color="#FFFFFF" />
+                </View>
+                <Text style={styles.badgeText}>SEBI registered</Text>
+              </View>
+              <View style={styles.badge}>
+                <Ionicons name="lock-closed" size={12} color="#C2A475" />
+                <Text style={styles.badgeText}>256 bit encrypted</Text>
+              </View>
+            </View>
+          </View>
 
-                  {/* Phone Number Input */}
-                  <Input
-                    style={styles.phoneInput}
-                    placeholder="Enter 10-digit mobile number"
+          {/* Bottom Card */}
+          <View style={styles.bottomCard}>
+            <View style={styles.formContainer}>
+              {!confirm ? (
+                <>
+                  <Text style={styles.inputLabel}>Mobile</Text>
+                  <TextInput
+                    style={styles.textInput}
+                    placeholder="Enter Mobile number"
+                    placeholderTextColor="#A1A1AA"
                     value={phoneNumber}
                     onChangeText={setPhoneNumber}
+                    keyboardType="number-pad"
                     maxLength={10}
                   />
-                </Layout>
-              )}
 
-              {/* OTP Input (shown after phone verification) */}
-              {confirm && (
-                <Layout style={styles.otpContainer}>
-                  <OtpInput
-                    length={6}
-                    onComplete={handleOtpComplete}
-                    onChange={handleOtpChange}
-                    disabled={isVerifying}
-                  />
                   <Button
-                    onPress={() => {
-                      setConfirm(false);
-                      setOtpCode("");
-                      setResendTimer(0);
-                    }}
-                    appearance="ghost"
-                    status="basic"
-                    style={styles.editPhoneButton}
-                    size="small"
-                  >
-                    Edit Phone Number
-                  </Button>
-                </Layout>
-              )}
-
-              {/* Send OTP Button */}
-              {!confirm && (
-                <Button
-                  onPress={handlePhoneNumberVerification}
-                  disabled={phoneNumber.length !== 10 || isLoading}
-                  style={styles.sendButton}
-                  size="large"
-                  accessoryLeft={() =>
-                    isLoading ? <LoadingIndicator /> : <></>
-                  }
-                >
-                  {isLoading ? "Sending OTP..." : "Send OTP"}
-                </Button>
-              )}
-
-              {/* Verify OTP Button */}
-              {confirm && (
-                <Layout style={styles.buttonContainer}>
-                  <Button
+                    title="Send OTP"
+                    disabled={phoneNumber.length !== 10}
+                    loading={isLoading}
                     onPress={handlePhoneNumberVerification}
-                    disabled={otpCode.length !== 6 || isVerifying}
-                    style={styles.sendButton}
-                    size="large"
-                    accessoryLeft={() =>
-                      isVerifying ? <LoadingIndicator /> : <></>
-                    }
-                  >
-                    {isVerifying ? "Verifying..." : "Verify & Continue"}
-                  </Button>
+                  />
 
-                  <Button
-                    onPress={handleResendOtp}
-                    disabled={resendTimer > 0 || isLoading}
-                    appearance="outline"
-                    style={styles.resendButton}
-                    size="large"
-                  >
-                    {isLoading
-                      ? "Resending..."
-                      : resendTimer > 0
-                        ? `Resend OTP in ${resendTimer}s`
-                        : "Resend OTP"}
-                  </Button>
-                </Layout>
-              )}
-
-              {/* Security Info */}
-              <Layout style={styles.securityContainer}>
-                <Layout style={styles.securityRow}>
-                  <Ionicons name="shield-checkmark" size={16} color="#3B82F6" />
-                  <Text
-                    category="c1"
-                    appearance="hint"
-                    style={styles.securityText}
-                  >
-                    Your information is secure and encrypted
+                  <Text style={styles.disclaimerText}>
+                    By proceeding, you accept T&C, privacy policy &{"\n"}
+                    authorize a penny drop for bank verification
                   </Text>
-                </Layout>
+                </>
+              ) : (
+                <>
+                  <Text style={styles.inputLabel}>Enter OTP</Text>
+                  <Text style={styles.fieldHint}>
+                    We've sent a 6-digit code to {countryCode} {phoneNumber}
+                  </Text>
 
-                <Text
-                  category="c1"
-                  appearance="hint"
-                  style={styles.disclaimerText}
-                >
-                  You agree to{" "}
-                  <Link
-                    href="https://nested.money/#/privacy-policy"
-                    style={styles.linkText}
-                  >
-                    TnC and Privacy Policy
-                  </Link>{" "}
-                  by proceeding.
-                </Text>
-              </Layout>
-            </Layout>
-          </Layout>
+                  <View style={styles.otpWrapper}>
+                    <OtpInput
+                      length={6}
+                      onComplete={handleOtpComplete}
+                      onChange={handleOtpChange}
+                      disabled={isVerifying}
+                    />
+                  </View>
+
+                  <View style={styles.otpButtonWrapper}>
+                    <Button
+                      title="Verify & Continue"
+                      disabled={otpCode.length !== 6}
+                      loading={isVerifying}
+                      onPress={handlePhoneNumberVerification}
+                    />
+
+                    <Button
+                      title={
+                        isLoading
+                          ? "Resending..."
+                          : resendTimer > 0
+                          ? `Resend OTP in ${resendTimer}s`
+                          : "Resend OTP"
+                      }
+                      disabled={resendTimer > 0 || isLoading}
+                      onPress={handleResendOtp}
+                    />
+
+                    <View style={styles.editPhoneWrapper}>
+                      <Text
+                        style={styles.editPhoneText}
+                        onPress={() => {
+                          setConfirm(false);
+                          setOtpCode("");
+                          setResendTimer(0);
+                        }}
+                      >
+                        Edit Phone Number
+                      </Text>
+                    </View>
+                  </View>
+                </>
+              )}
+            </View>
+          </View>
         </ScrollView>
-      </Layout>
+      </KeyboardAvoidingView>
     </SafeAreaView>
   );
 }
@@ -302,128 +263,125 @@ export default function SignIn() {
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: "#F5F5F5",
+    backgroundColor: "#F4F4F4",
   },
-  container: {
+  keyboardAvoidingView: {
     flex: 1,
   },
   scrollView: {
     flex: 1,
   },
   scrollContent: {
-    paddingBottom: 24,
+    flexGrow: 1,
   },
-  contentCard: {
+  topSection: {
+    alignItems: "center",
+    paddingTop: 60,
+    paddingBottom: 40,
+    paddingHorizontal: 24,
+  },
+  logoWrapper: {
+    marginBottom: 40,
+    borderRadius: 16,
+  },
+  mainTitle: {
+    fontSize: 26,
+    fontWeight: "600",
+    color: "#000000",
+    textAlign: "center",
+    marginBottom: 16,
+    lineHeight: 34,
+    letterSpacing: -0.5,
+  },
+  mainSubtitle: {
+    fontSize: 15,
+    color: "#737373",
+    textAlign: "center",
+    marginBottom: 24,
+    lineHeight: 22,
+  },
+  badgesRow: {
+    flexDirection: "row",
+    gap: 12,
+  },
+  badge: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#FCF4E3",
+    paddingHorizontal: 8,
+    paddingVertical: 6,
+    borderRadius: 6,
+    gap: 6,
+  },
+  greenCheckSquare: {
+    backgroundColor: "#22C55E",
+    width: 14,
+    height: 14,
+    borderRadius: 3,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  badgeText: {
+    fontSize: 12,
+    color: "#525252",
+    fontWeight: "500",
+  },
+  bottomCard: {
+    flex: 1,
     backgroundColor: "#FFFFFF",
     borderTopLeftRadius: 24,
     borderTopRightRadius: 24,
-    marginTop: -20,
+    borderWidth: 1,
+    borderColor: "#E5E5E5",
+    borderBottomWidth: 0,
     paddingHorizontal: 24,
     paddingTop: 32,
     paddingBottom: 24,
-    minHeight: "60%",
-  },
-  headerContainer: {
-    alignItems: "center",
-    marginBottom: 32,
-    backgroundColor: "transparent",
-  },
-  mainTitle: {
-    textAlign: "center",
-    fontWeight: "700",
-    fontSize: 24,
-    marginBottom: 8,
-    color: "#1A1A1A",
-  },
-  mainSubtitle: {
-    textAlign: "center",
-    fontSize: 16,
-    color: "#666666",
   },
   formContainer: {
-    backgroundColor: "transparent",
-  },
-  fieldLabel: {
-    fontSize: 16,
-    fontWeight: "600",
-    marginBottom: 6,
-    color: "#1A1A1A",
-  },
-  fieldHint: {
-    fontSize: 14,
-    marginBottom: 16,
-    color: "#666666",
-  },
-  inputRow: {
-    flexDirection: "row",
-    gap: 12,
-    marginBottom: 20,
-    backgroundColor: "transparent",
-    alignItems: "center",
-  },
-  countryCodeContainer: {
-    backgroundColor: "#F8F8F8",
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    borderRadius: 4,
-    justifyContent: "center",
-    alignItems: "center",
-    minWidth: 60,
-  },
-  countryCodeText: {
-    fontSize: 16,
-    fontWeight: "600",
-    color: "#1A1A1A",
-  },
-  phoneInput: {
     flex: 1,
-    backgroundColor: "#F8F8F8",
   },
-  sendButton: {
-    marginBottom: 16,
-    borderRadius: 12,
+  inputLabel: {
+    fontSize: 16,
+    fontWeight: "500",
+    color: "#171717",
+    marginBottom: 12,
+  },
+  textInput: {
+    borderWidth: 1,
+    borderColor: "#E5E5E5",
+    borderRadius: 8,
+    paddingHorizontal: 16,
     height: 52,
-  },
-  buttonContainer: {
-    gap: 12,
-    backgroundColor: "transparent",
-  },
-  resendButton: {
-    marginBottom: 16,
-    borderRadius: 12,
-    height: 52,
-  },
-  securityContainer: {
-    alignItems: "center",
-    marginTop: 16,
-    gap: 12,
-    backgroundColor: "transparent",
-  },
-  securityRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    backgroundColor: "transparent",
-  },
-  securityText: {
-    marginLeft: 8,
-    fontSize: 13,
+    fontSize: 16,
+    color: "#171717",
+    marginBottom: 32,
   },
   disclaimerText: {
     textAlign: "center",
-    fontSize: 13,
-    color: "#666666",
+    fontSize: 12,
+    color: "#737373",
+    lineHeight: 18,
+    marginTop: 24,
   },
-  linkText: {
-    color: "#3B82F6",
-    textDecorationLine: "underline",
-    fontSize: 13,
-  },
-  otpContainer: {
+  fieldHint: {
+    fontSize: 14,
+    color: "#737373",
     marginBottom: 24,
-    backgroundColor: "transparent",
   },
-  editPhoneButton: {
-    marginTop: 12,
-    alignSelf: "center",
+  otpWrapper: {
+    marginBottom: 32,
+  },
+  otpButtonWrapper: {
+    gap: 16,
+  },
+  editPhoneWrapper: {
+    alignItems: "center",
+    marginTop: 8,
+  },
+  editPhoneText: {
+    color: "#3137D5",
+    fontWeight: "600",
+    fontSize: 14,
   },
 });

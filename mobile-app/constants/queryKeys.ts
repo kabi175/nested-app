@@ -2,6 +2,7 @@ export const QUERY_KEYS = {
   user: "user",
   userSignature: "userSignature",
   children: "children",
+  education: "education",
   bankAccounts: "bankAccounts",
   goals: "goals",
   educationGoals: "educationGoals",

@@ -56,7 +56,7 @@ export default function NomineeSuccessScreen() {
                 setGoalsForCustomize
             );
         } else {
-            router.replace("/(tabs)/child");
+            router.replace("/(tabs)");
         }
     };
 

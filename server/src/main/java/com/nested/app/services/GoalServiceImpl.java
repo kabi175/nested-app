@@ -8,6 +8,7 @@ import com.nested.app.dto.MinifiedUserDTO;
 import com.nested.app.entity.Basket;
 import com.nested.app.entity.Child;
 import com.nested.app.entity.Goal;
+import com.nested.app.entity.SIPOrder;
 import com.nested.app.entity.User;
 import com.nested.app.enums.BasketType;
 import com.nested.app.exception.ExternalServiceException;
@@ -15,6 +16,7 @@ import com.nested.app.repository.BasketRepository;
 import com.nested.app.repository.ChildRepository;
 import com.nested.app.repository.EducationRepository;
 import com.nested.app.repository.OrderRepository;
+import com.nested.app.repository.SIPOrderRepository;
 import com.nested.app.repository.TenantAwareGoalRepository;
 import java.sql.Timestamp;
 import java.time.LocalDate;
@@ -49,6 +51,7 @@ public class GoalServiceImpl implements GoalService {
   private final EducationRepository educationRepository;
   private final OrderRepository orderRepository;
   private final ChildRepository childRepository;
+  private final SIPOrderRepository sipOrderRepository;
 
   /**
    * Retrieves all goals from the system
@@ -381,8 +384,17 @@ public class GoalServiceImpl implements GoalService {
     }
 
     if (goal.getEducation() != null) {
-      dto.setEducation(new MinifiedEducationDto(goal.getEducation().getId()));
+      dto.setEducation(MinifiedEducationDto.fromEntity(goal.getEducation()));
     }
+
+    // Populate next SIP info from the earliest active SIPOrder for this goal
+    sipOrderRepository.findByGoalIdOrderByNextRunDateAsc(goal.getId()).stream()
+        .filter(sip -> sip.isActive() && sip.getScheduleStatus() == SIPOrder.ScheduleStatus.ACTIVE)
+        .findFirst()
+        .ifPresent(sip -> {
+          dto.setNextSipAmount(sip.getAmount());
+          dto.setNextSipDate(sip.getNextRunDate());
+        });
 
     return dto;
   }

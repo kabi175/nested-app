@@ -9,15 +9,39 @@ import { StatusBar } from "expo-status-bar";
 import "react-native-reanimated";
 
 import { ForceUpdateScreen } from "@/components/ForceUpdateScreen";
+import SplashScreenComponent from "@/components/v2/SplashScreen";
 import { useColorScheme } from "@/hooks/useColorScheme";
 import { useForceUpdate } from "@/hooks/useForceUpdate";
 import { usePersistRoute } from "@/hooks/usePersistRoute";
 import { QueryProvider } from "@/providers/QueryProvider";
 import * as eva from "@eva-design/eva";
+import {
+  InstrumentSans_400Regular,
+  InstrumentSans_500Medium,
+  InstrumentSans_600SemiBold,
+  InstrumentSans_700Bold,
+} from "@expo-google-fonts/instrument-sans";
 import { ApplicationProvider } from "@ui-kitten/components";
 import { requestTrackingPermissionsAsync } from 'expo-tracking-transparency';
-import React, { useEffect } from "react";
-import { ActivityIndicator, View } from "react-native";
+import { useOnboardingSeen } from "@/hooks/useOnboardingSeen";
+import React, { useEffect, useState } from "react";
+import { ActivityIndicator, View, Text, TextInput } from "react-native";
+
+interface TextWithDefaultProps extends React.FunctionComponent<any> {
+  defaultProps?: any;
+}
+
+((Text as unknown) as TextWithDefaultProps).defaultProps =
+  ((Text as unknown) as TextWithDefaultProps).defaultProps || {};
+((Text as unknown) as TextWithDefaultProps).defaultProps.style = {
+  fontFamily: "InstrumentSans_400Regular",
+};
+
+((TextInput as unknown) as TextWithDefaultProps).defaultProps =
+  ((TextInput as unknown) as TextWithDefaultProps).defaultProps || {};
+((TextInput as unknown) as TextWithDefaultProps).defaultProps.style = {
+  fontFamily: "InstrumentSans_400Regular",
+};
 import { Auth0Provider, useAuth0 } from "react-native-auth0";
 import { Settings } from 'react-native-fbsdk-next';
 import { SafeAreaProvider } from "react-native-safe-area-context";
@@ -26,7 +50,12 @@ export default function RootLayout() {
   const colorScheme = useColorScheme();
   const [loaded] = useFonts({
     SpaceMono: require("../assets/fonts/SpaceMono-Regular.ttf"),
+    InstrumentSans_400Regular,
+    InstrumentSans_500Medium,
+    InstrumentSans_600SemiBold,
+    InstrumentSans_700Bold,
   });
+  const [showSplash, setShowSplash] = useState(true);
   usePersistRoute();
 
   useEffect(() => {
@@ -47,8 +76,15 @@ export default function RootLayout() {
     );
   }
 
+  const customMapping = {
+    strict: {
+      "text-font-family": "InstrumentSans_400Regular",
+    },
+    components: {},
+  };
+
   return (
-    <ApplicationProvider {...eva} theme={eva.light}>
+    <ApplicationProvider {...eva} theme={eva.light} customMapping={customMapping}>
       <QueryProvider>
         <Auth0Provider
           domain={process.env.EXPO_PUBLIC_AUTH0_DOMAIN}
@@ -66,6 +102,9 @@ export default function RootLayout() {
           </ThemeProvider>
         </Auth0Provider>
       </QueryProvider>
+      {showSplash && (
+        <SplashScreenComponent onFinish={() => setShowSplash(false)} />
+      )}
     </ApplicationProvider>
   );
 }
@@ -88,12 +127,23 @@ function VersionCheckGuard({ children }: { children: React.ReactNode }) {
   return <>{children}</>;
 }
 
+const StorybookEnabled = process.env.EXPO_PUBLIC_STORYBOOK_ENABLED === "true";
 export const unstable_settings = {
-  initialRouteName: "(tabs)",
+  initialRouteName: StorybookEnabled ? "(storybook)/index" : "(tabs)",
 };
 
 function RootNavigator() {
   const { user } = useAuth0();
+  const { seen } = useOnboardingSeen();
+
+  // Still reading AsyncStorage — show a brief spinner
+  if (seen === null) {
+    return (
+      <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
+        <ActivityIndicator size="large" color="#3137D5" />
+      </View>
+    );
+  }
 
   return (
     <Stack
@@ -101,15 +151,26 @@ function RootNavigator() {
         headerShown: false,
       }}
     >
+      <Stack.Protected guard={StorybookEnabled}>
+        <Stack.Screen name="(storybook)/index" />
+      </Stack.Protected>
+
       <Stack.Protected guard={!!user}>
         <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
         <Stack.Screen name="payment" />
         <Stack.Screen name="bank-accounts" />
         <Stack.Screen name="+not-found" />
         <Stack.Screen name="name-input" options={{ headerShown: false }} />
+        <Stack.Screen name="view-story" options={{ headerShown: false }} />
       </Stack.Protected>
 
       <Stack.Protected guard={!user}>
+        {/* First-time visitors see onboarding; returning visitors go to sign-in */}
+        <Stack.Screen
+          name="onboarding"
+          options={{ headerShown: false, presentation: "card" }}
+          redirect={seen}
+        />
         <Stack.Screen
           name="sign-in"
           options={{ headerShown: false, presentation: "card" }}

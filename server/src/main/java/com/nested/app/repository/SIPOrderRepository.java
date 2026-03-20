@@ -9,6 +9,8 @@ import org.springframework.stereotype.Repository;
 
 @Repository
 public interface SIPOrderRepository extends JpaRepository<SIPOrder, Long> {
+  List<SIPOrder> findByGoalIdOrderByNextRunDateAsc(Long goalId);
+
   List<SIPOrder> findByIsActiveTrueAndScheduleStatus(ScheduleStatus status);
 
   List<SIPOrder> findByScheduleStatus(ScheduleStatus status);

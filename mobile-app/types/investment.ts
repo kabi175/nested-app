@@ -1,6 +1,7 @@
 export type Goal = {
   id: string;
   childId: string;
+  child: { id: string; name: string };
   title: string;
   targetAmount: number;
   currentAmount: number;
@@ -15,10 +16,17 @@ export type Goal = {
     min_step_up: number;
   };
 
+  nextSipAmount: number | null;
+  nextSipDate: Date | null;
+
   targetDate: Date;
   status: "draft" | "payment_pending" | "active" | "completed" | "cancelled";
   createdAt: Date;
   updatedAt: Date;
+  education?: {
+    id: string;
+    name: string;
+  };
   educationId?: string;
 };
 

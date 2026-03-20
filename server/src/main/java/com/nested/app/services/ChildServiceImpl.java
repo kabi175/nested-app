@@ -113,9 +113,13 @@ public class ChildServiceImpl implements ChildService {
       // Update fields
       existingChild.setFirstName(childDTO.getFirstName());
       existingChild.setLastName(childDTO.getLastName());
-      existingChild.setDateOfBirth(childDTO.getDateOfBirth());
-      existingChild.setGender(childDTO.getGender());
-      existingChild.setInvestUnderChild(childDTO.isInvestUnderChild());
+      if (childDTO.getDateOfBirth() != null) {
+        existingChild.setDateOfBirth(childDTO.getDateOfBirth());
+      }
+      if(childDTO.getGender() != null) {
+        existingChild.setGender(childDTO.getGender());
+      }
+//      existingChild.setInvestUnderChild(childDTO.isInvestUnderChild());
 
       Child updatedChild = childRepository.save(existingChild);
       ChildDTO updatedChildDTO = convertToDTO(updatedChild);
@@ -223,7 +227,9 @@ public class ChildServiceImpl implements ChildService {
     child.setFirstName(childDTO.getFirstName());
     child.setLastName(childDTO.getLastName());
     child.setDateOfBirth(childDTO.getDateOfBirth());
-    child.setGender(childDTO.getGender());
+    if(childDTO.getGender() != null){
+      child.setGender(childDTO.getGender());
+    }
     child.setInvestUnderChild(childDTO.isInvestUnderChild());
     child.setUser(user);
 
@@ -243,10 +249,6 @@ public class ChildServiceImpl implements ChildService {
 
     if (childDTO.getDateOfBirth() == null) {
       throw new IllegalArgumentException("Date of birth is required");
-    }
-
-    if (childDTO.getGender() == null) {
-      throw new IllegalArgumentException("Gender is required");
     }
 
     // Validate date of birth is not in the future
