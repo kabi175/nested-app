@@ -18,7 +18,7 @@ import ChildChip from "./ChildChip";
 import NestEggs from "./NestEggs";
 
 // ─── Colour palette ──────────────────────────────────────────────────────────
-const EGG_COLORS = ["#F5C36B", "#4F8BD6", "#E27BA6"] as const;
+const EGG_COLORS = ["#ffd98f", "#6eafee", "#E27BA6"] as const;
 const MAX_CHILDREN = 3;
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -77,6 +77,9 @@ export default function SelectChildScreen({
   const canAddChild = children.length < MAX_CHILDREN;
   const canContinue = selectedChildId !== null;
 
+  const selectedChild = children.find((c) => c.id === selectedChildId) ?? children[0];
+  const displayName = selectedChild?.firstName ?? "";
+
   return (
     <SafeAreaView style={styles.safeArea} edges={["top", "bottom"]}>
       <StatusBar style="dark" backgroundColor="#FFFFFF" />
@@ -94,7 +97,7 @@ export default function SelectChildScreen({
           </Pressable>
 
           <Text style={styles.title}>
-            {children[0].firstName}’s future starts today
+            {displayName}’s future starts today
           </Text>
           <Text style={styles.subtitle}>Let's figure out what it needs</Text>
         </View>
@@ -133,7 +136,7 @@ export default function SelectChildScreen({
           {hideAddChild ? (
             <View style={styles.dashedBox}>
               <Text style={styles.dashedBoxText}>
-                Got another little one? You can add them after {children[0].firstName}’s nest is ready
+                Got another little one? You can add them after {displayName}’s nest is ready
               </Text>
             </View>
           ) : (
