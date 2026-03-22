@@ -101,10 +101,10 @@ const styles = StyleSheet.create({
   },
   mainValue: {
     fontSize: 38,
-    fontWeight: "700",
+    fontWeight: "500",
     color: T.textDark,
     marginBottom: 16,
-    paddingRight: 80,
+    paddingRight: 80
   },
   track: {
     height: 8,

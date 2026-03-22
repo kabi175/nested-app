@@ -70,13 +70,18 @@ const styles = StyleSheet.create({
     gap: 4,
   },
   fundName: {
-    fontSize: 17,
-    fontWeight: "600",
+    fontSize: 15,
+    fontWeight: "400",
     color: T.textDark,
+    lineHeight: 18,
+    letterSpacing: 0.3
   },
   subtitle: {
-    fontSize: 13,
+    fontSize: 12,
+    fontWeight: "400",
     color: T.textMuted,
+    lineHeight: 14.4,
+    letterSpacing: 0.24
   },
   returns: {
     fontSize: 20,
