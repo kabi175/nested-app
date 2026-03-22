@@ -148,22 +148,24 @@ export default function HomeScreen() {
 
 const GoalPlanCard = ({ goal }: { goal: Goal }) => {
   const { data: child } = useChild(goal.childId);
-  const onPress = () => {
 
-    if (!goal.nextSipAmount) {
-      if (goal.education) {
-        router.push({ pathname: "/education/[goal_id]/planner", params: { goal_id: goal.id } });
-      } else {
-        router.push({
-          pathname: "/child/[child_id]/[goal_id]/planner",
-          params: { child_id: child?.id, goal_id: goal.id }
-        });
-      }
+  const onPressGoalCard = () => {
+    const isInvestmentMade = goal.currentAmount > 0 || (goal.nextSipAmount != null && goal.nextSipAmount > 0)
 
+    if (isInvestmentMade) {
+      router.push(`/goal/${goal.id}`);
       return;
     }
 
-    router.push(`/goal/${goal.id}`);
+    if (goal.education) {
+      router.push({ pathname: "/education/[goal_id]/planner", params: { goal_id: goal.id } });
+      return
+    }
+
+    router.push({
+      pathname: "/child/[child_id]/[goal_id]/planner",
+      params: { child_id: child?.id, goal_id: goal.id }
+    });
   }
 
   return (
@@ -178,7 +180,7 @@ const GoalPlanCard = ({ goal }: { goal: Goal }) => {
       savedFraction={goal.targetAmount > 0 ? goal.currentAmount / goal.targetAmount : 0}
       nextSipAmount={goal.nextSipAmount != null ? `₹${formatIndianCompact(goal.nextSipAmount)}` : null}
       nextSipDate={goal.nextSipDate != null ? formatSipDate(goal.nextSipDate) : null}
-      onPress={onPress}
+      onPress={onPressGoalCard}
     />
   );
 };
