@@ -211,35 +211,9 @@ export default function GoalDetailScreen() {
               Holdings
             </ThemedText>
           </TouchableOpacity>
-          <TouchableOpacity
-            style={[
-              styles.tab,
-              activeTab === "transactions" && styles.tabActive,
-            ]}
-            onPress={() => setActiveTab("transactions")}
-          >
-            <ThemedText
-              style={[
-                styles.tabText,
-                activeTab === "transactions" && styles.tabTextActive,
-              ]}
-            >
-              Transactions
-            </ThemedText>
-          </TouchableOpacity>
         </View>
 
-        {/* Tab Content */}
-        {activeTab === "holdings" ? (
-          <HoldingsContent goalId={goal_id} holdings={holdings || []} />
-        ) : (
-          <TransactionsContent
-            goalId={goal_id}
-            onLoadMoreTrigger={(loadMore) => {
-              transactionsLoadMoreRef.current = loadMore;
-            }}
-          />
-        )}
+        <HoldingsContent goalId={goal_id} holdings={holdings || []} />
 
         {/* Invest More Button */}
         <Button
