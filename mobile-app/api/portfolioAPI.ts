@@ -13,6 +13,7 @@ export type Transaction = {
 export type Holding = {
   fund: string;
   fund_id: string;
+  fund_category?: string;
   allocation_percentage: number;
   invested_amount: number;
   current_value: number;
@@ -25,7 +26,7 @@ export type Holding = {
 export const getTranscationsForGoal = async (
   api: AxiosInstance,
   goalId: string,
-  page: number
+  page: number,
 ): Promise<Transaction[]> => {
   const { data } = await api.get(`/portfolio/goals/${goalId}/transactions`, {
     params: {
@@ -46,7 +47,7 @@ export const getTranscationsForGoal = async (
 
 export const getHoldingsForGoal = async (
   api: AxiosInstance,
-  goalId: string
+  goalId: string,
 ): Promise<Holding[]> => {
   const { data } = await api.get(`/portfolio/goals/${goalId}/holdings`);
   return data.data.map((holding: any) => ({
