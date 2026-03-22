@@ -1,14 +1,17 @@
 package com.nested.app.services;
 
+import com.nested.app.config.CacheConfig;
 import com.nested.app.dto.GoalHoldingDTO;
 import com.nested.app.dto.MinifiedGoalDTO;
 import com.nested.app.dto.PortfolioGoalDTO;
 import com.nested.app.dto.TransactionDTO;
 import com.nested.app.entity.User;
+import com.nested.app.repository.OrderItemsRepository;
 import com.nested.app.repository.TransactionRepository;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -19,16 +22,21 @@ import org.springframework.transaction.annotation.Transactional;
  *
  * <p>Simplified cost basis approach: openCostBasis = sum(buy amounts) - sum(sell amounts). This is
  * a naive approximation; replace with FIFO/LIFO or average cost for accurate tax/PnL.
+ *
+ * <p>Results are cached per goal+user (goalPortfolio) and per goal (goalMonthlySip) with a 5-minute
+ * TTL. Cache is evicted on GoalSyncEvent, which is published by all order fulfillment jobs.
  */
 @Service
 @RequiredArgsConstructor
 @Slf4j
 public class PortfolioService {
 
+  private static final List<String> ACTIVE_SIP_STATUSES = List.of("completed", "in_progress");
+
   private final TransactionRepository transactionRepository;
+  private final OrderItemsRepository orderItemsRepository;
 
-  
-
+  @Cacheable(value = CacheConfig.GOAL_PORTFOLIO, key = "#goalId + ':' + #user.id")
   @Transactional(readOnly = true)
   public PortfolioGoalDTO getGoalPortfolio(Long goalId, User user) {
     if (user == null) return null;
@@ -50,6 +58,14 @@ public class PortfolioService {
         currentValue,
         progress,
         0.0);
+  }
+
+  @Cacheable(value = CacheConfig.GOAL_MONTHLY_SIP, key = "#goalId")
+  @Transactional(readOnly = true)
+  public double getMonthlySip(Long goalId) {
+    Double amount = orderItemsRepository.sumSipOrderItemsAmountByGoalIdAndStatuses(
+        goalId, ACTIVE_SIP_STATUSES);
+    return amount != null ? amount : 0.0;
   }
 
   @Transactional(readOnly = true)

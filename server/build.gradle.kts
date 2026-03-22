@@ -58,6 +58,10 @@ dependencies {
     implementation("com.auth0:auth0:2.26.0")
     implementation("com.sendgrid:sendgrid-java:4.10.1")
 
+    // Caching
+    implementation("org.springframework.boot:spring-boot-starter-cache")
+    implementation("com.github.ben-manes.caffeine:caffeine")
+
     // Note: Trace IDs are handled by custom TraceIdFilter using MDC
     // No external tracing dependencies needed
     
