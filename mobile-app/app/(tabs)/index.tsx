@@ -11,6 +11,7 @@ import { useChild, useChildren } from "@/hooks/useChildren";
 import { useEducationGoals } from "@/hooks/useGoals";
 import { useUser } from "@/hooks/useUser";
 import { Goal } from "@/types/investment";
+import { formatIndianCompact } from "@/utils/formatters";
 
 function getAge(dateOfBirth: Date): number {
   const today = new Date();
@@ -25,13 +26,6 @@ function getAge(dateOfBirth: Date): number {
   return age;
 }
 
-function formatGoalAmount(amount: number): string {
-  if (amount >= 10_00_000) {
-    const l = amount / 1_00_000;
-    return `₹${Number.isInteger(l) ? l : l.toFixed(1)}L`;
-  }
-  return `₹${amount.toLocaleString("en-IN")}`;
-}
 
 function formatSipDate(date: Date): string {
   const d = new Date(date);
@@ -59,7 +53,7 @@ export default function HomeScreen() {
   const showKycCard = !isKycCompleted || !hasGoals;
 
   const totalCorpus = goals
-    ? formatGoalAmount(goals.reduce((sum, g) => sum + g.currentAmount, 0))
+    ? formatIndianCompact(goals.reduce((sum, g) => sum + g.currentAmount, 0))
     : null;
 
   const childName = children?.[0]?.firstName;
@@ -68,7 +62,7 @@ export default function HomeScreen() {
     .filter((v): v is number => !!v)
     .reduce((a, b) => a + b, 0);
   const monthlyAmount = totalMonthlySip
-    ? `₹${totalMonthlySip.toLocaleString("en-IN")}/mo`
+    ? `₹${formatIndianCompact(totalMonthlySip)}/mo`
     : undefined;
 
   function handleContinueKyc() {
@@ -179,10 +173,10 @@ const GoalPlanCard = ({ goal }: { goal: Goal }) => {
       educationId={goal.education?.id}
       collegeType={goal.education?.name}
       goalYear={new Date(goal.targetDate).getFullYear()}
-      goalAmount={formatGoalAmount(goal.targetAmount)}
-      savedAmount={`₹${goal.currentAmount.toLocaleString("en-IN")}`}
+      goalAmount={`₹${formatIndianCompact(goal.targetAmount)}`}
+      savedAmount={`₹${formatIndianCompact(goal.currentAmount)}`}
       savedFraction={goal.targetAmount > 0 ? goal.currentAmount / goal.targetAmount : 0}
-      nextSipAmount={goal.nextSipAmount != null ? `₹${goal.nextSipAmount.toLocaleString("en-IN")}` : null}
+      nextSipAmount={goal.nextSipAmount != null ? `₹${formatIndianCompact(goal.nextSipAmount)}` : null}
       nextSipDate={goal.nextSipDate != null ? formatSipDate(goal.nextSipDate) : null}
       onPress={onPress}
     />
