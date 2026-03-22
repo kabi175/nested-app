@@ -78,6 +78,8 @@ export default function GoalValueCard({
 const styles = StyleSheet.create({
   card: {
     backgroundColor: T.cardBg,
+    borderWidth: 1,
+    borderColor: "#2848F11A",
     borderRadius: 24,
     padding: 20,
     overflow: "visible",

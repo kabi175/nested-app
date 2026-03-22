@@ -39,7 +39,7 @@ export default function HoldingCard({
     <Pressable onPress={onPress} style={styles.card}>
       <View style={styles.row}>
         <View style={styles.info}>
-          <Text style={styles.fundName}>{fund}</Text>
+          <Text style={styles.fundName} numberOfLines={1} ellipsizeMode="tail">{fund}</Text>
           <Text style={styles.subtitle}>
             {category} · {allocation_percentage}%
           </Text>
@@ -56,12 +56,14 @@ export default function HoldingCard({
 const styles = StyleSheet.create({
   card: {
     backgroundColor: T.cardBg,
+    borderWidth: 1,
+    borderColor: "#2848F11A",
     borderRadius: 16,
     padding: 16,
   },
   row: {
     flexDirection: "row",
-    alignItems: "center",
+    alignItems: "flex-start",
   },
   info: {
     flex: 1,
