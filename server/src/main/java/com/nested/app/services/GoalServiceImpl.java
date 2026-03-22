@@ -15,7 +15,6 @@ import com.nested.app.exception.ExternalServiceException;
 import com.nested.app.repository.BasketRepository;
 import com.nested.app.repository.ChildRepository;
 import com.nested.app.repository.EducationRepository;
-import com.nested.app.repository.OrderRepository;
 import com.nested.app.repository.SIPOrderRepository;
 import com.nested.app.repository.TenantAwareGoalRepository;
 import java.sql.Timestamp;
@@ -49,9 +48,9 @@ public class GoalServiceImpl implements GoalService {
   private final TenantAwareGoalRepository goalRepository;
   private final BasketRepository basketRepository;
   private final EducationRepository educationRepository;
-  private final OrderRepository orderRepository;
   private final ChildRepository childRepository;
   private final SIPOrderRepository sipOrderRepository;
+  private final PortfolioService portfolioService;
 
   /**
    * Retrieves all goals from the system
@@ -71,7 +70,7 @@ public class GoalServiceImpl implements GoalService {
       } else {
         goals = goalRepository.findByBasketType(user, type);
       }
-      List<GoalDTO> goalDTOs = goals.stream().map(this::convertToDTO).collect(Collectors.toList());
+      List<GoalDTO> goalDTOs = goals.stream().map(g -> convertToDTO(g, user)).collect(Collectors.toList());
 
       log.info("Successfully retrieved {} goals", goalDTOs.size());
       return goalDTOs;
@@ -86,7 +85,7 @@ public class GoalServiceImpl implements GoalService {
   public GoalDTO getGoalById(Long goalId, User user) {
     try {
       Optional<Goal> goals = goalRepository.findById(goalId, user);
-      return goals.map(this::convertToDTO).orElse(null);
+      return goals.map(g -> convertToDTO(g, user)).orElse(null);
     } catch (Exception e) {
       log.error("Error retrieving goals: {}", e.getMessage(), e);
       throw new ExternalServiceException("Failed to retrieve goals", e);
@@ -152,7 +151,7 @@ public class GoalServiceImpl implements GoalService {
       }
 
       Goal updatedGoal = goalRepository.save(existingGoal);
-      GoalDTO updatedGoalDTO = convertToDTO(updatedGoal);
+      GoalDTO updatedGoalDTO = convertToDTO(updatedGoal, user);
 
       log.info("Successfully updated goal with ID: {}", updatedGoal.getId());
       return updatedGoalDTO;
@@ -221,7 +220,7 @@ public class GoalServiceImpl implements GoalService {
           });
 
       List<GoalDTO> savedGoalDTOs =
-          toBeSaved.stream().map(this::convertToDTO).collect(Collectors.toList());
+          toBeSaved.stream().map(g -> convertToDTO(g, user)).collect(Collectors.toList());
 
       log.info("Successfully created {} goalDtos", savedGoalDTOs.size());
       return savedGoalDTOs;
@@ -295,7 +294,7 @@ public class GoalServiceImpl implements GoalService {
 
     try {
       List<Goal> goals = goalRepository.findByBasketTitle(basketName, user);
-      List<GoalDTO> goalDTOs = goals.stream().map(this::convertToDTO).collect(Collectors.toList());
+      List<GoalDTO> goalDTOs = goals.stream().map(g -> convertToDTO(g, user)).collect(Collectors.toList());
 
       log.info("Successfully retrieved {} goals for basket name: {}", goalDTOs.size(), basketName);
       return goalDTOs;
@@ -355,18 +354,22 @@ public class GoalServiceImpl implements GoalService {
    * @param goal Goal entity
    * @return GoalDTO
    */
-  private GoalDTO convertToDTO(Goal goal) {
+  private GoalDTO convertToDTO(Goal goal, User user) {
     log.debug("Converting Goal entity to DTO for ID: {}", goal.getId());
 
     GoalDTO dto = new GoalDTO();
     dto.setId(goal.getId());
     dto.setTitle(goal.getTitle());
     dto.setTargetAmount(goal.getTargetAmount());
-    dto.setCurrentAmount(goal.getCurrentAmount());
-    dto.setInvestedAmount(goal.getInvestedAmount());
     dto.setTargetDate(goal.getTargetDate());
-    dto.setMonthlySip(goal.getMonthlySip());
     dto.setStatus(goal.getStatus());
+
+    // Compute live portfolio values to avoid sync delays
+    var portfolio = portfolioService.getGoalPortfolio(goal.getId(), user);
+    dto.setCurrentAmount(portfolio != null && portfolio.getCurrentValue() != null ? portfolio.getCurrentValue() : 0.0);
+    dto.setInvestedAmount(portfolio != null && portfolio.getInvestedAmount() != null ? portfolio.getInvestedAmount() : 0.0);
+
+    dto.setMonthlySip(portfolioService.getMonthlySip(goal.getId()));
 
     // Set user information if available
     if (goal.getUser() != null) {
