@@ -14,7 +14,8 @@ import { formatCurrency } from "@/utils/formatters";
 import { Button } from "@ui-kitten/components";
 import { router, useLocalSearchParams } from "expo-router";
 import { useSetAtom } from "jotai";
-import { ArrowLeft, Edit, MoreVertical, TrendingDown, TrendingUp } from "lucide-react-native";
+import HoldingCard from "@/components/v2/HoldingCard";
+import { ArrowLeft, Edit, MoreVertical } from "lucide-react-native";
 import React, { useMemo, useState } from "react";
 import {
   ActivityIndicator,
@@ -250,88 +251,6 @@ export default function GoalDetailScreen() {
   );
 }
 
-// Holding Card Component
-function HoldingCard({
-  holding,
-  borderColor,
-  goalId,
-}: {
-  holding: Holding;
-  borderColor: string;
-  goalId: string;
-}) {
-  const returnsPercentage =
-    holding.invested_amount > 0
-      ? (holding.returns_amount / holding.invested_amount) * 100
-      : 0;
-  const isNegative = returnsPercentage < 0;
-
-  return (
-    <TouchableOpacity
-      onPress={() => {
-        router.push(`/goal/${goalId}/${holding.fund_id}`);
-      }}
-      activeOpacity={0.7}
-    >
-      <ThemedView
-        style={[
-          styles.holdingCard,
-          { borderLeftColor: borderColor, borderLeftWidth: 4 },
-        ]}
-      >
-        <View style={styles.holdingHeader}>
-          <View style={styles.holdingInfo}>
-            <ThemedText style={styles.holdingFundName}>
-              {holding.fund}
-            </ThemedText>
-            <ThemedText style={styles.holdingAllocation}>
-              {holding.allocation_percentage}% allocation
-            </ThemedText>
-            <ThemedText style={styles.holdingInvested}>
-              Invested: {formatCurrency(holding.invested_amount)}
-            </ThemedText>
-          </View>
-          <View style={styles.holdingValue}>
-            <ThemedText style={styles.holdingCurrentValue}>
-              {formatCurrency(holding.current_value)}
-            </ThemedText>
-          </View>
-        </View>
-
-        {returnsPercentage !== 0 && (
-          <View style={styles.holdingReturns}>
-            <View style={styles.returnsRow}>
-              {holding.returns_amount >= 0 ? (
-                <TrendingUp size={14} color="#10B981" />
-              ) : (
-                <TrendingDown size={14} color="#EF4444" />
-              )}
-              <ThemedText
-                style={[
-                  styles.returnsText,
-                  isNegative && styles.returnsTextNegative,
-                ]}
-              >
-                {isNegative ? "-" : "+"}
-                {Math.abs(returnsPercentage).toFixed(2)}%
-              </ThemedText>
-            </View>
-            <ThemedText
-              style={[
-                styles.returnsAmountText,
-                holding.returns_amount < 0 && styles.returnsAmountTextNegative,
-              ]}
-            >
-              {holding.returns_amount >= 0 ? "+" : "-"}
-              {formatCurrency(Math.abs(holding.returns_amount))}
-            </ThemedText>
-          </View>
-        )}
-      </ThemedView>
-    </TouchableOpacity>
-  );
-}
-
 // Holdings Content Component
 function HoldingsContent({
   goalId,
@@ -348,22 +267,19 @@ function HoldingsContent({
     );
   }
 
-  // Generate colors for holdings
-  const colors = ["#FBCFE8", "#FEF3C7", "#D1FAE5", "#DBEAFE", "#FCE7F3"];
-
   return (
     <View style={styles.contentContainer}>
-      {holdings.map((holding, index) => {
-        const borderColor = colors[index % colors.length];
-        return (
-          <HoldingCard
-            key={index}
-            holding={holding}
-            borderColor={borderColor}
-            goalId={goalId}
-          />
-        );
-      })}
+      {holdings.map((holding, index) => (
+        <HoldingCard
+          key={index}
+          fund={holding.fund}
+          fund_category={holding.fund_category}
+          allocation_percentage={holding.allocation_percentage}
+          invested_amount={holding.invested_amount}
+          returns_amount={holding.returns_amount}
+          onPress={() => router.push(`/goal/${goalId}/${holding.fund_id}`)}
+        />
+      ))}
     </View>
   );
 }

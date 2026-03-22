@@ -52,6 +52,7 @@ export const getHoldingsForGoal = async (
   const { data } = await api.get(`/portfolio/goals/${goalId}/holdings`);
   return data.data.map((holding: any) => ({
     fund: holding.fund,
+    fund_category: holding.fund_category,
     allocation_percentage: holding.allocation_percentage,
     invested_amount: Number(holding.invested_amount),
     current_value: Number(holding.current_value),
