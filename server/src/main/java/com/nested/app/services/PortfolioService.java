@@ -31,7 +31,7 @@ import org.springframework.transaction.annotation.Transactional;
 @Slf4j
 public class PortfolioService {
 
-  private static final List<String> ACTIVE_SIP_STATUSES = List.of("completed", "in_progress");
+  private static final List<String> ACTIVE_SIP_STATUSES = List.of("ACTIVE");
 
   private final TransactionRepository transactionRepository;
   private final OrderItemsRepository orderItemsRepository;
