@@ -40,6 +40,9 @@ interface ChildPlanCardProps {
   savedFraction?: number; // 0–1
   nextSipAmount?: string | null;
   nextSipDate?: string | null;
+  actionLabel?: string;
+  onPressAction?: () => void;
+  onPressDelete?: () => void;
   onPress?: () => void;
 }
 
@@ -55,6 +58,9 @@ export default function ChildPlanCard({
   savedFraction = 0,
   nextSipAmount,
   nextSipDate,
+  actionLabel,
+  onPressAction,
+  onPressDelete,
   onPress,
 }: ChildPlanCardProps) {
   const clampedFraction = Math.min(Math.max(savedFraction, 0), 1);
@@ -99,15 +105,29 @@ export default function ChildPlanCard({
         </Text>
       </View>
 
-      {/* ── Next SIP (only when data is available) ── */}
+      {/* ── Monthly SIP (only when data is available) ── */}
       {hasSip && (
         <>
           <View style={styles.divider} />
           <View style={styles.sipRow}>
-            <Text style={styles.sipLabel}>Next SIP</Text>
+            <Text style={styles.sipLabel}>Monthly SIP</Text>
             <Text style={styles.sipValue}>{`${nextSipAmount} · ${nextSipDate}`}</Text>
           </View>
         </>
+      )}
+
+      {/* ── Action button ── */}
+      {!!actionLabel && (
+        <Pressable onPress={onPressAction} style={styles.actionButton}>
+          <Text style={styles.actionButtonText}>{actionLabel}</Text>
+        </Pressable>
+      )}
+
+      {/* ── Delete link ── */}
+      {!!onPressDelete && (
+        <Pressable onPress={onPressDelete} style={styles.deleteLink}>
+          <Text style={styles.deleteLinkText}>Delete goal</Text>
+        </Pressable>
       )}
     </Pressable>
   );
@@ -207,7 +227,7 @@ const styles = StyleSheet.create({
     marginBottom: 14,
   },
 
-  // ── Next SIP ──
+  // ── Monthly SIP ──
   sipRow: {
     flexDirection: "row",
     justifyContent: "space-between",
@@ -221,5 +241,35 @@ const styles = StyleSheet.create({
     fontSize: 15,
     fontWeight: "700",
     color: T.textDark,
+  },
+
+  // ── Action button ──
+  actionButton: {
+    marginTop: 16,
+    backgroundColor: "#2848F1",
+    borderRadius: 8,
+    height: 55,
+    alignItems: "center",
+    justifyContent: "center",
+    borderBottomWidth: 3,
+    borderBottomColor: "rgba(0,0,0,0.7)",
+  },
+  actionButtonText: {
+    color: "#FFF7FB",
+    fontSize: 18,
+    fontWeight: "500",
+  },
+
+  // ── Delete link ──
+  deleteLink: {
+    alignItems: "center",
+    paddingVertical: 8,
+    marginTop: 8,
+  },
+  deleteLinkText: {
+    fontSize: 12,
+    color: "rgba(0,0,0,0.75)",
+    textDecorationLine: "underline",
+    letterSpacing: 0.24,
   },
 });
