@@ -15,6 +15,7 @@ import com.nested.app.events.OrderItemsRefUpdatedEvent;
 import com.nested.app.exception.ExternalServiceException;
 import com.nested.app.repository.OrderItemsRepository;
 import com.nested.app.repository.PaymentRepository;
+import com.nested.app.repository.SIPOrderRepository;
 import com.nested.app.repository.TenantAwareGoalRepository;
 import java.util.ArrayList;
 import java.util.List;
@@ -45,6 +46,7 @@ public class SipOrderPaymentServiceImpl implements SipOrderPaymentService {
   private final PaymentServiceImpl paymentServiceHelper;
   private final OrderItemsRepository orderItemsRepository;
   private final TenantAwareGoalRepository goalRepository;
+  private final SIPOrderRepository sipOrderRepository;
   private final ApplicationEventPublisher eventPublisher;
   private final MandateApiClient mandateApiClient;
   private final SipOrderSchedulerService sipOrderSchedulerService;
@@ -86,6 +88,20 @@ public class SipOrderPaymentServiceImpl implements SipOrderPaymentService {
             goal.setMonthlySip(goalSIPAmount);
             goalRepository.save(goal);
           });
+
+      // Activate each SIPOrder: set nextRunDate to startDate so the scheduler
+      // can pick it up, and mark isActive so it is eligible for execution.
+      var activatedSipOrders =
+          sipOrders.stream()
+              .map(SIPOrder.class::cast)
+              .peek(
+                  sip -> {
+                    sip.setNextRunDate(sip.getStartDate());
+                    sip.setActive(true);
+                  })
+              .toList();
+      sipOrderRepository.saveAll(activatedSipOrders);
+
       var orderItems =
           payment.getOrders().stream().map(Order::getItems).flatMap(List::stream).toList();
       orderItems.forEach(orderItem -> orderItem.setStatus(TransactionStatus.ACTIVE));

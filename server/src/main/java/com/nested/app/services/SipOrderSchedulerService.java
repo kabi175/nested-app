@@ -2,10 +2,11 @@ package com.nested.app.services;
 
 import com.nested.app.entity.OrderItems;
 import com.nested.app.entity.SIPOrder;
+import com.nested.app.entity.SIPOrder.ScheduleStatus;
 import com.nested.app.enums.TransactionStatus;
 import com.nested.app.jobs.SipOrderVerificationJob;
 import com.nested.app.jobs.SipTransactionTracker;
-import com.nested.app.repository.OrderItemsRepository;
+import com.nested.app.repository.SIPOrderRepository;
 import java.time.LocalDate;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
@@ -20,17 +21,15 @@ import org.quartz.Scheduler;
 import org.quartz.SimpleScheduleBuilder;
 import org.quartz.Trigger;
 import org.quartz.TriggerBuilder;
-import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 /**
  * Scheduler-oriented service that advances and polls SIPOrders instead of using a separate schedule
- * entity. Responsibilities: - Identify due ACTIVE SIPOrders and transition them to RUNNING with a
- * generated provider ref. - Poll RUNNING SIPOrders for successful fills from provider and persist
- * Transaction rows. - Advance nextRunDate with month boundary clamping and update lifecycle status
- * (ACTIVE/COMPLETED/ERROR). - Maintain idempotency using providerTransactionId to avoid duplicate
- * transactions.
+ * entity. Responsibilities: - Identify due ACTIVE SIPOrders (nextRunDate <= today) and transition
+ * them to RUNNING with scheduled tracker jobs per OrderItem. - Advance nextRunDate after a cycle
+ * completes (all OrderItems reach a terminal status) and reset scheduleStatus to ACTIVE. - Mark
+ * scheduleStatus COMPLETED when nextRunDate would exceed endDate.
  *
  * <p>Notes: - Uses blocking calls (.block()) inside @Transactional methods; acceptable for current
  * design but consider moving provider calls outside the transaction if latency grows. - Assumes at
@@ -40,65 +39,104 @@ import org.springframework.transaction.annotation.Transactional;
 @Service
 @RequiredArgsConstructor
 public class SipOrderSchedulerService {
-  private final OrderItemsRepository orderItemsRepository;
+  private final SIPOrderRepository sipOrderRepository;
   private final Scheduler scheduler;
 
-  private static final int BATCH_SIZE = 10;
-  private static final int MAX_BATCHES = 100; // Safety limit to prevent infinite loops
-
   /**
-   * Scan for due SIPOrders (scheduleStatus=ACTIVE) and mark them RUNNING with a generated orderRef.
-   * The due logic relies on SIPOrder#due(LocalDate) which compares nextRunDate vs today.
+   * Main entry point called daily at 05:00 by SipDueSchedulesJob.
    *
-   * <p>Processes items in batches to handle large datasets efficiently while avoiding
-   * memory issues and providing better observability.
+   * <p>Phase A: Advance any RUNNING SIPOrders whose OrderItems have all reached a terminal state
+   * (COMPLETED or FAILED). Computes the next run date and resets scheduleStatus to ACTIVE, or marks
+   * COMPLETED if the SIP has passed its endDate.
+   *
+   * <p>Phase B: Find all ACTIVE SIPOrders with nextRunDate <= today, transition them to RUNNING,
+   * and schedule a SipTransactionTracker Quartz job for each of their OrderItems.
    */
   @Transactional
   public void runDueOrders() {
-    int pageNumber = 0;
-    int totalProcessed = 0;
-    int totalFailed = 0;
+    LocalDate today = LocalDate.now();
+    log.info("Starting SIP due-order run for date {}", today);
 
-    log.info("Starting bulk processing of due SIP orders");
+    advanceCompletedCycles();
+    scheduleNewCycles(today);
 
-    while (pageNumber < MAX_BATCHES) {
-      var page = orderItemsRepository.findAllSipOrderItems(
-          List.of(TransactionStatus.ACTIVE.name()),
-          Pageable.ofSize(BATCH_SIZE).withPage(pageNumber));
+    log.info("Completed SIP due-order run for date {}", today);
+  }
 
-      if (page.isEmpty()) {
-        break;
+  /**
+   * Phase A: For each RUNNING SIPOrder whose OrderItems are all terminal, advance nextRunDate and
+   * reset scheduleStatus to ACTIVE (or COMPLETED if past endDate).
+   */
+  private void advanceCompletedCycles() {
+    List<SIPOrder> runningSips = sipOrderRepository.findByScheduleStatus(ScheduleStatus.RUNNING);
+    log.debug("Phase A: found {} RUNNING SIP orders to check for cycle completion", runningSips.size());
+
+    for (SIPOrder sip : runningSips) {
+      boolean allTerminal =
+          sip.getItems().stream()
+              .allMatch(
+                  item ->
+                      item.getStatus() == TransactionStatus.COMPLETED
+                          || item.getStatus() == TransactionStatus.FAILED);
+
+      if (!allTerminal) {
+        log.debug("SIPOrder id={} still has in-progress items, skipping advancement", sip.getId());
+        continue;
       }
 
-      log.debug("Processing batch {} with {} items (total elements: {})",
-          pageNumber + 1, page.getNumberOfElements(), page.getTotalElements());
+      LocalDate next = computeNextRunDate(sip);
+      if (next.isAfter(sip.getEndDate())) {
+        sip.setScheduleStatus(ScheduleStatus.COMPLETED);
+        log.info("SIPOrder id={} completed — nextRunDate {} is past endDate {}", sip.getId(), next, sip.getEndDate());
+      } else {
+        sip.setNextRunDate(next);
+        sip.setScheduleStatus(ScheduleStatus.ACTIVE);
+        log.info("SIPOrder id={} advanced nextRunDate to {}", sip.getId(), next);
+      }
+    }
 
-      for (var orderItem : page.getContent()) {
+    sipOrderRepository.saveAll(runningSips.stream()
+        .filter(s -> s.getScheduleStatus() != ScheduleStatus.RUNNING)
+        .toList());
+  }
+
+  /**
+   * Phase B: Find ACTIVE SIPOrders with nextRunDate <= today, transition to RUNNING, and schedule
+   * a tracker job for each OrderItem that has a provider ref.
+   */
+  private void scheduleNewCycles(LocalDate today) {
+    List<SIPOrder> dueSips =
+        sipOrderRepository.findByScheduleStatusAndNextRunDateLessThanEqual(
+            ScheduleStatus.ACTIVE, today);
+    log.debug("Phase B: found {} due SIP orders for date {}", dueSips.size(), today);
+
+    int totalScheduled = 0;
+    int totalFailed = 0;
+
+    for (int i = 0; i < dueSips.size(); i++) {
+      SIPOrder sip = dueSips.get(i);
+      sip.setScheduleStatus(ScheduleStatus.RUNNING);
+
+      List<OrderItems> items = sip.getItems();
+      for (OrderItems item : items) {
         try {
-          scheduleSipTransactionTrackerJob(orderItem, pageNumber);
-          totalProcessed++;
+          scheduleSipTransactionTrackerJob(item, i);
+          totalScheduled++;
         } catch (Exception e) {
           totalFailed++;
           log.error(
               "Failed to schedule SipTransactionTracker for orderItem id={}: {}",
-              orderItem.getId(),
+              item.getId(),
               e.getMessage(),
               e);
         }
       }
-
-      if (!page.hasNext()) {
-        break;
-      }
-      pageNumber++;
     }
 
-    if (pageNumber >= MAX_BATCHES) {
-      log.warn("Reached maximum batch limit ({}). Some items may not have been processed.", MAX_BATCHES);
-    }
-
-    log.info("Completed bulk processing of due SIP orders. Processed: {}, Failed: {}, Batches: {}",
-        totalProcessed, totalFailed, pageNumber + 1);
+    sipOrderRepository.saveAll(dueSips);
+    log.info(
+        "Phase B complete. Scheduled: {}, Failed: {}, SIP orders transitioned to RUNNING: {}",
+        totalScheduled, totalFailed, dueSips.size());
   }
 
   /**
@@ -106,8 +144,9 @@ public class SipOrderSchedulerService {
    * transaction status by polling the provider.
    *
    * @param orderItem The OrderItem to track
+   * @param index Stagger index to avoid thundering-herd on the provider
    */
-  public void scheduleSipTransactionTrackerJob(OrderItems orderItem, int page) {
+  public void scheduleSipTransactionTrackerJob(OrderItems orderItem, int index) {
     if (orderItem.getRef() == null || orderItem.getRef().isEmpty()) {
       log.warn(
           "OrderItem id={} has no ref, skipping SipTransactionTracker scheduling",
@@ -123,12 +162,11 @@ public class SipOrderSchedulerService {
           TriggerBuilder.newTrigger()
               .withIdentity(jobIdentity + "-trigger-" + System.currentTimeMillis())
               .forJob(jobKey)
-              .startAt(DateBuilder.futureDate(10 * (page + 1), DateBuilder.IntervalUnit.SECOND))
+              .startAt(DateBuilder.futureDate(10 * (index + 1), DateBuilder.IntervalUnit.SECOND))
               .withSchedule(
                   SimpleScheduleBuilder.simpleSchedule().withMisfireHandlingInstructionFireNow())
               .build();
 
-      // Check if job already exists for this order item
       if (scheduler.checkExists(jobKey)) {
         log.info(
             "SipTransactionTracker job already exists for orderItem id={}. Adding new trigger.",
@@ -177,10 +215,9 @@ public class SipOrderSchedulerService {
               .withSchedule(
                   SimpleScheduleBuilder.simpleSchedule()
                       .withMisfireHandlingInstructionFireNow()
-                      .withRepeatCount(0)) // Run once
+                      .withRepeatCount(0))
               .build();
 
-      // Check if job already exists for this payment
       if (scheduler.checkExists(jobKey)) {
         log.info(
             "SIP order verification job already exists for payment ID: {}. Adding new trigger.",
@@ -206,7 +243,6 @@ public class SipOrderSchedulerService {
           "Failed to schedule SIP order verification job for payment ID: {}. Error: {}",
           paymentID,
           e.getMessage());
-      // Graceful error handling - log warning but don't throw exception
     }
   }
 
@@ -214,7 +250,7 @@ public class SipOrderSchedulerService {
    * Computes the next run date by adding one month to the current nextRunDate and clamping to the
    * last day of month if original target day exceeds month length.
    */
-  private LocalDate computeNextRunDate(SIPOrder order) {
+  LocalDate computeNextRunDate(SIPOrder order) {
     LocalDate candidate = order.getNextRunDate().plusMonths(1);
     int targetDay = order.getStartDate().getDayOfMonth(); // Original SIP initiation day
     int length = candidate.lengthOfMonth();
@@ -231,5 +267,4 @@ public class SipOrderSchedulerService {
         utc.atStartOfDay(ZoneId.of("UTC")).withZoneSameInstant(ZoneId.systemDefault());
     return zdt.toLocalDate();
   }
-
 }
