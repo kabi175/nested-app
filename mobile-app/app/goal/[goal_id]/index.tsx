@@ -60,8 +60,11 @@ export default function GoalDetailScreen() {
       router.push(`/basket?type=${goal.basket.title}`);
       return;
     }
-    setGoalsForCustomize([goal]);
-    router.push(`/child/${goal.childId}/goal/customize`);
+
+    router.push({
+      pathname: "goal/[goal_id]/top-up",
+      params: { goal_id },
+    });
   };
 
   const goalTitle = (() => {
