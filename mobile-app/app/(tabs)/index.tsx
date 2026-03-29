@@ -1,6 +1,6 @@
 import { router, useRouter } from "expo-router";
 import { StatusBar } from "expo-status-bar";
-import { Bell, PiggyBank, Receipt, TrendingUp, UserPlus } from "lucide-react-native";
+import { Baby, Bell, ChartColumnIncreasing, PiggyBank, ScrollText } from "lucide-react-native";
 import React from "react";
 import {
   Alert,
@@ -70,9 +70,9 @@ const TESTIMONIALS = [
 
 const QUICK_ACTIONS = [
   { label: "Add Money", icon: PiggyBank, route: "/child/select" as const },
-  { label: "Edit plan", icon: TrendingUp, route: "/child/select" as const },
-  { label: "Orders", icon: Receipt, route: "/orders" as const },
-  { label: "Add Child", icon: UserPlus, route: "/child/create" as const },
+  { label: "Edit plan", icon: ChartColumnIncreasing, route: "/child/select" as const },
+  { label: "Orders", icon: ScrollText, route: "/orders" as const },
+  { label: "Add Child", icon: Baby, route: "/child/create" as const },
 ];
 
 export default function HomeScreen() {
