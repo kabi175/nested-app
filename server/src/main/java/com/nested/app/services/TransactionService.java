@@ -24,5 +24,5 @@ public interface TransactionService {
    * @return List of transactions matching the criteria
    */
   List<TransactionDTO> getAllTransactions(
-      String startDate, String endDate, Pageable pageable, User user);
+      String startDate, String endDate, Long childId, Pageable pageable, User user);
 }

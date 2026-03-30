@@ -41,10 +41,12 @@ public class TransactionController {
   private final UserContext userContext;
 
   /**
-   * Retrieves all transactions for the authenticated user with optional date range filtering
+   * Retrieves all transactions for the authenticated user with optional date range and child
+   * filtering
    *
    * @param startDate Optional start date in yyyy-MM-dd format (inclusive)
    * @param endDate Optional end date in yyyy-MM-dd format (inclusive)
+   * @param childId Optional child ID to filter transactions by child
    * @param pageable Pagination parameters (page, size, sort)
    * @return ResponseEntity containing list of transactions
    */
@@ -52,7 +54,7 @@ public class TransactionController {
   @Operation(
       summary = "Get all transactions",
       description =
-          "Retrieves all transactions for the authenticated user with optional date range filtering on createdAt field. "
+          "Retrieves all transactions for the authenticated user with optional date range and child filtering on createdAt field. "
               + "Supports pagination and sorting. Default sort is by createdAt descending (newest first).")
   @ApiResponses(
       value = {
@@ -81,20 +83,26 @@ public class TransactionController {
               example = "2024-12-31")
           @RequestParam(name = "to_date", required = false)
           String endDate,
+      @Parameter(
+              description = "Child ID to filter transactions belonging to a specific child's goals.",
+              example = "42")
+          @RequestParam(name = "child_id", required = false)
+          Long childId,
       @PageableDefault(sort = "createdAt", direction = Sort.Direction.DESC, size = 20)
           Pageable pageable) {
 
     log.info(
-        "GET /api/v1/transactions - Retrieving transactions with startDate: {}, endDate: {}, page: {}, size: {}",
+        "GET /api/v1/transactions - Retrieving transactions with startDate: {}, endDate: {}, childId: {}, page: {}, size: {}",
         startDate,
         endDate,
+        childId,
         pageable.getPageNumber(),
         pageable.getPageSize());
 
     try {
       List<TransactionDTO> transactions =
           transactionService.getAllTransactions(
-              startDate, endDate, pageable, userContext.getUser());
+              startDate, endDate, childId, pageable, userContext.getUser());
       log.info("Successfully retrieved {} transactions", transactions.size());
 
       return ResponseEntity.ok(Entity.of(transactions));

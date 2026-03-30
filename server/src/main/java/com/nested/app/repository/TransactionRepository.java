@@ -32,6 +32,11 @@ public interface TransactionRepository extends JpaRepository<Transaction, Long> 
   Page<Transaction> findByUserIdAndCreatedAtBetween(
       Long userId, Timestamp startDate, Timestamp endDate, Pageable pageable);
 
+  Page<Transaction> findByUserIdAndGoalChildId(Long userId, Long childId, Pageable pageable);
+
+  Page<Transaction> findByUserIdAndGoalChildIdAndCreatedAtBetween(
+      Long userId, Long childId, Timestamp startDate, Timestamp endDate, Pageable pageable);
+
   /**
    * Retrieves aggregated holdings data for a specific goal using database-level grouping and
    * calculations. This query groups transactions by fund and computes: - Total units (sum of all
