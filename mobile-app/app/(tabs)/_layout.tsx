@@ -1,4 +1,5 @@
-import { Redirect, Tabs } from "expo-router";
+import { Redirect, Tabs, usePathname } from "expo-router";
+import { StatusBar } from "expo-status-bar";
 import React from "react";
 import { Platform } from "react-native";
 
@@ -9,6 +10,7 @@ import { useAuth0 } from "react-native-auth0";
 
 export default function TabLayout() {
   const { user } = useAuth0();
+  const pathname = usePathname();
 
   if (!user) {
     console.log("Redirecting to sign-in");
@@ -16,58 +18,64 @@ export default function TabLayout() {
   }
 
   return (
-    <Tabs
-      screenOptions={{
-        tabBarActiveTintColor: "#141B34",
-        headerShown: false,
-        tabBarButton: HapticTab,
-        tabBarBackground: TabBarBackground,
-        tabBarStyle: Platform.select({
-          ios: {
-            position: "absolute",
-            backgroundColor: "#F4F4F4",
-            height: 80,
-            paddingTop: 12,
-            paddingBottom: 20,
+    <>
+      <StatusBar
+        hidden={pathname === "/"}
+        translucent={Platform.OS === "android"}
+      />
+      <Tabs
+        screenOptions={{
+          tabBarActiveTintColor: "#141B34",
+          headerShown: false,
+          tabBarButton: HapticTab,
+          tabBarBackground: TabBarBackground,
+          tabBarStyle: Platform.select({
+            ios: {
+              position: "absolute",
+              backgroundColor: "#F4F4F4",
+              height: 80,
+              paddingTop: 12,
+              paddingBottom: 20,
+            },
+            default: {
+              backgroundColor: "#F4F4F4",
+              height: 70,
+              paddingTop: 10,
+              paddingBottom: 10,
+            },
+          }),
+          tabBarLabelStyle: {
+            fontSize: 12,
+            fontWeight: "500",
+            marginTop: 4,
           },
-          default: {
-            backgroundColor: "#F4F4F4",
-            height: 70,
-            paddingTop: 10,
-            paddingBottom: 10,
+          tabBarIconStyle: {
+            marginBottom: 0,
           },
-        }),
-        tabBarLabelStyle: {
-          fontSize: 12,
-          fontWeight: "500",
-          marginTop: 4,
-        },
-        tabBarIconStyle: {
-          marginBottom: 0,
-        },
-      }}
-    >
-      <Tabs.Screen
-        name="index"
-        options={{
-          title: "Home",
-          tabBarIcon: ({ color }) => <House size={24} color={color} />,
         }}
-      />
-      <Tabs.Screen
-        name="super-fd"
-        options={{
-          title: "Super FD",
-          tabBarIcon: ({ color }) => <Database size={24} color={color} />,
-        }}
-      />
-      <Tabs.Screen
-        name="account"
-        options={{
-          title: "Account",
-          tabBarIcon: ({ color }) => <User size={24} color={color} />,
-        }}
-      />
-    </Tabs>
+      >
+        <Tabs.Screen
+          name="index"
+          options={{
+            title: "Home",
+            tabBarIcon: ({ color }) => <House size={24} color={color} />,
+          }}
+        />
+        <Tabs.Screen
+          name="super-fd"
+          options={{
+            title: "Super FD",
+            tabBarIcon: ({ color }) => <Database size={24} color={color} />,
+          }}
+        />
+        <Tabs.Screen
+          name="account"
+          options={{
+            title: "Account",
+            tabBarIcon: ({ color }) => <User size={24} color={color} />,
+          }}
+        />
+      </Tabs>
+    </>
   );
 }

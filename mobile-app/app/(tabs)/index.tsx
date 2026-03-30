@@ -1,5 +1,4 @@
 import { router, useRouter } from "expo-router";
-import { StatusBar } from "expo-status-bar";
 import { Baby, Bell, ChartColumnIncreasing, PiggyBank, ScrollText } from "lucide-react-native";
 import React from "react";
 import {
@@ -10,7 +9,7 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
 
 import ChildPlanCard from "@/components/v2/ChildPlanCard";
 import CompleteKycComponent from "@/components/v2/CompleteKycComponent";
@@ -114,8 +113,7 @@ export default function HomeScreen() {
   }
 
   return (
-    <View style={styles.screen}>
-      <StatusBar backgroundColor="#2848F1" style="light" />
+    <SafeAreaView style={styles.screen} edges={["left", "right", "bottom"]}>
       <ScrollView
         style={styles.scroll}
         contentContainerStyle={[
@@ -277,7 +275,7 @@ export default function HomeScreen() {
           </View>
         </View>
       </ScrollView>
-    </View>
+    </SafeAreaView>
   );
 }
 

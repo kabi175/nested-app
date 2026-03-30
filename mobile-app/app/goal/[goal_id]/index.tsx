@@ -11,11 +11,11 @@ import { usePortfolioHoldings } from "@/hooks/usePortfolio";
 import { router, useLocalSearchParams } from "expo-router";
 import { useSetAtom } from "jotai";
 import React, { useMemo, useState } from "react";
+import { StatusBar } from "expo-status-bar";
 import {
   ActivityIndicator,
   Alert,
   ScrollView,
-  StatusBar,
   StyleSheet,
   View,
 } from "react-native";
@@ -93,7 +93,7 @@ export default function GoalDetailScreen() {
 
   return (
     <SafeAreaView style={styles.container} edges={["top"]}>
-      <StatusBar backgroundColor="#FFFFFF" barStyle="dark-content" />
+      <StatusBar style="dark" backgroundColor="#FFFFFF" />
 
       <GoalHeader title={goalTitle} subtitle={goalSubtitle || undefined} />
 

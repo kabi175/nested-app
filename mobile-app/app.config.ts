@@ -10,6 +10,7 @@ module.exports = () => ({
     scheme: "nested",
     android: {
       package: "com.nexted.app",
+      statusBarTranslucent: true,
       intentFilters: {
         action: "VIEW",
         category: ["BROWSABLE", "DEFAULT"],

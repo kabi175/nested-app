@@ -67,7 +67,7 @@ export default function ValidationInProgressScreen() {
   }
 
   return (
-    <SafeAreaView style={styles.safeArea} edges={["bottom"]}>
+    <SafeAreaView style={styles.safeArea} edges={["top", "bottom"]}>
       <Layout level="1" style={styles.container}>
         <View style={styles.content}>
           <ActivityIndicator size="large" color="#0A84FF" />

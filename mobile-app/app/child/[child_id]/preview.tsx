@@ -9,9 +9,9 @@ import { formatCompactCurrency, formatCurrency } from "@/utils/formatters";
 import { router, useLocalSearchParams } from "expo-router";
 import { useAtomValue } from "jotai";
 import React from "react";
+import { StatusBar } from "expo-status-bar";
 import {
     ScrollView,
-    StatusBar,
     StyleSheet,
     Text,
     View,
@@ -49,7 +49,7 @@ export default function Preview() {
 
     return (
         <SafeAreaView style={styles.safe} edges={["top"]}>
-            <StatusBar backgroundColor="#F5F5F5" />
+            <StatusBar style="dark" backgroundColor="#F5F5F5" />
 
             <ScrollView
                 style={styles.scroll}

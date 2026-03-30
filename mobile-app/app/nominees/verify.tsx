@@ -194,7 +194,7 @@ export default function NomineeVerificationScreen() {
   }, [resendTimer]);
 
   return (
-    <SafeAreaView style={styles.safeArea} edges={[]}>
+    <SafeAreaView style={styles.safeArea} edges={["top", "bottom"]}>
       <View style={styles.container}>
         <ScrollView
           style={styles.scrollView}

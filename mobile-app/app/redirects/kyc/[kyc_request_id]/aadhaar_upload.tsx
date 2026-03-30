@@ -7,7 +7,8 @@ import { Button, Layout, Spinner, Text } from "@ui-kitten/components";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import * as WebBrowser from "expo-web-browser";
 import React, { useEffect, useMemo, useState } from "react";
-import { SafeAreaView, View } from "react-native";
+import { View } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function AadhaarRedirectSuccessScreen() {
   const { kyc_request_id } = useLocalSearchParams<{
@@ -74,7 +75,7 @@ export default function AadhaarRedirectSuccessScreen() {
   };
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: "#ffffff" }}>
+    <SafeAreaView style={{ flex: 1, backgroundColor: "#ffffff" }} edges={["top", "bottom"]}>
       <Layout
         level="1"
         style={{
