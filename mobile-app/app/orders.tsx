@@ -1,12 +1,16 @@
+import { Transaction } from "@/api/orders";
+import { useChildren } from "@/hooks/useChildren";
 import { useTransactions } from "@/hooks/useTransactions";
 import { formatCurrency } from "@/utils/formatters";
-import { Card, Datepicker, Text } from "@ui-kitten/components";
+import { Datepicker, Text } from "@ui-kitten/components";
 import { router } from "expo-router";
 import { StatusBar } from "expo-status-bar";
-import { ArrowLeft, CalendarDays, ChevronLeft, ChevronRight } from "lucide-react-native";
-import { useState } from "react";
+import { ArrowLeft, CalendarDays } from "lucide-react-native";
+import { useCallback, useEffect, useRef, useState } from "react";
 import {
   ActivityIndicator,
+  NativeScrollEvent,
+  NativeSyntheticEvent,
   ScrollView,
   StyleSheet,
   TouchableOpacity,
@@ -14,151 +18,138 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
-type Transaction = {
-  status: "in_progress" | "completed" | "failed" | "refunded";
-  type: "SIP" | "BUY" | "SELL";
-  amount: number;
-  units: number;
-  fund: string;
-  executed_at: Date;
-};
-
-const getTransactionTypeLabel = (type: string): string => {
+const getTypeLabel = (type: string): string => {
   switch (type) {
+    case "SIP":
+      return "Monthly SIP";
     case "BUY":
-      return "Buy";
+      return "Lumpsum";
     case "SELL":
       return "Redeem";
-    case "SIP":
-      return "SIP";
-    case "STP":
-      return "STP";
-    case "SWP":
-      return "SWP";
     default:
       return type;
   }
 };
 
-const getTransactionTypeColor = (type: string): string => {
-  switch (type) {
-    case "BUY":
-      return "#D1FAE5"; // Light green
-    case "SELL":
-      return "#FED7AA"; // Light orange
-    case "SIP":
-      return "#DBEAFE"; // Light blue
-    case "STP":
-      return "#CCFBF1"; // Light teal
-    case "SWP":
-      return "#E9D5FF"; // Light purple
-    default:
-      return "#E5E7EB"; // Light grey
-  }
+const formatShortDate = (date: Date): string => {
+  return date.toLocaleDateString("en-IN", { day: "numeric", month: "short" });
 };
 
-const getTransactionTypeTextColor = (type: string): string => {
-  switch (type) {
-    case "BUY":
-      return "#065F46"; // Dark green
-    case "SELL":
-      return "#9A3412"; // Dark orange
-    case "SIP":
-      return "#1E40AF"; // Dark blue
-    case "STP":
-      return "#134E4A"; // Dark teal
-    case "SWP":
-      return "#6B21A8"; // Dark purple
-    default:
-      return "#374151"; // Dark grey
-  }
+const getMonthGroupKey = (date: Date): string => {
+  return `${date.getFullYear()}-${date.getMonth()}`;
 };
 
-const getStatusLabel = (status: string): string => {
-  switch (status) {
-    case "completed":
-      return "Completed";
-    case "in_progress":
-      return "Processing";
-    case "failed":
-    case "refunded":
-      return "Rejected";
-    default:
-      return status;
-  }
+const formatMonthHeader = (date: Date): string => {
+  const month = date
+    .toLocaleDateString("en-IN", { month: "long" })
+    .toUpperCase();
+  const year = date.getFullYear();
+  return `${month}' ${year}`;
 };
 
-const getStatusColor = (status: string): string => {
-  switch (status) {
-    case "completed":
-      return "#D1FAE5"; // Light green
-    case "in_progress":
-      return "#FEF3C7"; // Light yellow
-    case "failed":
-    case "refunded":
-      return "#FEE2E2"; // Light red
-    default:
-      return "#E5E7EB"; // Light grey
-  }
+type MonthGroup = {
+  key: string;
+  label: string;
+  date: Date;
+  transactions: Transaction[];
 };
 
-const getStatusTextColor = (status: string): string => {
-  switch (status) {
-    case "completed":
-      return "#065F46"; // Dark green
-    case "in_progress":
-      return "#92400E"; // Dark yellow
-    case "failed":
-    case "refunded":
-      return "#991B1B"; // Dark red
-    default:
-      return "#374151"; // Dark grey
+const groupByMonth = (transactions: Transaction[]): MonthGroup[] => {
+  const map = new Map<string, MonthGroup>();
+  for (const tx of transactions) {
+    const key = getMonthGroupKey(tx.executed_at);
+    if (!map.has(key)) {
+      map.set(key, {
+        key,
+        label: formatMonthHeader(tx.executed_at),
+        date: tx.executed_at,
+        transactions: [],
+      });
+    }
+    map.get(key)!.transactions.push(tx);
   }
-};
-
-const formatDate = (date: Date): string => {
-  const day = date.getDate().toString().padStart(2, "0");
-  const month = (date.getMonth() + 1).toString().padStart(2, "0");
-  const year = date.getFullYear().toString().slice(-2);
-  return `${day}-${month}-${year}`;
+  return Array.from(map.values()).sort(
+    (a, b) => b.date.getTime() - a.date.getTime()
+  );
 };
 
 export default function OrdersScreen() {
   const [fromDate, setFromDate] = useState<Date | undefined>(undefined);
   const [toDate, setToDate] = useState<Date | undefined>(undefined);
+  const [selectedChildId, setSelectedChildId] = useState<string | undefined>(
+    undefined
+  );
   const [currentPage, setCurrentPage] = useState(0);
+  const [allTransactions, setAllTransactions] = useState<Transaction[]>([]);
+  const [hasMore, setHasMore] = useState(true);
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
 
+  const { data: children } = useChildren();
   const { data: transactions, isLoading } = useTransactions(
     currentPage,
     fromDate,
-    toDate
+    toDate,
+    selectedChildId
   );
 
-  // Reset to page 0 when date filters change
-  const handleDateChange = (date: Date | undefined, isFromDate: boolean) => {
-    setCurrentPage(0);
-    if (isFromDate) {
-      setFromDate(date);
+  // Accumulate transactions across pages
+  useEffect(() => {
+    if (!transactions) return;
+    if (currentPage === 0) {
+      setAllTransactions(transactions);
+      setHasMore(transactions.length > 0);
+    } else if (transactions.length > 0) {
+      setAllTransactions((prev) => [...prev, ...transactions]);
+      setHasMore(true);
     } else {
-      setToDate(date);
+      setHasMore(false);
     }
+    setIsLoadingMore(false);
+  }, [transactions, currentPage]);
+
+  // Reset when filters change
+  const resetAndFilter = useCallback(
+    (childId: string | undefined, from: Date | undefined, to: Date | undefined) => {
+      setAllTransactions([]);
+      setHasMore(true);
+      setCurrentPage(0);
+      setSelectedChildId(childId);
+      setFromDate(from);
+      setToDate(to);
+    },
+    []
+  );
+
+  const handleChildSelect = (childId: string | undefined) => {
+    if (childId === selectedChildId) return;
+    resetAndFilter(childId, fromDate, toDate);
   };
 
-  const handlePreviousPage = () => {
-    if (currentPage > 0) {
-      setCurrentPage((prev) => prev - 1);
-    }
+  const handleDateChange = (date: Date | undefined, isFromDate: boolean) => {
+    resetAndFilter(
+      selectedChildId,
+      isFromDate ? date : fromDate,
+      isFromDate ? toDate : date
+    );
   };
 
-  const handleNextPage = () => {
-    // If current page has data, assume there might be a next page
-    if (transactions && transactions.length > 0) {
-      setCurrentPage((prev) => prev + 1);
-    }
-  };
+  // Scroll-based infinite load
+  const scrollViewRef = useRef<ScrollView>(null);
+  const handleScroll = useCallback(
+    (e: NativeSyntheticEvent<NativeScrollEvent>) => {
+      if (!hasMore || isLoadingMore || isLoading) return;
+      const { layoutMeasurement, contentOffset, contentSize } = e.nativeEvent;
+      const isNearBottom =
+        layoutMeasurement.height + contentOffset.y >= contentSize.height - 100;
+      if (isNearBottom) {
+        setIsLoadingMore(true);
+        setCurrentPage((prev) => prev + 1);
+      }
+    },
+    [hasMore, isLoadingMore, isLoading]
+  );
 
-  const hasNextPage = transactions && transactions.length > 0;
-  const hasPreviousPage = currentPage > 0;
+  const monthGroups = groupByMonth(allTransactions);
 
   return (
     <SafeAreaView style={styles.container} edges={["top"]}>
@@ -179,196 +170,110 @@ export default function OrdersScreen() {
       </View>
 
       <ScrollView
+        ref={scrollViewRef}
         style={styles.scrollView}
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
+        onScroll={handleScroll}
+        scrollEventThrottle={16}
       >
-        {/* Date Filters */}
-        <Card style={styles.dateFilterCard} disabled>
-          <View style={styles.dateFilterContainer}>
-            <View style={styles.dateFilterItem}>
-              <Text category="s1" style={styles.dateLabel}>
-                From:
-              </Text>
-              <Datepicker
-                placeholder="dd-mm-yy"
-                date={fromDate}
-                onSelect={(date) => handleDateChange(date, true)}
-                accessoryRight={() => (
-                  <CalendarDays size={20} color="#6B7280" />
-                )}
-                style={styles.datePicker}
-                size="medium"
-              />
-            </View>
-            <View style={styles.dateFilterItem}>
-              <Text category="s1" style={styles.dateLabel}>
-                To:
-              </Text>
-              <Datepicker
-                placeholder="dd-mm-yy"
-                date={toDate}
-                onSelect={(date) => handleDateChange(date, false)}
-                accessoryRight={() => (
-                  <CalendarDays size={20} color="#6B7280" />
-                )}
-                style={styles.datePicker}
-                size="medium"
-              />
-            </View>
-          </View>
-        </Card>
-
-        {/* Order History */}
-        <Card style={styles.orderHistoryCard} disabled>
-          <Text category="h6" style={styles.orderHistoryTitle}>
-            Order History
-          </Text>
-
-          {isLoading ? (
-            <View style={styles.loadingContainer}>
-              <ActivityIndicator size="large" color="#2563EB" />
-            </View>
-          ) : !transactions || transactions.length === 0 ? (
-            <View style={styles.emptyContainer}>
-              <Text category="s1" appearance="hint" style={styles.emptyText}>
-                No orders found
-              </Text>
-            </View>
-          ) : (
-            <View style={styles.transactionsList}>
-              {transactions.map((transaction: Transaction, index: number) => (
-                <View
-                  key={index}
+        {/* Member filter tabs */}
+        {children && children.length > 0 && (
+          <View style={styles.memberTabsRow}>
+            {children.map((child) => (
+              <TouchableOpacity
+                key={child.id}
+                style={[
+                  styles.memberTab,
+                  selectedChildId === child.id && styles.memberTabActive,
+                ]}
+                onPress={() => handleChildSelect(child.id)}
+              >
+                <Text
+                  category="s1"
                   style={[
-                    styles.transactionItem,
-                    index < transactions.length - 1 &&
-                    styles.transactionItemBorder,
+                    styles.memberTabText,
+                    selectedChildId === child.id && styles.memberTabTextActive,
                   ]}
                 >
-                  <View style={styles.transactionHeader}>
-                    <Text category="s1" style={styles.fundName}>
-                      {transaction.fund}
-                    </Text>
+                  {child.firstName}
+                </Text>
+              </TouchableOpacity>
+            ))}
+          </View>
+        )}
+
+        {/* Date filter row */}
+        <View style={styles.dateFilterRow}>
+          <Text category="s1" style={styles.dateFromLabel}>
+            From
+          </Text>
+          <View style={styles.dateInputsRow}>
+            <Datepicker
+              placeholder="dd-mm-yyyy"
+              date={fromDate}
+              onSelect={(date) => handleDateChange(date, true)}
+              accessoryRight={() => <CalendarDays size={18} color="#6B7280" />}
+              style={styles.datePicker}
+              size="small"
+            />
+            <Text category="s1" style={styles.dateToText}>
+              to
+            </Text>
+            <Datepicker
+              placeholder="dd-mm-yyyy"
+              date={toDate}
+              onSelect={(date) => handleDateChange(date, false)}
+              accessoryRight={() => <CalendarDays size={18} color="#6B7280" />}
+              style={styles.datePicker}
+              size="small"
+            />
+          </View>
+        </View>
+
+        {/* Transactions */}
+        {isLoading && currentPage === 0 ? (
+          <View style={styles.loadingContainer}>
+            <ActivityIndicator size="large" color="#2563EB" />
+          </View>
+        ) : allTransactions.length === 0 ? (
+          <View style={styles.emptyContainer}>
+            <Text category="s1" appearance="hint" style={styles.emptyText}>
+              No orders found
+            </Text>
+          </View>
+        ) : (
+          monthGroups.map((group) => (
+            <View key={group.key}>
+              <Text style={styles.monthHeader}>{group.label}</Text>
+              {group.transactions.map((tx, index) => (
+                <View key={index} style={styles.txCard}>
+                  <View style={styles.txLeft}>
+                    <Text style={styles.txType}>{getTypeLabel(tx.type)}</Text>
+                    {tx.member_name ? (
+                      <Text style={styles.txMember}>{tx.member_name}</Text>
+                    ) : null}
                   </View>
-                  <View style={styles.transactionDetails}>
-                    <View style={styles.transactionInfo}>
-                      <Text category="c1" appearance="hint" style={styles.date}>
-                        {formatDate(transaction.executed_at)}
-                      </Text>
-                      <Text category="s1" style={styles.amount}>
-                        {formatCurrency(transaction.amount)}
-                      </Text>
-                    </View>
-                    <View style={styles.badgesContainer}>
-                      <View
-                        style={[
-                          styles.badge,
-                          {
-                            backgroundColor: getTransactionTypeColor(
-                              transaction.type
-                            ),
-                          },
-                        ]}
-                      >
-                        <Text
-                          category="c1"
-                          style={[
-                            styles.badgeText,
-                            {
-                              color: getTransactionTypeTextColor(
-                                transaction.type
-                              ),
-                            },
-                          ]}
-                        >
-                          {getTransactionTypeLabel(transaction.type)}
-                        </Text>
-                      </View>
-                      <View
-                        style={[
-                          styles.badge,
-                          {
-                            backgroundColor: getStatusColor(transaction.status),
-                          },
-                        ]}
-                      >
-                        <Text
-                          category="c1"
-                          style={[
-                            styles.badgeText,
-                            {
-                              color: getStatusTextColor(transaction.status),
-                            },
-                          ]}
-                        >
-                          {getStatusLabel(transaction.status)}
-                        </Text>
-                      </View>
-                    </View>
+                  <View style={styles.txRight}>
+                    <Text style={styles.txAmount}>
+                      +{formatCurrency(tx.amount)}
+                    </Text>
+                    <Text style={styles.txDate}>
+                      {formatShortDate(tx.executed_at)}
+                    </Text>
                   </View>
                 </View>
               ))}
             </View>
-          )}
+          ))
+        )}
 
-          {/* Pagination Controls */}
-          {!isLoading && (transactions?.length > 0 || currentPage > 0) && (
-            <View style={styles.paginationContainer}>
-              <TouchableOpacity
-                style={[
-                  styles.paginationButton,
-                  !hasPreviousPage && styles.paginationButtonDisabled,
-                ]}
-                onPress={handlePreviousPage}
-                disabled={!hasPreviousPage}
-              >
-                <ChevronLeft
-                  size={20}
-                  color={hasPreviousPage ? "#2563EB" : "#9CA3AF"}
-                />
-                <Text
-                  category="s1"
-                  style={[
-                    styles.paginationButtonText,
-                    !hasPreviousPage && styles.paginationButtonTextDisabled,
-                  ]}
-                >
-                  Previous
-                </Text>
-              </TouchableOpacity>
-
-              <View style={styles.pageIndicator}>
-                <Text category="s1" style={styles.pageIndicatorText}>
-                  Page {currentPage + 1}
-                </Text>
-              </View>
-
-              <TouchableOpacity
-                style={[
-                  styles.paginationButton,
-                  !hasNextPage && styles.paginationButtonDisabled,
-                ]}
-                onPress={handleNextPage}
-                disabled={!hasNextPage}
-              >
-                <Text
-                  category="s1"
-                  style={[
-                    styles.paginationButtonText,
-                    !hasNextPage && styles.paginationButtonTextDisabled,
-                  ]}
-                >
-                  Next
-                </Text>
-                <ChevronRight
-                  size={20}
-                  color={hasNextPage ? "#2563EB" : "#9CA3AF"}
-                />
-              </TouchableOpacity>
-            </View>
-          )}
-        </Card>
+        {/* Load more indicator */}
+        {isLoadingMore && (
+          <View style={styles.loadMoreContainer}>
+            <ActivityIndicator size="small" color="#2563EB" />
+          </View>
+        )}
       </ScrollView>
     </SafeAreaView>
   );
@@ -403,138 +308,125 @@ const styles = StyleSheet.create({
   },
   scrollContent: {
     padding: 20,
-    paddingBottom: 40,
+    paddingBottom: 48,
   },
-  dateFilterCard: {
-    marginBottom: 20,
-    borderRadius: 12,
-  },
-  dateFilterContainer: {
+  // Member tabs
+  memberTabsRow: {
     flexDirection: "row",
-    gap: 16,
+    gap: 10,
+    marginBottom: 20,
+    flexWrap: "wrap",
   },
-  dateFilterItem: {
-    flex: 1,
+  memberTab: {
+    paddingHorizontal: 20,
+    paddingVertical: 10,
+    borderRadius: 24,
+    borderWidth: 1,
+    borderColor: "#D1D5DB",
+    backgroundColor: "#FFFFFF",
   },
-  dateLabel: {
+  memberTabActive: {
+    backgroundColor: "#EEF2FF",
+    borderColor: "#6366F1",
+  },
+  memberTabText: {
     fontSize: 14,
     fontWeight: "500",
     color: "#374151",
+  },
+  memberTabTextActive: {
+    color: "#4F46E5",
+    fontWeight: "600",
+  },
+  // Date filter
+  dateFilterRow: {
+    backgroundColor: "#FFFFFF",
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: "#E5E7EB",
+    padding: 14,
+    marginBottom: 24,
+  },
+  dateFromLabel: {
+    fontSize: 13,
+    color: "#6B7280",
     marginBottom: 8,
+  },
+  dateInputsRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
   },
   datePicker: {
     flex: 1,
   },
-  orderHistoryCard: {
-    borderRadius: 12,
+  dateToText: {
+    fontSize: 13,
+    color: "#6B7280",
   },
-  orderHistoryTitle: {
-    fontSize: 18,
-    fontWeight: "600",
-    color: "#111827",
-    marginBottom: 16,
-  },
+  // Empty / loading
   loadingContainer: {
-    paddingVertical: 40,
+    paddingVertical: 60,
     alignItems: "center",
   },
   emptyContainer: {
-    paddingVertical: 40,
+    paddingVertical: 60,
     alignItems: "center",
   },
   emptyText: {
     fontSize: 14,
     color: "#6B7280",
   },
-  transactionsList: {
-    gap: 0,
-  },
-  transactionItem: {
-    paddingBottom: 16,
-    marginBottom: 16,
-  },
-  transactionItemBorder: {
-    borderBottomWidth: 1,
-    borderBottomColor: "#E5E7EB",
-  },
-  transactionHeader: {
-    marginBottom: 8,
-  },
-  fundName: {
-    fontSize: 14,
+  // Month group
+  monthHeader: {
+    fontSize: 12,
     fontWeight: "600",
-    color: "#111827",
+    color: "#6B7280",
+    letterSpacing: 0.5,
+    marginBottom: 10,
+    marginTop: 4,
   },
-  transactionDetails: {
-    gap: 8,
-  },
-  transactionInfo: {
+  // Transaction card
+  txCard: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
+    backgroundColor: "#FFFFFF",
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: "#E5E7EB",
+    paddingHorizontal: 16,
+    paddingVertical: 14,
+    marginBottom: 10,
   },
-  date: {
-    fontSize: 12,
+  txLeft: {
+    flex: 1,
+    gap: 4,
+  },
+  txType: {
+    fontSize: 15,
+    fontWeight: "600",
+    color: "#111827",
+  },
+  txMember: {
+    fontSize: 13,
     color: "#6B7280",
   },
-  amount: {
-    fontSize: 14,
-    fontWeight: "600",
-    color: "#111827",
+  txRight: {
+    alignItems: "flex-end",
+    gap: 4,
   },
-  badgesContainer: {
-    flexDirection: "row",
-    gap: 8,
-    flexWrap: "wrap",
+  txAmount: {
+    fontSize: 15,
+    fontWeight: "700",
+    color: "#16A34A",
   },
-  badge: {
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    borderRadius: 12,
+  txDate: {
+    fontSize: 13,
+    color: "#6B7280",
   },
-  badgeText: {
-    fontSize: 11,
-    fontWeight: "600",
-  },
-  paginationContainer: {
-    flexDirection: "row",
+  loadMoreContainer: {
+    paddingVertical: 20,
     alignItems: "center",
-    justifyContent: "space-between",
-    marginTop: 24,
-    paddingTop: 20,
-    borderTopWidth: 1,
-    borderTopColor: "#E5E7EB",
-  },
-  paginationButton: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 6,
-    paddingHorizontal: 16,
-    paddingVertical: 10,
-    borderRadius: 8,
-    backgroundColor: "#F3F4F6",
-    minWidth: 100,
-    justifyContent: "center",
-  },
-  paginationButtonDisabled: {
-    backgroundColor: "#F9FAFB",
-    opacity: 0.6,
-  },
-  paginationButtonText: {
-    fontSize: 14,
-    fontWeight: "600",
-    color: "#2563EB",
-  },
-  paginationButtonTextDisabled: {
-    color: "#9CA3AF",
-  },
-  pageIndicator: {
-    paddingHorizontal: 16,
-    paddingVertical: 10,
-  },
-  pageIndicatorText: {
-    fontSize: 14,
-    fontWeight: "600",
-    color: "#374151",
   },
 });

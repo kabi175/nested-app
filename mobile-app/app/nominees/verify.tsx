@@ -352,6 +352,14 @@ export default function NomineeVerificationScreen() {
                       )}
                     </Text>
                   </TouchableOpacity>
+
+                  <TouchableOpacity
+                    onPress={() => router.back()}
+                    style={styles.cancelButton}
+                    activeOpacity={0.7}
+                  >
+                    <Text style={styles.cancelButtonText}>Cancel</Text>
+                  </TouchableOpacity>
                 </View>
               </>
             )}
@@ -517,18 +525,26 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
-    paddingVertical: 12,
+    paddingVertical: 14,
+    paddingHorizontal: 24,
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: "#BFDBFE",
+    backgroundColor: "#EFF6FF",
+    width: "100%",
     gap: 6,
   },
   resendButtonDisabled: {
-    opacity: 0.5,
+    borderColor: "#E5E7EB",
+    backgroundColor: "#F9FAFB",
+    opacity: 0.6,
   },
   resendIcon: {
     marginRight: 2,
   },
   resendButtonText: {
     color: "#2563EB",
-    fontSize: 15,
+    fontSize: 16,
     fontWeight: "600",
   },
   resendButtonTextDisabled: {
@@ -536,6 +552,20 @@ const styles = StyleSheet.create({
   },
   resendTimerText: {
     color: "#6B7280",
+    fontWeight: "500",
+  },
+  cancelButton: {
+    paddingVertical: 12,
+    paddingHorizontal: 24,
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: "#E5E7EB",
+    width: "100%",
+    alignItems: "center",
+  },
+  cancelButtonText: {
+    color: "#6B7280",
+    fontSize: 16,
     fontWeight: "500",
   },
   securityContainer: {

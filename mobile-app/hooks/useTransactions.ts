@@ -6,11 +6,12 @@ import { useAuthAxios } from "./useAuthAxios";
 export function useTransactions(
   page: number = 0,
   fromDate?: Date,
-  toDate?: Date
+  toDate?: Date,
+  childId?: string
 ) {
   const api = useAuthAxios();
   return useQuery({
-    queryKey: [QUERY_KEYS.transactions, page, fromDate, toDate],
-    queryFn: () => getTransactions(api, page, fromDate, toDate),
+    queryKey: [QUERY_KEYS.transactions, page, fromDate, toDate, childId],
+    queryFn: () => getTransactions(api, page, fromDate, toDate, childId),
   });
 }
