@@ -1,31 +1,16 @@
-import { cartAtom } from "@/atoms/cart";
-import { goalsForCustomizeAtom } from "@/atoms/goals";
-import { useAuthAxios } from "@/hooks/useAuthAxios";
 import { useAddBankAccount } from "@/hooks/useBankAccount";
-import { usePendingActivities } from "@/hooks/usePendingActivities";
-import { useQueryClient } from "@tanstack/react-query";
 import {
   Button,
-  Card,
   Input,
-  Layout,
-  Radio,
-  RadioGroup,
   Text,
 } from "@ui-kitten/components";
 import { router } from "expo-router";
 import { StatusBar } from "expo-status-bar";
-import { useSetAtom } from "jotai";
 import { useState } from "react";
-import { Alert, ScrollView, StyleSheet, View } from "react-native";
+import { Alert, ScrollView, StyleSheet, TouchableOpacity, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function AddManualScreen() {
-  const api = useAuthAxios();
-  const { data: pendingActivities } = usePendingActivities();
-  const queryClient = useQueryClient();
-  const setCart = useSetAtom(cartAtom);
-  const setGoalsForCustomize = useSetAtom(goalsForCustomizeAtom);
   const accountTypes = [
     { label: "Savings", value: "savings" },
     { label: "Current", value: "current" },
@@ -70,110 +55,98 @@ export default function AddManualScreen() {
   };
 
   return (
-    <SafeAreaView style={styles.safeArea} edges={["top"]}>
-      <StatusBar style="auto" backgroundColor="#fff" />
-      <Layout style={styles.container} level="1">
-        <ScrollView
-          style={styles.scrollView}
-          contentContainerStyle={styles.scrollContent}
-          showsVerticalScrollIndicator={false}
-        >
-          {/* Header Section */}
-          <View style={styles.headerSection}>
-            <Text category="h4" style={styles.title}>
-              Enter bank account details
-            </Text>
-            <Text category="s1" appearance="hint" style={styles.subtitle}>
-              Enter the details of your bank account to link it to your account.
-            </Text>
+    <SafeAreaView style={styles.safeArea} edges={["top", "bottom"]}>
+      <StatusBar style="dark" backgroundColor="#F8F9FA" />
+
+      {/* Header */}
+      <View style={styles.header}>
+        <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
+          <Text style={styles.backArrow}>←</Text>
+        </TouchableOpacity>
+        <Text style={styles.headerTitle}>Enter bank account details</Text>
+        <View style={styles.headerSpacer} />
+      </View>
+
+      <ScrollView
+        style={styles.scrollView}
+        contentContainerStyle={styles.scrollContent}
+        showsVerticalScrollIndicator={false}
+      >
+        {/* Form Fields */}
+        <View style={styles.formSection}>
+          <Input
+            label={(props: any) => <Text {...props} style={styles.inputLabel}>Account Number</Text>}
+            placeholder="Enter Account Number"
+            value={accountNumber}
+            onChangeText={setAccountNumber}
+            keyboardType="numeric"
+            style={styles.input}
+            textStyle={styles.inputText}
+          />
+
+          <Input
+            label={(props: any) => <Text {...props} style={styles.inputLabel}>Re-enter Account Number</Text>}
+            placeholder="Re-enter Account Number"
+            value={reAccountNumber}
+            onChangeText={setReAccountNumber}
+            keyboardType="numeric"
+            status={
+              reAccountNumber && accountNumber && reAccountNumber !== accountNumber
+                ? "danger"
+                : "basic"
+            }
+            caption={
+              reAccountNumber && accountNumber && reAccountNumber !== accountNumber
+                ? "Account numbers do not match"
+                : ""
+            }
+            style={styles.input}
+            textStyle={styles.inputText}
+          />
+
+          <Input
+            label={(props: any) => <Text {...props} style={styles.inputLabel}>IFSC Code</Text>}
+            placeholder="Enter IFSC code"
+            value={ifscCode}
+            onChangeText={(text) => setIfscCode(text.toUpperCase())}
+            autoCapitalize="characters"
+            style={styles.input}
+            textStyle={styles.inputText}
+          />
+        </View>
+
+        {/* Account Type */}
+        <View style={styles.accountTypeSection}>
+          <Text style={styles.accountTypeLabel}>Account Type</Text>
+          <View style={styles.radioGroup}>
+            {accountTypes.map((type, index) => (
+              <TouchableOpacity
+                key={index}
+                style={styles.radioRow}
+                onPress={() => setAccountType(index)}
+                activeOpacity={0.7}
+              >
+                <View style={styles.radioOuter}>
+                  {accountType === index && <View style={styles.radioInner} />}
+                </View>
+                <Text style={styles.radioLabel}>{type.label}</Text>
+              </TouchableOpacity>
+            ))}
           </View>
+        </View>
+      </ScrollView>
 
-          {/* Bank Details Card */}
-          <Card style={styles.card} status="primary">
-            <View style={styles.cardHeader}>
-              <Text category="h6" style={styles.cardTitle}>
-                Bank Details
-              </Text>
-            </View>
-
-            <View style={styles.formSection}>
-              <Input
-                label="Account Number"
-                placeholder="Enter account number"
-                value={accountNumber}
-                onChangeText={setAccountNumber}
-                keyboardType="numeric"
-                style={styles.input}
-              />
-
-              <Input
-                label="Re-enter Account Number"
-                placeholder="Re-enter account number"
-                value={reAccountNumber}
-                onChangeText={setReAccountNumber}
-                keyboardType="numeric"
-                status={
-                  reAccountNumber &&
-                    accountNumber &&
-                    reAccountNumber !== accountNumber
-                    ? "danger"
-                    : "basic"
-                }
-                caption={
-                  reAccountNumber &&
-                    accountNumber &&
-                    reAccountNumber !== accountNumber
-                    ? "Account numbers do not match"
-                    : ""
-                }
-                style={styles.input}
-              />
-
-              <Input
-                label="IFSC Code"
-                placeholder="Enter IFSC code"
-                value={ifscCode}
-                onChangeText={(text) => setIfscCode(text.toUpperCase())}
-                autoCapitalize="characters"
-                style={styles.input}
-              />
-            </View>
-          </Card>
-
-          {/* Account Type Card */}
-          <Card style={styles.card}>
-            <View style={styles.cardHeader}>
-              <Text category="h6" style={styles.cardTitle}>
-                Account Type
-              </Text>
-            </View>
-
-            <RadioGroup
-              selectedIndex={accountType}
-              onChange={(index) => setAccountType(index)}
-              style={styles.radioGroup}
-            >
-              {accountTypes.map((type, index) => (
-                <Radio key={index} style={styles.radio}>
-                  {type.label}
-                </Radio>
-              ))}
-            </RadioGroup>
-          </Card>
-        </ScrollView>
-
-        {/* Continue Button - Fixed at Bottom */}
-        <SafeAreaView style={styles.buttonContainer} edges={["bottom"]}>
-          <Button
-            style={styles.continueButton}
-            size="large"
-            disabled={!isFormValid || isPending}
-            onPress={handleContinue}
-          >
-            {isPending ? "Adding..." : "Continue"}
-          </Button>
-        </SafeAreaView>
-      </Layout>
+      {/* Continue Button */}
+      <View style={styles.buttonContainer}>
+        <Button
+          style={styles.continueButton}
+          size="large"
+          disabled={!isFormValid || isPending}
+          onPress={handleContinue}
+        >
+          {isPending ? "Adding..." : "Continue"}
+        </Button>
+      </View>
     </SafeAreaView>
   );
 }
@@ -181,59 +154,110 @@ export default function AddManualScreen() {
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
+    backgroundColor: "#F8F9FA",
   },
-  container: {
+  header: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    backgroundColor: "#F8F9FA",
+  },
+  backButton: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: "#EEEEF0",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  backArrow: {
+    fontSize: 18,
+    color: "#1A1A2E",
+    lineHeight: 22,
+  },
+  headerTitle: {
     flex: 1,
+    textAlign: "center",
+    fontSize: 16,
+    fontWeight: "600",
+    color: "#1A1A2E",
+  },
+  headerSpacer: {
+    width: 36,
   },
   scrollView: {
     flex: 1,
   },
   scrollContent: {
     paddingHorizontal: 20,
-    paddingTop: 24,
-    paddingBottom: 100, // Extra padding to prevent content from being hidden behind button
-  },
-  headerSection: {
-    marginBottom: 24,
-  },
-  title: {
-    marginBottom: 8,
-    fontWeight: "bold",
-  },
-  subtitle: {
-    lineHeight: 20,
-  },
-  card: {
-    marginBottom: 20,
-    borderRadius: 12,
-  },
-  cardHeader: {
-    marginBottom: 16,
-  },
-  cardTitle: {
-    fontWeight: "600",
+    paddingTop: 8,
+    paddingBottom: 24,
   },
   formSection: {
-    gap: 16,
+    gap: 4,
+    marginBottom: 24,
   },
   input: {
+    backgroundColor: "#FFFFFF",
+    borderRadius: 10,
+    marginBottom: 8,
+  },
+  inputText: {
+    fontSize: 15,
+  },
+  inputLabel: {
+    fontSize: 14,
+    fontWeight: "500" as const,
+    color: "#1A1A2E",
     marginBottom: 4,
+  },
+  accountTypeSection: {
+    backgroundColor: "#FFFFFF",
+    borderRadius: 12,
+    padding: 16,
+  },
+  accountTypeLabel: {
+    fontSize: 15,
+    fontWeight: "600",
+    color: "#1A1A2E",
+    marginBottom: 12,
   },
   radioGroup: {
     gap: 12,
   },
-  radio: {
-    marginBottom: 4,
+  radioRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 10,
+  },
+  radioOuter: {
+    width: 20,
+    height: 20,
+    borderRadius: 10,
+    borderWidth: 2,
+    borderColor: "#3366FF",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  radioInner: {
+    width: 10,
+    height: 10,
+    borderRadius: 5,
+    backgroundColor: "#3366FF",
+  },
+  radioLabel: {
+    fontSize: 15,
+    color: "#1A1A2E",
   },
   buttonContainer: {
     paddingHorizontal: 20,
-    paddingTop: 16,
-    paddingBottom: 20,
-    borderTopWidth: 1,
-    borderTopColor: "#E5E7EB",
-    backgroundColor: "#FFFFFF",
+    paddingTop: 12,
+    paddingBottom: 16,
+    backgroundColor: "#F8F9FA",
   },
   continueButton: {
     width: "100%",
+    borderRadius: 12,
   },
 });
