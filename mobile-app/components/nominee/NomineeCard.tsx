@@ -12,114 +12,85 @@ interface NomineeCardProps {
   onDelete?: () => void;
 }
 
-/**
- * Nominee Card Component
- * Displays nominee information with allocation progress bar
- */
 export function NomineeCard({ nominee, onEdit, onDelete }: NomineeCardProps) {
   const isMinor = calculateIsMinor(nominee.dob);
   const [showMenu, setShowMenu] = useState(false);
 
   return (
     <Card style={styles.card} disabled>
-      <View style={styles.cardContent}>
-        {/* Icon */}
+      {/* Top row: avatar + name/relationship + menu */}
+      <View style={styles.topRow}>
         <View style={styles.iconContainer}>
-          <User size={24} color="#7C3AED" />
+          <User size={22} color="#7C3AED" />
         </View>
 
-        {/* Nominee Info */}
         <View style={styles.infoContainer}>
           <View style={styles.nameRow}>
-            <Text category="s1" style={styles.name}>
-              {nominee.name}
-            </Text>
+            <Text style={styles.name}>{nominee.name}</Text>
             {isMinor && (
               <View style={styles.minorBadge}>
-                <Text category="c2" style={styles.minorBadgeText}>
-                  Minor
-                </Text>
+                <Text style={styles.minorBadgeText}>Minor</Text>
               </View>
             )}
           </View>
-          <Text category="p2" style={styles.relationship}>
+          <Text style={styles.relationship}>
             {getRelationshipLabel(nominee.relationship)}
           </Text>
-
-          {/* Allocation */}
-          <View style={styles.allocationContainer}>
-            <Text category="c1" style={styles.allocationLabel}>
-              Allocation
-            </Text>
-            <View style={styles.allocationBarContainer}>
-              <View style={styles.progressBarWrapper}>
-                <ProgressBar
-                  progress={nominee.allocation / 100}
-                  color="#7C3AED"
-                  backgroundColor="#E5E7EB"
-                  height={8}
-                />
-              </View>
-              <Text category="s2" style={styles.allocationPercentage}>
-                {nominee.allocation}%
-              </Text>
-            </View>
-          </View>
         </View>
 
-        {/* Actions */}
         {(onEdit || onDelete) && (
-          <>
-            <TouchableOpacity
-              style={styles.menuButton}
-              onPress={() => setShowMenu(true)}
-              activeOpacity={0.7}
-            >
-              <MoreVertical size={20} color="#6B7280" />
-            </TouchableOpacity>
-
-            {/* Action Menu Modal */}
-            <Modal
-              visible={showMenu}
-              backdropStyle={styles.backdrop}
-              onBackdropPress={() => setShowMenu(false)}
-            >
-              <Card style={styles.menuCard} disabled>
-                {onEdit && (
-                  <TouchableOpacity
-                    style={styles.menuItem}
-                    onPress={() => {
-                      setShowMenu(false);
-                      onEdit();
-                    }}
-                    activeOpacity={0.7}
-                  >
-                    <Edit2 size={20} color="#2563EB" />
-                    <Text category="s1" style={styles.menuItemText}>
-                      Edit
-                    </Text>
-                  </TouchableOpacity>
-                )}
-                {onDelete && (
-                  <TouchableOpacity
-                    style={[styles.menuItem, styles.menuItemDestructive]}
-                    onPress={() => {
-                      setShowMenu(false);
-                      onDelete();
-                    }}
-                    activeOpacity={0.7}
-                  >
-                    <LogOut size={20} color="#EF4444" />
-                    <Text category="s1" style={styles.menuItemTextDestructive}>
-                      Delete
-                    </Text>
-                  </TouchableOpacity>
-                )}
-              </Card>
-            </Modal>
-          </>
+          <TouchableOpacity
+            style={styles.menuButton}
+            onPress={() => setShowMenu(true)}
+            activeOpacity={0.7}
+          >
+            <MoreVertical size={18} color="#9CA3AF" />
+          </TouchableOpacity>
         )}
       </View>
+
+      {/* Allocation progress */}
+      <View style={styles.allocationSection}>
+        <ProgressBar
+          progress={nominee.allocation / 100}
+          color="#4F46E5"
+          backgroundColor="#E5E7EB"
+          height={6}
+        />
+        <Text style={styles.allocationText}>{nominee.allocation}% allocated</Text>
+      </View>
+
+      {/* Context menu modal */}
+      {(onEdit || onDelete) && (
+        <Modal
+          visible={showMenu}
+          backdropStyle={styles.backdrop}
+          onBackdropPress={() => setShowMenu(false)}
+        >
+          <Card style={styles.menuCard} disabled>
+            {onEdit && (
+              <TouchableOpacity
+                style={styles.menuItem}
+                onPress={() => { setShowMenu(false); onEdit(); }}
+                activeOpacity={0.7}
+              >
+                <Edit2 size={20} color="#2563EB" />
+                <Text style={styles.menuItemText}>Edit</Text>
+              </TouchableOpacity>
+            )}
+            {onDelete && (
+              <TouchableOpacity
+                style={[styles.menuItem, styles.menuItemDestructive]}
+                onPress={() => { setShowMenu(false); onDelete(); }}
+                activeOpacity={0.7}
+              >
+                <LogOut size={20} color="#EF4444" />
+                <Text style={styles.menuItemTextDestructive}>Delete</Text>
+              </TouchableOpacity>
+            )}
+          </Card>
+        </Modal>
+      )}
     </Card>
   );
 }
@@ -127,17 +98,18 @@ export function NomineeCard({ nominee, onEdit, onDelete }: NomineeCardProps) {
 const styles = StyleSheet.create({
   card: {
     marginBottom: 12,
-    borderRadius: 12,
+    borderRadius: 16,
     backgroundColor: "#FFFFFF",
   },
-  cardContent: {
+  topRow: {
     flexDirection: "row",
-    alignItems: "flex-start",
+    alignItems: "center",
+    marginBottom: 14,
   },
   iconContainer: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
+    width: 44,
+    height: 44,
+    borderRadius: 22,
     backgroundColor: "#EDE9FE",
     justifyContent: "center",
     alignItems: "center",
@@ -150,12 +122,12 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     gap: 8,
-    marginBottom: 4,
+    marginBottom: 2,
   },
   name: {
-    fontSize: 16,
-    fontWeight: "600",
-    color: "#1F2937",
+    fontSize: 15,
+    fontWeight: "700",
+    color: "#111827",
   },
   minorBadge: {
     backgroundColor: "#FEF3C7",
@@ -169,39 +141,22 @@ const styles = StyleSheet.create({
     fontSize: 10,
   },
   relationship: {
-    fontSize: 14,
+    fontSize: 13,
     color: "#6B7280",
-    marginBottom: 12,
-  },
-  allocationContainer: {
-    marginTop: 4,
-  },
-  allocationLabel: {
-    fontSize: 12,
-    color: "#6B7280",
-    marginBottom: 6,
-  },
-  allocationBarContainer: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 12,
-  },
-  progressBarWrapper: {
-    flex: 1,
-  },
-  allocationPercentage: {
-    fontSize: 14,
-    fontWeight: "600",
-    color: "#7C3AED",
-    minWidth: 40,
-    textAlign: "right",
   },
   menuButton: {
-    padding: 8,
-    marginLeft: 8,
+    padding: 4,
+    marginLeft: 4,
+  },
+  allocationSection: {
+    gap: 6,
+  },
+  allocationText: {
+    fontSize: 12,
+    color: "#9CA3AF",
   },
   backdrop: {
-    backgroundColor: "rgba(0, 0, 0, 0.5)",
+    backgroundColor: "rgba(0, 0, 0, 0.4)",
   },
   menuCard: {
     minWidth: 200,
@@ -220,11 +175,11 @@ const styles = StyleSheet.create({
     paddingTop: 16,
   },
   menuItemText: {
-    fontSize: 16,
+    fontSize: 15,
     color: "#1F2937",
   },
   menuItemTextDestructive: {
-    fontSize: 16,
+    fontSize: 15,
     color: "#EF4444",
   },
 });

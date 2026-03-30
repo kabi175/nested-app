@@ -32,6 +32,9 @@ export const validationErrorsAtom = atom<NomineeValidationErrors>({});
 // MFA state
 export const mfaStateAtom = atom<MfaState>("idle");
 
+// Index of the nominee being edited (null = adding new)
+export const editingIndexAtom = atom<number | null>(null);
+
 // Computed: Total allocation
 export const allocationTotalAtom = atom<number>((get) => {
   const nominees = get(nomineeListAtom);

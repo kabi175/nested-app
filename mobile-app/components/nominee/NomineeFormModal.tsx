@@ -18,23 +18,22 @@ import {
   SelectItem,
   Text,
 } from "@ui-kitten/components";
-import { CalendarDays, ChevronDown, ChevronUp, X } from "lucide-react-native";
+import { ArrowLeft, CalendarDays, ChevronDown, ChevronUp } from "lucide-react-native";
 import React, { useEffect, useState } from "react";
 import {
-  Modal,
   ScrollView,
   StyleSheet,
+  TextInput,
   TouchableOpacity,
   View,
 } from "react-native";
 
-interface NomineeFormModalProps {
-  visible: boolean;
-  draft: NomineeDraft | null;
+interface NomineeFormProps {
+  draft: NomineeDraft;
   errors: NomineeValidationErrors;
   remainingAllocation: number;
   isEditMode: boolean;
-  isEditingExistingNominee?: boolean; // True when editing an existing nominee from server (only allocation editable)
+  isEditingExistingNominee?: boolean;
   onFieldChange: (field: keyof NomineeDraft, value: any) => void;
   onSave: () => void;
   onCancel: () => void;
@@ -42,11 +41,10 @@ interface NomineeFormModalProps {
 }
 
 /**
- * Add/Edit Nominee Form Modal
+ * Add/Edit Nominee Form
  * Supports adding new nominees and editing existing ones (only allocation editable for existing nominees)
  */
-export function NomineeFormModal({
-  visible,
+export function NomineeForm({
   draft,
   errors,
   remainingAllocation,
@@ -56,7 +54,7 @@ export function NomineeFormModal({
   onSave,
   onCancel,
   isSubmitting = false,
-}: NomineeFormModalProps) {
+}: NomineeFormProps) {
   const [selectedRelationship, setSelectedRelationship] = useState<{
     label: string;
     value: RelationshipType;
@@ -109,7 +107,7 @@ export function NomineeFormModal({
     onFieldChange("address", {
       ...currentAddress,
       [field]: value,
-      country: "in", // Always set country to "in"
+      country: "in",
     });
   };
 
@@ -152,418 +150,348 @@ export function NomineeFormModal({
   const selectedStateIndex =
     stateIndex >= 0 ? new IndexPath(stateIndex) : undefined;
 
-  if (!draft) return null;
-
   return (
-    <Modal
-      visible={visible}
-      animationType="slide"
-      transparent={true}
-      onRequestClose={onCancel}
-    >
-      <View style={styles.overlay}>
-        <View style={styles.modalContent}>
-          {/* Header */}
-          <View style={styles.header}>
-            <View style={styles.headerTextContainer}>
-              <Text category="h6" style={styles.title}>
-                {isEditMode ? "Edit Nominee" : "Add Nominee"}
-              </Text>
-              <Text category="s2" style={styles.subtitle}>
-                {remainingAllocation}% allocation remaining
-              </Text>
-            </View>
-            <TouchableOpacity onPress={onCancel} style={styles.closeButton}>
-              <X size={24} color="#666" />
-            </TouchableOpacity>
-          </View>
+    <View style={styles.container}>
+      {/* Header */}
+      <View style={styles.header}>
+        <TouchableOpacity onPress={onCancel} style={styles.backButton} disabled={isSubmitting}>
+          <ArrowLeft size={24} color="#1F2937" />
+        </TouchableOpacity>
+        <Text style={styles.title}>
+          {isEditMode ? "Edit Nominee" : "Add Nominee"}
+        </Text>
+        <View style={styles.headerSpacer} />
+      </View>
 
-          <ScrollView
-            style={styles.scrollView}
-            contentContainerStyle={styles.scrollContent}
-            showsVerticalScrollIndicator={false}
-          >
-            {/* Nominee Details Section */}
-            <Text category="s1" style={styles.sectionTitle}>
-              Nominee Details
+      <ScrollView
+        style={styles.scrollView}
+        contentContainerStyle={styles.scrollContent}
+        showsVerticalScrollIndicator={false}
+      >
+        {/* Full Name */}
+        <Text style={styles.label}>Full Name*</Text>
+        <Input
+          placeholder="Enter Full Name"
+          value={draft.name}
+          onChangeText={(value) => onFieldChange("name", value)}
+          status={errors.name ? "danger" : "basic"}
+          caption={errors.name}
+          style={styles.input}
+          size="large"
+          disabled={isEditingExistingNominee || isSubmitting}
+        />
+
+        {/* Relationship */}
+        <Text style={styles.label}>Relationship*</Text>
+        <View style={styles.inputContainer}>
+          <SearchableDropdown
+            data={RELATIONSHIP_OPTIONS}
+            labelKey="label"
+            valueKey="value"
+            placeholder="Select relationship"
+            onSelect={handleRelationshipSelect}
+            selectedValue={selectedRelationship}
+            searchPlaceholder="Search relationship..."
+            disabled={isEditingExistingNominee || isSubmitting}
+          />
+          {errors.relationship && (
+            <Text category="c2" status="danger" style={styles.errorText}>
+              {errors.relationship}
             </Text>
+          )}
+        </View>
 
-            {/* Full Name */}
-            <Input
-              label="Full Name *"
-              placeholder="Enter full name"
-              value={draft.name}
-              onChangeText={(value) => onFieldChange("name", value)}
-              status={errors.name ? "danger" : "basic"}
-              caption={errors.name || "2-100 characters"}
-              style={styles.input}
-              size="large"
-              disabled={isEditingExistingNominee || isSubmitting}
-            />
+        {/* Date of Birth */}
+        <Text style={styles.label}>Date of Birth*</Text>
+        <Datepicker
+          placeholder="dd/mm/yyyy"
+          date={getDobDate()}
+          min={new Date("1900-01-01")}
+          max={new Date()}
+          onSelect={handleDateSelect}
+          accessoryRight={() => <CalendarDays size={20} />}
+          status={errors.dob ? "danger" : "basic"}
+          caption={errors.dob}
+          style={styles.input}
+          size="large"
+          disabled={isEditMode || isSubmitting}
+        />
 
-            {/* Relationship */}
-            <View style={styles.inputContainer}>
-              <Text category="label" style={styles.label}>
-                Relationship *
-              </Text>
-              <SearchableDropdown
-                data={RELATIONSHIP_OPTIONS}
-                labelKey="label"
-                valueKey="value"
-                placeholder="Select relationship"
-                onSelect={handleRelationshipSelect}
-                selectedValue={selectedRelationship}
-                searchPlaceholder="Search relationship..."
-                disabled={isEditingExistingNominee || isSubmitting}
-              />
-              {errors.relationship && (
-                <Text category="c2" status="danger" style={styles.errorText}>
-                  {errors.relationship}
-                </Text>
-              )}
-            </View>
+        {/* PAN Number */}
+        <Text style={styles.label}>PAN Number*</Text>
+        <Input
+          placeholder="Enter PAN number"
+          value={draft.pan || ""}
+          onChangeText={(value) =>
+            onFieldChange("pan", value.toUpperCase())
+          }
+          status={errors.pan ? "danger" : "basic"}
+          caption={errors.pan}
+          style={styles.input}
+          size="large"
+          disabled={isEditingExistingNominee || isSubmitting}
+          maxLength={10}
+        />
 
-            {/* Date of Birth */}
-            <Datepicker
-              label="Date of Birth *"
-              placeholder="dd/mm/yyyy"
-              date={getDobDate()}
-              min={new Date("1900-01-01")}
-              max={new Date()}
-              onSelect={handleDateSelect}
-              accessoryRight={() => <CalendarDays size={20} />}
-              status={errors.dob ? "danger" : "basic"}
-              caption={errors.dob}
-              style={styles.input}
-              size="large"
-              disabled={isEditMode || isSubmitting}
-            />
+        {/* Email */}
+        <Text style={styles.label}>Email*</Text>
+        <Input
+          placeholder="example@gmail.com"
+          value={draft.email || ""}
+          onChangeText={(value) => onFieldChange("email", value)}
+          keyboardType="email-address"
+          autoCapitalize="none"
+          status={errors.email ? "danger" : "basic"}
+          caption={errors.email}
+          style={styles.input}
+          size="large"
+          disabled={isEditingExistingNominee || isSubmitting}
+        />
 
-            {/* Allocation */}
-            <View style={styles.inputContainer}>
-              <Text category="label" style={styles.label}>
-                Allocation (%) *
-              </Text>
-              <View style={styles.allocationContainer}>
-                <Input
-                  placeholder="Enter allocation percentage"
-                  value={draft.allocation.toString()}
-                  onChangeText={(value) => {
-                    const num = parseInt(value) || 0;
-                    const maxAllowed = Math.min(
-                      100,
-                      remainingAllocation + draft.allocation
-                    );
-                    onFieldChange(
-                      "allocation",
-                      Math.min(Math.max(1, num), maxAllowed)
-                    );
-                  }}
-                  keyboardType="number-pad"
-                  status={errors.allocation ? "danger" : "basic"}
-                  style={styles.allocationInput}
-                  size="large"
-                  disabled={isSubmitting}
-                />
-                <View style={styles.allocationControls}>
-                  <TouchableOpacity
-                    onPress={handleAllocationIncrement}
-                    disabled={isSubmitting || draft.allocation >= 100}
-                    style={styles.allocationButton}
-                  >
-                    <ChevronUp
-                      size={16}
-                      color={draft.allocation >= 100 ? "#CCC" : "#666"}
-                    />
-                  </TouchableOpacity>
-                  <TouchableOpacity
-                    onPress={handleAllocationDecrement}
-                    disabled={isSubmitting || draft.allocation <= 1}
-                    style={styles.allocationButton}
-                  >
-                    <ChevronDown
-                      size={16}
-                      color={draft.allocation <= 1 ? "#CCC" : "#666"}
-                    />
-                  </TouchableOpacity>
-                </View>
-              </View>
-              {errors.allocation && (
-                <Text category="c2" status="danger" style={styles.errorText}>
-                  {errors.allocation}
-                </Text>
-              )}
-              <Text category="c2" style={styles.helperText}>
-                Range: 1-100%
-              </Text>
-            </View>
+        {/* Mobile Number */}
+        <Text style={styles.label}>Mobile Number*</Text>
+        <Input
+          placeholder="99999 99999"
+          value={draft.mobileNumber || ""}
+          onChangeText={(value) => onFieldChange("mobileNumber", value)}
+          keyboardType="phone-pad"
+          status={errors.mobileNumber ? "danger" : "basic"}
+          caption={errors.mobileNumber}
+          style={styles.input}
+          size="large"
+          disabled={isEditingExistingNominee || isSubmitting}
+        />
 
-            {/* Minor Status (read-only, derived from DOB) */}
-            <View style={styles.minorStatusContainer}>
-              <Text category="label" style={styles.label}>
-                Minor Status
-              </Text>
-              <Text category="s2" style={styles.minorStatusText}>
-                18 years or older
-              </Text>
-              <View style={styles.badge}>
-                <Text category="c2" style={styles.badgeText}>
-                  {draft.isMinor ? "Minor" : "Adult"}
-                </Text>
-              </View>
-            </View>
+        {/* Address Line */}
+        <Text style={styles.label}>Address Line*</Text>
+        <Input
+          placeholder="Address"
+          value={draft.address?.address_line || ""}
+          onChangeText={(value) =>
+            handleAddressChange("address_line", value)
+          }
+          status={
+            typeof errors.address === "object" &&
+              errors.address?.address_line
+              ? "danger"
+              : "basic"
+          }
+          caption={
+            typeof errors.address === "object"
+              ? errors.address?.address_line
+              : undefined
+          }
+          style={styles.input}
+          size="large"
+          disabled={isEditingExistingNominee || isSubmitting}
+        />
 
-            {/* PAN, Email, Mobile Number, Address (required for all) */}
-            <Input
-              label="PAN *"
-              placeholder="Enter PAN"
-              value={draft.pan || ""}
-              onChangeText={(value) =>
-                onFieldChange("pan", value.toUpperCase())
-              }
-              status={errors.pan ? "danger" : "basic"}
-              style={styles.input}
-              size="large"
-              disabled={isEditingExistingNominee || isSubmitting}
-              maxLength={10}
-            />
-            {errors.pan && (
-              <Text category="c2" status="danger" style={styles.errorText}>
-                {errors.pan}
-              </Text>
-            )}
-            <Input
-              label="Email *"
-              placeholder="Enter email"
-              value={draft.email || ""}
-              onChangeText={(value) => onFieldChange("email", value)}
-              keyboardType="email-address"
-              autoCapitalize="none"
-              status={errors.email ? "danger" : "basic"}
-              style={styles.input}
-              size="large"
-              disabled={isEditingExistingNominee || isSubmitting}
-            />
-            {errors.email && (
-              <Text category="c2" status="danger" style={styles.errorText}>
-                {errors.email}
-              </Text>
-            )}
-            <Input
-              label="Mobile Number *"
-              placeholder="Enter mobile number"
-              value={draft.mobileNumber || ""}
-              onChangeText={(value) => onFieldChange("mobileNumber", value)}
-              keyboardType="phone-pad"
-              status={errors.mobileNumber ? "danger" : "basic"}
-              style={styles.input}
-              size="large"
-              disabled={isEditingExistingNominee || isSubmitting}
-            />
-            {errors.mobileNumber && (
-              <Text category="c2" status="danger" style={styles.errorText}>
-                {errors.mobileNumber}
-              </Text>
-            )}
-            <Input
-              label="Address Line *"
-              placeholder="Enter address line"
-              value={draft.address?.address_line || ""}
-              onChangeText={(value) =>
-                handleAddressChange("address_line", value)
-              }
-              status={
-                typeof errors.address === "object" &&
-                  errors.address?.address_line
-                  ? "danger"
-                  : "basic"
-              }
-              caption={
-                typeof errors.address === "object"
-                  ? errors.address?.address_line
-                  : undefined
-              }
-              style={styles.input}
-              size="large"
-              disabled={isEditingExistingNominee || isSubmitting}
-            />
-            <Input
-              label="City *"
-              placeholder="Enter city"
-              value={draft.address?.city || ""}
-              onChangeText={(value) => handleAddressChange("city", value)}
-              status={
-                typeof errors.address === "object" && errors.address?.city
-                  ? "danger"
-                  : "basic"
-              }
-              caption={
-                typeof errors.address === "object"
-                  ? errors.address?.city
-                  : undefined
-              }
-              style={styles.input}
-              size="large"
-              disabled={isEditingExistingNominee || isSubmitting}
-            />
-            <View style={styles.inputContainer}>
-              <Text category="label" style={styles.label}>
-                State *
-              </Text>
-              <Select
-                selectedIndex={selectedStateIndex}
-                value={draft.address?.state || undefined}
-                onSelect={(index) => {
-                  const row = Array.isArray(index) ? index[0].row : index.row;
-                  handleAddressChange("state", states[row]);
-                }}
-                status={
-                  typeof errors.address === "object" && errors.address?.state
-                    ? "danger"
-                    : "basic"
+        {/* City */}
+        <Text style={styles.label}>City*</Text>
+        <Input
+          placeholder="Enter city"
+          value={draft.address?.city || ""}
+          onChangeText={(value) => handleAddressChange("city", value)}
+          status={
+            typeof errors.address === "object" && errors.address?.city
+              ? "danger"
+              : "basic"
+          }
+          caption={
+            typeof errors.address === "object"
+              ? errors.address?.city
+              : undefined
+          }
+          style={styles.input}
+          size="large"
+          disabled={isEditingExistingNominee || isSubmitting}
+        />
+
+        {/* State */}
+        <Text style={styles.label}>State*</Text>
+        <View style={styles.inputContainer}>
+          <Select
+            selectedIndex={selectedStateIndex}
+            value={draft.address?.state || undefined}
+            onSelect={(index) => {
+              const row = Array.isArray(index) ? index[0].row : index.row;
+              handleAddressChange("state", states[row]);
+            }}
+            status={
+              typeof errors.address === "object" && errors.address?.state
+                ? "danger"
+                : "basic"
+            }
+            caption={
+              typeof errors.address === "object"
+                ? errors.address?.state
+                : undefined
+            }
+            placeholder="Select"
+            disabled={isEditingExistingNominee || isSubmitting}
+          >
+            {states.map((s) => (
+              <SelectItem key={s} title={s} />
+            ))}
+          </Select>
+        </View>
+
+        {/* Pincode */}
+        <Text style={styles.label}>Pincode*</Text>
+        <Input
+          placeholder="6-digit PIN"
+          value={draft.address?.pin_code || ""}
+          onChangeText={(value) =>
+            handleAddressChange("pin_code", value.replace(/[^0-9]/g, ""))
+          }
+          keyboardType="number-pad"
+          maxLength={6}
+          status={
+            typeof errors.address === "object" && errors.address?.pin_code
+              ? "danger"
+              : "basic"
+          }
+          caption={
+            typeof errors.address === "object"
+              ? errors.address?.pin_code
+              : undefined
+          }
+          style={styles.input}
+          size="large"
+          disabled={isEditingExistingNominee || isSubmitting}
+        />
+
+        {/* Allocation — inline row */}
+        <View style={styles.allocationRow}>
+          <Text style={styles.allocationLabel}>Allocation (%)*</Text>
+          <View style={styles.allocationStepper}>
+            <TextInput
+              style={styles.allocationValue}
+              value={draft.allocation.toString()}
+              onChangeText={(value) => {
+                const num = parseInt(value.replace(/[^0-9]/g, ""), 10);
+                if (isNaN(num)) {
+                  onFieldChange("allocation", 0);
+                  return;
                 }
-                caption={
-                  typeof errors.address === "object"
-                    ? errors.address?.state
-                    : undefined
-                }
-                placeholder="Select state"
-                disabled={isEditingExistingNominee || isSubmitting}
-              >
-                {states.map((s) => (
-                  <SelectItem key={s} title={s} />
-                ))}
-              </Select>
-            </View>
-            <Input
-              label="PIN Code *"
-              placeholder="Enter PIN code"
-              value={draft.address?.pin_code || ""}
-              onChangeText={(value) =>
-                handleAddressChange("pin_code", value.replace(/[^0-9]/g, ""))
-              }
+                const maxAllowed = Math.min(100, remainingAllocation + draft.allocation);
+                onFieldChange("allocation", Math.min(Math.max(0, num), maxAllowed));
+              }}
+              onBlur={() => {
+                if (draft.allocation < 1) onFieldChange("allocation", 1);
+              }}
               keyboardType="number-pad"
-              maxLength={6}
-              status={
-                typeof errors.address === "object" && errors.address?.pin_code
-                  ? "danger"
-                  : "basic"
-              }
-              caption={
-                typeof errors.address === "object"
-                  ? errors.address?.pin_code
-                  : undefined
-              }
-              style={styles.input}
-              size="large"
-              disabled={isEditingExistingNominee || isSubmitting}
+              editable={!isSubmitting}
+              selectTextOnFocus
             />
-
-            {/* Guardian Details (only for minors) */}
-            {draft.isMinor && (
-              <>
-                <Text
-                  category="s1"
-                  style={[styles.sectionTitle, styles.guardianSectionTitle]}
-                >
-                  Guardian Details
-                </Text>
-
-                <Input
-                  label="Guardian Name *"
-                  placeholder="Enter guardian name"
-                  value={draft.guardianName || ""}
-                  onChangeText={(value) => onFieldChange("guardianName", value)}
-                  status={errors.guardianName ? "danger" : "basic"}
-                  caption={errors.guardianName}
-                  style={styles.input}
-                  size="large"
-                  disabled={isEditingExistingNominee || isSubmitting}
+            <View style={styles.allocationControls}>
+              <TouchableOpacity
+                onPress={handleAllocationIncrement}
+                disabled={isSubmitting || draft.allocation >= 100}
+                style={styles.allocationButton}
+              >
+                <ChevronUp
+                  size={14}
+                  color={draft.allocation >= 100 ? "#CCC" : "#374151"}
                 />
-              </>
-            )}
-          </ScrollView>
-
-          {/* Action Buttons */}
-          <View style={styles.buttonContainer}>
-            <Button
-              style={[styles.button, styles.cancelButton]}
-              appearance="outline"
-              status="basic"
-              onPress={onCancel}
-              disabled={isSubmitting}
-            >
-              Cancel
-            </Button>
-            <Button
-              style={styles.button}
-              status="primary"
-              onPress={onSave}
-              disabled={isSubmitting}
-            >
-              {isSubmitting ? "Saving..." : "Save Nominee"}
-            </Button>
+              </TouchableOpacity>
+              <TouchableOpacity
+                onPress={handleAllocationDecrement}
+                disabled={isSubmitting || draft.allocation <= 1}
+                style={styles.allocationButton}
+              >
+                <ChevronDown
+                  size={14}
+                  color={draft.allocation <= 1 ? "#CCC" : "#374151"}
+                />
+              </TouchableOpacity>
+            </View>
           </View>
         </View>
+        {errors.allocation && (
+          <Text category="c2" status="danger" style={styles.errorText}>
+            {errors.allocation}
+          </Text>
+        )}
+
+        {/* Guardian Details (only for minors) */}
+        {draft.isMinor && (
+          <>
+            <Text style={styles.sectionTitle}>Guardian Details</Text>
+
+            <Text style={styles.label}>Guardian Name*</Text>
+            <Input
+              placeholder="Enter guardian name"
+              value={draft.guardianName || ""}
+              onChangeText={(value) => onFieldChange("guardianName", value)}
+              status={errors.guardianName ? "danger" : "basic"}
+              caption={errors.guardianName}
+              style={styles.input}
+              size="large"
+              disabled={isEditingExistingNominee || isSubmitting}
+            />
+          </>
+        )}
+      </ScrollView>
+
+      {/* Done Button */}
+      <View style={styles.footer}>
+        <Button
+          style={styles.doneButton}
+          status="primary"
+          onPress={onSave}
+          disabled={isSubmitting}
+        >
+          {isSubmitting ? "Saving..." : "Done"}
+        </Button>
       </View>
-    </Modal>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  overlay: {
+  container: {
     flex: 1,
-    backgroundColor: "rgba(0, 0, 0, 0.5)",
-    justifyContent: "flex-end",
-  },
-  modalContent: {
-    height: "90%",
-    borderTopLeftRadius: 20,
-    borderTopRightRadius: 20,
     backgroundColor: "#FFFFFF",
   },
   header: {
     flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "flex-start",
-    padding: 20,
-    paddingBottom: 12,
+    alignItems: "center",
+    paddingHorizontal: 16,
+    paddingVertical: 14,
     borderBottomWidth: 1,
-    borderBottomColor: "#E5E7EB",
+    borderBottomColor: "#F3F4F6",
   },
-  headerTextContainer: {
-    flex: 1,
-    marginRight: 16,
+  backButton: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: "#F3F4F6",
+    justifyContent: "center",
+    alignItems: "center",
   },
   title: {
-    fontSize: 20,
-    fontWeight: "bold",
+    flex: 1,
+    textAlign: "center",
+    fontSize: 18,
+    fontWeight: "700",
     color: "#1F2937",
-    marginBottom: 4,
   },
-  subtitle: {
-    fontSize: 14,
-    color: "#6B7280",
-  },
-  closeButton: {
-    padding: 4,
+  headerSpacer: {
+    width: 40,
   },
   scrollView: {
     flex: 1,
   },
   scrollContent: {
     padding: 20,
-    paddingBottom: 40,
+    paddingBottom: 32,
   },
-  sectionTitle: {
-    fontSize: 16,
+  label: {
+    fontSize: 14,
     fontWeight: "600",
     color: "#1F2937",
-    marginBottom: 16,
-    marginTop: 8,
-  },
-  guardianSectionTitle: {
-    marginTop: 24,
+    marginBottom: 6,
   },
   input: {
     marginBottom: 16,
@@ -571,72 +499,70 @@ const styles = StyleSheet.create({
   inputContainer: {
     marginBottom: 16,
   },
-  label: {
-    fontSize: 14,
-    fontWeight: "600",
-    color: "#374151",
-    marginBottom: 8,
-  },
   errorText: {
     marginTop: 4,
+    marginBottom: 8,
   },
-  helperText: {
-    marginTop: 4,
-    color: "#6B7280",
-  },
-  allocationContainer: {
+  allocationRow: {
     flexDirection: "row",
     alignItems: "center",
+    justifyContent: "space-between",
+    backgroundColor: "#F9FAFB",
+    borderRadius: 12,
+    paddingHorizontal: 16,
+    paddingVertical: 14,
+    marginBottom: 16,
+    borderWidth: 1,
+    borderColor: "#E5E7EB",
+  },
+  allocationLabel: {
+    fontSize: 14,
+    fontWeight: "600",
+    color: "#1F2937",
+  },
+  allocationStepper: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#FFFFFF",
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: "#E5E7EB",
+    paddingHorizontal: 10,
+    paddingVertical: 6,
     gap: 8,
   },
-  allocationInput: {
-    flex: 1,
+  allocationValue: {
+    fontSize: 14,
+    fontWeight: "600",
+    color: "#1F2937",
+    minWidth: 44,
+    textAlign: "center",
+    padding: 0,
   },
   allocationControls: {
     flexDirection: "column",
-    gap: 4,
+    gap: 2,
   },
   allocationButton: {
-    width: 36,
-    height: 36,
+    width: 20,
+    height: 20,
     justifyContent: "center",
     alignItems: "center",
-    backgroundColor: "#F3F4F6",
-    borderRadius: 8,
   },
-  minorStatusContainer: {
-    flexDirection: "row",
-    alignItems: "center",
+  sectionTitle: {
+    fontSize: 16,
+    fontWeight: "700",
+    color: "#1F2937",
     marginBottom: 16,
-    gap: 12,
+    marginTop: 8,
   },
-  minorStatusText: {
-    flex: 1,
-    color: "#6B7280",
-  },
-  badge: {
-    backgroundColor: "#E5E7EB",
-    paddingHorizontal: 12,
-    paddingVertical: 4,
-    borderRadius: 12,
-  },
-  badgeText: {
-    color: "#374151",
-    fontWeight: "600",
-  },
-  buttonContainer: {
-    flexDirection: "row",
-    gap: 12,
+  footer: {
     padding: 20,
-    paddingTop: 12,
+    paddingBottom: 36,
     borderTopWidth: 1,
-    borderTopColor: "#E5E7EB",
+    borderTopColor: "#F3F4F6",
   },
-  button: {
-    flex: 1,
+  doneButton: {
     borderRadius: 12,
-  },
-  cancelButton: {
-    borderColor: "#E5E7EB",
   },
 });
