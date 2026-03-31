@@ -49,14 +49,19 @@ export default function PlanScreen() {
 
   function handleContinue() {
     if (!selected) return;
-    if (selected === "not_sure") {
+    if (selected === "field") {
       router.push({
-        pathname: "/child/[child_id]/need-age",
+        pathname: "/child/[child_id]/child-field-selection",
+        params: { child_id },
+      });
+    } else if (selected === "college") {
+      router.push({
+        pathname: "/child/[child_id]/child-college-selection",
         params: { child_id },
       });
     } else {
       router.push({
-        pathname: "/child/[child_id]/child-path-selection",
+        pathname: "/child/[child_id]/need-age",
         params: { child_id },
       });
     }
