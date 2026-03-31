@@ -4,8 +4,10 @@ import LoadingScreen from "@/components/v2/LoadingScreen";
 import PathCard from "@/components/v2/PathCard";
 import { useChild } from "@/hooks/useChildren";
 import { useEducations } from "@/hooks/useEducations";
-import { StatusBar } from "expo-status-bar";
+import { useGoalCreation } from "@/hooks/useGoalCreation";
+import { calculateFutureCost } from "@/utils/goalForm";
 import { router, useLocalSearchParams } from "expo-router";
+import { StatusBar } from "expo-status-bar";
 import { ArrowLeft } from "lucide-react-native";
 import React, { useState } from "react";
 import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
@@ -59,17 +61,36 @@ export default function ChildFieldSelectionScreen() {
   const { courses, isLoading: isEducationLoading } = useEducations();
   const insets = useSafeAreaInsets();
   const [selectedPath, setSelectedPath] = useState<string | null>(null);
+  const createGoalMutation = useGoalCreation();
 
   if (isChildLoading || isEducationLoading) return <LoadingScreen />;
   if (!child) return <ErrorScreen />;
 
-  function handleContinue() {
-    if (!selectedPath) return;
+  async function handleContinue() {
+    if (!selectedPath || !child) return;
     const pathTitle = PATHS.find((p) => p.id === selectedPath)?.title;
     const education = courses?.find((c) => c.name === pathTitle);
+    if (!education) return;
+
+    const currentYear = new Date().getFullYear();
+    const targetYear = Math.max(child.dateOfBirth.getFullYear() + 18, currentYear + 3);
+
+    const targetDate = new Date(child.dateOfBirth);
+    targetDate.setFullYear(targetYear);
+
+    const [goal] = await createGoalMutation.mutateAsync([
+      {
+        childId: child.id,
+        educationId: education.id,
+        title: `${child.firstName}'s Graduation`,
+        targetAmount: calculateFutureCost(education, targetYear),
+        targetDate,
+      },
+    ]);
+
     router.push({
-      pathname: "/child/[child_id]/need-age",
-      params: { child_id, ...(education ? { education_id: education.id } : {}) },
+      pathname: "/education/[gaol_id]",
+      params: { gaol_id: goal.id },
     });
   }
 
@@ -122,7 +143,7 @@ export default function ChildFieldSelectionScreen() {
       </ScrollView>
 
       <View style={[styles.footer, { paddingBottom: insets.bottom + 16 }]}>
-        <Button title="Continue" disabled={!selectedPath} onPress={handleContinue} />
+        <Button title="Continue" disabled={!selectedPath} loading={createGoalMutation.isPending} onPress={handleContinue} />
       </View>
     </SafeAreaView>
   );
