@@ -100,7 +100,7 @@ const styles = StyleSheet.create({
     borderRadius: 12,
   },
   value: {
-    width: 44,
+    width: 56,
     fontSize: 16,
     fontWeight: '500',
     color: '#7A7A7E',
