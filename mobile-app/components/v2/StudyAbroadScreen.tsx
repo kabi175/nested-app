@@ -22,6 +22,7 @@ import Animated, {
 } from "react-native-reanimated";
 import { SafeAreaView } from "react-native-safe-area-context";
 import Svg, { Defs, Line, LinearGradient, Path, Stop } from "react-native-svg";
+import { EducationContent } from "@/constants/educationContent";
 import Button from "./Button";
 
 // ─── Constants ────────────────────────────────────────────────────────────────
@@ -113,6 +114,7 @@ const AnimatedPath = Animated.createAnimatedComponent(Path);
 export interface StudyAbroadScreenProps {
     onBack?: () => void;
     onStartPlanning?: () => void;
+    content?: EducationContent;
 }
 
 // ─── Component ────────────────────────────────────────────────────────────────
@@ -120,6 +122,7 @@ export interface StudyAbroadScreenProps {
 export default function StudyAbroadScreen({
     onBack,
     onStartPlanning,
+    content,
 }: StudyAbroadScreenProps) {
     // ── Fonts ──────────────────────────────────────────────────────────────────
     const [fontsLoaded] = useFonts({ InstrumentSans_700Bold });
@@ -203,14 +206,14 @@ export default function StudyAbroadScreen({
                             fontsLoaded && { fontFamily: headlineFont },
                         ]}
                     >
-                        {"Studying abroad has\nnever been cheap"}
+                        {content?.headline ?? "Studying abroad has\nnever been cheap"}
                     </Text>
                 </Animated.View>
 
                 {/* Subtitle */}
                 <Animated.View style={subtitleStyle}>
                     <Text style={styles.subtitle}>
-                        {"A 4-year abroad degree that cost ₹18L in 2010\ncosts ₹52L today."}
+                        {content?.subtitle ?? "A 4-year abroad degree that cost ₹18L in 2010\ncosts ₹52L today."}
                     </Text>
                 </Animated.View>
 
@@ -269,15 +272,15 @@ export default function StudyAbroadScreen({
 
                     {/* X-axis year labels */}
                     <View style={styles.axisLabels}>
-                        <Text style={styles.axisLabel}>2010</Text>
-                        <Text style={styles.axisLabel}>2026</Text>
+                        <Text style={styles.axisLabel}>{content?.chartYearStart ?? "2010"}</Text>
+                        <Text style={styles.axisLabel}>{content?.chartYearEnd ?? "2026"}</Text>
                     </View>
                 </View>
 
                 {/* Pull quote */}
                 <Animated.View style={[styles.quoteContainer, quoteStyle]}>
                     <Text style={styles.quote}>
-                        {"\"That's 3x in 15 years.\nAnd it's not slowing down.\""}
+                        {content?.quote ?? "\"That's 3x in 15 years.\nAnd it's not slowing down.\""}
                     </Text>
                 </Animated.View>
             </View>

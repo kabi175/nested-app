@@ -44,7 +44,7 @@ public class TransactionServiceImpl implements TransactionService {
   @Override
   @Transactional(readOnly = true)
   public List<TransactionDTO> getAllTransactions(
-      String startDate, String endDate, Pageable pageable, User user) {
+      String startDate, String endDate, Long childId, Pageable pageable, User user) {
     if (user == null) {
       log.warn("No user found in context");
       return List.of();
@@ -54,30 +54,38 @@ public class TransactionServiceImpl implements TransactionService {
     Page<Transaction> transactionPage;
 
     try {
-      // Check if date filtering is required
-      if (startDate != null && endDate != null) {
-        // Both dates provided - filter by date range
-        Timestamp start = parseDate(startDate, true);
-        Timestamp end = parseDate(endDate, false);
-        log.info("Fetching transactions for user {} between {} and {}", userId, startDate, endDate);
+      boolean hasDateFilter = startDate != null || endDate != null;
+
+      Timestamp start =
+          startDate != null
+              ? parseDate(startDate, true)
+              : Timestamp.valueOf("1970-01-01 00:00:00");
+      Timestamp end =
+          endDate != null
+              ? parseDate(endDate, false)
+              : Timestamp.valueOf("2999-12-31 23:59:59");
+
+      if (childId != null && hasDateFilter) {
+        log.info(
+            "Fetching transactions for user {} child {} between {} and {}",
+            userId,
+            childId,
+            startDate,
+            endDate);
         transactionPage =
-            transactionRepository.findByUserIdAndCreatedAtBetween(userId, start, end, pageable);
-      } else if (startDate != null) {
-        // Only start date provided - from startDate onwards
-        Timestamp start = parseDate(startDate, true);
-        Timestamp end = Timestamp.valueOf("2999-12-31 23:59:59");
-        log.info("Fetching transactions for user {} from {} onwards", userId, startDate);
+            transactionRepository.findByUserIdAndGoalChildIdAndCreatedAtBetween(
+                userId, childId, start, end, pageable);
+      } else if (childId != null) {
+        log.info("Fetching transactions for user {} child {}", userId, childId);
         transactionPage =
-            transactionRepository.findByUserIdAndCreatedAtBetween(userId, start, end, pageable);
-      } else if (endDate != null) {
-        // Only end date provided - up to endDate
-        Timestamp start = Timestamp.valueOf("1970-01-01 00:00:00");
-        Timestamp end = parseDate(endDate, false);
-        log.info("Fetching transactions for user {} up to {}", userId, endDate);
+            transactionRepository.findByUserIdAndGoalChildId(userId, childId, pageable);
+      } else if (hasDateFilter) {
+        log.info(
+            "Fetching transactions for user {} between {} and {}", userId, startDate, endDate);
         transactionPage =
             transactionRepository.findByUserIdAndCreatedAtBetween(userId, start, end, pageable);
       } else {
-        // No date filtering
+        // No filtering
         log.info("Fetching all transactions for user {}", userId);
         transactionPage = transactionRepository.findByUserId(userId, pageable);
       }

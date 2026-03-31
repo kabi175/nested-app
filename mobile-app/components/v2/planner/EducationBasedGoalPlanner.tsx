@@ -231,7 +231,23 @@ export default function EducationBasedGoalPlanner({
         )}
 
         {/* Projection */}
-        <PlanProjection year={goalYear} />
+        {(() => {
+          const timePeriod = Math.max(yearsFromNow, 3);
+          const nestedLakhs = goalAmount / 100_000;
+          const fdLakhs = (normalizedSipAmount * 12 * Math.pow(1.07, timePeriod)) / 100_000;
+          const maxAmount = Math.max(nestedLakhs, fdLakhs) * 1.15;
+          return (
+            <PlanProjection
+              year={goalYear}
+              plans={[
+                { label: 'NESTED', amount: Math.round(nestedLakhs * 10) / 10 },
+                { label: 'FD / RD', amount: Math.round(fdLakhs * 10) / 10 },
+                { label: 'No plan', amount: 0 },
+              ]}
+              maxAmount={maxAmount}
+            />
+          );
+        })()}
 
         {/* Disclaimer */}
         <View style={styles.disclaimer}>

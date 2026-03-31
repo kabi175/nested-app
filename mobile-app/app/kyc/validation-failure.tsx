@@ -21,7 +21,7 @@ export default function ValidationFailureScreen() {
   };
 
   return (
-    <SafeAreaView style={styles.safeArea} edges={["bottom"]}>
+    <SafeAreaView style={styles.safeArea} edges={["top", "bottom"]}>
       <View style={styles.container}>
         <View style={styles.content}>
           <View style={styles.iconContainer}>

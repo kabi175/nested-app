@@ -5,7 +5,7 @@ export default function SelectChild() {
     return (
         <SelectChildScreen
             onAddChild={() => router.push("/child/create")}
-            onContinue={(childID) => router.push(`/child/${childID}/child-path-selection`)}
+            onContinue={(childID) => router.push(`/child/${childID}/plan`)}
         />
     )
 }

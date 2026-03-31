@@ -1,4 +1,6 @@
 import StudyAbroadScreen from "@/components/v2/StudyAbroadScreen";
+import { getEducationContent } from "@/constants/educationContent";
+import { useGoal } from "@/hooks/useGoal";
 import { router, useLocalSearchParams } from "expo-router";
 
 export default function EducationDetailRoute() {
@@ -6,6 +8,8 @@ export default function EducationDetailRoute() {
     const { goal_id } = useLocalSearchParams<{
         goal_id: string;
     }>();
+
+    const { data: goalData } = useGoal(goal_id);
 
     const onBack = () => {
         if (router.canGoBack()) {
@@ -24,10 +28,13 @@ export default function EducationDetailRoute() {
         );
     }
 
+    const content = getEducationContent(goalData?.education?.name);
+
     return (
         <StudyAbroadScreen
             onBack={onBack}
             onStartPlanning={onStartPlanning}
+            content={content}
         />
     );
 }

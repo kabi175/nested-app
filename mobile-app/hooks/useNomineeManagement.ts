@@ -1,4 +1,5 @@
 import {
+  editingIndexAtom,
   mfaStateAtom,
   nomineeDraftAtom,
   nomineeListAtom,
@@ -30,11 +31,10 @@ export function useNomineeManagement() {
   const [draft, setDraft] = useAtom(nomineeDraftAtom);
   const [pendingNomineeId, setPendingNomineeId] = useAtom(pendingNomineeIdAtom);
   const [validationErrors, setValidationErrors] = useAtom(validationErrorsAtom);
+  const [editingIndex, setEditingIndex] = useAtom(editingIndexAtom);
   const setPendingAction = useSetAtom(pendingActionAtom);
   const setMfaState = useSetAtom(mfaStateAtom);
-
-  const [showFormModal, setShowFormModal] = useState(false);
-  const [editingIndex, setEditingIndex] = useState<number | null>(null);
+  const [showVerifyModal, setShowVerifyModal] = useState(false);
 
   // Single list containing all nominees (existing with id, new without id)
   const allNominees = nomineeList;
@@ -68,7 +68,7 @@ export function useNomineeManagement() {
     setEditingIndex(null);
     setPendingNomineeId(null);
     setValidationErrors({});
-    setShowFormModal(true);
+    router.push("/nominees/add");
   };
 
   const handleEditNominee = (index: number) => {
@@ -82,7 +82,7 @@ export function useNomineeManagement() {
     setEditingIndex(index);
     setPendingNomineeId(nominee.id || null);
     setValidationErrors({});
-    setShowFormModal(true);
+    router.push("/nominees/add");
   };
 
   const handleDeleteNominee = (index: number) => {
@@ -152,7 +152,7 @@ export function useNomineeManagement() {
     setEditingIndex(null);
     setPendingNomineeId(null);
     setValidationErrors({});
-    setShowFormModal(false);
+    router.back();
   };
 
   const handleSaveAll = () => {
@@ -195,15 +195,17 @@ export function useNomineeManagement() {
       }
     }
 
-    router.push("/nominees/verify");
+    setShowVerifyModal(true);
   };
 
+  const handleCancelVerify = () => setShowVerifyModal(false);
+
   const handleCancelForm = () => {
-    setShowFormModal(false);
     setDraft(null);
     setEditingIndex(null);
     setPendingNomineeId(null);
     setValidationErrors({});
+    router.back();
   };
 
   const canAddMore = allNominees.length < MAX_NOMINEES;
@@ -215,8 +217,8 @@ export function useNomineeManagement() {
     validationErrors,
     editingIndex,
     pendingNomineeId,
-    showFormModal,
     canAddMore,
+    showVerifyModal,
     // Handlers
     handleAddNominee,
     handleEditNominee,
@@ -226,5 +228,6 @@ export function useNomineeManagement() {
     handleSaveDraft,
     handleSaveAll,
     handleCancelForm,
+    handleCancelVerify,
   };
 }

@@ -1,10 +1,10 @@
 import { Ionicons } from "@expo/vector-icons";
 import { router, useLocalSearchParams } from "expo-router";
 import { useEffect, useState } from "react";
+import { StatusBar } from "expo-status-bar";
 import {
   Alert,
   ScrollView,
-  StatusBar,
   StyleSheet,
   TouchableOpacity,
   View,
@@ -146,8 +146,8 @@ export default function RedeemVerificationScreen() {
   }, [resendTimer]);
 
   return (
-    <SafeAreaView style={styles.safeArea} edges={[]}>
-      <StatusBar backgroundColor="#FFFFFF" />
+    <SafeAreaView style={styles.safeArea} edges={["top", "bottom"]}>
+      <StatusBar style="dark" backgroundColor="#FFFFFF" />
       <View style={styles.container}>
         <ScrollView
           style={styles.scrollView}

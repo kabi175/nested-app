@@ -28,6 +28,13 @@ export default function NomineesLayout() {
           title: "Verify Nominees",
         }}
       />
+      <Stack.Screen
+        name="add"
+        options={{
+          headerShown: false,
+          title: "Add Nominee",
+        }}
+      />
     </Stack>
   );
 }

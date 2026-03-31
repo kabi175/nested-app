@@ -31,30 +31,32 @@ export default function SuperFDScreen() {
   const invested = goals?.reduce((sum, goal) => sum + goal.investedAmount, 0) || 0;
 
   return (
-    <SafeAreaView style={styles.container}>
-      <StatusBar style="auto" backgroundColor="#F8F7FF" />
-      <SuperFDListHeader />
-      <ScrollView
-        style={styles.scrollContainer}
-        contentContainerStyle={styles.scrollContent}
-        showsVerticalScrollIndicator={false}
-      >
-        <>
-          <View style={styles.contentContainer}>
-            {currentValue > 0 && (
-              <PortfolioSummaryCard
-                currentValue={currentValue}
-                investedAmount={invested}
-                returnsAmount={currentValue - invested}
-              />
-            )}
+    <>
+      <StatusBar style="auto" backgroundColor="#F8F7FF" hidden={false} />
+      <SafeAreaView style={styles.container}>
+        <SuperFDListHeader />
+        <ScrollView
+          style={styles.scrollContainer}
+          contentContainerStyle={styles.scrollContent}
+          showsVerticalScrollIndicator={false}
+        >
+          <>
+            <View style={styles.contentContainer}>
+              {currentValue > 0 && (
+                <PortfolioSummaryCard
+                  currentValue={currentValue}
+                  investedAmount={invested}
+                  returnsAmount={currentValue - invested}
+                />
+              )}
 
-            <SuperFDSection showHeader={false} />
+              <SuperFDSection showHeader={false} />
 
-          </View>
-        </>
-      </ScrollView>
-    </SafeAreaView>
+            </View>
+          </>
+        </ScrollView>
+      </SafeAreaView>
+    </>
   );
 }
 

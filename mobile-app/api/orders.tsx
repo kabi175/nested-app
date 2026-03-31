@@ -26,18 +26,20 @@ export const getSipOrders = async (api: AxiosInstance, page: number) => {
 
 export type Transaction = {
   status: "in_progress" | "completed" | "failed" | "refunded";
-  type: "SIP" | "BUY" | "SELL";
+  type: "SIP" | "BUY" | "SELL" | "STP" | "SWP";
   amount: number;
   units: number;
   fund: string;
   executed_at: Date;
+  member_name?: string;
 };
 
 export const getTransactions = async (
   api: AxiosInstance,
   page: number,
   fromDate?: Date,
-  toDate?: Date
+  toDate?: Date,
+  childId?: string
 ) => {
   const params: Record<string, any> = {
     page,
@@ -49,6 +51,10 @@ export const getTransactions = async (
 
   if (toDate) {
     params.to_date = toDate.toISOString().split("T")[0];
+  }
+
+  if (childId) {
+    params.child_id = childId;
   }
 
   try {

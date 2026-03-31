@@ -1,67 +1,65 @@
 import { nomineeListAtom } from "@/atoms/nominee";
+import { MfaModal } from "@/components/nominee/MfaModal";
 import { NomineeEmptyState } from "@/components/nominee/NomineeEmptyState";
 import { NomineeFooter } from "@/components/nominee/NomineeFooter";
-import { NomineeFormModal } from "@/components/nominee/NomineeFormModal";
 import { NomineeList } from "@/components/nominee/NomineeList";
 import { NomineeScreenHeader } from "@/components/nominee/NomineeScreenHeader";
 import { useNomineeAllocations } from "@/hooks/useNomineeAllocations";
 import { useNomineeManagement } from "@/hooks/useNomineeManagement";
 import { useNominees } from "@/hooks/useNominees";
+import { useUpsertNominees } from "@/hooks/useUpsertNominees";
+import { draftToPayload } from "@/utils/nominee";
 import { Layout, Spinner, Text } from "@ui-kitten/components";
+import { router } from "expo-router";
 import { useAtom } from "jotai";
 import { useEffect } from "react";
 import { StyleSheet } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
-/**
- * Nominee Management Screen
- * Main screen for managing investment nominees
- */
 export default function NomineesScreen() {
   const { data: nominees, isLoading } = useNominees();
-  const [, setNomineeList] = useAtom(nomineeListAtom);
+  const [nomineeList, setNomineeList] = useAtom(nomineeListAtom);
+  const upsertNomineesMutation = useUpsertNominees();
 
   const {
-    draft,
     allNominees,
-    validationErrors,
-    editingIndex,
-    pendingNomineeId,
-    showFormModal,
     canAddMore,
+    showVerifyModal,
     handleAddNominee,
     handleEditNominee,
     handleDeleteNominee,
     handleOptOutNominee,
-    handleFieldChange,
-    handleSaveDraft,
     handleSaveAll,
-    handleCancelForm,
+    handleCancelVerify,
   } = useNomineeManagement();
 
-  const { totalAllocation, remainingAllocation } = useNomineeAllocations();
+  const { totalAllocation } = useNomineeAllocations();
 
   // Sync nominees from query to atom (merge server data with local changes)
   useEffect(() => {
     if (nominees) {
       setNomineeList((prev) => {
-        // Merge: keep local changes (by id), add/update server nominees
         const localById = new Map(
           prev.filter((n) => n.id).map((n) => [n.id, n])
         );
         const localWithoutId = prev.filter((n) => !n.id);
-
-        // Update existing or add new server nominees
         nominees.forEach((n) => {
-          if (n.id) {
-            localById.set(n.id, n);
-          }
+          if (n.id) localById.set(n.id, n);
         });
-
         return [...Array.from(localById.values()), ...localWithoutId];
       });
     }
   }, [nominees, setNomineeList]);
+
+  const handleVerify = async (_otp: string) => {
+    const payloads = nomineeList.map((n) => {
+      const payload = draftToPayload(n as any);
+      return n.id ? { ...payload, id: n.id } : payload;
+    });
+    await upsertNomineesMutation.mutateAsync(payloads);
+    setNomineeList([]);
+    router.replace("/nominees/success");
+  };
 
   if (isLoading) {
     return (
@@ -77,17 +75,13 @@ export default function NomineesScreen() {
   }
 
   const hasNominees = allNominees.length > 0;
-  const calculatedRemainingAllocation =
-    editingIndex !== null
-      ? remainingAllocation + (allNominees[editingIndex]?.allocation || 0)
-      : remainingAllocation;
 
   return (
     <SafeAreaView style={styles.container} edges={["top", "bottom"]}>
       <Layout style={styles.layout} level="1">
         <NomineeScreenHeader
           onAddPress={handleAddNominee}
-          showAddMoreButton={hasNominees && canAddMore}
+          showAddMoreButton={false}
         />
 
         {!hasNominees ? (
@@ -106,26 +100,20 @@ export default function NomineesScreen() {
             <NomineeFooter
               totalAllocation={totalAllocation}
               draftNomineesCount={allNominees.length}
+              canAddMore={canAddMore}
               onSave={handleSaveAll}
+              onAdd={handleAddNominee}
             />
           </>
         )}
-
-        {draft && (
-          <NomineeFormModal
-            visible={showFormModal}
-            draft={draft}
-            errors={validationErrors}
-            remainingAllocation={calculatedRemainingAllocation}
-            isEditMode={editingIndex !== null}
-            isEditingExistingNominee={pendingNomineeId !== null}
-            onFieldChange={handleFieldChange}
-            onSave={handleSaveDraft}
-            onCancel={handleCancelForm}
-            isSubmitting={false}
-          />
-        )}
       </Layout>
+
+      <MfaModal
+        visible={showVerifyModal}
+        action="save"
+        onVerify={handleVerify}
+        onCancel={handleCancelVerify}
+      />
     </SafeAreaView>
   );
 }

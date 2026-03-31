@@ -15,11 +15,11 @@ import { computeMinimumSIPAmount } from "@/utils/sip";
 import { router, useLocalSearchParams } from "expo-router";
 import { useSetAtom } from "jotai";
 import React, { useMemo, useState } from "react";
+import { StatusBar } from "expo-status-bar";
 import {
     Alert,
     Pressable,
     ScrollView,
-    StatusBar,
     StyleSheet,
     Text,
     View,
@@ -208,7 +208,7 @@ export default function Planner() {
 
     return (
         <SafeAreaView style={styles.safe} edges={["top"]}>
-            <StatusBar backgroundColor="#FAFAFA" />
+            <StatusBar style="dark" backgroundColor="#FAFAFA" />
 
             <ScrollView
                 style={styles.scroll}

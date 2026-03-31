@@ -116,10 +116,7 @@ export default function ChildPathSelectionScreen({
 
             <View style={styles.titleContainer} >
               <Text style={styles.title}>
-                What path do you see for
-              </Text>
-              <Text style={styles.title}>
-                {childName}?
+                Choose a field
               </Text>
             </View>
             <Text style={styles.subtitle}>
