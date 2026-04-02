@@ -20,3 +20,13 @@ export const getBasketByName = async (api: AxiosInstance, name: string): Promise
   const { data } = await api.get(`/bucket/name/${name}`);
   return data;
 };
+
+export const getBasketById = async (api: AxiosInstance, id: string): Promise<Basket> => {
+  const { data } = await api.get(`/bucket/${id}`);
+  console.log("Raw basket API response:", data);
+  if (Array.isArray(data.data)) {
+    console.log("data[0]", data.data[0])
+    return data.data[0];
+  }
+  return data;
+};
