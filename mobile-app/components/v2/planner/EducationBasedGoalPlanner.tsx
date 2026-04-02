@@ -1,3 +1,4 @@
+import { BasketFund } from '@/api/basketAPI';
 import React, { useEffect, useRef, useState } from 'react';
 import {
   Animated,
@@ -29,6 +30,7 @@ interface EducationBasedGoalPlannerProps {
   idealSipAmount?: number;
   minSip?: number;
   sipStep?: number;
+  funds?: BasketFund[];
   error?: string;
   onBack?: () => void;
   onBegin?: (params: {
@@ -47,6 +49,7 @@ export default function EducationBasedGoalPlanner({
   idealSipAmount = 6200,
   minSip = 500,
   sipStep = 100,
+  funds = [],
   error,
   onBack,
   onBegin,
@@ -249,6 +252,26 @@ export default function EducationBasedGoalPlanner({
           );
         })()}
 
+        {/* Fund Portfolio */}
+        {funds.length > 0 && (
+          <View>
+            <Text style={styles.fundSectionLabel}>FUND PORTFOLIO</Text>
+            {funds.map((fund) => (
+              <View key={fund.id} style={styles.fundCard}>
+                <View style={styles.fundCardLeft}>
+                  <Text style={styles.fundName}>{fund.name}</Text>
+                  <Text style={styles.fundCardSub}>{fund.allocationPercentage}% of portfolio</Text>
+                </View>
+                <View style={styles.fundCardRight}>
+                  {fund.cagr != null && (
+                    <Text style={styles.fundCagr}>+{fund.cagr.toFixed(1)}%</Text>
+                  )}
+                </View>
+              </View>
+            ))}
+          </View>
+        )}
+
         {/* Disclaimer */}
         <View style={styles.disclaimer}>
           <Text style={styles.disclaimerText}>
@@ -390,5 +413,48 @@ const styles = StyleSheet.create({
     color: '#6E6F7A',
     textAlign: 'center',
     lineHeight: 20,
+  },
+  fundSectionLabel: {
+    fontSize: 11,
+    fontWeight: '600',
+    color: '#8A8A8E',
+    letterSpacing: 1,
+    textTransform: 'uppercase',
+    marginBottom: 12,
+  },
+  fundCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    backgroundColor: '#FFFFFF',
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: '#ECECEC',
+    paddingVertical: 14,
+    paddingHorizontal: 16,
+    marginBottom: 8,
+  },
+  fundCardLeft: {
+    flex: 1,
+    gap: 3,
+  },
+  fundCardRight: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+  },
+  fundName: {
+    fontSize: 16,
+    fontWeight: '400',
+    color: '#1D1E20',
+  },
+  fundCardSub: {
+    fontSize: 13,
+    color: '#8A8A8E',
+  },
+  fundCagr: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#16A34A',
   },
 });

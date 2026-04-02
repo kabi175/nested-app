@@ -1,6 +1,7 @@
 import { CreateOrderRequest } from "@/api/paymentAPI";
 import { cartAtom } from "@/atoms/cart";
 import EducationBasedGoalPlanner from "@/components/v2/planner/EducationBasedGoalPlanner";
+import { useBasketById } from "@/hooks/useBasket";
 import { useCreateOrders } from "@/hooks/useCreateOrders";
 import { useGoal } from "@/hooks/useGoal";
 import { formatCurrency } from "@/utils/formatters";
@@ -15,6 +16,8 @@ export default function GoalPlannerScreen() {
     }>();
 
     const { data: goal } = useGoal(goal_id);
+    const { data: basket } = useBasketById(goal?.basket?.id ?? '');
+    console.log("Basket data:", basket?.funds);
 
     const createOrdersMutation = useCreateOrders();
     const setCart = useSetAtom(cartAtom);
@@ -121,6 +124,7 @@ export default function GoalPlannerScreen() {
             idealSipAmount={idealSipAmount}
             minSip={minSip}
             error={errorMessage}
+            funds={basket?.funds ?? []}
             onBegin={onBegin}
             onBack={() => router.replace("/(tabs)")}
         />

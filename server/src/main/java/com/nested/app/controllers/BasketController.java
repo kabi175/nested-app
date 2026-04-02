@@ -84,7 +84,6 @@ public class BasketController {
    * @return ResponseEntity containing basket details
    */
   @GetMapping("/{id}")
-  @AdminOnly
   @Operation(
       summary = "Get basket details by ID (Admin only)",
       description = "Retrieves detailed information about a specific investment basket")

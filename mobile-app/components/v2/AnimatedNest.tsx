@@ -96,7 +96,7 @@ export default function AnimatedNest({
 
   const animatedEggStyle = useAnimatedStyle(() => ({
     opacity: eggOpacity.value,
-    transform: [{ scale: eggScale.value }],
+    transform: [{ scale: eggScale.value }, { rotate: "180deg" }],
   }));
 
   const { eggTop, eggLeft } = getEggLayout(width, height);

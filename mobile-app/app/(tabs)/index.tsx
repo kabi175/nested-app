@@ -192,15 +192,9 @@ export default function HomeScreen() {
             {goals!.map((g) => (
               <GoalPlanCard key={g.id} goal={g} />
             ))}
-            <TouchableOpacity
-              style={styles.addGoalButton}
-              onPress={() => router.push("/child/select")}
-            >
-              <Text style={styles.addGoalText}>+ Add goal</Text>
-            </TouchableOpacity>
             <OutlineButton
-              title="Add child"
-              onPress={() => router.push("/child/create")}
+              title="+ Add goal"
+              onPress={() => router.push("/child/select")}
             />
           </View>
         )}

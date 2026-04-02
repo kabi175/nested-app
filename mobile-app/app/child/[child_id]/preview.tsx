@@ -3,6 +3,7 @@ import BackButton from "@/components/v2/BackButton";
 import Button from "@/components/v2/Button";
 import { EducationGoalCard } from "@/components/v2/planner/EducationGoalCard";
 import PlanProjection from "@/components/v2/planner/PlanProjection";
+import { useBasketById } from "@/hooks/useBasket";
 import { useChild } from "@/hooks/useChildren";
 import { useGoal } from "@/hooks/useGoal";
 import { formatCompactCurrency, formatCurrency } from "@/utils/formatters";
@@ -33,6 +34,7 @@ export default function Preview() {
 
     const goalId = cart[0]?.goal?.id ?? "";
     const { data: goal } = useGoal(goalId);
+    const { data: basket } = useBasketById(goal?.basket?.id ?? '');
 
     const sipAmount = cart.find((o) => o.type === "sip")?.amount ?? 0;
     const lumpSum = cart.find((o) => o.type === "buy")?.amount ?? 0;
@@ -98,6 +100,26 @@ export default function Preview() {
                         maxAmount={maxL}
                     />
                 </View>
+
+                {/* Fund Portfolio */}
+                {(basket?.funds ?? []).length > 0 && (
+                    <View style={styles.section}>
+                        <Text style={styles.fundSectionLabel}>FUND PORTFOLIO</Text>
+                        {basket!.funds.map((fund) => (
+                            <View key={fund.id} style={styles.fundCard}>
+                                <View style={styles.fundCardLeft}>
+                                    <Text style={styles.fundName}>{fund.name}</Text>
+                                    <Text style={styles.fundCardSub}>{fund.allocationPercentage}% of portfolio</Text>
+                                </View>
+                                <View style={styles.fundCardRight}>
+                                    {fund.cagr != null && (
+                                        <Text style={styles.fundCagr}>+{fund.cagr.toFixed(1)}%</Text>
+                                    )}
+                                </View>
+                            </View>
+                        ))}
+                    </View>
+                )}
 
                 {/* Push footer to bottom */}
                 <View style={{ flex: 1 }} />
@@ -199,4 +221,29 @@ const styles = StyleSheet.create({
         textAlign: "center",
         lineHeight: 20,
     },
+    fundSectionLabel: {
+        fontSize: 11,
+        fontWeight: "600",
+        color: "#8A8A8E",
+        letterSpacing: 1,
+        textTransform: "uppercase",
+        marginBottom: 12,
+    },
+    fundCard: {
+        flexDirection: "row",
+        alignItems: "center",
+        justifyContent: "space-between",
+        backgroundColor: "#FFFFFF",
+        borderRadius: 16,
+        borderWidth: 1,
+        borderColor: "#ECECEC",
+        paddingVertical: 14,
+        paddingHorizontal: 16,
+        marginBottom: 8,
+    },
+    fundCardLeft: { flex: 1, gap: 3 },
+    fundCardRight: { flexDirection: "row", alignItems: "center", gap: 10 },
+    fundName: { fontSize: 16, fontWeight: "400", color: "#1D1E20" },
+    fundCardSub: { fontSize: 13, color: "#8A8A8E" },
+    fundCagr: { fontSize: 14, fontWeight: "600", color: "#16A34A" },
 });
