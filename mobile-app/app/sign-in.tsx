@@ -146,32 +146,34 @@ export default function SignIn() {
           bounces={false}
         >
           {/* Top Section */}
-          <View style={styles.topSection}>
-            <View style={styles.logoWrapper}>
-              <Logo width={65} height={65} />
-            </View>
+          {!confirm && (
+            <View style={styles.topSection}>
+              <View style={styles.logoWrapper}>
+                <Logo width={65} height={65} />
+              </View>
 
-            <Text style={styles.mainTitle}>
-              Building your child's future{"\n"}starts here
-            </Text>
+              <Text style={styles.mainTitle}>
+                Building your child's future{"\n"}starts here
+              </Text>
 
-            <Text style={styles.mainSubtitle}>
-              Join 40,000+ Indian parents who plan{"\n"}with purpose
-            </Text>
+              <Text style={styles.mainSubtitle}>
+                Join 40,000+ Indian parents who plan{"\n"}with purpose
+              </Text>
 
-            <View style={styles.badgesRow}>
-              <View style={styles.badge}>
-                <View style={styles.greenCheckSquare}>
-                  <Ionicons name="checkmark" size={10} color="#FFFFFF" />
+              <View style={styles.badgesRow}>
+                <View style={styles.badge}>
+                  <View style={styles.greenCheckSquare}>
+                    <Ionicons name="checkmark" size={10} color="#FFFFFF" />
+                  </View>
+                  <Text style={styles.badgeText}>SEBI registered</Text>
                 </View>
-                <Text style={styles.badgeText}>SEBI registered</Text>
-              </View>
-              <View style={styles.badge}>
-                <Ionicons name="lock-closed" size={12} color="#C2A475" />
-                <Text style={styles.badgeText}>256 bit encrypted</Text>
+                <View style={styles.badge}>
+                  <Ionicons name="lock-closed" size={12} color="#C2A475" />
+                  <Text style={styles.badgeText}>256 bit encrypted</Text>
+                </View>
               </View>
             </View>
-          </View>
+          )}
 
           {/* Bottom Card */}
           <View style={styles.bottomCard}>
