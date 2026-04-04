@@ -1,7 +1,8 @@
 import { router } from "expo-router";
 import { ArrowLeft } from "lucide-react-native";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
+  Keyboard,
   KeyboardAvoidingView,
   Platform,
   Pressable,
@@ -47,7 +48,14 @@ export default function CreateChild() {
 
   const [submitError, setSubmitError] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [keyboardVisible, setKeyboardVisible] = useState(false);
   const { mutateAsync: createChildMutation } = useCreateChild();
+
+  useEffect(() => {
+    const show = Keyboard.addListener("keyboardDidShow", () => setKeyboardVisible(true));
+    const hide = Keyboard.addListener("keyboardDidHide", () => setKeyboardVisible(false));
+    return () => { show.remove(); hide.remove(); };
+  }, []);
 
   const handleBack = () => {
     if (router.canGoBack()) {
@@ -161,9 +169,11 @@ export default function CreateChild() {
           </View>
 
           {/* Illustration */}
-          <View style={styles.imageContainer}>
-            <AnimatedNest width={180} height={180} />
-          </View>
+          {!keyboardVisible && (
+            <View style={styles.imageContainer}>
+              <AnimatedNest width={180} height={180} />
+            </View>
+          )}
 
           {/* Form */}
           <View style={styles.formContainer}>
