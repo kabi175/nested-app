@@ -1,5 +1,4 @@
 import { Redirect, Tabs, usePathname } from "expo-router";
-import { StatusBar } from "expo-status-bar";
 import React from "react";
 import { Platform } from "react-native";
 
@@ -19,10 +18,6 @@ export default function TabLayout() {
 
   return (
     <>
-      <StatusBar
-        hidden={pathname === "/"}
-        translucent={Platform.OS === "android"}
-      />
       <Tabs
         screenOptions={{
           tabBarActiveTintColor: "#141B34",
@@ -47,10 +42,6 @@ export default function TabLayout() {
           tabBarLabelStyle: {
             fontSize: 12,
             fontWeight: "500",
-            marginTop: 4,
-          },
-          tabBarIconStyle: {
-            marginBottom: 0,
           },
         }}
       >

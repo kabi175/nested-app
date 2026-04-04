@@ -7,6 +7,7 @@ import {
   Pressable,
   StyleSheet,
   Text,
+  TextInput,
   View,
 } from "react-native";
 
@@ -25,10 +26,16 @@ export default function CollegeDropdown({
   onSelectCollege,
 }: CollegeDropdownProps) {
   const [modalVisible, setModalVisible] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+
+  const closeModal = () => {
+    setModalVisible(false);
+    setSearchQuery("");
+  };
 
   const handleSelect = (college: string) => {
     onSelectCollege(college);
-    setModalVisible(false);
+    closeModal();
   };
 
   return (
@@ -57,7 +64,7 @@ export default function CollegeDropdown({
         visible={modalVisible}
         transparent
         animationType="slide"
-        onRequestClose={() => setModalVisible(false)}
+        onRequestClose={closeModal}
       >
         <View style={styles.modalOverlay}>
           <View style={styles.modalContent}>
@@ -65,7 +72,7 @@ export default function CollegeDropdown({
             <View style={styles.modalHeader}>
               <Text style={styles.modalTitle}>Select a college</Text>
               <Pressable
-                onPress={() => setModalVisible(false)}
+                onPress={closeModal}
                 hitSlop={12}
                 accessibilityRole="button"
                 accessibilityLabel="Close"
@@ -74,9 +81,21 @@ export default function CollegeDropdown({
               </Pressable>
             </View>
 
+            {/* Search */}
+            <TextInput
+              style={styles.searchInput}
+              placeholder="Search colleges..."
+              placeholderTextColor="#9CA3AF"
+              value={searchQuery}
+              onChangeText={setSearchQuery}
+              autoCorrect={false}
+            />
+
             {/* List */}
             <FlatList
-              data={colleges?.map((college) => college.name) || []}
+              data={(colleges?.map((college) => college.name) || []).filter(
+                (name) => name.toLowerCase().includes(searchQuery.toLowerCase())
+              )}
               keyExtractor={(_item, index) => index.toString()}
               renderItem={({ item }) => (
                 <Pressable
@@ -182,5 +201,18 @@ const styles = StyleSheet.create({
     height: 1,
     backgroundColor: "#F5F5F5",
     marginHorizontal: 20,
+  },
+  searchInput: {
+    marginHorizontal: 20,
+    marginTop: 12,
+    marginBottom: 4,
+    height: 44,
+    borderWidth: 1,
+    borderColor: "#E0E0E0",
+    borderRadius: 10,
+    paddingHorizontal: 14,
+    fontSize: 15,
+    color: "#1A1A1A",
+    backgroundColor: "#FAFAFA",
   },
 });
