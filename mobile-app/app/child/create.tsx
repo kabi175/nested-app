@@ -15,32 +15,51 @@ import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context"
 
 import AnimatedNest from "@/components/v2/AnimatedNest";
 import Button from "@/components/v2/Button";
-import DateInput from "@/components/v2/DateInput";
 import TextInput from "@/components/v2/TextInput";
 import { useCreateChild } from "@/hooks/useChildMutations";
 import { StatusBar } from "expo-status-bar";
 
-const MIN_DOB = (() => {
-  const d = new Date();
-  d.setFullYear(d.getFullYear() - 25);
-  return d;
-})();
+const MIN_YEARS = 25;
 
 // Local form state
 interface ChildFormState {
   name: string;
-  dob: Date | null;
+  dob: string; // DD/MM/YYYY
 }
 
 const defaultLocalValues: ChildFormState = {
   name: "",
-  dob: null,
+  dob: "",
 };
+
+function parseDob(value: string): Date | null {
+  if (value.length !== 10) return null;
+  const [day, month, year] = value.split("/").map(Number);
+  if (!day || !month || !year) return null;
+  const date = new Date(year, month - 1, day);
+  // Verify no date overflow (e.g. 31/02 rolling over)
+  if (
+    date.getFullYear() !== year ||
+    date.getMonth() !== month - 1 ||
+    date.getDate() !== day
+  ) return null;
+  return date;
+}
+
+function formatDobInput(_prev: string, next: string): string {
+  // Strip non-digits
+  const digits = next.replace(/\D/g, "");
+  // Only allow up to 8 digits (DDMMYYYY)
+  const clamped = digits.slice(0, 8);
+  // Insert slashes
+  if (clamped.length <= 2) return clamped;
+  if (clamped.length <= 4) return `${clamped.slice(0, 2)}/${clamped.slice(2)}`;
+  return `${clamped.slice(0, 2)}/${clamped.slice(2, 4)}/${clamped.slice(4)}`;
+}
 
 export default function CreateChild() {
   const insets = useSafeAreaInsets();
   const [values, setValues] = useState<ChildFormState>(defaultLocalValues);
-  // Touched state to only show errors after the user interacts
   const [touched, setTouched] = useState<Record<keyof ChildFormState, boolean>>({
     name: false,
     dob: false,
@@ -61,7 +80,7 @@ export default function CreateChild() {
     if (router.canGoBack()) {
       router.back();
     } else {
-      router.replace("/")
+      router.replace("/");
     }
   };
 
@@ -70,14 +89,14 @@ export default function CreateChild() {
     setSubmitError("");
   };
 
-  const handleBlur = (field: keyof ChildFormState) => {
-    setTouched((prev) => ({ ...prev, [field]: true }));
+  const handleDobChange = (raw: string) => {
+    const formatted = formatDobInput(values.dob, raw);
+    setValues((prev) => ({ ...prev, dob: formatted }));
+    setSubmitError("");
   };
 
-  const handleDobChange = (date: Date) => {
-    setValues((prev) => ({ ...prev, dob: date }));
-    setSubmitError("");
-    setTouched((prev) => ({ ...prev, dob: true }));
+  const handleBlur = (field: keyof ChildFormState) => {
+    setTouched((prev) => ({ ...prev, [field]: true }));
   };
 
   // Local Validation
@@ -96,8 +115,25 @@ export default function CreateChild() {
     // DOB validation
     if (!values.dob) {
       errs.dob = "Date of birth is required.";
-    } else if (values.dob > new Date()) {
-      errs.dob = "Date of birth cannot be in the future.";
+    } else if (values.dob.length < 10) {
+      errs.dob = "Enter a complete date (DD/MM/YYYY).";
+    } else {
+      const parsed = parseDob(values.dob);
+      if (!parsed) {
+        errs.dob = "Enter a valid date (DD/MM/YYYY).";
+      } else {
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        const minDate = new Date();
+        minDate.setFullYear(minDate.getFullYear() - MIN_YEARS);
+        minDate.setHours(0, 0, 0, 0);
+
+        if (parsed > today) {
+          errs.dob = "Date of birth cannot be in the future.";
+        } else if (parsed < minDate) {
+          errs.dob = `Date of birth cannot be more than ${MIN_YEARS} years ago.`;
+        }
+      }
     }
 
     return errs;
@@ -118,7 +154,7 @@ export default function CreateChild() {
       const payload = {
         firstName: values.name.trim(),
         lastName: " ",
-        dateOfBirth: values.dob!,
+        dateOfBirth: parseDob(values.dob)!,
         investUnderChild: false,
       };
 
@@ -188,15 +224,16 @@ export default function CreateChild() {
               autoCapitalize="words"
             />
 
-            <DateInput
+            <TextInput
               label="Date of birth"
-              value={values.dob}
-              onChange={handleDobChange}
-              max={new Date()}
-              min={MIN_DOB}
               placeholder="DD/MM/YYYY"
+              value={values.dob}
+              onChangeText={handleDobChange}
+              onBlur={() => handleBlur("dob")}
               error={errors.dob}
               touched={touched.dob}
+              keyboardType="number-pad"
+              maxLength={10}
             />
 
             {submitError ? (
@@ -242,7 +279,7 @@ const styles = StyleSheet.create({
     width: 48,
     height: 48,
     borderRadius: 24,
-    backgroundColor: "#E4E6FB", // Adjusted lighter purple from mock for the arrow container
+    backgroundColor: "#E4E6FB",
     alignItems: "center",
     justifyContent: "center",
     alignSelf: "flex-start",
@@ -265,10 +302,6 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     marginBottom: 48,
-  },
-  image: {
-    width: 180,
-    height: 180,
   },
   formContainer: {
     width: "100%",
