@@ -12,6 +12,7 @@ import { ForceUpdateScreen } from "@/components/ForceUpdateScreen";
 import SplashScreenComponent from "@/components/v2/SplashScreen";
 import { useColorScheme } from "@/hooks/useColorScheme";
 import { useForceUpdate } from "@/hooks/useForceUpdate";
+import { useOnboardingSeen } from "@/hooks/useOnboardingSeen";
 import { usePersistRoute } from "@/hooks/usePersistRoute";
 import { QueryProvider } from "@/providers/QueryProvider";
 import * as eva from "@eva-design/eva";
@@ -23,9 +24,11 @@ import {
 } from "@expo-google-fonts/instrument-sans";
 import { ApplicationProvider } from "@ui-kitten/components";
 import { requestTrackingPermissionsAsync } from 'expo-tracking-transparency';
-import { useOnboardingSeen } from "@/hooks/useOnboardingSeen";
 import React, { useEffect, useState } from "react";
-import { ActivityIndicator, View, Text, TextInput } from "react-native";
+import { ActivityIndicator, Text, TextInput, View } from "react-native";
+import { Auth0Provider, useAuth0 } from "react-native-auth0";
+import { Settings } from 'react-native-fbsdk-next';
+import { SafeAreaProvider } from "react-native-safe-area-context";
 
 interface TextWithDefaultProps extends React.FunctionComponent<any> {
   defaultProps?: any;
@@ -42,9 +45,6 @@ interface TextWithDefaultProps extends React.FunctionComponent<any> {
 ((TextInput as unknown) as TextWithDefaultProps).defaultProps.style = {
   fontFamily: "InstrumentSans_400Regular",
 };
-import { Auth0Provider, useAuth0 } from "react-native-auth0";
-import { Settings } from 'react-native-fbsdk-next';
-import { SafeAreaProvider } from "react-native-safe-area-context";
 
 export default function RootLayout() {
   const colorScheme = useColorScheme();
@@ -98,7 +98,7 @@ export default function RootLayout() {
                 <RootNavigator />
               </VersionCheckGuard>
             </SafeAreaProvider>
-            <StatusBar style="auto" />
+            <StatusBar style="auto" backgroundColor="transparent" translucent />
           </ThemeProvider>
         </Auth0Provider>
       </QueryProvider>

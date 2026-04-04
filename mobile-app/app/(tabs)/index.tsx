@@ -1,4 +1,5 @@
 import { router, useRouter } from "expo-router";
+import { StatusBar } from "expo-status-bar";
 import { Baby, Bell, ChartColumnIncreasing, PiggyBank, ScrollText } from "lucide-react-native";
 import React from "react";
 import {
@@ -114,6 +115,7 @@ export default function HomeScreen() {
 
   return (
     <SafeAreaView style={styles.screen} edges={["left", "right", "bottom"]}>
+      <StatusBar style="light" backgroundColor="transparent" translucent />
       <ScrollView
         style={styles.scroll}
         contentContainerStyle={[
