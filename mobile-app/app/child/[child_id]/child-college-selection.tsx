@@ -4,8 +4,10 @@ import ErrorScreen from "@/components/v2/ErrorScreen";
 import LoadingScreen from "@/components/v2/LoadingScreen";
 import { useChild } from "@/hooks/useChildren";
 import { useEducations } from "@/hooks/useEducations";
-import { StatusBar } from "expo-status-bar";
+import { useGoalCreation } from "@/hooks/useGoalCreation";
+import { calculateFutureCost } from "@/utils/goalForm";
 import { router, useLocalSearchParams } from "expo-router";
+import { StatusBar } from "expo-status-bar";
 import { ArrowLeft } from "lucide-react-native";
 import React, { useState } from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
@@ -17,16 +19,34 @@ export default function ChildCollegeSelectionScreen() {
   const { institutions, isLoading: isEducationLoading } = useEducations();
   const insets = useSafeAreaInsets();
   const [selectedCollege, setSelectedCollege] = useState<string | null>(null);
+  const createGoalMutation = useGoalCreation();
 
   if (isChildLoading || isEducationLoading) return <LoadingScreen />;
   if (!child) return <ErrorScreen />;
 
-  function handleContinue() {
-    if (!selectedCollege) return;
+  async function handleContinue() {
+    if (!selectedCollege || !child) return;
     const education = institutions?.find((i) => i.name === selectedCollege);
+    if (!education) return;
+    const currentYear = new Date().getFullYear();
+    const targetYear = Math.max(child.dateOfBirth.getFullYear() + 18, currentYear + 3);
+
+    const targetDate = new Date(child.dateOfBirth);
+    targetDate.setFullYear(targetYear);
+
+    const [goal] = await createGoalMutation.mutateAsync([
+      {
+        childId: child.id,
+        educationId: education.id,
+        title: `${child.firstName}'s Graduation`,
+        targetAmount: calculateFutureCost(education, targetYear),
+        targetDate,
+      },
+    ]);
+
     router.push({
-      pathname: "/child/[child_id]/need-age",
-      params: { child_id, ...(education ? { education_id: education.id } : {}) },
+      pathname: "/education/[gaol_id]",
+      params: { gaol_id: goal.id },
     });
   }
 
