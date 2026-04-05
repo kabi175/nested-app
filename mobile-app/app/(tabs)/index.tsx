@@ -1,9 +1,11 @@
+import { LinearGradient } from "expo-linear-gradient";
 import { router, useRouter } from "expo-router";
 import { StatusBar } from "expo-status-bar";
-import { Baby, Bell, ChartColumnIncreasing, PiggyBank, ScrollText } from "lucide-react-native";
+import { Baby, Bell, ChartColumnIncreasing, Phone, PiggyBank, ScrollText } from "lucide-react-native";
 import React from "react";
 import {
   Alert,
+  Linking,
   ScrollView,
   StyleSheet,
   Text,
@@ -120,7 +122,7 @@ export default function HomeScreen() {
         style={styles.scroll}
         contentContainerStyle={[
           styles.content,
-          { paddingBottom: Math.max(insets.bottom + 80, 120) },
+          { paddingBottom: insets.bottom + 16 },
         ]}
         showsVerticalScrollIndicator={false}
       >
@@ -270,6 +272,34 @@ export default function HomeScreen() {
             ))}
           </View>
         </View>
+
+        {/* ── Referral Card ── */}
+        <TouchableOpacity
+          style={styles.referralCard}
+          onPress={() =>
+            Linking.openURL(
+              "whatsapp://send?text=Hey! I've been using Nested to plan my child's education fund. Check it out!"
+            )
+          }
+          activeOpacity={0.85}
+        >
+          <LinearGradient
+            colors={["#FFF8E8", "#F0FFF4"]}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 1 }}
+            style={styles.referralGradient}
+          >
+            <View style={styles.referralTextBlock}>
+              <Text style={styles.referralTitle}>Know a parent who'd benefit?</Text>
+              <Text style={styles.referralSubtitle}>
+                Share Nested, and get ₹500 off their first month
+              </Text>
+            </View>
+            <View style={styles.whatsappCircle}>
+              <Phone size={22} color="#FFFFFF" fill="#FFFFFF" />
+            </View>
+          </LinearGradient>
+        </TouchableOpacity>
       </ScrollView>
     </SafeAreaView>
   );
@@ -656,5 +686,47 @@ const styles = StyleSheet.create({
     fontSize: 7,
     fontWeight: "500",
     color: "rgba(0,0,0,0.9)",
+  },
+
+  // ── Referral Card ──
+  referralCard: {
+    marginHorizontal: 16,
+    borderRadius: 16,
+    overflow: "hidden",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.08,
+    shadowRadius: 8,
+    elevation: 3,
+  },
+  referralGradient: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    padding: 16,
+  },
+  referralTextBlock: {
+    flex: 1,
+    gap: 4,
+    marginRight: 12,
+  },
+  referralTitle: {
+    fontSize: 16,
+    fontWeight: "700",
+    color: "#1A1A1A",
+    letterSpacing: -0.3,
+  },
+  referralSubtitle: {
+    fontSize: 13,
+    color: "rgba(0,0,0,0.5)",
+    lineHeight: 18,
+  },
+  whatsappCircle: {
+    width: 52,
+    height: 52,
+    borderRadius: 26,
+    backgroundColor: "#25D366",
+    alignItems: "center",
+    justifyContent: "center",
   },
 });
