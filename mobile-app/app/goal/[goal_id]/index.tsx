@@ -1,4 +1,3 @@
-import { goalsForCustomizeAtom } from "@/atoms/goals";
 import { DeleteGoalModal } from "@/components/goal/DeleteGoalModal";
 import GoalValueCard from "@/components/v2/GoalValueCard";
 import GoalFooter from "@/components/v2/goal/GoalFooter";
@@ -9,9 +8,8 @@ import { useDeleteGoal } from "@/hooks/useDeleteGoal";
 import { useGoal } from "@/hooks/useGoal";
 import { usePortfolioHoldings } from "@/hooks/usePortfolio";
 import { router, useLocalSearchParams } from "expo-router";
-import { useSetAtom } from "jotai";
-import React, { useMemo, useState } from "react";
 import { StatusBar } from "expo-status-bar";
+import React, { useMemo, useState } from "react";
 import {
   ActivityIndicator,
   Alert,
@@ -27,7 +25,6 @@ export default function GoalDetailScreen() {
   const { goal_id } = useLocalSearchParams<{ goal_id: string }>();
   const { data: goal, isLoading: goalLoading } = useGoal(goal_id);
   const { data: holdings, isLoading: holdingsLoading } = usePortfolioHoldings(goal_id);
-  const setGoalsForCustomize = useSetAtom(goalsForCustomizeAtom);
   const deleteGoalMutation = useDeleteGoal();
   const [showDeleteModal, setShowDeleteModal] = useState(false);
 
@@ -121,7 +118,12 @@ export default function GoalDetailScreen() {
 
       <GoalFooter
         onAddLumpsum={handleAddLumpsum}
-        onEditSip={() => router.push(`/goal/${goal_id}/edit`)}
+        onEditSip={() => {
+          router.push({
+            pathname: "goal/[goal_id]/edit-sip",
+            params: { goal_id },
+          });
+        }}
       />
 
       <DeleteGoalModal
