@@ -69,13 +69,19 @@ const EDUCATION_CONTENT_MAP: Array<{ keywords: string[]; content: EducationConte
     },
 ];
 
-const DEFAULT_CONTENT: EducationContent = EDUCATION_CONTENT_MAP[0].content;
+const DEFAULT_CONTENT: EducationContent = {
+    headline: 'Indian college fees have\ntripled in a decade',
+    subtitle: 'What cost ₹5L ten years ago now costs ₹15L\n— across colleges in India.',
+    chartYearStart: '2016',
+    chartYearEnd: '2036',
+    quote: '"3x in 10 years, and rising at 10%+ annually.\nStart building a corpus today that\'s ready\nfor tomorrow\'s fees."',
+};
 
 export function getEducationContent(name: string | undefined): EducationContent {
     if (!name) return DEFAULT_CONTENT;
     const lower = name.toLowerCase();
     const match = EDUCATION_CONTENT_MAP.find(({ keywords }) =>
-        keywords.some((k) => lower.includes(k))
+        keywords.some((k) => lower.includes(k.toLowerCase()))
     );
     return match?.content ?? DEFAULT_CONTENT;
 }
