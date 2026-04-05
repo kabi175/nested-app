@@ -114,7 +114,7 @@ export default function BasketCard({
         </View>
 
         {/* Minimum Investment */}
-        {data.currentValue && (
+        {!!data.currentValue && (
           <View
             style={[
               styles.minInvestmentContainer,
