@@ -12,11 +12,7 @@ export default function EducationDetailRoute() {
     const { data: goalData } = useGoal(goal_id);
 
     const onBack = () => {
-        if (router.canGoBack()) {
-            router.back();
-        } else {
-            router.push(`/(tabs)`);
-        }
+        router.push(`/(tabs)`);
     }
 
     const onStartPlanning = () => {
