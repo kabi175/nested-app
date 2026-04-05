@@ -38,6 +38,26 @@ const EDUCATION_CONTENT_MAP: Array<{ keywords: string[]; content: EducationConte
         },
     },
     {
+        keywords: ['Arts & Design'],
+        content: {
+            headline: 'Arts degrees don\'t come\ncheap anymore',
+            subtitle: 'A premier Arts degree that cost ₹5L a decade ago\nnow costs ₹15L today.',
+            chartYearStart: '2016',
+            chartYearEnd: '2036',
+            quote: '"That\'s 3x in 10 years. Arts is a serious career\npath — and with costs set to rise at 10%+ annually,\nit\'s only getting more expensive."',
+        },
+    },
+    {
+        keywords: ['Top colleges India'],
+        content: {
+            headline: 'Top colleges are getting\nharder to afford',
+            subtitle: 'A premier UG degree that cost ₹7L a decade ago\nnow costs ₹20L today.',
+            chartYearStart: '2016',
+            chartYearEnd: '2036',
+            quote: '"That\'s 3x in 10 years. Whether it\'s BTech, BArch,\nor any other course — costs are set to rise at 10%+\nannually, and the gap keeps widening."',
+        },
+    },
+    {
         keywords: ['iit', 'engineering'],
         content: {
             headline: 'Even IIT fees have quietly\nrisen 8x since 2000',
