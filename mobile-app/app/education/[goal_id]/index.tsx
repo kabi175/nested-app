@@ -1,3 +1,4 @@
+import LoadingScreen from "@/components/v2/LoadingScreen";
 import StudyAbroadScreen from "@/components/v2/StudyAbroadScreen";
 import { getEducationContent } from "@/constants/educationContent";
 import { useGoal } from "@/hooks/useGoal";
@@ -9,7 +10,7 @@ export default function EducationDetailRoute() {
         goal_id: string;
     }>();
 
-    const { data: goalData } = useGoal(goal_id);
+    const { data: goalData, isLoading } = useGoal(goal_id);
 
     const onBack = () => {
         router.push(`/(tabs)`);
@@ -23,6 +24,8 @@ export default function EducationDetailRoute() {
             }
         );
     }
+
+    if (isLoading) return <LoadingScreen />;
 
     const content = getEducationContent(goalData?.education?.name);
 
