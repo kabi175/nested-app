@@ -25,7 +25,7 @@ export interface BuildingNestScreenProps {
 
 export default function BuildingNestScreen({
   userName,
-  statusText = "We sift through 2,500+ mutual funds so only the right ones make it in — tailored by Nested using sharp market data and the risk insights that actually matter",
+  statusText = "2,500+ funds filtered. One portfolio. Built for your child.",
   onComplete,
 }: BuildingNestScreenProps) {
   const [fontsLoaded] = useFonts({
