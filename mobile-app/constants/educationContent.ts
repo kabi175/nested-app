@@ -11,10 +11,10 @@ const EDUCATION_CONTENT_MAP: Array<{ keywords: string[]; content: EducationConte
         keywords: ['abroad'],
         content: {
             headline: 'Studying abroad has\nnever been cheap',
-            subtitle: 'A 4-year abroad degree that cost ₹18L in 2010\ncosts ₹52L today.',
+            subtitle: 'A 4-year abroad degree that cost ₹20L in 2010\ncosts ₹75L today.',
             chartYearStart: '2010',
             chartYearEnd: '2037',
-            quote: '"That\'s 3x in 15 years.\nAnd it\'s not slowing down."',
+            quote: '"That\'s 3.5x in 15 years. Rupee depreciation is steep, \nand costs are growing at 8%+ — and it\'s not slowing down"',
         },
     },
     {
