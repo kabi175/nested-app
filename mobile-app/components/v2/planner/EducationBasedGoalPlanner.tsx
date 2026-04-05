@@ -90,7 +90,7 @@ export default function EducationBasedGoalPlanner({
   };
   const [lumpSumEnabled, setLumpSumEnabled] = useState(false);
   const [lumpSumAmount, setLumpSumAmount] = useState('');
-  const [stepUp, setStepUp] = useState(10);
+  const [stepUp, setStepUp] = useState(0);
 
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const slideAnim = useRef(new Animated.Value(24)).current;
