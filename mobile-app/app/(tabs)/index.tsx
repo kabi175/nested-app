@@ -86,6 +86,7 @@ export default function HomeScreen() {
   const { data: goals } = useEducationGoals();
 
   const isKycCompleted = user?.kycStatus === "completed";
+  const isInvestedInAnyGoal = goals ? goals.some((g) => g.currentAmount > 0) : false;
   const hasGoals = !!goals && goals.length > 0;
   const showKycCard = !isKycCompleted || !hasGoals;
 
@@ -191,7 +192,7 @@ export default function HomeScreen() {
         )}
 
         {/* ── Child plan cards ── */}
-        {isKycCompleted && hasGoals && (
+        {isKycCompleted && isInvestedInAnyGoal && hasGoals && (
           <View style={styles.planCardWrapper}>
             {goals!.map((g) => (
               <GoalPlanCard key={g.id} goal={g} />
