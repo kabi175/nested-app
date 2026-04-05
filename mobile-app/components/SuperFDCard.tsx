@@ -126,25 +126,6 @@ export default function SuperFDCard({
     );
   };
 
-  // Very faint light reflection overlay - non-symmetric, pushed right
-  const LightReflectionOverlay = () => {
-    return (
-      <LinearGradient
-        colors={[
-          "transparent",
-          "transparent",
-          "rgba(255, 255, 255, 0.06)",
-          "rgba(255, 255, 255, 0.06)",
-          "transparent",
-        ]}
-        start={{ x: 0.7, y: 0.3 }}
-        end={{ x: 1.2, y: 0.8 }}
-        style={StyleSheet.absoluteFill}
-        pointerEvents="none"
-      />
-    );
-  };
-
   return (
     <Pressable onPress={handleCardPress} style={styles.cardContainer}>
       <Animated.View
@@ -156,40 +137,13 @@ export default function SuperFDCard({
         ]}
       >
         <LinearGradient
-          colors={["#7C3AED", "#8B5CF6", "#9333EA"]}
+          colors={["#FFD57E", "#FFF8E5"]}
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 1 }}
           style={styles.gradient}
         >
           {/* Background Pattern */}
           <PatternOverlay />
-
-          {/* Edge darkening overlay */}
-          <LinearGradient
-            colors={[
-              "rgba(0, 0, 0, 0.15)",
-              "rgba(0, 0, 0, 0.05)",
-              "transparent",
-              "rgba(0, 0, 0, 0.05)",
-              "rgba(0, 0, 0, 0.15)",
-            ]}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 1 }}
-            style={StyleSheet.absoluteFill}
-            pointerEvents="none"
-          />
-
-          {/* Center-left brightening */}
-          <LinearGradient
-            colors={["rgba(255, 255, 255, 0.08)", "transparent", "transparent"]}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 0.5, y: 1 }}
-            style={StyleSheet.absoluteFill}
-            pointerEvents="none"
-          />
-
-          {/* Very faint light reflection */}
-          <LightReflectionOverlay />
 
           {/* Content Container */}
           <View style={styles.contentContainer}>
@@ -275,7 +229,7 @@ const styles = StyleSheet.create({
   card: {
     borderRadius: 19,
     overflow: "hidden",
-    shadowColor: "#7C3AED",
+    shadowColor: "#FFB830",
     shadowOffset: {
       width: 0,
       height: 8,
@@ -301,7 +255,7 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 22,
     fontWeight: "bold",
-    color: "#FFFFFF",
+    color: "#1A1A1A",
     marginBottom: 10,
     lineHeight: 36,
   },
@@ -314,27 +268,29 @@ const styles = StyleSheet.create({
   },
   description: {
     fontSize: 12,
-    color: "rgba(255, 255, 255, 0.9)",
+    color: "rgba(0, 0, 0, 0.6)",
     lineHeight: 20,
     marginBottom: 2,
   },
   badge: {
     alignSelf: "flex-start",
-    backgroundColor: "rgba(167, 139, 250, 0.3)",
+    backgroundColor: "transparent",
     borderRadius: 20,
-    paddingHorizontal: 16,
+    paddingHorizontal: 0,
     paddingVertical: 8,
     marginBottom: 20,
   },
   badgeText: {
     fontSize: 14,
-    color: "#FFFFFF",
-    fontWeight: "500",
+    color: "#6F85F5",
+    fontWeight: "600",
+    textTransform: "uppercase",
+    letterSpacing: 0.5,
   },
   badgeHighlight: {
-    fontSize: 16,
-    fontWeight: "bold",
-    color: "#FFFFFF",
+    fontSize: 14,
+    fontWeight: "600",
+    color: "#6F85F5",
   },
   button: {
     alignSelf: "flex-start",
@@ -345,7 +301,7 @@ const styles = StyleSheet.create({
   buttonContent: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "#4C1D95",
+    backgroundColor: "#2848F1",
     borderRadius: 25,
     paddingVertical: 12,
     paddingHorizontal: 20,
@@ -397,7 +353,7 @@ const styles = StyleSheet.create({
   },
   rupeeSymbol: {
     fontSize: 36,
-    color: "#4C1D95",
+    color: "#2848F1",
     fontWeight: "bold",
     textAlign: "center",
     includeFontPadding: false,
