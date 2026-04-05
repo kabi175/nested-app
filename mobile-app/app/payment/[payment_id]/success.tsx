@@ -1,6 +1,7 @@
 import { ThemedText } from "@/components/ThemedText";
 import { usePayment } from "@/hooks/usePayment";
 import { logPurchase } from "@/services/metaEvents";
+import { logPurchase as logFirebasePurchase } from "@/services/firebaseAnalytics";
 import { LinearGradient } from "expo-linear-gradient";
 import { router, useLocalSearchParams } from "expo-router";
 import { CheckCircle } from "lucide-react-native";
@@ -51,8 +52,12 @@ export default function PaymentSuccessScreen() {
     if (isBuyCompleted || isSipCompleted) {
       purchaseLoggedRef.current = true;
       const amount = (payment as { amount?: number }).amount ?? 0;
-      logPurchase(amount, "INR", {
-        content_type: isBuyCompleted && isSipCompleted ? "buy_sip" : isBuyCompleted ? "buy" : "sip",
+      const contentType = isBuyCompleted && isSipCompleted ? "buy_sip" : isBuyCompleted ? "buy" : "sip";
+      logPurchase(amount, "INR", { content_type: contentType });
+      logFirebasePurchase({
+        transaction_id: payment_id,
+        value: amount,
+        items: [{ item_id: contentType, item_name: contentType, quantity: 1 }],
       });
     }
   }, [payment_id, payment, isLoading]);

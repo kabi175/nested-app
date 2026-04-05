@@ -3,6 +3,7 @@ import TextInput from "@/components/v2/TextInput";
 import { useUser } from "@/hooks/useUser";
 import { useUpdateUser } from "@/hooks/useUserMutations";
 import { logCompleteRegistration } from "@/services/metaEvents";
+import { logSignUp } from "@/services/firebaseAnalytics";
 import { Redirect, router } from "expo-router";
 import React, { useState } from "react";
 import { Alert, StyleSheet, Text, View } from "react-native";
@@ -39,6 +40,7 @@ export default function NameInputScreen() {
         },
       });
       logCompleteRegistration({ registration_method: "phone" });
+      logSignUp("phone");
       router.replace("/view-story");
     } catch (error) {
       console.log("Error saving name", error);

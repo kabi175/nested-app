@@ -16,6 +16,7 @@ import {
   View,
 } from "react-native";
 import { useAuth0 } from "react-native-auth0";
+import { logLogin } from "@/services/firebaseAnalytics";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function SignIn() {
@@ -72,6 +73,7 @@ export default function SignIn() {
         audience: `https://${process.env.EXPO_PUBLIC_AUTH0_DOMAIN}/api/v2/`,
       });
       console.log("Authorization successful");
+      logLogin("phone");
       router.replace("/name-input");
     } catch (error: any) {
       if (error.code === "auth/invalid-verification-code") {

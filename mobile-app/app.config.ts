@@ -10,6 +10,7 @@ module.exports = () => ({
     scheme: "nested",
     android: {
       package: "com.nexted.app",
+      googleServicesFile: "./google-services.json",
       statusBarTranslucent: true,
       intentFilters: {
         action: "VIEW",
@@ -23,6 +24,7 @@ module.exports = () => ({
     },
     ios: {
       bundleIdentifier: "com.nexted.app",
+      googleServicesFile: "./GoogleService-Info.plist",
       infoPlist: {
         LSApplicationQueriesSchemes: ["whatsapp"],
         NSUserTrackingUsageDescription:
@@ -30,6 +32,7 @@ module.exports = () => ({
       },
     },
     plugins: [
+      "@react-native-firebase/app",
       "expo-web-browser",
       "expo-router",
       [
