@@ -10,7 +10,7 @@ module.exports = () => ({
     scheme: "nested",
     android: {
       package: "com.nexted.app",
-      googleServicesFile: "./google-services.json",
+      googleServicesFile: process.env.GOOGLE_SERVICES_JSON ?? "./google-services.json",
       statusBarTranslucent: true,
       intentFilters: {
         action: "VIEW",
@@ -24,7 +24,7 @@ module.exports = () => ({
     },
     ios: {
       bundleIdentifier: "com.nexted.app",
-      googleServicesFile: "./GoogleService-Info.plist",
+      googleServicesFile: process.env.GOOGLE_SERVICES_INFO_PLIST ?? "./GoogleService-Info.plist",
       infoPlist: {
         LSApplicationQueriesSchemes: ["whatsapp"],
         NSUserTrackingUsageDescription:
