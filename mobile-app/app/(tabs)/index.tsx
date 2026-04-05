@@ -279,7 +279,10 @@ export default function HomeScreen() {
           style={styles.referralCard}
           onPress={() =>
             Linking.openURL(
-              "whatsapp://send?text=Hey! I've been using Nested to plan my child's education fund. Check it out!"
+              "whatsapp://send?text=" +
+                encodeURIComponent(
+                  "₹100 a day. That's it. And yet, most of us wait.\n\nWe pour everything into our kids — every meal, every bedtime, every little worry. But their financial future? That's one thing we keep saying we'll start \"someday\".\n\nPlease don't wait. Start for your little one today. 🌱\n\nI'm on Nested — and what makes it special is that every child gets a custom portfolio built around the parent's own dreams for them. Study abroad, MBA, Arts, a safety net — it's tailored, not templated.\n\nhttps://play.google.com/store/apps/details?id=com.nexted.app"
+                )
             )
           }
           activeOpacity={0.85}
