@@ -45,3 +45,6 @@ ios
 
 *storybook.log
 storybook-static
+
+google-services.json
+GoogleService-Info.plist
