@@ -19,7 +19,7 @@ export default function SuperFDScreen() {
       <SafeAreaView style={styles.container}>
         <View style={styles.loadingContainer}>
           <ActivityIndicator size="large" color="#2563EB" />
-          <ThemedText style={styles.loadingText}>Loading goals...</ThemedText>
+          <ThemedText style={styles.loadingText}>Loading...</ThemedText>
         </View>
       </SafeAreaView>
     );

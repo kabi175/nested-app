@@ -74,7 +74,7 @@ const DEFAULT_CONTENT: EducationContent = {
     subtitle: 'What cost ₹5L ten years ago now costs ₹15L\n— across colleges in India.',
     chartYearStart: '2016',
     chartYearEnd: '2036',
-    quote: '"3x in 10 years, and rising at 10%+ annually.\nStart building a corpus today that\'s ready\nfor tomorrow\'s fees."',
+    quote: '"3x in 10 years, and\n rising at 10%+ annually.Start building a corpus today that\'s ready\nfor tomorrow\'s fees."',
 };
 
 export function getEducationContent(name: string | undefined): EducationContent {
