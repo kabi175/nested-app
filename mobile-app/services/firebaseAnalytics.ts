@@ -37,3 +37,17 @@ export async function logPurchase(params: {
     currency: params.currency ?? "INR",
   });
 }
+
+export async function logPurchaseFailed(params: {
+  transaction_id: string;
+  value: number;
+  content_type: string;
+  currency?: string;
+}) {
+  await analytics().logEvent("purchase_failed", {
+    transaction_id: params.transaction_id,
+    value: params.value,
+    currency: params.currency ?? "INR",
+    content_type: params.content_type,
+  });
+}

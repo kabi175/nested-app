@@ -5,7 +5,7 @@ module.exports = () => ({
     name: "NestEd",
     slug: "nested",
     owner: "kabi175",
-    version: "1.6.4",
+    version: "1.7.0",
     icon: "./assets/images/v2/logo-with-bg.png",
     scheme: "nested",
     android: {

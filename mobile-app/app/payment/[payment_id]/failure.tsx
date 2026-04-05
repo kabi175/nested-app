@@ -1,9 +1,10 @@
 import { ThemedText } from "@/components/ThemedText";
 import { usePayment } from "@/hooks/usePayment";
+import { logPurchaseFailed } from "@/services/firebaseAnalytics";
 import { LinearGradient } from "expo-linear-gradient";
 import { router, useLocalSearchParams } from "expo-router";
 import { XCircle } from "lucide-react-native";
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import {
   ActivityIndicator,
   Animated,
@@ -20,6 +21,7 @@ export default function PaymentFailureScreen() {
   }>();
 
   const { data: payment, isLoading } = usePayment(payment_id || "");
+  const failureLoggedRef = useRef(false);
 
   const [fadeAnim] = useState(new Animated.Value(0));
   const [scaleAnim] = useState(new Animated.Value(0.5));
@@ -40,6 +42,19 @@ export default function PaymentFailureScreen() {
     ]).start();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  // Log Firebase purchase_failed once when payment status is confirmed failed
+  useEffect(() => {
+    if (!payment_id || !payment || isLoading || failureLoggedRef.current) return;
+    const isBuyFailed = payment.buy_status === "failed";
+    const isSipFailed = payment.sip_status === "failed";
+    if (isBuyFailed || isSipFailed) {
+      failureLoggedRef.current = true;
+      const amount = (payment as { amount?: number }).amount ?? 0;
+      const contentType = isBuyFailed && isSipFailed ? "buy_sip" : isBuyFailed ? "buy" : "sip";
+      logPurchaseFailed({ transaction_id: payment_id, value: amount, content_type: contentType });
+    }
+  }, [payment_id, payment, isLoading]);
 
   const handleContinue = () => {
     if (type === "buy" && payment?.sip_status === "pending") {
