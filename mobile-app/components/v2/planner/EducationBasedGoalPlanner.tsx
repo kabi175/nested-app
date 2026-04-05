@@ -263,7 +263,7 @@ export default function EducationBasedGoalPlanner({
           const timePeriod = Math.max(yearsFromNow, 3);
           const nestedLakhs = goalAmount / 100_000;
           const lumpsum = lumpSumEnabled ? parseFloat(lumpSumAmount) || 0 : 0;
-          const fdLakhs = calculateFutureValue(lumpsum, normalizedSipAmount, timePeriod, 0.07, stepUp) / 100_000;
+          const fdLakhs = calculateFutureValue(lumpsum, normalizedSipAmount, timePeriod, 7, stepUp) / 100_000;
           const maxAmount = Math.max(nestedLakhs, fdLakhs) * 1.15;
           return (
             <PlanProjection
