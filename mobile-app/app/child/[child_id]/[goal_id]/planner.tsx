@@ -13,9 +13,9 @@ import { useUpdateGoal } from "@/hooks/useUpdateGoal";
 import { formatCurrency } from "@/utils/formatters";
 import { computeMinimumSIPAmount } from "@/utils/sip";
 import { router, useLocalSearchParams } from "expo-router";
+import { StatusBar } from "expo-status-bar";
 import { useSetAtom } from "jotai";
 import React, { useMemo, useState } from "react";
-import { StatusBar } from "expo-status-bar";
 import {
     Alert,
     Pressable,
@@ -218,7 +218,7 @@ export default function Planner() {
             >
                 {/* Header */}
                 <View style={styles.header}>
-                    <BackButton onPress={() => router.back()} />
+                    <BackButton onPress={() => router.push("/(tabs)")} />
                     <Text style={styles.title}>
                         Let's build a perfect nest for{"\n"}{childName}
                     </Text>

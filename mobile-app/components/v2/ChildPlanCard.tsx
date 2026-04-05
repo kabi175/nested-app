@@ -37,6 +37,7 @@ interface ChildPlanCardProps {
   goalYear: number;
   goalAmount: string;
   savedAmount?: string;
+  showDelete?: boolean;
   savedFraction?: number; // 0–1
   nextSipAmount?: string | null;
   nextSipDate?: string | null;
@@ -59,6 +60,7 @@ export default function ChildPlanCard({
   nextSipAmount,
   nextSipDate,
   actionLabel,
+  showDelete,
   onPressAction,
   onPressDelete,
   onPress,
@@ -124,7 +126,7 @@ export default function ChildPlanCard({
       )}
 
       {/* ── Delete link ── */}
-      {!!onPressDelete && (
+      {(!!onPressDelete && showDelete) && (
         <Pressable onPress={onPressDelete} style={styles.deleteLink}>
           <Text style={styles.deleteLinkText}>Delete goal</Text>
         </Pressable>

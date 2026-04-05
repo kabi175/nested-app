@@ -68,7 +68,7 @@ export default function ChildFieldSelectionScreen() {
 
   async function handleContinue() {
     if (!selectedPath || !child) return;
-    const pathTitle = PATHS.find((p) => p.id === selectedPath)?.title;
+    const pathTitle = PATHS.find((p) => p.id === selectedPath)?.id;
     const education = courses?.find((c) => c.name === pathTitle);
     if (!education) return;
 

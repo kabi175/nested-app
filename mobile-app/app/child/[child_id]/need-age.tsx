@@ -48,8 +48,8 @@ export default function NeedAgeRoute() {
             });
           } else {
             router.push({
-              pathname: "/child/[child_id]/planner",
-              params: { child_id },
+              pathname: "/child/[child_id]/[goal_id]/planner",
+              params: { child_id, goal_id: goal.id },
             });
           }
         }}

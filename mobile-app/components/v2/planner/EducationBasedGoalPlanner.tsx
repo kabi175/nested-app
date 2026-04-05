@@ -41,6 +41,31 @@ interface EducationBasedGoalPlannerProps {
   }) => void;
 }
 
+function calculateFutureValue(lumpsum = 0, monthlySip = 0, years: number, annualRate: number, stepUpPercent = 0) {
+  const monthlyRate = annualRate / 12 / 100;
+  const totalMonths = years * 12;
+
+  let currentSip = monthlySip;
+  let totalValue = lumpsum * Math.pow(1 + monthlyRate, totalMonths);
+  let totalInvested = lumpsum;
+
+  for (let year = 1; year <= years; year++) {
+    // Calculate SIP for 12 months of the current year
+    for (let month = 1; month <= 12; month++) {
+      const monthsRemaining = totalMonths - ((year - 1) * 12 + month) + 1;
+
+      // FV of a single SIP payment: P * (1 + r)^n
+      totalValue += currentSip * Math.pow(1 + monthlyRate, monthsRemaining);
+      totalInvested += currentSip;
+    }
+
+    // Apply Step-up at the end of each year for the next year
+    currentSip += (currentSip * (stepUpPercent / 100));
+  }
+
+  return Math.round(totalValue);
+}
+
 export default function EducationBasedGoalPlanner({
   childName = 'Aanya',
   goalYear = 2037,
@@ -65,7 +90,7 @@ export default function EducationBasedGoalPlanner({
   };
   const [lumpSumEnabled, setLumpSumEnabled] = useState(false);
   const [lumpSumAmount, setLumpSumAmount] = useState('');
-  const [stepUp, setStepUp] = useState(10);
+  const [stepUp, setStepUp] = useState(0);
 
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const slideAnim = useRef(new Animated.Value(24)).current;
@@ -237,14 +262,15 @@ export default function EducationBasedGoalPlanner({
         {(() => {
           const timePeriod = Math.max(yearsFromNow, 3);
           const nestedLakhs = goalAmount / 100_000;
-          const fdLakhs = (normalizedSipAmount * 12 * Math.pow(1.07, timePeriod)) / 100_000;
+          const lumpsum = lumpSumEnabled ? parseFloat(lumpSumAmount) || 0 : 0;
+          const fdLakhs = calculateFutureValue(lumpsum, normalizedSipAmount, timePeriod, 0.07, stepUp) / 100_000;
           const maxAmount = Math.max(nestedLakhs, fdLakhs) * 1.15;
           return (
             <PlanProjection
               year={goalYear}
               plans={[
-                { label: 'NESTED', amount: Math.round(nestedLakhs * 10) / 10 },
-                { label: 'FD / RD', amount: Math.round(fdLakhs * 10) / 10 },
+                { label: 'NESTED', amount: Math.round(nestedLakhs) },
+                { label: 'FD / RD', amount: Math.round(fdLakhs) },
                 { label: 'No plan', amount: 0 },
               ]}
               maxAmount={maxAmount}

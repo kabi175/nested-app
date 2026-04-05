@@ -143,7 +143,7 @@ export function mapGoalToGoal(goal: GoalDTO): Goal {
   return {
     id: goal.id,
     title: goal.title,
-    childId: goal.child.id,
+    childId: goal.child?.id,
     child: goal.child,
     targetAmount: goal.target_amount,
     currentAmount: goal.current_amount,
