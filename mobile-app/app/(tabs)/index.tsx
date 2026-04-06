@@ -192,15 +192,18 @@ export default function HomeScreen() {
         )}
 
         {/* ── Child plan cards ── */}
-        {isKycCompleted && isInvestedInAnyGoal && hasGoals && (
+        {isKycCompleted && hasGoals && (
           <View style={styles.planCardWrapper}>
             {goals!.map((g) => (
               <GoalPlanCard key={g.id} goal={g} />
             ))}
-            <OutlineButton
-              title="+ Add goal"
-              onPress={() => router.push("/child/select")}
-            />
+
+            {isInvestedInAnyGoal && (
+              <OutlineButton
+                title="+ Add goal"
+                onPress={() => router.push("/child/select")}
+              />
+            )}
           </View>
         )}
 
@@ -280,9 +283,9 @@ export default function HomeScreen() {
           onPress={() =>
             Linking.openURL(
               "whatsapp://send?text=" +
-                encodeURIComponent(
-                  "₹100 a day. That's it. And yet, most of us wait.\n\nWe pour everything into our kids — every meal, every bedtime, every little worry. But their financial future? That's one thing we keep saying we'll start \"someday\".\n\nPlease don't wait. Start for your little one today. 🌱\n\nI'm on Nested — and what makes it special is that every child gets a custom portfolio built around the parent's own dreams for them. Study abroad, MBA, Arts, a safety net — it's tailored, not templated.\n\nhttps://play.google.com/store/apps/details?id=com.nexted.app"
-                )
+              encodeURIComponent(
+                "₹100 a day. That's it. And yet, most of us wait.\n\nWe pour everything into our kids — every meal, every bedtime, every little worry. But their financial future? That's one thing we keep saying we'll start \"someday\".\n\nPlease don't wait. Start for your little one today. 🌱\n\nI'm on Nested — and what makes it special is that every child gets a custom portfolio built around the parent's own dreams for them. Study abroad, MBA, Arts, a safety net — it's tailored, not templated.\n\nhttps://play.google.com/store/apps/details?id=com.nexted.app"
+              )
             )
           }
           activeOpacity={0.85}
