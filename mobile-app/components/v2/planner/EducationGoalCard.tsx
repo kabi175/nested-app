@@ -4,6 +4,7 @@ import GraduationCap from "@/assets/images/v2/planner/graduation-cap.svg";
 import { formatCompactCurrency } from "@/utils/formatters";
 
 interface EducationGoalCardProps {
+  label?: string;
   year?: number;
   amount?: number;
   collegeType?: string;
@@ -24,6 +25,7 @@ const BulletSeparator = () => (
  * - Row layout with two sections (Left: text info, Right: graduation cap)
  */
 export const EducationGoalCard: React.FC<EducationGoalCardProps> = ({
+  label = "INFLATION ADJUSTED GOAL",
   year = 2037,
   amount = 4860000,
   collegeType = "Top College (IIT/NIT/Private)",
@@ -35,7 +37,7 @@ export const EducationGoalCard: React.FC<EducationGoalCardProps> = ({
       <View style={styles.leftView}>
         {/* Top row: Label and Year */}
         <View style={styles.topRow}>
-          <Text style={styles.smallText}>INFLATION ADJUSTED GOAL</Text>
+          <Text style={styles.smallText}>{label}</Text>
           <BulletSeparator />
           <Text style={styles.smallText}>{year}</Text>
         </View>

@@ -138,6 +138,11 @@ export default function EducationBasedGoalPlanner({
     }
   }, [mode]);
 
+  const lumpsum = lumpSumEnabled ? parseFloat(lumpSumAmount) || 0 : 0;
+  const displayAmount = mode === 'custom'
+    ? calculateFutureValue(lumpsum, normalizedSipAmount, Math.max(yearsFromNow, 3), 12, stepUp)
+    : goalAmount;
+
   const formattedSip = normalizedSipAmount.toLocaleString('en-IN');
   const totalInvestedLakhs = ((normalizedSipAmount * 12 * yearsFromNow) / 100000).toFixed(1);
 
@@ -183,8 +188,9 @@ export default function EducationBasedGoalPlanner({
         {/* Goal card */}
         <View style={styles.goalCardWrapper}>
           <EducationGoalCard
+            label={mode === 'custom' ? 'PROJECTED CORPUS' : 'INFLATION ADJUSTED GOAL'}
             year={goalYear}
-            amount={goalAmount}
+            amount={displayAmount}
             collegeType={collegeType}
             yearsFromNow={yearsFromNow}
           />
@@ -262,7 +268,6 @@ export default function EducationBasedGoalPlanner({
         {(() => {
           const timePeriod = Math.max(yearsFromNow, 3);
           const nestedLakhs = goalAmount / 100_000;
-          const lumpsum = lumpSumEnabled ? parseFloat(lumpSumAmount) || 0 : 0;
           const fdLakhs = calculateFutureValue(lumpsum, normalizedSipAmount, timePeriod, 7, stepUp) / 100_000;
           const maxAmount = Math.max(nestedLakhs, fdLakhs) * 1.15;
           return (
