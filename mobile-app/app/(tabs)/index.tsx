@@ -1,6 +1,7 @@
 import { LinearGradient } from "expo-linear-gradient";
 import { router, useRouter } from "expo-router";
 import { StatusBar } from "expo-status-bar";
+import { useVideoPlayer, VideoView } from "expo-video";
 import { Baby, Bell, ChartColumnIncreasing, Phone, PiggyBank, ScrollText } from "lucide-react-native";
 import React from "react";
 import {
@@ -229,24 +230,7 @@ export default function HomeScreen() {
         {/* ── How Nested Helps ── */}
         <View style={styles.sectionWrapper}>
           <Text style={styles.sectionTitle}>How Nested helps?</Text>
-          <ScrollView
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            contentContainerStyle={styles.helpCardsRow}
-          >
-            {[
-              { label: "Plan your child's future" },
-              { label: "Beat inflation with smart SIPs" },
-              { label: "Track growth in real-time" },
-            ].map((item, i) => (
-              <View key={i} style={styles.helpCard}>
-                <View style={styles.helpPlayIcon}>
-                  <Text style={styles.helpPlayText}>▶</Text>
-                </View>
-                <Text style={styles.helpCardLabel}>{item.label}</Text>
-              </View>
-            ))}
-          </ScrollView>
+          <HowNestedHelpsVideo />
         </View>
 
         {/* ── Testimonials ── */}
@@ -309,6 +293,25 @@ export default function HomeScreen() {
         </TouchableOpacity>
       </ScrollView>
     </SafeAreaView>
+  );
+}
+
+const VIDEO_URL =
+  "https://res.cloudinary.com/dn6qn2gp8/video/upload/v1773954351/WhatsApp_Video_2026-03-17_at_9.01.57_PM_cf42q1.mp4";
+
+function HowNestedHelpsVideo() {
+  const player = useVideoPlayer(VIDEO_URL, (p) => {
+    p.loop = true;
+    p.muted = false;
+  });
+
+  return (
+    <VideoView
+      player={player}
+      style={styles.howVideo}
+      contentFit="cover"
+      nativeControls
+    />
   );
 }
 
@@ -578,6 +581,13 @@ const styles = StyleSheet.create({
   },
 
   // ── How Nested Helps ──
+  howVideo: {
+    width: "100%",
+    height: 200,
+    borderRadius: 12,
+    marginRight: 16,
+    overflow: "hidden",
+  },
   sectionWrapper: {
     gap: 12,
     paddingLeft: 16,
