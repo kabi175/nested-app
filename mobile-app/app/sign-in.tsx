@@ -8,6 +8,7 @@ import { useEffect, useState } from "react";
 import {
   Alert,
   KeyboardAvoidingView,
+  Linking,
   Platform,
   ScrollView,
   StyleSheet,
@@ -201,8 +202,19 @@ export default function SignIn() {
                   />
 
                   <Text style={styles.disclaimerText}>
-                    By proceeding, you accept T&C, privacy policy &{"\n"}
-                    authorize a penny drop for bank verification
+                    By proceeding, you accept{" "}
+                    <Text
+                      style={styles.linkText}
+                      onPress={() =>
+                        Linking.openURL(
+                          "https://nested.money/terms-and-conditions/"
+                        )
+                      }
+                    >
+                      T&C
+                    </Text>
+                    , privacy policy &{"\n"}authorize a penny drop for bank
+                    verification
                   </Text>
                 </>
               ) : (
@@ -387,5 +399,9 @@ const styles = StyleSheet.create({
     color: "#3137D5",
     fontWeight: "600",
     fontSize: 14,
+  },
+  linkText: {
+    color: "#3137D5",
+    textDecorationLine: "underline",
   },
 });
