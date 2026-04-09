@@ -4,12 +4,14 @@ import {
   ThemeProvider,
 } from "@react-navigation/native";
 import { useFonts } from "expo-font";
-import { Stack } from "expo-router";
+import { Stack, usePathname } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import "react-native-reanimated";
 
 import { CrashlyticsErrorBoundary } from "@/components/CrashlyticsErrorBoundary";
 import { ForceUpdateScreen } from "@/components/ForceUpdateScreen";
+import analytics from "@react-native-firebase/analytics";
+import perf from "@react-native-firebase/perf";
 import SplashScreenComponent from "@/components/v2/SplashScreen";
 import { useColorScheme } from "@/hooks/useColorScheme";
 import { useForceUpdate } from "@/hooks/useForceUpdate";
@@ -61,6 +63,7 @@ export default function RootLayout() {
 
   useEffect(() => {
     Settings.initializeSDK();
+    perf().dataCollectionEnabled = !__DEV__;
     requestTrackingPermissionsAsync().then(({ status }) => {
       if (status === 'granted') {
         Settings.setAdvertiserTrackingEnabled(true);
@@ -138,6 +141,13 @@ export const unstable_settings = {
 function RootNavigator() {
   const { user } = useAuth0();
   const { seen } = useOnboardingSeen();
+  const pathname = usePathname();
+
+  useEffect(() => {
+    if (!__DEV__) {
+      analytics().logScreenView({ screen_name: pathname, screen_class: pathname });
+    }
+  }, [pathname]);
 
   // Still reading AsyncStorage — show a brief spinner
   if (seen === null) {

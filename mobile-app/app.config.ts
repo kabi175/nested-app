@@ -34,6 +34,7 @@ module.exports = () => ({
     plugins: [
       "@react-native-firebase/app",
       "@react-native-firebase/crashlytics",
+      "@react-native-firebase/perf",
       "expo-web-browser",
       "expo-router",
       [
