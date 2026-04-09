@@ -8,6 +8,7 @@ import { Stack } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import "react-native-reanimated";
 
+import { CrashlyticsErrorBoundary } from "@/components/CrashlyticsErrorBoundary";
 import { ForceUpdateScreen } from "@/components/ForceUpdateScreen";
 import SplashScreenComponent from "@/components/v2/SplashScreen";
 import { useColorScheme } from "@/hooks/useColorScheme";
@@ -84,28 +85,30 @@ export default function RootLayout() {
   };
 
   return (
-    <ApplicationProvider {...eva} theme={eva.light} customMapping={customMapping}>
-      <QueryProvider>
-        <Auth0Provider
-          domain={process.env.EXPO_PUBLIC_AUTH0_DOMAIN}
-          clientId={process.env.EXPO_PUBLIC_AUTH0_CLIENT_ID}
-        >
-          <ThemeProvider
-            value={colorScheme === "dark" ? DarkTheme : DefaultTheme}
+    <CrashlyticsErrorBoundary>
+      <ApplicationProvider {...eva} theme={eva.light} customMapping={customMapping}>
+        <QueryProvider>
+          <Auth0Provider
+            domain={process.env.EXPO_PUBLIC_AUTH0_DOMAIN}
+            clientId={process.env.EXPO_PUBLIC_AUTH0_CLIENT_ID}
           >
-            <SafeAreaProvider>
-              <VersionCheckGuard>
-                <RootNavigator />
-              </VersionCheckGuard>
-            </SafeAreaProvider>
-            <StatusBar style="auto" backgroundColor="transparent" translucent />
-          </ThemeProvider>
-        </Auth0Provider>
-      </QueryProvider>
-      {showSplash && (
-        <SplashScreenComponent onFinish={() => setShowSplash(false)} />
-      )}
-    </ApplicationProvider>
+            <ThemeProvider
+              value={colorScheme === "dark" ? DarkTheme : DefaultTheme}
+            >
+              <SafeAreaProvider>
+                <VersionCheckGuard>
+                  <RootNavigator />
+                </VersionCheckGuard>
+              </SafeAreaProvider>
+              <StatusBar style="auto" backgroundColor="transparent" translucent />
+            </ThemeProvider>
+          </Auth0Provider>
+        </QueryProvider>
+        {showSplash && (
+          <SplashScreenComponent onFinish={() => setShowSplash(false)} />
+        )}
+      </ApplicationProvider>
+    </CrashlyticsErrorBoundary>
   );
 }
 
