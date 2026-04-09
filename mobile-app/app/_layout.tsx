@@ -10,8 +10,8 @@ import "react-native-reanimated";
 
 import { CrashlyticsErrorBoundary } from "@/components/CrashlyticsErrorBoundary";
 import { ForceUpdateScreen } from "@/components/ForceUpdateScreen";
-import analytics from "@react-native-firebase/analytics";
-import perf from "@react-native-firebase/perf";
+import { getAnalytics, logScreenView } from "@react-native-firebase/analytics";
+import { getPerformance } from "@react-native-firebase/perf";
 import SplashScreenComponent from "@/components/v2/SplashScreen";
 import { useColorScheme } from "@/hooks/useColorScheme";
 import { useForceUpdate } from "@/hooks/useForceUpdate";
@@ -28,7 +28,7 @@ import {
 import { ApplicationProvider } from "@ui-kitten/components";
 import { requestTrackingPermissionsAsync } from 'expo-tracking-transparency';
 import React, { useEffect, useState } from "react";
-import { ActivityIndicator, Text, TextInput, View } from "react-native";
+import { Text, TextInput } from "react-native";
 import { Auth0Provider, useAuth0 } from "react-native-auth0";
 import { Settings } from 'react-native-fbsdk-next';
 import { SafeAreaProvider } from "react-native-safe-area-context";
@@ -63,7 +63,7 @@ export default function RootLayout() {
 
   useEffect(() => {
     Settings.initializeSDK();
-    perf().dataCollectionEnabled = !__DEV__;
+    getPerformance().dataCollectionEnabled = !__DEV__;
     requestTrackingPermissionsAsync().then(({ status }) => {
       if (status === 'granted') {
         Settings.setAdvertiserTrackingEnabled(true);
@@ -73,11 +73,7 @@ export default function RootLayout() {
 
   if (!loaded) {
     // Async font loading only occurs in development.
-    return (
-      <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
-        <ActivityIndicator size="large" color="#2563EB" />
-      </View>
-    );
+    return <SplashScreenComponent />;
   }
 
   const customMapping = {
@@ -119,11 +115,7 @@ function VersionCheckGuard({ children }: { children: React.ReactNode }) {
   const { isUpdateRequired, config, isLoading } = useForceUpdate();
 
   if (isLoading) {
-    return (
-      <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
-        <ActivityIndicator size="large" color="#2563EB" />
-      </View>
-    );
+    return <SplashScreenComponent />;
   }
 
   if (isUpdateRequired) {
@@ -145,17 +137,13 @@ function RootNavigator() {
 
   useEffect(() => {
     if (!__DEV__) {
-      analytics().logScreenView({ screen_name: pathname, screen_class: pathname });
+      logScreenView(getAnalytics(), { screen_name: pathname, screen_class: pathname });
     }
   }, [pathname]);
 
-  // Still reading AsyncStorage — show a brief spinner
+  // Still reading AsyncStorage — show branded splash
   if (seen === null) {
-    return (
-      <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
-        <ActivityIndicator size="large" color="#3137D5" />
-      </View>
-    );
+    return <SplashScreenComponent />;
   }
 
   return (

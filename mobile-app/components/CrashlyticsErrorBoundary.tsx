@@ -1,4 +1,4 @@
-import crashlytics from "@react-native-firebase/crashlytics";
+import { getCrashlytics, log, recordError } from "@react-native-firebase/crashlytics";
 import React from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 
@@ -18,8 +18,14 @@ export class CrashlyticsErrorBoundary extends React.Component<Props, State> {
   }
 
   componentDidCatch(error: Error, info: React.ErrorInfo) {
-    crashlytics().recordError(error);
-    crashlytics().log(`componentStack: ${info.componentStack}`);
+    try {
+      const instance = getCrashlytics();
+      recordError(instance, error);
+      log(instance, `componentStack: ${info.componentStack}`);
+    } catch (e) {
+      // Crashlytics native module not available (e.g. dev build without native setup)
+      console.error("[CrashlyticsErrorBoundary]", error);
+    }
   }
 
   render() {
