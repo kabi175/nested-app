@@ -48,16 +48,6 @@ export default function SelectChildScreen({
   const { data: children = [], isLoading } = useChildren();
   const [selectedChildId, setSelectedChildId] = useState<string | null>(null);
 
-  if (isLoading && children.length === 0) {
-    return (
-      <SafeAreaView style={styles.safeArea} edges={["top", "bottom"]}>
-        <ActivityIndicator style={{ flex: 1 }} size="large" color="#4F8BD6" />
-      </SafeAreaView>
-    );
-  }
-
-  const hideAddChild = children.length === 1 || children.length >= MAX_CHILDREN;
-
   // Map children to nest-egg data with assigned colours
   const nestChildren = useMemo(
     () =>
@@ -73,6 +63,16 @@ export default function SelectChildScreen({
       setSelectedChildId(children[0].id);
     }
   }, [children, selectedChildId]);
+
+  if (isLoading) {
+    return (
+      <SafeAreaView style={styles.safeArea} edges={["top", "bottom"]}>
+        <ActivityIndicator style={{ flex: 1 }} size="large" color="#4F8BD6" />
+      </SafeAreaView>
+    );
+  }
+
+  const hideAddChild = children.length === 1 || children.length >= MAX_CHILDREN;
 
   const canAddChild = children.length < MAX_CHILDREN;
   const canContinue = selectedChildId !== null;
