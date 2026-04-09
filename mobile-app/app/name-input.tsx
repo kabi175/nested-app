@@ -1,9 +1,11 @@
 import Button from "@/components/v2/Button";
 import TextInput from "@/components/v2/TextInput";
+import { QUERY_KEYS } from "@/constants/queryKeys";
 import { useUser } from "@/hooks/useUser";
 import { useUpdateUser } from "@/hooks/useUserMutations";
-import { logCompleteRegistration } from "@/services/metaEvents";
 import { logSignUp } from "@/services/firebaseAnalytics";
+import { logCompleteRegistration } from "@/services/metaEvents";
+import { useQueryClient } from "@tanstack/react-query";
 import { Redirect, router } from "expo-router";
 import React, { useState } from "react";
 import { Alert, StyleSheet, Text, View } from "react-native";
@@ -14,6 +16,7 @@ export default function NameInputScreen() {
     useUpdateUser();
   const { data: user, isLoading: isUserLoading } = useUser();
   const [name, setName] = useState("");
+  const queryClient = useQueryClient();
 
   if (isUserLoading || user?.firstName !== user?.phone_number) {
     return <Redirect href="/" />;
@@ -39,6 +42,8 @@ export default function NameInputScreen() {
           firstName: name.trim(),
         },
       });
+
+      queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.user] });
       logCompleteRegistration({ registration_method: "phone" });
       logSignUp("phone");
       router.replace("/view-story");
