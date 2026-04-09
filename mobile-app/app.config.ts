@@ -34,6 +34,7 @@ module.exports = () => ({
     plugins: [
       "@react-native-firebase/app",
       "@react-native-firebase/crashlytics",
+      "@react-native-firebase/perf",
       "expo-web-browser",
       "expo-router",
       [
@@ -48,7 +49,8 @@ module.exports = () => ({
         "expo-splash-screen",
         {
           image: "./assets/images/v2/splash.png",
-          imageWidth: 778,
+          imageWidth: 109,
+          resizeMode: "contain",
           backgroundColor: "#2F4BFF",
         },
       ],
