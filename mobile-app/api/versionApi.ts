@@ -8,7 +8,25 @@ export interface VersionConfig {
   androidUrl: string;
 }
 
-export const fetchVersionConfig = async (): Promise<VersionConfig> => {
-  const response = await api.get<VersionConfig>("/app/version");
+export interface VersionRequestHeaders {
+  appVersion: string;
+  platform: string;
+  buildNumber?: number;
+  deviceId?: string;
+}
+
+export const fetchVersionConfig = async (
+  headers: VersionRequestHeaders
+): Promise<VersionConfig> => {
+  const response = await api.get<VersionConfig>("/app/version", {
+    headers: {
+      "X-App-Version": headers.appVersion,
+      "X-Platform": headers.platform,
+      ...(headers.buildNumber !== undefined && {
+        "X-Build-Number": headers.buildNumber,
+      }),
+      ...(headers.deviceId && { "X-Device-Id": headers.deviceId }),
+    },
+  });
   return response.data;
 };

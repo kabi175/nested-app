@@ -14,13 +14,15 @@ public class CacheConfig {
 
   public static final String GOAL_PORTFOLIO = "goalPortfolio";
   public static final String GOAL_MONTHLY_SIP = "goalMonthlySip";
+  public static final String APP_VERSION = "appVersion";
 
   @Bean
   CacheManager cacheManager() {
     var manager = new SimpleCacheManager();
     manager.setCaches(List.of(
         buildCache(GOAL_PORTFOLIO, 5, 2_000),
-        buildCache(GOAL_MONTHLY_SIP, 5, 2_000)
+        buildCache(GOAL_MONTHLY_SIP, 5, 2_000),
+        buildCache(APP_VERSION, 60, 100)
     ));
     return manager;
   }

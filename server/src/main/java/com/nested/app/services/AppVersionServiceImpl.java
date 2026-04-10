@@ -22,7 +22,7 @@ public class AppVersionServiceImpl implements AppVersionService {
   @Override
   @Cacheable(
       value = "appVersion",
-      key = "#version + #platform + #buildNumber + #deviceId",
+      key = "(#currentVersion ?: 'null') + ':' + (#platform ?: 'null') + ':' + (#buildNumber ?: 'null') + ':' + (#deviceId ?: 'null')",
       unless = "#result == null")
   public AppVersionResponse getVersionInfo(
       String currentVersion, Platform platform, Integer buildNumber, String deviceId) {

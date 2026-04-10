@@ -1,7 +1,7 @@
 import { fetchVersionConfig, VersionConfig } from "@/api/versionApi";
 import { isUpdateRequired } from "@/utils/version";
 import { useQuery } from "@tanstack/react-query";
-import * as Application from "expo-application";
+import Constants from "expo-constants";
 import { Platform } from "react-native";
 
 export interface ForceUpdateState {
@@ -13,16 +13,31 @@ export interface ForceUpdateState {
 }
 
 export const useForceUpdate = (): ForceUpdateState => {
-  const currentVersion = Application.nativeApplicationVersion || "0.0.0";
+  const currentVersion = Constants.expoConfig?.version || "0.0.0";
+  console.log("Current app version:", currentVersion);
+
+  const platform = Platform.OS;
+  const buildNumber =
+    platform === "ios"
+      ? Number(Constants.expoConfig?.ios?.buildNumber)
+      : (Constants.expoConfig?.android?.versionCode ?? undefined);
+  const deviceId = Constants.sessionId;
 
   const { data, isLoading, error } = useQuery({
     queryKey: ["versionConfig"],
-    queryFn: fetchVersionConfig,
+    queryFn: () =>
+      fetchVersionConfig({
+        appVersion: currentVersion,
+        platform,
+        buildNumber: Number.isFinite(buildNumber) ? buildNumber : undefined,
+        deviceId,
+      }),
     staleTime: 1000 * 60 * 60, // 1 hour
   });
 
+  console.log("Fetched version config:", data);
 
-  const updateRequired = data 
+  const updateRequired = data
     ? isUpdateRequired(currentVersion, data.minSupportedVersion)
     : false;
 
