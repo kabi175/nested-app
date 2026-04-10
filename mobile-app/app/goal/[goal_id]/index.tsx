@@ -65,7 +65,7 @@ export default function GoalDetailScreen() {
   };
 
   const goalTitle = (() => {
-    if (goal?.child.name) {
+    if (goal?.child?.name) {
       return `${goal?.child.name}'s fund`
     }
     return goal?.title || "Goal";

@@ -1,7 +1,7 @@
 export type Goal = {
   id: string;
   childId: string;
-  child: { id: string; name: string };
+  child?: { id: string; name: string };
   title: string;
   targetAmount: number;
   currentAmount: number;

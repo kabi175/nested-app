@@ -203,7 +203,7 @@ export default function TopUpScreen() {
 
             <View style={styles.footer}>
                 <Button
-                    title={`Add to ${goal?.child?.name ?? "fund"}'s fund`}
+                    title={`Add to ${goal?.child?.name ?? goal?.title ?? "fund"}'s fund`}
                     disabled={!isValid}
                     onPress={handleAddToFund}
                 />
