@@ -14,7 +14,6 @@ export interface ForceUpdateState {
 
 export const useForceUpdate = (): ForceUpdateState => {
   const currentVersion = Constants.expoConfig?.version || "0.0.0";
-  console.log("Current app version:", currentVersion);
 
   const platform = Platform.OS;
   const buildNumber =
@@ -35,7 +34,6 @@ export const useForceUpdate = (): ForceUpdateState => {
     staleTime: 1000 * 60 * 60, // 1 hour
   });
 
-  console.log("Fetched version config:", data);
 
   const updateRequired = data
     ? isUpdateRequired(currentVersion, data.minSupportedVersion)
