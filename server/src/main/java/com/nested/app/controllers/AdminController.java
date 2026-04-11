@@ -6,6 +6,7 @@ import com.nested.app.dto.UserDTO;
 import com.nested.app.repository.UserRepository;
 import com.nested.app.services.AdminService;
 import com.nested.app.services.SchemeWiseReportService;
+import com.nested.app.services.SipOrderSchedulerService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -36,6 +37,7 @@ public class AdminController {
     private final AdminService adminService;
   private final UserRepository userRepository;
   private final SchemeWiseReportService schemeWiseReportService;
+  private final SipOrderSchedulerService sipOrderSchedulerService;
 
     @PostMapping(path = "/create-admin", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
     @AdminOnly
@@ -194,6 +196,39 @@ public class AdminController {
               return ResponseEntity.status(HttpStatus.NOT_FOUND)
                   .body(createErrorResponse("User not found with id: " + userId));
             });
+  }
+
+  @PostMapping(
+      path = "/action/trigger-sip-tracker/{orderRef}",
+      produces = MediaType.APPLICATION_JSON_VALUE)
+  @AdminOnly
+  @Operation(
+      summary = "Trigger SIP transaction tracker (Admin only)",
+      description =
+          "Immediately triggers a SipTransactionTracker job for the given SIP order item ref."
+              + " Use for debugging stuck SIP transactions in production.")
+  @ApiResponses(
+      value = {
+        @ApiResponse(responseCode = "200", description = "Tracker job triggered successfully"),
+        @ApiResponse(responseCode = "404", description = "No order item found for the given ref"),
+        @ApiResponse(responseCode = "403", description = "Access denied - Admin role required")
+      })
+  public ResponseEntity<?> triggerSipTransactionTracker(
+      @Parameter(description = "SIP order item ref", required = true)
+          @PathVariable("orderRef")
+          String orderRef) {
+
+    log.info(
+        "POST /api/v1/admin/action/trigger-sip-tracker/{} - Triggering SIP tracker", orderRef);
+
+    boolean triggered = sipOrderSchedulerService.triggerSipTransactionTrackerNow(orderRef);
+    if (!triggered) {
+      return ResponseEntity.status(HttpStatus.NOT_FOUND)
+          .body(createErrorResponse("No order item found for ref: " + orderRef));
+    }
+
+    return ResponseEntity.ok(
+        createSuccessResponse("SipTransactionTracker triggered for orderRef: " + orderRef));
   }
 
     /**
