@@ -3,7 +3,7 @@
 import { motion } from 'framer-motion';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Zap, RefreshCw, ArrowRight } from 'lucide-react';
+import { Zap, RefreshCw, Activity, ArrowRight } from 'lucide-react';
 import Link from 'next/link';
 
 interface Action {
@@ -23,6 +23,14 @@ const actions: Action[] = [
     href: '/actions/refresh-portfolio',
     icon: RefreshCw,
     color: 'from-blue-500 to-indigo-500',
+  },
+  {
+    id: 'trigger-sip-tracker',
+    title: 'Trigger SIP Transaction Tracker',
+    description: 'Immediately trigger the SIP transaction tracker for a given order item ref. Use this to unblock stuck SIP installment cycles in production.',
+    href: '/actions/trigger-sip-tracker',
+    icon: Activity,
+    color: 'from-violet-500 to-purple-500',
   },
 ];
 

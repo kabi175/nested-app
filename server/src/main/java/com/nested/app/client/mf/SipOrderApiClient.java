@@ -20,4 +20,6 @@ public interface SipOrderApiClient {
 
   // returns 100 latest Transactions
   Mono<List<OrderData>> fetchTransactionDetails(String orderRef);
+
+  Mono<Void> cancelSipOrder(String planRef, String cancellationCode, String cancellationReason);
 }

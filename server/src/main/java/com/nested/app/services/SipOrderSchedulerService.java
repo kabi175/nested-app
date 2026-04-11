@@ -6,6 +6,7 @@ import com.nested.app.entity.SIPOrder.ScheduleStatus;
 import com.nested.app.enums.TransactionStatus;
 import com.nested.app.jobs.SipOrderVerificationJob;
 import com.nested.app.jobs.SipTransactionTracker;
+import com.nested.app.repository.OrderItemsRepository;
 import com.nested.app.repository.SIPOrderRepository;
 import java.time.LocalDate;
 import java.time.ZoneId;
@@ -40,6 +41,7 @@ import org.springframework.transaction.annotation.Transactional;
 @RequiredArgsConstructor
 public class SipOrderSchedulerService {
   private final SIPOrderRepository sipOrderRepository;
+  private final OrderItemsRepository orderItemsRepository;
   private final Scheduler scheduler;
 
   /**
@@ -243,6 +245,60 @@ public class SipOrderSchedulerService {
           "Failed to schedule SIP order verification job for payment ID: {}. Error: {}",
           paymentID,
           e.getMessage());
+    }
+  }
+
+  /**
+   * Immediately triggers a SipTransactionTracker job for the given orderRef. Intended for admin
+   * debug use in production. If the job already exists, adds a new immediate trigger; otherwise
+   * creates the job first. Returns false if no OrderItem is found for the given ref.
+   */
+  public boolean triggerSipTransactionTrackerNow(String orderRef) {
+    var orderItems = orderItemsRepository.findByRef(orderRef);
+    if (orderItems.isEmpty()) {
+      log.warn("triggerSipTransactionTrackerNow: no OrderItem found for ref {}", orderRef);
+      return false;
+    }
+
+    var orderItem = orderItems.getFirst();
+    try {
+      String jobIdentity = "sip-transaction-tracker-" + orderItem.getId();
+      JobKey jobKey = new JobKey(jobIdentity);
+
+      Trigger trigger =
+          TriggerBuilder.newTrigger()
+              .withIdentity(jobIdentity + "-trigger-admin-" + System.currentTimeMillis())
+              .forJob(jobKey)
+              .startNow()
+              .withSchedule(
+                  SimpleScheduleBuilder.simpleSchedule().withMisfireHandlingInstructionFireNow())
+              .build();
+
+      if (scheduler.checkExists(jobKey)) {
+        scheduler.scheduleJob(trigger);
+      } else {
+        JobDetail jobDetail =
+            JobBuilder.newJob(SipTransactionTracker.class)
+                .withIdentity(jobIdentity)
+                .usingJobData("orderRef", orderItem.getRef())
+                .storeDurably()
+                .requestRecovery(true)
+                .build();
+        scheduler.scheduleJob(jobDetail, trigger);
+      }
+
+      log.info(
+          "Admin triggered SipTransactionTracker for orderRef={}, orderItemId={}",
+          orderRef,
+          orderItem.getId());
+      return true;
+
+    } catch (Exception e) {
+      log.error(
+          "Failed to admin-trigger SipTransactionTracker for orderRef={}: {}",
+          orderRef,
+          e.getMessage());
+      return false;
     }
   }
 

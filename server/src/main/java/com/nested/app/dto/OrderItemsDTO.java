@@ -54,7 +54,11 @@ public class OrderItemsDTO {
 
   private String type = "SIP";
 
-  private LocalDate sipDate;
+  @JsonProperty("scheduled_date")
+  private LocalDate scheduledDate;
+
+  @JsonProperty("frequency")
+  private String frequency;
 
   public static OrderItemsDTO fromEntity(OrderItems orderItems) {
     OrderItemsDTO dto = new OrderItemsDTO();
@@ -75,7 +79,8 @@ public class OrderItemsDTO {
     dto.setVersion(orderItems.getVersion());
 
     if (orderItems.getOrder() != null && orderItems.getOrder() instanceof SIPOrder sipOrder) {
-      dto.setSipDate(sipOrder.getStartDate());
+      dto.setScheduledDate(sipOrder.getNextRunDate());
+      dto.setFrequency(sipOrder.getFrequency().name().toLowerCase());
     }
     return dto;
   }
