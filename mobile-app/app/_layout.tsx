@@ -18,6 +18,7 @@ import { useForceUpdate } from "@/hooks/useForceUpdate";
 import { useOnboardingSeen } from "@/hooks/useOnboardingSeen";
 import { usePersistRoute } from "@/hooks/usePersistRoute";
 import { QueryProvider } from "@/providers/QueryProvider";
+import { RouteRestoredProvider } from "@/providers/RouteRestoredProvider";
 import * as eva from "@eva-design/eva";
 import {
   InstrumentSans_400Regular,
@@ -59,7 +60,6 @@ export default function RootLayout() {
     InstrumentSans_700Bold,
   });
   const [showSplash, setShowSplash] = useState(true);
-  usePersistRoute();
 
   useEffect(() => {
     Settings.initializeSDK();
@@ -87,6 +87,7 @@ export default function RootLayout() {
     <CrashlyticsErrorBoundary>
       <ApplicationProvider {...eva} theme={eva.light} customMapping={customMapping}>
         <QueryProvider>
+          <RouteRestoredProvider>
           <Auth0Provider
             domain={process.env.EXPO_PUBLIC_AUTH0_DOMAIN}
             clientId={process.env.EXPO_PUBLIC_AUTH0_CLIENT_ID}
@@ -102,6 +103,7 @@ export default function RootLayout() {
               <StatusBar style="auto" backgroundColor="transparent" translucent />
             </ThemeProvider>
           </Auth0Provider>
+          </RouteRestoredProvider>
         </QueryProvider>
         {showSplash && (
           <SplashScreenComponent onFinish={() => setShowSplash(false)} />
@@ -134,6 +136,7 @@ function RootNavigator() {
   const { user } = useAuth0();
   const { seen } = useOnboardingSeen();
   const pathname = usePathname();
+  usePersistRoute();
 
   useEffect(() => {
     if (!__DEV__) {

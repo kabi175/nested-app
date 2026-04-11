@@ -1,121 +1,157 @@
-import { ThemedText } from "@/components/ThemedText";
 import { usePayment } from "@/hooks/usePayment";
 import { logPurchaseFailed } from "@/services/firebaseAnalytics";
-import { LinearGradient } from "expo-linear-gradient";
+import { Ionicons } from "@expo/vector-icons";
 import { router, useLocalSearchParams } from "expo-router";
-import { XCircle } from "lucide-react-native";
+import { StatusBar } from "expo-status-bar";
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import {
   ActivityIndicator,
   Animated,
   StyleSheet,
+  Text,
   TouchableOpacity,
   View,
 } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
+import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
+
+const AUTO_REDIRECT_SECONDS = 5;
 
 export default function PaymentFailureScreen() {
   const { payment_id, type } = useLocalSearchParams<{
     payment_id: string;
     type: "buy" | "sip";
   }>();
+  const { bottom: bottomInset } = useSafeAreaInsets();
 
   const { data: payment, isLoading } = usePayment(payment_id || "");
   const failureLoggedRef = useRef(false);
+  const setupDoneRef = useRef(false);
+  const navigateFnRef = useRef<(() => void) | null>(null);
+  const countdownDurationRef = useRef(AUTO_REDIRECT_SECONDS);
 
+  const [countdown, setCountdown] = useState(AUTO_REDIRECT_SECONDS);
+  const [shouldNavigate, setShouldNavigate] = useState(false);
+  const [countdownReady, setCountdownReady] = useState(false);
+
+  const [scaleAnim] = useState(new Animated.Value(0.6));
   const [fadeAnim] = useState(new Animated.Value(0));
-  const [scaleAnim] = useState(new Animated.Value(0.5));
 
   useEffect(() => {
     Animated.parallel([
       Animated.timing(fadeAnim, {
         toValue: 1,
-        duration: 800,
+        duration: 500,
         useNativeDriver: true,
       }),
       Animated.spring(scaleAnim, {
         toValue: 1,
-        tension: 50,
-        friction: 8,
+        tension: 60,
+        friction: 7,
         useNativeDriver: true,
       }),
     ]).start();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Log Firebase purchase_failed once when payment status is confirmed failed
+  // Log analytics once
   useEffect(() => {
     if (!payment_id || !payment || isLoading || failureLoggedRef.current) return;
-    const isBuyFailed = payment.buy_status === "failed";
-    const isSipFailed = payment.sip_status === "failed";
+    const isBuyFailed = payment.buy_status === "failed" || payment.buy_status === "cancelled";
+    const isSipFailed = payment.sip_status === "failed" || payment.sip_status === "cancelled";
     if (isBuyFailed || isSipFailed) {
       failureLoggedRef.current = true;
       const amount = (payment as { amount?: number }).amount ?? 0;
       const contentType = isBuyFailed && isSipFailed ? "buy_sip" : isBuyFailed ? "buy" : "sip";
-      logPurchaseFailed({ transaction_id: payment_id, value: amount, content_type: contentType });
+      logPurchaseFailed({ transaction_id: payment_id!, value: amount, content_type: contentType });
     }
   }, [payment_id, payment, isLoading]);
 
-  const handleContinue = () => {
-    if (type === "buy" && payment?.sip_status === "pending") {
-      router.replace({
-        pathname: `/payment/${payment_id}/processing`,
-        params: {
-          paymentId: payment_id,
-        },
-      });
-      return;
+  // Setup — runs once when payment is ready. Captures nav target + duration.
+  useEffect(() => {
+    if (isLoading || !payment || setupDoneRef.current) return;
+    setupDoneRef.current = true;
+
+    // If SIP failed but buy is still actionable → go back to processing
+    const hasNextStep =
+      (type === "sip" && payment.buy_status === "pending") ||
+      (type === "sip" && payment.buy_status === "submitted");
+
+    navigateFnRef.current = () => {
+      if (hasNextStep) {
+        router.replace(`/payment/${payment_id}/processing` as any);
+      } else {
+        router.replace("/(tabs)");
+      }
+    };
+
+    const duration = hasNextStep ? AUTO_REDIRECT_SECONDS : 0; // 0 = no auto-redirect for final failures
+    countdownDurationRef.current = duration;
+    if (duration > 0) {
+      setCountdown(duration);
+      setCountdownReady(true);
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isLoading, payment]);
 
-    if (type === "sip" && payment?.buy_status === "pending") {
-      router.replace({
-        pathname: `/payment/${payment_id}/processing`,
-        params: {
-          paymentId: payment_id,
-        },
-      });
-      return;
+  // Interval — starts exactly once, not tied to payment so refetches can't kill it
+  useEffect(() => {
+    if (!countdownReady) return;
+    const countRef = { current: countdownDurationRef.current };
+    const interval = setInterval(() => {
+      countRef.current -= 1;
+      setCountdown(countRef.current);
+      if (countRef.current <= 0) {
+        clearInterval(interval);
+        setShouldNavigate(true);
+      }
+    }, 1000);
+    return () => clearInterval(interval);
+  }, [countdownReady]);
+
+  // Trigger navigation
+  useEffect(() => {
+    if (shouldNavigate && navigateFnRef.current) {
+      navigateFnRef.current();
     }
+  }, [shouldNavigate]);
 
-    router.replace("/(tabs)");
-  };
+  const hasNextStep =
+    (type === "sip" && payment?.buy_status === "pending") ||
+    (type === "sip" && payment?.buy_status === "submitted");
 
-  // Determine failure message based on type
-  // If type is not provided, infer from payment status
   const paymentType = useMemo((): "buy" | "sip" | undefined => {
     if (type) return type;
     if (payment) {
-      if (payment.buy_status === "failed") return "buy";
-      if (payment.sip_status === "failed") return "sip";
+      if (payment.buy_status === "failed" || payment.buy_status === "cancelled") return "buy";
+      if (payment.sip_status === "failed" || payment.sip_status === "cancelled") return "sip";
     }
     return undefined;
   }, [type, payment]);
 
   const { title, subtitle } = useMemo(() => {
+    if (paymentType === "sip") {
+      return {
+        title: "SIP setup failed",
+        subtitle: "Your SIP mandate could not be set up.",
+      };
+    }
     if (paymentType === "buy") {
       return {
-        title: "Lumpsum Payment Failed",
-        subtitle:
-          "Your one-time investment could not be processed. Please try again or contact support if the issue persists.",
-      };
-    } else if (paymentType === "sip") {
-      return {
-        title: "SIP Mandate Setup Failed",
-        subtitle:
-          "Your Systematic Investment Plan setup could not be completed. Please try again or contact support if the issue persists.",
+        title: "Payment failed",
+        subtitle: "Your one-time investment could not be processed.",
       };
     }
     return {
-      title: "Payment Failed",
-      subtitle:
-        "Your payment could not be processed. Please try again or contact support if the issue persists.",
+      title: "Payment failed",
+      subtitle: "Your payment could not be processed.",
     };
   }, [paymentType]);
 
   if (isLoading) {
     return (
-      <SafeAreaView style={styles.container}>
-        <View style={styles.loadingContainer}>
+      <SafeAreaView style={styles.safeArea}>
+        <StatusBar style="dark" />
+        <View style={styles.loadingScreen}>
           <ActivityIndicator size="large" color="#EF4444" />
         </View>
       </SafeAreaView>
@@ -123,61 +159,66 @@ export default function PaymentFailureScreen() {
   }
 
   return (
-    <SafeAreaView style={styles.container}>
-      <LinearGradient
-        colors={["#FEF2F2", "#FFFFFF"]}
-        style={styles.gradientBackground}
-      >
+    <SafeAreaView style={styles.safeArea} edges={["top", "left", "right"]}>
+      <StatusBar style="dark" />
+
+      {/* Centered content */}
+      <View style={styles.content}>
         <Animated.View
           style={[
-            styles.content,
-            {
-              opacity: fadeAnim,
-              transform: [{ scale: scaleAnim }],
-            },
+            styles.animatedContent,
+            { opacity: fadeAnim, transform: [{ scale: scaleAnim }] },
           ]}
         >
-          <View style={styles.iconContainer}>
-            <XCircle size={80} color="#EF4444" />
+          {/* X icon */}
+          <View style={styles.errorCircle}>
+            <Ionicons name="close" size={36} color="#FFFFFF" />
           </View>
 
-          <View style={styles.textContainer}>
-            <ThemedText style={styles.title}>{title}</ThemedText>
-            <ThemedText style={styles.subtitle}>{subtitle}</ThemedText>
-            <View style={styles.refundMessageContainer}>
-              <ThemedText style={styles.refundMessage}>
-                If the money is debited from your account, it will be refunded
-                in 2-3 business days.
-              </ThemedText>
+          <Text style={styles.doneText}>Oops.</Text>
+          <Text style={styles.label}>{title}</Text>
+          <Text style={styles.subtitleText}>{subtitle}</Text>
+
+          {/* Refund note */}
+          <View style={styles.refundNote}>
+            <Ionicons name="information-circle-outline" size={15} color="#92400E" />
+            <Text style={styles.refundNoteText}>
+              If any amount was debited, it will be refunded in 2–3 business days.
+            </Text>
+          </View>
+
+          {/* Next step hint */}
+          {hasNextStep && (
+            <View style={styles.nextStepBanner}>
+              <Ionicons name="arrow-forward-circle-outline" size={15} color="#3137D5" />
+              <Text style={styles.nextStepText}>
+                Your lumpsum payment step is still pending.
+              </Text>
             </View>
-          </View>
-
-          <TouchableOpacity
-            style={styles.continueButton}
-            onPress={handleContinue}
-            activeOpacity={0.8}
-          >
-            <LinearGradient
-              colors={["#EF4444", "#DC2626"]}
-              style={styles.buttonGradient}
-            >
-              <ThemedText style={styles.buttonText}>Continue</ThemedText>
-            </LinearGradient>
-          </TouchableOpacity>
+          )}
         </Animated.View>
-      </LinearGradient>
+      </View>
+
+      {/* Bottom */}
+      <View style={[styles.bottomContainer, { paddingBottom: Math.max(bottomInset, 32) }]}>
+        {hasNextStep ? (
+          <Text style={styles.countdownHint}>Continuing to next step in {countdown}s…</Text>
+        ) : (
+          <TouchableOpacity onPress={() => router.replace("/(tabs)")} activeOpacity={0.6}>
+            <Text style={styles.backLink}>Back to home</Text>
+          </TouchableOpacity>
+        )}
+      </View>
     </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
+  safeArea: {
     flex: 1,
+    backgroundColor: "#FAFAF8",
   },
-  gradientBackground: {
-    flex: 1,
-  },
-  loadingContainer: {
+  loadingScreen: {
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
@@ -188,55 +229,94 @@ const styles = StyleSheet.create({
     alignItems: "center",
     paddingHorizontal: 40,
   },
-  iconContainer: {
-    marginBottom: 40,
-  },
-  textContainer: {
+  animatedContent: {
     alignItems: "center",
-    marginBottom: 60,
-  },
-  title: {
-    fontSize: 28,
-    fontWeight: "700",
-    color: "#1F2937",
-    textAlign: "center",
-    marginBottom: 16,
-  },
-  subtitle: {
-    fontSize: 16,
-    fontWeight: "400",
-    color: "#6B7280",
-    textAlign: "center",
-    lineHeight: 24,
-    marginBottom: 16,
-  },
-  refundMessageContainer: {
-    backgroundColor: "#FEF3C7",
-    borderRadius: 12,
-    padding: 16,
-    marginTop: 8,
     width: "100%",
   },
-  refundMessage: {
-    fontSize: 14,
+  errorCircle: {
+    width: 72,
+    height: 72,
+    borderRadius: 36,
+    backgroundColor: "#EF4444",
+    justifyContent: "center",
+    alignItems: "center",
+    marginBottom: 28,
+    shadowColor: "#EF4444",
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.25,
+    shadowRadius: 12,
+    elevation: 8,
+  },
+  doneText: {
+    fontSize: 32,
+    fontWeight: "600",
+    color: "#111827",
+    marginBottom: 20,
+    letterSpacing: -0.5,
+  },
+  label: {
+    fontSize: 18,
     fontWeight: "500",
-    color: "#92400E",
+    color: "#374151",
+    marginBottom: 8,
+    textAlign: "center",
+  },
+  subtitleText: {
+    fontSize: 14,
+    color: "#9CA3AF",
     textAlign: "center",
     lineHeight: 20,
+    marginBottom: 24,
   },
-  continueButton: {
+  refundNote: {
+    flexDirection: "row",
+    alignItems: "flex-start",
+    gap: 8,
+    backgroundColor: "#FEF3C7",
+    borderRadius: 12,
+    padding: 14,
+    borderWidth: 1,
+    borderColor: "#FDE68A",
     width: "100%",
-    borderRadius: 16,
-    overflow: "hidden",
+    marginBottom: 12,
   },
-  buttonGradient: {
-    paddingVertical: 16,
-    paddingHorizontal: 32,
+  refundNoteText: {
+    flex: 1,
+    fontSize: 13,
+    color: "#92400E",
+    lineHeight: 18,
+  },
+  nextStepBanner: {
+    flexDirection: "row",
+    alignItems: "flex-start",
+    gap: 8,
+    backgroundColor: "#EEF0FB",
+    borderRadius: 12,
+    padding: 14,
+    borderWidth: 1,
+    borderColor: "#C7CAF0",
+    width: "100%",
+  },
+  nextStepText: {
+    flex: 1,
+    fontSize: 13,
+    color: "#3137D5",
+    lineHeight: 18,
+    fontWeight: "500",
+  },
+  bottomContainer: {
     alignItems: "center",
+    paddingTop: 16,
+    gap: 10,
   },
-  buttonText: {
-    fontSize: 18,
-    fontWeight: "600",
-    color: "#FFFFFF",
+  countdownHint: {
+    fontSize: 13,
+    color: "#9CA3AF",
+  },
+  backLink: {
+    fontSize: 15,
+    fontWeight: "500",
+    color: "#374151",
+    textDecorationLine: "underline",
   },
 });

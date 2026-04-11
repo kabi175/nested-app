@@ -399,13 +399,27 @@ public class PaymentServiceImpl implements PaymentService {
    * @param payment Payment entity
    * @return PaymentDTO
    */
+  private static final long EXPIRY_MILLIS = 10 * 60 * 1000L;
+
+  private PaymentDTO.DtoPaymentStatus resolveDisplayStatus(
+      Payment.PaymentStatus status, java.sql.Timestamp submittedAt) {
+    if (status == Payment.PaymentStatus.SUBMITTED
+        && submittedAt != null
+        && (System.currentTimeMillis() - submittedAt.getTime()) > EXPIRY_MILLIS) {
+      return PaymentDTO.DtoPaymentStatus.EXPIRED;
+    }
+    return PaymentDTO.DtoPaymentStatus.valueOf(status.name());
+  }
+
   private PaymentDTO convertPaymentToDTO(Payment payment) {
     log.debug("Converting Payment entity to DTO for ID: {}", payment.getId());
 
     PaymentDTO dto = new PaymentDTO();
     dto.setId(payment.getId());
-    dto.setBuyStatus(payment.getBuyStatus());
-    dto.setSipStatus(payment.getSipStatus());
+    dto.setBuyStatus(resolveDisplayStatus(payment.getBuyStatus(), payment.getBuySubmittedAt()));
+    dto.setBuySubmittedAt(payment.getBuySubmittedAt());
+    dto.setSipStatus(resolveDisplayStatus(payment.getSipStatus(), payment.getSipSubmittedAt()));
+    dto.setSipSubmittedAt(payment.getSipSubmittedAt());
     dto.setVerificationStatus(payment.getVerificationStatus());
     dto.setPaymentUrl(payment.getPaymentUrl());
     dto.setMandateType(PaymentDTO.MandateType.valueOf(payment.getPaymentType().name()));

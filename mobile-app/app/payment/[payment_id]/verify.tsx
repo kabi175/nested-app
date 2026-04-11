@@ -1,11 +1,5 @@
-import { Ionicons } from "@expo/vector-icons";
-import { LinearGradient } from "expo-linear-gradient";
-import { Redirect, router, useLocalSearchParams } from "expo-router";
-import { useEffect, useState } from "react";
-import { ActivityIndicator, Alert, Animated, ScrollView, StyleSheet, View } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
-
 import { OtpInput } from "@/components/ui/OtpInput";
+import Button from "@/components/v2/Button";
 import { useAuthAxios } from "@/hooks/useAuthAxios";
 import { usePayment } from "@/hooks/usePayment";
 import { useVerifyPayment } from "@/hooks/usePaymentMutations";
@@ -16,12 +10,24 @@ import {
   verifyOtp,
   type MfaAction,
 } from "@/services/mfaService";
-import { Button, Spinner, Text } from "@ui-kitten/components";
+import { Ionicons } from "@expo/vector-icons";
+import { Redirect, router, useLocalSearchParams } from "expo-router";
+import { StatusBar } from "expo-status-bar";
+import { useEffect, useState } from "react";
+import {
+  ActivityIndicator,
+  Alert,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+} from "react-native";
+import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
 
 export default function PaymentVerificationScreen() {
-  const { payment_id } = useLocalSearchParams<{
-    payment_id: string;
-  }>();
+  const { payment_id } = useLocalSearchParams<{ payment_id: string }>();
+  const { bottom: bottomInset } = useSafeAreaInsets();
   const api = useAuthAxios();
   const verifyPaymentMutation = useVerifyPayment();
   const [mfaSessionId, setMfaSessionId] = useState<string | null>(null);
@@ -31,113 +37,60 @@ export default function PaymentVerificationScreen() {
   const [isVerifying, setIsVerifying] = useState(false);
   const [isProcessingPayment, setIsProcessingPayment] = useState(false);
   const { data: payment, isLoading: isLoadingPayment } = usePayment(payment_id);
-  const [fadeAnim] = useState(new Animated.Value(0));
-  const [scaleAnim] = useState(new Animated.Value(0.9));
 
-
-  // Auto-send OTP when component mounts
   useEffect(() => {
     const initializeSession = async () => {
-      console.log("Initializing session", mfaSessionId, isLoading);
       if (!mfaSessionId && !isLoading) {
-        // Check if there's a stored session ID first
         const storedSessionId = await getStoredSessionId();
-        console.log("Stored session ID:", storedSessionId);
         if (storedSessionId) {
-          console.log("Found stored session ID:", storedSessionId);
           setMfaSessionId(storedSessionId);
         } else {
           sendOTP();
         }
       }
     };
-
     initializeSession();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  // Animation on mount
-  useEffect(() => {
-    Animated.parallel([
-      Animated.timing(fadeAnim, {
-        toValue: 1,
-        duration: 400,
-        useNativeDriver: true,
-      }),
-      Animated.spring(scaleAnim, {
-        toValue: 1,
-        tension: 50,
-        friction: 7,
-        useNativeDriver: true,
-      }),
-    ]).start();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const sendOTP = async () => {
     try {
       setIsLoading(true);
-      // Set action for payment verification (using MF_BUY for payment-related actions)
       const action: MfaAction = "MF_BUY";
       await setCurrentAction(action);
-
-      // Start MFA session
       const response = await startMfaSession(action, "SMS", api);
-      console.log("MFA session response:", response);
 
       if (response.mfaSessionId) {
         setMfaSessionId(response.mfaSessionId);
-        setResendTimer(30);
+        setResendTimer(15);
       } else {
-        // Try to get from SecureStore as fallback
         const storedSessionId = await getStoredSessionId();
         if (storedSessionId) {
-          console.log("Using stored session ID:", storedSessionId);
           setMfaSessionId(storedSessionId);
-          setResendTimer(30);
+          setResendTimer(15);
         } else {
           throw new Error("Session ID not found in response");
         }
       }
     } catch (error: any) {
-      console.error("Error sending OTP", error);
-      Alert.alert(
-        "Error",
-        error.message || "Failed to send OTP. Please try again."
-      );
-      // Try to get stored session ID as last resort
+      Alert.alert("Error", error.message || "Failed to send OTP. Please try again.");
       try {
         const storedSessionId = await getStoredSessionId();
-        if (storedSessionId) {
-          console.log("Fallback: Using stored session ID:", storedSessionId);
-          setMfaSessionId(storedSessionId);
-        }
-      } catch (fallbackError) {
-        console.error("Fallback error:", fallbackError);
-      }
+        if (storedSessionId) setMfaSessionId(storedSessionId);
+      } catch {}
     } finally {
       setIsLoading(false);
     }
   };
 
-  const handleOtpChange = (otp: string) => {
-    setOtpCode(otp);
-  };
-
-  const handleOtpComplete = (otp: string) => {
-    setOtpCode(otp);
-  };
-
   const handleResendOtp = async () => {
     if (resendTimer > 0) return;
-
     try {
       setIsLoading(true);
       setOtpCode("");
       await sendOTP();
       Alert.alert("Success", "OTP has been resent successfully!");
-    } catch (error) {
-      console.log("Resend OTP error", error);
+    } catch {
       Alert.alert("Error", "Failed to resend OTP. Please try again.");
       setResendTimer(0);
     } finally {
@@ -150,339 +103,312 @@ export default function PaymentVerificationScreen() {
       Alert.alert("Error", "Missing verification data. Please try again.");
       return;
     }
-
     if (otpCode.length !== 6) {
       Alert.alert("Error", "Please enter a valid 6-digit OTP.");
       return;
     }
-
     try {
       setIsVerifying(true);
-      // Verify OTP with custom MFA service
       await verifyOtp(mfaSessionId, otpCode, api);
-
-      console.log("MFA verification successful");
-      // After MFA verification, verify payment
       setIsProcessingPayment(true);
       await verifyPaymentMutation.mutateAsync(payment_id);
-
-      router.replace({
-        pathname: `/payment/${payment_id}/processing`,
-      });
+      router.replace({ pathname: `/payment/${payment_id}/processing` });
     } catch (error: any) {
-      console.error("Verification error", error);
-      const errorMessage =
-        error.message || "Failed to verify. Please try again.";
-      Alert.alert("Error", errorMessage);
+      Alert.alert("Error", error.message || "Failed to verify. Please try again.");
     } finally {
       setIsVerifying(false);
       setIsProcessingPayment(false);
     }
   };
 
-  // Timer effect
   useEffect(() => {
     let interval: NodeJS.Timeout;
     if (resendTimer > 0) {
-      interval = setInterval(() => {
-        setResendTimer((prev) => prev - 1);
-      }, 1000);
+      interval = setInterval(() => setResendTimer((prev) => prev - 1), 1000);
     }
     return () => clearInterval(interval);
   }, [resendTimer]);
 
   if (isLoadingPayment) {
-    return <ActivityIndicator size="large" color="#2563EB" />;
+    return (
+      <View style={styles.loadingScreen}>
+        <ActivityIndicator size="large" color="#3137D5" />
+      </View>
+    );
   }
 
   if (payment == null || payment.verification_status !== "pending") {
     return <Redirect href="/(tabs)" />;
   }
 
+  const isBusy = isVerifying || isProcessingPayment;
+  const buttonTitle = isProcessingPayment
+    ? "Processing Payment..."
+    : isVerifying
+      ? "Verifying..."
+      : isLoading
+        ? "Sending OTP..."
+        : "Verify & Continue";
+
   return (
-    <SafeAreaView style={styles.safeArea} edges={["top", "bottom"]}>
-      <View style={styles.container}>
-        <ScrollView
-          style={styles.scrollView}
-          contentContainerStyle={styles.scrollContent}
-          showsVerticalScrollIndicator={false}
-        >
-          <Animated.View
-            style={[
-              styles.contentContainer,
-              {
-                opacity: fadeAnim,
-                transform: [{ scale: scaleAnim }],
-              },
-            ]}
+    <SafeAreaView style={styles.safeArea} edges={["top", "left", "right"]}>
+      <StatusBar style="dark" />
+
+      {/* Header */}
+      <View style={styles.header}>
+        <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
+          <Ionicons name="arrow-back" size={22} color="#1F2937" />
+        </TouchableOpacity>
+        <Text style={styles.headerTitle}>Verify Payment</Text>
+      </View>
+
+      <ScrollView
+        style={styles.scrollView}
+        contentContainerStyle={styles.scrollContent}
+        showsVerticalScrollIndicator={false}
+        keyboardShouldPersistTaps="handled"
+      >
+        {/* Shield Icon */}
+        <View style={styles.iconWrapper}>
+          <View style={styles.iconContainer}>
+            <Ionicons name="shield-checkmark" size={36} color="#FFFFFF" />
+          </View>
+        </View>
+
+        {/* Title */}
+        <Text style={styles.title}>Enter OTP</Text>
+        <Text style={styles.subtitle}>
+          We&apos;ve sent a 6-digit code to your registered mobile number.
+        </Text>
+
+        {/* Sending indicator */}
+        {!mfaSessionId && isLoading && (
+          <View style={styles.sendingRow}>
+            <ActivityIndicator size="small" color="#3137D5" />
+            <Text style={styles.sendingText}>Sending verification code...</Text>
+          </View>
+        )}
+
+        {/* OTP Input */}
+        <View style={styles.otpContainer}>
+          <OtpInput
+            length={6}
+            onComplete={(otp) => setOtpCode(otp)}
+            onChange={(otp) => setOtpCode(otp)}
+            disabled={isBusy}
+          />
+        </View>
+
+        {/* Resend */}
+        {resendTimer > 0 ? (
+          <View style={styles.timerRow}>
+            <View style={styles.timerBadge}>
+              <Text style={styles.timerCount}>{resendTimer}</Text>
+            </View>
+            <Text style={styles.timerLabel}>Resend available in {resendTimer}s</Text>
+          </View>
+        ) : (
+          <TouchableOpacity
+            style={styles.resendRow}
+            onPress={handleResendOtp}
+            disabled={isLoading || !mfaSessionId}
+            activeOpacity={0.6}
           >
-            {/* Shield Icon with Gradient */}
-            <View style={styles.shieldContainer}>
-              <LinearGradient
-                colors={["#3B82F6", "#2563EB", "#1D4ED8"]}
-                start={{ x: 0, y: 0 }}
-                end={{ x: 1, y: 1 }}
-                style={styles.shieldIcon}
-              >
-                <View style={styles.shieldIconInner}>
-                  <Ionicons name="shield-checkmark" size={40} color="#FFFFFF" />
-                </View>
-              </LinearGradient>
-            </View>
-
-            {/* Enter OTP Heading */}
-            <Text category="h3" style={styles.otpHeading}>
-              Enter OTP
+            <Ionicons
+              name="refresh"
+              size={15}
+              color={isLoading || !mfaSessionId ? "#9CA3AF" : "#3137D5"}
+            />
+            <Text
+              style={[
+                styles.resendText,
+                (isLoading || !mfaSessionId) && styles.resendTextDisabled,
+              ]}
+            >
+              Resend OTP
             </Text>
+          </TouchableOpacity>
+        )}
 
-            {/* Subtitle */}
-            <Text category="s1" style={styles.subtitle}>
-              We&apos;ve sent a 6-digit code to your registered mobile number .
-            </Text>
+        {/* Security notice */}
+        <View style={styles.securityBox}>
+          <Ionicons name="shield-checkmark" size={18} color="#92400E" />
+          <View style={styles.securityTextWrap}>
+            <Text style={styles.securityTitle}>Secure Payment</Text>
+            <Text style={styles.securityMessage}>Never share your OTP with anyone.</Text>
+          </View>
+        </View>
+      </ScrollView>
 
-            {/* Loading state while sending OTP */}
-            {!mfaSessionId && isLoading && (
-              <View style={styles.loadingContainer}>
-                <View style={styles.loadingSpinnerWrapper}>
-                  <Spinner size="small" status="primary" />
-                </View>
-                <Text category="s1" style={styles.loadingText}>
-                  Sending verification code...
-                </Text>
-              </View>
-            )}
-
-            {/* OTP Input - Always visible, only disabled during verification/processing */}
-            <View style={styles.otpContainer}>
-              <OtpInput
-                length={6}
-                onComplete={handleOtpComplete}
-                onChange={handleOtpChange}
-                disabled={isVerifying || isProcessingPayment}
-              />
-            </View>
-
-            {/* Button Container - Always visible */}
-            <View style={styles.buttonContainer}>
-              {/* Submit/Verify Button - Always visible */}
-              <Button
-                onPress={handleVerifyAndContinue}
-                disabled={
-                  otpCode.length !== 6 ||
-                  isVerifying ||
-                  isProcessingPayment ||
-                  isLoading
-                }
-                status="primary"
-                size="large"
-                style={styles.verifyButton}
-                accessoryLeft={() =>
-                  !isVerifying && !isProcessingPayment ? (
-                    <Ionicons name="checkmark" size={16} color="#FFFFFF" />
-                  ) : (
-                    <></>
-                  )
-                }
-                accessoryRight={() =>
-                  isVerifying || isProcessingPayment ? (
-                    <Spinner size="small" status="control" />
-                  ) : (
-                    <></>
-                  )
-                }
-              >
-                {isProcessingPayment
-                  ? "Processing Payment..."
-                  : isVerifying
-                    ? "Verifying..."
-                    : isLoading
-                      ? "Sending OTP..."
-                      : "Verify & Continue"}
-              </Button>
-
-              {/* Resend Button - Always visible */}
-              <Button
-                onPress={handleResendOtp}
-                disabled={resendTimer > 0 || isLoading || !mfaSessionId}
-                appearance="ghost"
-                status="primary"
-                size="medium"
-                style={styles.resendButton}
-                accessoryLeft={() => (
-                  <Ionicons
-                    name="refresh"
-                    size={16}
-                    color={
-                      resendTimer > 0 || isLoading || !mfaSessionId
-                        ? "#9CA3AF"
-                        : "#2563EB"
-                    }
-                  />
-                )}
-              >
-                Resend OTP{" "}
-                {resendTimer > 0 && (
-                  <Text style={styles.resendTimerText}>({resendTimer}s)</Text>
-                )}
-              </Button>
-            </View>
-
-            {/* Security Message - Always at bottom */}
-            <View style={styles.securityContainer}>
-              <View style={styles.securityBox}>
-                <View style={styles.securityIconContainer}>
-                  <Ionicons name="shield-checkmark" size={18} color="#92400E" />
-                </View>
-                <View style={styles.securityTextContainer}>
-                  <Text category="c2" style={styles.securityTitle}>
-                    Secure Payment
-                  </Text>
-                  <Text category="c2" style={styles.securityMessage}>
-                    Never share your OTP with anyone.
-                  </Text>
-                </View>
-              </View>
-            </View>
-          </Animated.View>
-        </ScrollView>
+      {/* Button */}
+      <View style={[styles.buttonContainer, { paddingBottom: Math.max(bottomInset, 20) }]}>
+        <Button
+          title={buttonTitle}
+          disabled={otpCode.length !== 6 || isBusy || isLoading}
+          loading={isBusy}
+          onPress={handleVerifyAndContinue}
+        />
       </View>
     </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
+  loadingScreen: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "#FFFFFF",
+  },
   safeArea: {
     flex: 1,
     backgroundColor: "#FFFFFF",
   },
-  container: {
-    flex: 1,
+  header: {
+    flexDirection: "row",
+    alignItems: "center",
     backgroundColor: "#FFFFFF",
+    paddingHorizontal: 20,
+    paddingTop: 12,
+    paddingBottom: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: "#F3F4F6",
+  },
+  backButton: {
+    marginRight: 12,
+    padding: 4,
+  },
+  headerTitle: {
+    fontSize: 20,
+    fontWeight: "700",
+    color: "#111827",
   },
   scrollView: {
     flex: 1,
   },
   scrollContent: {
     flexGrow: 1,
-    justifyContent: "center",
-    paddingVertical: 24,
-    paddingBottom: 40,
-  },
-  contentContainer: {
-    backgroundColor: "#FFFFFF",
-    marginHorizontal: 0,
-    borderRadius: 0,
-    padding: 28,
+    paddingHorizontal: 24,
+    paddingTop: 48,
+    paddingBottom: 32,
     alignItems: "center",
   },
-  shieldContainer: {
-    alignItems: "center",
+  iconWrapper: {
     marginBottom: 28,
-    marginTop: 4,
   },
-  shieldIcon: {
-    width: 96,
-    height: 96,
-    borderRadius: 24,
+  iconContainer: {
+    width: 88,
+    height: 88,
+    borderRadius: 22,
+    backgroundColor: "#3137D5",
     justifyContent: "center",
     alignItems: "center",
-    shadowColor: "#3B82F6",
-    shadowOffset: {
-      width: 0,
-      height: 8,
-    },
-    shadowOpacity: 0.3,
+    shadowColor: "#3137D5",
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.28,
     shadowRadius: 16,
-    elevation: 12,
+    elevation: 10,
   },
-  shieldIconInner: {
-    width: "100%",
-    height: "100%",
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  otpHeading: {
-    textAlign: "center",
-    marginBottom: 12,
+  title: {
+    fontSize: 28,
     fontWeight: "700",
     color: "#111827",
-    fontSize: 28,
+    marginBottom: 10,
     letterSpacing: -0.5,
+    textAlign: "center",
   },
   subtitle: {
-    textAlign: "center",
-    marginBottom: 36,
-    color: "#6B7280",
-    paddingHorizontal: 12,
     fontSize: 15,
+    color: "#6B7280",
+    textAlign: "center",
     lineHeight: 22,
+    marginBottom: 36,
+    paddingHorizontal: 8,
+  },
+  sendingRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 10,
+    marginBottom: 24,
+  },
+  sendingText: {
+    fontSize: 14,
+    color: "#6B7280",
   },
   otpContainer: {
-    marginBottom: 28,
-    paddingHorizontal: 4,
-    alignItems: "center",
-    justifyContent: "center",
     width: "100%",
-  },
-  loadingContainer: {
     alignItems: "center",
-    marginBottom: 36,
-    marginTop: 12,
-    gap: 16,
-  },
-  loadingSpinnerWrapper: {
-    padding: 8,
-  },
-  loadingText: {
-    color: "#6B7280",
-    fontSize: 15,
-    fontWeight: "500",
-  },
-  buttonContainer: {
-    gap: 20,
-    marginTop: 12,
     marginBottom: 28,
-    alignItems: "center",
-    width: "100%",
   },
-  verifyButton: {
+  timerRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 10,
+    marginBottom: 48,
+  },
+  timerBadge: {
+    width: 32,
+    height: 32,
     borderRadius: 16,
+    backgroundColor: "#EEF0FB",
+    justifyContent: "center",
+    alignItems: "center",
+    borderWidth: 1.5,
+    borderColor: "#C7CAF0",
   },
-  resendButton: {},
-  resendTimerText: {
-    color: "#6B7280",
+  timerCount: {
+    fontSize: 13,
+    fontWeight: "700",
+    color: "#3137D5",
+  },
+  timerLabel: {
+    fontSize: 14,
+    color: "#9CA3AF",
+  },
+  resendRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+    marginBottom: 48,
+  },
+  resendText: {
+    fontSize: 14,
     fontWeight: "500",
+    color: "#3137D5",
   },
-  securityContainer: {
-    marginTop: 28,
-    width: "100%",
+  resendTextDisabled: {
+    color: "#9CA3AF",
   },
   securityBox: {
-    backgroundColor: "#FFFBEB",
-    borderRadius: 16,
-    padding: 16,
     flexDirection: "row",
     alignItems: "flex-start",
     gap: 12,
+    backgroundColor: "#FFFBEB",
+    borderRadius: 14,
+    padding: 16,
     borderWidth: 1,
     borderColor: "#FDE68A",
+    width: "100%",
   },
-  securityIconContainer: {
-    marginTop: 2,
-  },
-  securityTextContainer: {
+  securityTextWrap: {
     flex: 1,
   },
   securityTitle: {
-    color: "#92400E",
-    fontWeight: "700",
-    marginBottom: 4,
     fontSize: 13,
-    letterSpacing: 0.2,
+    fontWeight: "700",
+    color: "#92400E",
+    marginBottom: 3,
   },
   securityMessage: {
-    color: "#B45309",
     fontSize: 12,
+    color: "#B45309",
     lineHeight: 18,
+  },
+  buttonContainer: {
+    paddingTop: 16,
+    paddingHorizontal: 20,
+    backgroundColor: "#FFFFFF",
+    borderTopWidth: 1,
+    borderTopColor: "#F3F4F6",
   },
 });

@@ -1,5 +1,9 @@
 import { cartAtom } from "@/atoms/cart";
 import { ThemedText } from "@/components/ThemedText";
+import { BankAccountChip } from "@/components/v2/top-up/BankAccountChip";
+import { PaymentMethodRow } from "@/components/v2/top-up/PaymentMethodRow";
+import { PAYMENT_METHODS } from "@/components/v2/top-up/types";
+import { SectionHeader } from "@/components/v2/profile/SectionHeader";
 import { useBankAccounts } from "@/hooks/useBankAccount";
 import { useCreatePayment } from "@/hooks/usePaymentMutations";
 import { BankAccount } from "@/types/bank";
@@ -7,6 +11,7 @@ import { formatCurrency } from "@/utils/formatters";
 import { Ionicons } from "@expo/vector-icons";
 import { Button } from "@ui-kitten/components";
 import { Redirect, router } from "expo-router";
+import { StatusBar } from "expo-status-bar";
 import { useAtomValue } from "jotai";
 import { useEffect, useMemo, useState } from "react";
 import {
@@ -17,40 +22,13 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
+import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
 
 type PaymentMethod = "upi" | "netbanking";
 
-// Get bank name from IFSC code
-
-// Get bank icon color based on bank account id
-const getBankIconColor = (bankId: string): string => {
-  // Generate a consistent color based on the bank account id
-  // Using a simple hash to map id to a color from a predefined palette
-  const colors = [
-    "#004C8C", // Blue
-    "#FF6600", // Orange
-    "#8E2DE2", // Purple
-    "#E31837", // Red
-    "#10B981", // Green
-    "#F59E0B", // Amber
-    "#EC4899", // Pink
-    "#06B6D4", // Cyan
-  ];
-
-  // Simple hash function to convert id to a number
-  let hash = 0;
-  for (let i = 0; i < bankId.length; i++) {
-    hash = bankId.charCodeAt(i) + ((hash << 5) - hash);
-  }
-
-  // Use absolute value and modulo to get index
-  const index = Math.abs(hash) % colors.length;
-  return colors[index];
-};
-
 
 export default function PaymentMethodScreen() {
+  const { bottom: bottomInset } = useSafeAreaInsets();
   const cart = useAtomValue(cartAtom);
   const { data: bankAccountsData, isLoading: isLoadingBanks } =
     useBankAccounts();
@@ -65,8 +43,7 @@ export default function PaymentMethodScreen() {
   );
   const [selectedBank, setSelectedBank] = useState<BankAccount | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
-
-  const cardBackground = "#FFFFFF";
+  const [paymentError, setPaymentError] = useState<string | null>(null);
 
   // Auto-select bank account when bank accounts finish loading and a payment method is selected
   useEffect(() => {
@@ -126,15 +103,14 @@ export default function PaymentMethodScreen() {
       return;
     }
     setSelectedMethod(method);
+    setPaymentError(null);
 
     // Auto-select bank account if available and none is selected
     if (!selectedBank && bankAccounts.length > 0) {
-      // Prefer primary bank account, otherwise select the first one
       const primaryBank = bankAccounts.find((bank) => bank.isPrimary);
       setSelectedBank(primaryBank || bankAccounts[0]);
     }
   };
-
 
   const handleConfirmOrder = async () => {
     if (!selectedMethod) {
@@ -152,6 +128,7 @@ export default function PaymentMethodScreen() {
       return;
     }
 
+    setPaymentError(null);
     setIsProcessing(true);
 
     try {
@@ -166,188 +143,36 @@ export default function PaymentMethodScreen() {
         },
       });
 
-      // Redirect to verification screen
-      router.replace({
-        pathname: `/payment/${payment.id}/verify`,
-      });
+      router.replace({ pathname: `/payment/${payment.id}/verify` });
     } catch (error: any) {
-      console.error("Failed to create payment", error);
+      const status = error?.response?.status;
+      let message: string;
 
-      // Extract error message from server response
-      let errorMessage = "Failed to process payment. Please try again.";
-
-      if (error?.response?.data?.message) {
-        errorMessage = error.response.data.message;
-      } else if (error?.response?.data?.error) {
-        errorMessage = error.response.data.error;
-      } else if (error?.message) {
-        errorMessage = error.message;
-      } else if (error?.response?.status === 400) {
-        errorMessage = "Invalid payment details. Please check and try again.";
-      } else if (error?.response?.status === 401) {
-        errorMessage = "Please log in to continue.";
-      } else if (error?.response?.status === 403) {
-        errorMessage = "You don't have permission to perform this action.";
-      } else if (error?.response?.status === 404) {
-        errorMessage = "Payment service not found. Please try again later.";
-      } else if (error?.response?.status >= 500) {
-        errorMessage = "Server error. Please try again later.";
+      if (status === 401) {
+        message = "Your session has expired. Please log in again.";
+      } else if (status === 403) {
+        message = "You don't have permission to do this. Contact support if the issue persists.";
+      } else if (status === 404) {
+        message = "Payment service unavailable. Please try again later.";
+      } else if (status >= 500) {
+        message = "Something went wrong on our end. Please try again in a moment.";
+      } else {
+        message =
+          error?.response?.data?.message ||
+          error?.response?.data?.error ||
+          error?.message ||
+          "Unable to process payment. Please try again.";
       }
 
-      Alert.alert("Error", errorMessage, [{ text: "OK", style: "cancel" }]);
+      setPaymentError(message);
     } finally {
       setIsProcessing(false);
     }
   };
 
-  const PaymentMethodCard = ({
-    method,
-    title,
-    description,
-    icon,
-    isSelected,
-  }: {
-    method: PaymentMethod;
-    title: string;
-    description: string;
-    icon: string;
-    isSelected: boolean;
-  }) => {
-    // Get icon container color based on method and selection state
-    const getIconContainerColor = () => {
-      if (method === "upi") {
-        // UPI: green icon container
-        return "#10B981";
-      } else {
-        // Net Banking: lighter blue when selected, grey when not
-        return isSelected ? "#60A5FA" : "#F3F4F6";
-      }
-    };
-
-    // Get card background color
-    const getCardBackgroundColor = () => {
-      if (isSelected) {
-        return method === "upi" ? "#10B981" : "#2563EB";
-      }
-      return "#FFFFFF";
-    };
-
-    // Get border color
-    const getBorderColor = () => {
-      if (isSelected) {
-        return method === "upi" ? "#10B981" : "#2563EB";
-      }
-      return "#E5E7EB";
-    };
-
-    const iconContainerColor = getIconContainerColor();
-
-    return (
-      <TouchableOpacity
-        style={[
-          styles.paymentMethodCard,
-          {
-            backgroundColor: getCardBackgroundColor(),
-            borderColor: getBorderColor(),
-          },
-        ]}
-        onPress={() => handlePaymentMethodSelect(method)}
-        activeOpacity={0.7}
-      >
-        <View style={styles.paymentMethodContent}>
-          {/* Checkmark - always rendered to maintain layout consistency */}
-          <View
-            style={[
-              styles.selectedCheckmark,
-              !isSelected && styles.selectedCheckmarkHidden,
-            ]}
-          >
-            {isSelected && (
-              <Ionicons name="checkmark" size={16} color="#FFFFFF" />
-            )}
-          </View>
-          <View
-            style={[
-              styles.paymentMethodIconContainer,
-              { backgroundColor: iconContainerColor },
-            ]}
-          >
-            <Ionicons name={icon as any} size={32} color="#FFFFFF" />
-          </View>
-          <View style={styles.paymentMethodText}>
-            <ThemedText
-              type="subtitle"
-              style={[
-                styles.paymentMethodTitle,
-                isSelected && styles.paymentMethodTitleSelected,
-              ]}
-            >
-              {title}
-            </ThemedText>
-            <ThemedText
-              style={[
-                styles.paymentMethodDescription,
-                isSelected && styles.paymentMethodDescriptionSelected,
-              ]}
-              numberOfLines={2}
-            >
-              {description}
-            </ThemedText>
-          </View>
-        </View>
-      </TouchableOpacity>
-    );
-  };
-
-  const formatAccountNumber = (accountNumber: string) => {
-    if (accountNumber.length <= 4) return `****${accountNumber}`;
-    return `****${accountNumber.slice(-4)}`;
-  };
-
-  const BankAccountCard = ({
-    bankAccount,
-    isSelected,
-  }: {
-    bankAccount: BankAccount;
-    isSelected: boolean;
-  }) => {
-    const bankName = bankAccount.name;
-    const iconColor = getBankIconColor(bankAccount.id);
-
-    return (
-      <TouchableOpacity
-        style={[
-          styles.bankAccountCard,
-          { backgroundColor: cardBackground },
-          isSelected && styles.bankAccountCardSelected,
-        ]}
-        onPress={() => setSelectedBank(bankAccount)}
-        activeOpacity={0.7}
-      >
-        <View style={styles.bankAccountContent}>
-          <View
-            style={[styles.bankIconContainer, { backgroundColor: iconColor }]}
-          >
-            <Ionicons name="business" size={20} color="#FFFFFF" />
-          </View>
-          <View style={styles.bankAccountInfo}>
-            <ThemedText style={styles.bankName}>{bankName}</ThemedText>
-            <ThemedText style={styles.bankAccountNumber}>
-              A/C {formatAccountNumber(bankAccount.accountNumber)}
-            </ThemedText>
-          </View>
-          {isSelected && (
-            <View style={styles.bankSelectedCheckmark}>
-              <Ionicons name="checkmark" size={18} color="#FFFFFF" />
-            </View>
-          )}
-        </View>
-      </TouchableOpacity>
-    );
-  };
-
   return (
-    <SafeAreaView style={styles.safeArea} edges={["top"]}>
+    <SafeAreaView style={styles.safeArea} edges={["top", "left", "right"]}>
+      <StatusBar style="dark" />
       <View style={styles.container}>
         {/* Header */}
         <View style={styles.header}>
@@ -371,190 +196,159 @@ export default function PaymentMethodScreen() {
           contentContainerStyle={styles.scrollContent}
           showsVerticalScrollIndicator={false}
         >
-          {/* Main White Card */}
-          <View style={styles.mainCard}>
-            {/* Payment Methods Section */}
+          {/* Payment Methods Section */}
+          <View style={styles.section}>
+            <SectionHeader label="CHOOSE A PAYMENT METHOD" />
+            {PAYMENT_METHODS.map((method) => (
+              <PaymentMethodRow
+                key={method.id}
+                method={method}
+                selected={
+                  selectedMethod === (method.id === "net_banking" ? "netbanking" : "upi")
+                }
+                onPress={() =>
+                  handlePaymentMethodSelect(
+                    method.id === "net_banking" ? "netbanking" : "upi"
+                  )
+                }
+              />
+            ))}
+          </View>
+
+          {/* Bank Selection Section */}
+          {selectedMethod && (
             <View style={styles.section}>
-              <ThemedText type="subtitle" style={styles.sectionTitle}>
-                Select Payment Method
-              </ThemedText>
-              <View style={styles.paymentMethodsRow}>
-                <View style={styles.paymentMethodWrapper}>
-                  <PaymentMethodCard
-                    key="upi"
-                    method="upi"
-                    title="UPI"
-                    description="Pay instantly via UPI"
-                    icon="phone-portrait-outline"
-                    isSelected={selectedMethod === "upi"}
-                  />
-                </View>
-                <View style={styles.paymentMethodWrapper}>
-                  <PaymentMethodCard
-                    key="netbanking"
-                    method="netbanking"
-                    title="Net Banking"
-                    description="Pay via Internet Banking"
-                    icon="apps-outline"
-                    isSelected={selectedMethod === "netbanking"}
-                  />
-                </View>
-              </View>
-            </View>
-
-            {/* Bank Selection Section */}
-            {selectedMethod && (
-              <View style={styles.section}>
-                <ThemedText type="subtitle" style={styles.sectionTitle}>
-                  Select Bank Account
-                </ThemedText>
-                {isLoadingBanks ? (
-                  <View style={styles.loadingContainer}>
-                    <ActivityIndicator size="small" color="#2563EB" />
-                    <ThemedText style={styles.loadingText}>
-                      Loading banks...
-                    </ThemedText>
-                  </View>
-                ) : bankAccounts.length > 0 ? (
-                  <ScrollView
-                    style={styles.bankAccountsScroll}
-                    showsVerticalScrollIndicator={false}
-                    nestedScrollEnabled={true}
-                  >
-                    {bankAccounts.map((bankAccount, index) => (
-                      <BankAccountCard
-                        key={bankAccount.id || index}
-                        bankAccount={bankAccount}
-                        isSelected={selectedBank?.id === bankAccount.id}
-                      />
-                    ))}
-                  </ScrollView>
-                ) : (
-                  <View style={styles.emptyContainer}>
-                    <Ionicons
-                      name="card-outline"
-                      size={48}
-                      color="#9CA3AF"
-                      style={{ opacity: 0.5 }}
-                    />
-                    <ThemedText style={styles.emptyText}>
-                      No bank accounts available
-                    </ThemedText>
-                    <TouchableOpacity
-                      style={styles.addBankButton}
-                      onPress={() => router.push("/bank-accounts")}
-                    >
-                      <ThemedText style={styles.addBankButtonText}>
-                        Add Bank Account
-                      </ThemedText>
-                    </TouchableOpacity>
-                  </View>
-                )}
-              </View>
-            )}
-
-            {/* Payment Steps Section */}
-            {(buyOrdersAmount > 0 || sipOrdersAmount > 0) && selectedBank && (
-              <View style={styles.section}>
-                <ThemedText type="subtitle" style={styles.sectionTitle}>
-                  Payment Steps
-                </ThemedText>
-                {/* Securi`ty Message */}
-                <View style={styles.securityBox}>
-                  <Ionicons
-                    name="shield-checkmark"
-                    size={20}
-                    color="#1E40AF"
-                    style={styles.securityIcon}
-                  />
-                  <ThemedText style={styles.securityText}>
-                    You&apos;ll be redirected to complete payment each step
-                    securely
+              <SectionHeader label="SELECT BANK ACCOUNT" />
+              {isLoadingBanks ? (
+                <View style={styles.loadingContainer}>
+                  <ActivityIndicator size="small" color="#3137D5" />
+                  <ThemedText style={styles.loadingText}>
+                    Loading banks...
                   </ThemedText>
                 </View>
+              ) : bankAccounts.length > 0 ? (
+                <View style={styles.bankChipsRow}>
+                  {bankAccounts.map((bankAccount, index) => (
+                    <BankAccountChip
+                      key={bankAccount.id || index}
+                      bank={bankAccount}
+                      selected={selectedBank?.id === bankAccount.id}
+                      onPress={() => setSelectedBank(bankAccount)}
+                    />
+                  ))}
+                </View>
+              ) : (
+                <View style={styles.emptyContainer}>
+                  <Ionicons
+                    name="card-outline"
+                    size={48}
+                    color="#9CA3AF"
+                    style={{ opacity: 0.5 }}
+                  />
+                  <ThemedText style={styles.emptyText}>
+                    No bank accounts available
+                  </ThemedText>
+                  <TouchableOpacity
+                    style={styles.addBankButton}
+                    onPress={() => router.push("/bank-accounts")}
+                  >
+                    <ThemedText style={styles.addBankButtonText}>
+                      Add Bank Account
+                    </ThemedText>
+                  </TouchableOpacity>
+                </View>
+              )}
+            </View>
+          )}
 
-                <ThemedText style={styles.stepsDescription}>
-                  {buyOrdersAmount > 0 && sipOrdersAmount > 0
-                    ? "Complete both steps to finish your investment"
-                    : "Complete the step to finish your investment"}
+          {/* Payment Steps Section */}
+          {(buyOrdersAmount > 0 || sipOrdersAmount > 0) && selectedBank && (
+            <View style={styles.section}>
+              <SectionHeader label="PAYMENT STEPS" />
+              {/* Security Message */}
+              <View style={styles.securityBox}>
+                <Ionicons
+                  name="shield-checkmark-outline"
+                  size={18}
+                  color="#3137D5"
+                  style={styles.securityIcon}
+                />
+                <ThemedText style={styles.securityText}>
+                  Each step opens a secure page — complete it and you&apos;ll be brought back here automatically.
                 </ThemedText>
-                <View style={styles.paymentSteps}>
-                  {/* Complete Purchase Step */}
-                  {buyOrdersAmount > 0 && (
-                    <>
-                      <View style={styles.paymentStep}>
-                        <View style={styles.stepIconContainer}>
-                          <Ionicons
-                            name="cart-outline"
-                            size={20}
-                            color="#FFFFFF"
-                          />
-                        </View>
-                        <View style={styles.stepContent}>
-                          <View style={styles.stepHeader}>
-                            <ThemedText style={styles.stepTitle}>
-                              {buyOrdersAmount > 0 && sipOrdersAmount > 0
-                                ? "Step 1: Complete Purchase"
-                                : "Step 1: Complete Purchase"}
-                            </ThemedText>
-                            <View style={styles.pendingBadge}>
-                              <ThemedText style={styles.pendingBadgeText}>
-                                Pending
-                              </ThemedText>
-                            </View>
-                          </View>
-                          <ThemedText style={styles.stepDescription}>
-                            One-time payment for{" "}
-                            <ThemedText style={styles.stepAmount}>
-                              {formatCurrency(buyOrdersAmount)}
-                            </ThemedText>
-                          </ThemedText>
-                        </View>
-                      </View>
-                      {/* Connector Line */}
-                      {buyOrdersAmount > 0 && sipOrdersAmount > 0 && (
-                        <View style={styles.stepConnector} />
-                      )}
-                    </>
-                  )}
+              </View>
 
-                  {/* Setup SIP Auto-Debit Step */}
-                  {sipOrdersAmount > 0 && (
-                    <View style={styles.paymentStep}>
-                      <View style={styles.stepIconContainer}>
-                        <Ionicons
-                          name="refresh-outline"
-                          size={20}
-                          color="#FFFFFF"
-                        />
+              <ThemedText style={styles.stepsDescription}>
+                {buyOrdersAmount > 0 && sipOrdersAmount > 0
+                  ? "Two steps to activate your investment"
+                  : "One step to activate your investment"}
+              </ThemedText>
+
+              <View style={styles.paymentSteps}>
+                {buyOrdersAmount > 0 && (
+                  <>
+                    <View style={styles.stepCard}>
+                      <View style={styles.stepLeft}>
+                        <View style={styles.stepIconContainer}>
+                          <Ionicons name="cart-outline" size={20} color="#FFFFFF" />
+                        </View>
+                        {sipOrdersAmount > 0 && <View style={styles.stepConnector} />}
                       </View>
                       <View style={styles.stepContent}>
-                        <View style={styles.stepHeader}>
+                        <View style={styles.stepTitleRow}>
                           <ThemedText style={styles.stepTitle}>
-                            {buyOrdersAmount > 0 && sipOrdersAmount > 0
-                              ? "Step 2: Setup SIP Auto-Debit"
-                              : "Step 1: Setup SIP Auto-Debit"}
+                            {sipOrdersAmount > 0 ? "Step 1: " : ""}Pay Now
                           </ThemedText>
                           <View style={styles.pendingBadge}>
-                            <ThemedText style={styles.pendingBadgeText}>
-                              Pending
-                            </ThemedText>
+                            <ThemedText style={styles.pendingBadgeText}>Pending</ThemedText>
                           </View>
                         </View>
                         <ThemedText style={styles.stepDescription}>
-                          Authorize recurring payment
+                          One-time lumpsum of{" "}
+                          <ThemedText style={styles.stepAmount}>
+                            {formatCurrency(buyOrdersAmount)}
+                          </ThemedText>
                         </ThemedText>
                       </View>
                     </View>
-                  )}
-                </View>
+                  </>
+                )}
+
+                {sipOrdersAmount > 0 && (
+                  <View style={styles.stepCard}>
+                    <View style={styles.stepLeft}>
+                      <View style={styles.stepIconContainer}>
+                        <Ionicons name="refresh-outline" size={20} color="#FFFFFF" />
+                      </View>
+                    </View>
+                    <View style={styles.stepContent}>
+                      <View style={styles.stepTitleRow}>
+                        <ThemedText style={styles.stepTitle}>
+                          {buyOrdersAmount > 0 ? "Step 2: " : ""}Activate SIP
+                        </ThemedText>
+                        <View style={styles.pendingBadge}>
+                          <ThemedText style={styles.pendingBadgeText}>Pending</ThemedText>
+                        </View>
+                      </View>
+                      <ThemedText style={styles.stepDescription}>
+                        Allow auto-debit for monthly investments
+                      </ThemedText>
+                    </View>
+                  </View>
+                )}
               </View>
-            )}
-          </View>
+            </View>
+          )}
         </ScrollView>
 
         {/* Proceed to Pay Button */}
-        <View style={styles.buttonContainer}>
+        <View style={[styles.buttonContainer, { paddingBottom: Math.max(bottomInset, 20) }]}>
+          {paymentError && (
+            <View style={styles.errorBanner}>
+              <Ionicons name="alert-circle" size={16} color="#DC2626" />
+              <ThemedText style={styles.errorBannerText}>{paymentError}</ThemedText>
+            </View>
+          )}
           <Button
             onPress={handleConfirmOrder}
             disabled={!selectedMethod || !selectedBank || isProcessing}
@@ -586,7 +380,7 @@ export default function PaymentMethodScreen() {
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: "#F9FAFB",
+    backgroundColor: "#FFFFFF",
   },
   container: {
     flex: 1,
@@ -622,287 +416,108 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   scrollContent: {
-    padding: 16,
-    paddingBottom: 120,
-  },
-  mainCard: {
-    backgroundColor: "#FFFFFF",
     padding: 20,
-    borderRadius: 16,
-    shadowColor: "#000",
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.05,
-    shadowRadius: 12,
-    elevation: 3,
+    paddingBottom: 120,
   },
   section: {
     marginBottom: 28,
   },
-  sectionTitle: {
-    fontSize: 17,
-    fontWeight: "700",
-    color: "#111827",
-    marginBottom: 16,
-    letterSpacing: -0.2,
-  },
-  paymentMethodsRow: {
+  bankChipsRow: {
     flexDirection: "row",
-    gap: 12,
-    alignItems: "stretch",
-  },
-  paymentMethodWrapper: {
-    flex: 1,
-    minWidth: 0,
-    alignSelf: "stretch",
-  },
-  paymentMethodCard: {
-    borderRadius: 16,
-    padding: 18,
-    backgroundColor: "#FFFFFF",
-    borderWidth: 2,
-    borderColor: "#E5E7EB",
-    height: 160,
-    justifyContent: "center",
-    alignItems: "center",
-    width: "100%",
-    position: "relative",
-    shadowColor: "#000",
-    shadowOffset: {
-      width: 0,
-      height: 1,
-    },
-    shadowOpacity: 0.05,
-    shadowRadius: 3,
-    elevation: 2,
-  },
-  paymentMethodContent: {
-    alignItems: "center",
-    justifyContent: "center",
-    width: "100%",
-    position: "relative",
-  },
-  paymentMethodIconContainer: {
-    width: 68,
-    height: 68,
-    borderRadius: 16,
-    justifyContent: "center",
-    alignItems: "center",
-    marginBottom: 12,
-  },
-  paymentMethodText: {
-    alignItems: "center",
-    justifyContent: "center",
-    width: "100%",
-    paddingTop: 0,
-  },
-  paymentMethodTitle: {
-    fontSize: 17,
-    fontWeight: "700",
-    color: "#111827",
-    marginBottom: 6,
-    textAlign: "center",
-    height: 24,
-    lineHeight: 24,
-  },
-  paymentMethodTitleSelected: {
-    color: "#FFFFFF",
-  },
-  paymentMethodDescription: {
-    fontSize: 13,
-    color: "#6B7280",
-    textAlign: "center",
-    lineHeight: 18,
-    minHeight: 36,
-  },
-  paymentMethodDescriptionSelected: {
-    color: "#FFFFFF",
-    opacity: 0.9,
-  },
-  selectedCheckmark: {
-    position: "absolute",
-    top: 10,
-    right: 10,
-    width: 26,
-    height: 26,
-    borderRadius: 13,
-    backgroundColor: "rgba(255, 255, 255, 0.3)",
-    justifyContent: "center",
-    alignItems: "center",
-    borderWidth: 1.5,
-    borderColor: "rgba(255, 255, 255, 0.4)",
-    zIndex: 10,
-  },
-  selectedCheckmarkHidden: {
-    opacity: 0,
-    pointerEvents: "none",
-  },
-  bankAccountsScroll: {
-    maxHeight: 220,
-  },
-  bankAccountCard: {
-    borderRadius: 14,
-    marginBottom: 12,
-    padding: 18,
-    backgroundColor: "#FFFFFF",
-    borderWidth: 2,
-    borderColor: "#E5E7EB",
-    shadowColor: "#000",
-    shadowOffset: {
-      width: 0,
-      height: 1,
-    },
-    shadowOpacity: 0.04,
-    shadowRadius: 3,
-    elevation: 2,
-  },
-  bankAccountCardSelected: {
-    borderColor: "#10B981",
-    borderWidth: 2.5,
-    backgroundColor: "#F0FDF4",
-  },
-  bankAccountContent: {
-    flexDirection: "row",
-    alignItems: "center",
-  },
-  bankIconContainer: {
-    width: 52,
-    height: 52,
-    borderRadius: 14,
-    justifyContent: "center",
-    alignItems: "center",
-    marginRight: 14,
-  },
-  bankAccountInfo: {
-    flex: 1,
-  },
-  bankName: {
-    fontSize: 17,
-    fontWeight: "600",
-    color: "#111827",
-    marginBottom: 5,
-    letterSpacing: -0.2,
-  },
-  bankAccountNumber: {
-    fontSize: 14,
-    color: "#6B7280",
-    letterSpacing: 0.2,
+    flexWrap: "wrap",
+    gap: 10,
   },
   stepsDescription: {
-    fontSize: 14,
+    fontSize: 13,
     color: "#6B7280",
-    marginBottom: 18,
-    lineHeight: 20,
+    marginBottom: 14,
+    lineHeight: 18,
   },
   paymentSteps: {
-    marginBottom: 18,
+    gap: 0,
   },
-  paymentStep: {
+  stepCard: {
     flexDirection: "row",
-    marginBottom: 18,
+    alignItems: "flex-start",
   },
-  stepIconContainer: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    backgroundColor: "#2563EB",
-    justifyContent: "center",
+  stepLeft: {
     alignItems: "center",
     marginRight: 14,
-    shadowColor: "#2563EB",
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.2,
-    shadowRadius: 4,
-    elevation: 3,
+  },
+  stepIconContainer: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: "#3137D5",
+    justifyContent: "center",
+    alignItems: "center",
   },
   stepConnector: {
-    width: 2.5,
-    height: 24,
-    backgroundColor: "#10B981",
-    marginLeft: 22,
-    marginBottom: 4,
-    borderRadius: 2,
+    width: 2,
+    flex: 1,
+    minHeight: 20,
+    backgroundColor: "#E0E0E0",
+    marginVertical: 4,
+    borderRadius: 1,
   },
   stepContent: {
     flex: 1,
+    paddingBottom: 20,
   },
-  stepHeader: {
+  stepTitleRow: {
     flexDirection: "row",
     alignItems: "center",
-    marginBottom: 6,
     flexWrap: "wrap",
+    gap: 8,
+    marginBottom: 4,
   },
   stepTitle: {
-    fontSize: 16,
+    fontSize: 15,
     fontWeight: "600",
     color: "#111827",
-    marginRight: 10,
-    letterSpacing: -0.2,
   },
   pendingBadge: {
     backgroundColor: "#FEF3C7",
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    borderRadius: 10,
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 20,
     borderWidth: 1,
     borderColor: "#FDE68A",
   },
   pendingBadgeText: {
-    fontSize: 12,
-    fontWeight: "700",
+    fontSize: 11,
+    fontWeight: "600",
     color: "#D97706",
-    letterSpacing: 0.2,
   },
   stepDescription: {
-    fontSize: 14,
-    color: "#6B7280",
-    lineHeight: 20,
+    fontSize: 13,
+    color: "#9CA3AF",
+    lineHeight: 18,
   },
   stepAmount: {
-    fontSize: 14,
+    fontSize: 13,
     fontWeight: "700",
-    color: "#111827",
+    color: "#374151",
   },
   securityBox: {
     backgroundColor: "#EFF6FF",
-    borderRadius: 14,
-    padding: 16,
-    marginBottom: 12,
+    borderRadius: 12,
+    padding: 14,
+    marginBottom: 14,
     flexDirection: "row",
     alignItems: "center",
     borderWidth: 1,
     borderColor: "#DBEAFE",
   },
   securityIcon: {
-    marginRight: 12,
+    marginRight: 10,
   },
   securityText: {
-    fontSize: 14,
-    color: "#1E40AF",
-    lineHeight: 20,
+    fontSize: 13,
+    color: "#3137D5",
+    lineHeight: 18,
     flex: 1,
     fontWeight: "500",
-  },
-  bankSelectedCheckmark: {
-    width: 28,
-    height: 28,
-    borderRadius: 14,
-    backgroundColor: "#10B981",
-    justifyContent: "center",
-    alignItems: "center",
-    shadowColor: "#10B981",
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.3,
-    shadowRadius: 4,
-    elevation: 3,
   },
   loadingContainer: {
     flexDirection: "row",
@@ -944,11 +559,11 @@ const styles = StyleSheet.create({
     bottom: 0,
     left: 0,
     right: 0,
-    padding: 20,
+    paddingTop: 12,
+    paddingHorizontal: 20,
     backgroundColor: "#FFFFFF",
     borderTopWidth: 1,
     borderTopColor: "#F3F4F6",
-    paddingBottom: 34,
     shadowColor: "#000",
     shadowOffset: {
       width: 0,
@@ -957,46 +572,23 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.05,
     shadowRadius: 8,
     elevation: 5,
+    gap: 10,
   },
-  proceedButton: {
-    borderRadius: 14,
-    shadowColor: "#2563EB",
-    shadowOffset: {
-      width: 0,
-      height: 4,
-    },
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
-    elevation: 6,
-  },
-  orderSummary: {
-    borderRadius: 12,
-    padding: 16,
-  },
-  orderSummaryItem: {
+  errorBanner: {
     flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    paddingVertical: 8,
+    alignItems: "flex-start",
+    gap: 8,
+    backgroundColor: "#FEF2F2",
+    borderWidth: 1,
+    borderColor: "#FECACA",
+    borderRadius: 10,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
   },
-  orderSummaryLabel: {
-    fontSize: 16,
-  },
-  orderSummaryAmount: {
-    fontSize: 16,
-    fontWeight: "500",
-  },
-  totalLabel: {
-    fontWeight: "600",
-    fontSize: 18,
-  },
-  buyOrdersAmount: {
-    fontWeight: "700",
-    fontSize: 18,
-  },
-  divider: {
-    height: 1,
-    backgroundColor: "#e0e0e0",
-    marginVertical: 8,
+  errorBannerText: {
+    flex: 1,
+    fontSize: 13,
+    color: "#DC2626",
+    lineHeight: 18,
   },
 });

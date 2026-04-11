@@ -1,11 +1,11 @@
 // hooks/usePersistRoute.ts
+import { useRouteRestored } from "@/providers/RouteRestoredProvider";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useGlobalSearchParams, usePathname } from "expo-router";
 import { useEffect } from "react";
 
 export const LAST_ROUTE_KEY = "last_active_route";
 export const BLOCKED_ROUTES: RegExp[] = [
-  /^\/$/, // "/"
   /^\/name-input$/, // "/login"
   /^\/onboarding$/, // "/onboarding"
   /^\/sign-in$/, // "/sign-in"
@@ -19,11 +19,12 @@ export const isBlocked = (route: string) =>
   BLOCKED_ROUTES.some((regex) => regex.test(route));
 
 export function usePersistRoute() {
+  const { isRestored } = useRouteRestored();
   const pathname = usePathname();
   const params = useGlobalSearchParams();
 
   useEffect(() => {
-    if (!pathname) return;
+    if (!isRestored || !pathname) return;
 
     const query = new URLSearchParams(
       Object.entries(params).reduce(
@@ -43,5 +44,5 @@ export function usePersistRoute() {
 
     console.log("persisting last route", fullRoute);
     AsyncStorage.setItem(LAST_ROUTE_KEY, fullRoute);
-  }, [pathname, params]);
+  }, [isRestored, pathname, params]);
 }
