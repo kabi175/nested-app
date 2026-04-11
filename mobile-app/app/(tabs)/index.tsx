@@ -281,7 +281,7 @@ export default function HomeScreen() {
             style={styles.referralGradient}
           >
             <View style={styles.referralTextBlock}>
-              <Text style={styles.referralTitle}>Know a parent who'd benefit?</Text>
+              <Text style={styles.referralTitle}>Know a parent who&apos;d benefit?</Text>
               <Text style={styles.referralSubtitle}>
                 Share Nested, and get ₹500 off their first month
               </Text>

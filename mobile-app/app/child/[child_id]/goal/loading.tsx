@@ -114,6 +114,7 @@ export default function LoadingScreen() {
       rotationAnimation.stop();
       pulseAnimation.stop();
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const rotationInterpolate = rotateAnim.interpolate({

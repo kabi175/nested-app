@@ -74,6 +74,7 @@ export default function BasicDetailsScreen() {
     return () => {
       mounted = false;
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [update, apiUser]);
 
   const onContinue = async () => {
@@ -106,7 +107,7 @@ export default function BasicDetailsScreen() {
       });
 
       router.push("/kyc/basic-confirmation");
-    } catch (error) {
+    } catch (_err) {
       Alert.alert("Error", "Failed to update user. Please try again.");
     }
   };

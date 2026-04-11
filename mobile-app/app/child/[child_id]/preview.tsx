@@ -62,7 +62,7 @@ export default function Preview() {
                 <View style={styles.header}>
                     <BackButton onPress={() => router.back()} />
                     <Text style={styles.title}>
-                        Here's what we're planning{"\n"}for <Text style={styles.titleBold}>{childName}</Text>
+                        Here&apos;s what we&apos;re planning{"\n"}for <Text style={styles.titleBold}>{childName}</Text>
                     </Text>
                 </View>
 

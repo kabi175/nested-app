@@ -38,6 +38,7 @@ export default function EsignUploadScreen() {
     } finally {
       setIsLaunching(false);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user]);
 
   if (isLoading) {

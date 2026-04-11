@@ -49,6 +49,7 @@ export default function FundDetailScreen() {
   >(null);
   const [unitsValue, setUnitsValue] = useState("");
   const [amountValue, setAmountValue] = useState("");
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [isRedeeming, setIsRedeeming] = useState(false);
 
   const isLoading = holdingsLoading || transactionsLoading;

@@ -435,7 +435,7 @@ export default function PaymentProcessingScreen() {
             <View style={[styles.stepIcon, { backgroundColor: "#9CA3AF" }]}>
               <Ionicons name="time-outline" size={34} color="#FFFFFF" />
             </View>
-            <Text style={styles.stepTitle}>Time's up</Text>
+            <Text style={styles.stepTitle}>Time&apos;s up</Text>
             <Text style={styles.stepSubtitle}>
               The 10-minute window expired. Moving to the next step…
             </Text>

@@ -51,6 +51,7 @@ export default function PathCard({
       damping: 14,
       stiffness: 120,
     });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selected]);
 
   const animatedContainerStyle = useAnimatedStyle(() => {

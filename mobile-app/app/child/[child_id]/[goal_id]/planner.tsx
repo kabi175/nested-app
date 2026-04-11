@@ -77,7 +77,7 @@ export default function Planner() {
     const insets = useSafeAreaInsets();
 
     const { data: goal } = useGoal(goal_id);
-    const child_id = goal?.child.id;
+    const child_id = goal?.child?.id;
     // const { data: child } = useChild(child_id);
     const createGoalMutation = useGoalCreation();
     const updateGoalMutation = useUpdateGoal();
@@ -204,7 +204,7 @@ export default function Planner() {
     const isLoading =
         createGoalMutation.isPending || createOrdersMutation.isPending;
 
-    const childName = goal?.child.name ?? "your child";
+    const childName = goal?.child?.name ?? "your child";
 
     return (
         <SafeAreaView style={styles.safe} edges={["top"]}>
@@ -220,7 +220,7 @@ export default function Planner() {
                 <View style={styles.header}>
                     <BackButton onPress={() => router.push("/(tabs)")} />
                     <Text style={styles.title}>
-                        Let's build a perfect nest for{"\n"}{childName}
+                        Let&apos;s build a perfect nest for{"\n"}{childName}
                     </Text>
                 </View>
 

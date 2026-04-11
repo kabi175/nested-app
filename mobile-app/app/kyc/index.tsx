@@ -7,7 +7,7 @@ import { Alert } from "react-native";
 
 export default function KycIntroScreen() {
   const router = useRouter();
-  const { data: user, isLoading: isUserLoading } = useUser();
+  const { data: user } = useUser();
   const createInvestorMutation = useCreateInvestor();
 
   useEffect(() => {

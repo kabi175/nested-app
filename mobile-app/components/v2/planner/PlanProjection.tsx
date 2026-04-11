@@ -26,7 +26,7 @@ export default function PlanProjection({
 }: PlanProjectionProps) {
   return (
     <View style={styles.container}>
-      <Text style={styles.headerTitle}>WHAT YOU'D REACH BY {year}</Text>
+      <Text style={styles.headerTitle}>WHAT YOU&apos;D REACH BY {year}</Text>
       <View style={styles.rows}>
         {plans.map((plan, index) => {
           // Calculate percentage width, ensuring a minimum for the visual "cap"

@@ -1,4 +1,4 @@
-import { Redirect, Tabs, usePathname } from "expo-router";
+import { Redirect, Tabs } from "expo-router";
 import React from "react";
 import { Platform } from "react-native";
 
@@ -9,7 +9,6 @@ import { useAuth0 } from "react-native-auth0";
 
 export default function TabLayout() {
   const { user } = useAuth0();
-  const pathname = usePathname();
 
   if (!user) {
     console.log("Redirecting to sign-in");

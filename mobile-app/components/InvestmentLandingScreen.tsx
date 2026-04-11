@@ -53,6 +53,7 @@ export default function InvestmentLandingScreen({
     console.log("Explore strategy:", strategyId);
   };
 
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const handleLearnMore = () => {
     onLearnMore?.();
     console.log("Learn more pressed");

@@ -100,13 +100,14 @@ export default function SelectChildScreen({
           <Text style={styles.title}>
             {isChildPresent ? `${displayName}’s future starts today` : "Add a child"}
           </Text>
-          <Text style={styles.subtitle}>Let's figure out what it needs</Text>
+          <Text style={styles.subtitle}>Let&apos;s figure out what it needs</Text>
         </View>
 
         {/* ── Nest illustration area ────────────────────────── */}
         <View style={styles.nestArea}>
           {children.length > 0 ? (
             <NestEggs
+              // eslint-disable-next-line react/no-children-prop
               children={nestChildren}
               selectedChildId={selectedChildId}
               onSelectChild={setSelectedChildId}

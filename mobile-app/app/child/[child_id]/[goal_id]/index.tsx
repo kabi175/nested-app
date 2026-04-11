@@ -10,7 +10,7 @@ export default function EducationDetailRoute() {
         goal_id: string;
     }>();
 
-    const { data: goalData, isLoading } = useGoal(goal_id);
+    const { isLoading } = useGoal(goal_id);
 
     const onBack = () => {
         router.push(`/(tabs)`);

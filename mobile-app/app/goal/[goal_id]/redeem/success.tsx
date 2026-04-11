@@ -33,6 +33,7 @@ export default function RedeemSuccessScreen() {
         useNativeDriver: true,
       }),
     ]).start();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const handleContinue = () => {

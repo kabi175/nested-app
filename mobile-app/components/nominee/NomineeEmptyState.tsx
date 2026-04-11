@@ -54,7 +54,7 @@ export function NomineeEmptyState({
 
       <View style={styles.bottomArea}>
         <View style={styles.infoBox}>
-          <Text style={styles.infoText}>You're free to add any nominees later.</Text>
+          <Text style={styles.infoText}>You&apos;re free to add any nominees later.</Text>
         </View>
         <Button title="Add your First Nominee" onPress={onAddPress} />
         {onOptOut && (

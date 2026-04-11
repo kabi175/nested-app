@@ -1,5 +1,5 @@
 import { Ionicons } from "@expo/vector-icons";
-import { Link, router } from "expo-router";
+import { router } from "expo-router";
 
 import Logo from "@/assets/images/v2/logo-varient.svg";
 import Button from "@/components/v2/Button";
@@ -156,7 +156,7 @@ export default function SignIn() {
               </View>
 
               <Text style={styles.mainTitle}>
-                Building your child's future{"\n"}starts here
+                Building your child&apos;s future{"\n"}starts here
               </Text>
 
               <Text style={styles.mainSubtitle}>
@@ -221,7 +221,7 @@ export default function SignIn() {
                 <>
                   <Text style={styles.inputLabel}>Enter OTP</Text>
                   <Text style={styles.fieldHint}>
-                    We've sent a 6-digit code to {countryCode} {phoneNumber}
+                    We&apos;ve sent a 6-digit code to {countryCode} {phoneNumber}
                   </Text>
 
                   <View style={styles.otpWrapper}>

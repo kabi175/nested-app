@@ -226,6 +226,7 @@ export default function OnboardingScreen({
       }
     });
     return () => anim.stop();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentIndex]);
 
   const onListLayout = useCallback((e: LayoutChangeEvent) => {

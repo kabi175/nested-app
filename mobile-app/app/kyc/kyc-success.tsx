@@ -28,6 +28,7 @@ export default function KycSuccessScreen() {
         useNativeDriver: true,
       }),
     ]).start();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const handleGoToGoals = () => {
@@ -56,7 +57,7 @@ export default function KycSuccessScreen() {
             </Text>
             <Text category="s1" appearance="hint" style={styles.subtitle}>
               Your KYC has been successfully verified. You can now start
-              creating investment goals for your child's future.
+              creating investment goals for your child&apos;s future.
             </Text>
           </View>
 

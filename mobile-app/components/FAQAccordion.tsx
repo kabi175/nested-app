@@ -30,7 +30,6 @@ export function FAQAccordion({ question, answer }: FAQAccordionProps) {
     let match: RegExpExecArray | null;
     let key = 0;
 
-    // eslint-disable-next-line no-cond-assign
     while ((match = linkRegex.exec(text)) !== null) {
       const matchIndex = match.index;
       const [fullMatch, label, url] = match;

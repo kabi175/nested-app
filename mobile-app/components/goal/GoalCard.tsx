@@ -1,11 +1,8 @@
-import { cartAtom } from "@/atoms/cart";
 import { goalsForCustomizeAtom } from "@/atoms/goals";
 import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
-import { useAuthAxios } from "@/hooks/useAuthAxios";
 import type { Goal } from "@/types/investment";
 import { formatCurrency } from "@/utils/formatters";
-import { useQueryClient } from "@tanstack/react-query";
 import { ProgressBar } from "@ui-kitten/components";
 import { router } from "expo-router";
 import { useSetAtom } from "jotai";
@@ -57,9 +54,6 @@ function getGoalBorderColor(goalId: string): string {
 }
 
 export function GoalCard({ goal }: GoalCardProps) {
-  const api = useAuthAxios();
-  const queryClient = useQueryClient();
-  const setCart = useSetAtom(cartAtom);
   const progressPercentage = goal.currentAmount / goal.targetAmount;
   const borderColor = getGoalBorderColor(goal.id);
   const hasMonthlySip =

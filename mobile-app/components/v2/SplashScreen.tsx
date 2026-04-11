@@ -1,7 +1,7 @@
 import { LinearGradient } from "expo-linear-gradient";
 import { StatusBar } from "expo-status-bar";
 import React, { useEffect, useRef } from "react";
-import { Animated, StyleSheet, View } from "react-native";
+import { Animated, StyleSheet } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import LogoDefault from "../../assets/images/v2/logo-default.svg";
 
@@ -43,6 +43,7 @@ export default function SplashScreenComponent({
         }, 800);
       }
     });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   return (

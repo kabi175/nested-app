@@ -1,6 +1,6 @@
 import { ThemedText } from "@/components/ThemedText";
 import React from "react";
-import { Animated, StyleSheet, TouchableOpacity, View } from "react-native";
+import { Animated, StyleSheet, TouchableOpacity } from "react-native";
 
 interface SelectionModeToggleProps {
   selectionMode: "course" | "college";
