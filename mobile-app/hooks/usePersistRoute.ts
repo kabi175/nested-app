@@ -24,7 +24,6 @@ export function usePersistRoute() {
   const params = useGlobalSearchParams();
 
   useEffect(() => {
-    console.log("usePersistRoute effect triggered with", { isRestored, pathname, params });
     if (!isRestored || !pathname) return;
 
     const query = new URLSearchParams(
