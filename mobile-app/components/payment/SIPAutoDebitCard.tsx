@@ -38,6 +38,13 @@ const phaseConfig: Record<DisplayPhase, {
     badgeText: "Processing…", badgeColor: "#3137D5",
     showSpinner: true,
   },
+  active: {
+    icon: "checkmark-circle",
+    iconBg: "#22C55E",
+    badgeBg: "#DCFCE7", badgeBorder: "#86EFAC",
+    badgeText: "Activated ✓", badgeColor: "#16A34A",
+    showSpinner: false,
+  },
   completed: {
     icon: "checkmark-circle",
     iconBg: "#22C55E",

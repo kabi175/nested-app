@@ -108,7 +108,7 @@ export default function GoalPlannerScreen() {
         // 6. Navigate
         router.push({
             pathname: "/child/[child_id]/testimonials",
-            params: { child_id: goal.child.id }
+            params: { child_id: goal.child?.id }
         }
         );
     };
@@ -116,7 +116,7 @@ export default function GoalPlannerScreen() {
 
     return (
         <EducationBasedGoalPlanner
-            childName={goal.child.name}
+            childName={goal.child?.name ?? ""}
             goalYear={targetYear}
             goalAmount={targetAmount}
             collegeType={goal.education?.name}
