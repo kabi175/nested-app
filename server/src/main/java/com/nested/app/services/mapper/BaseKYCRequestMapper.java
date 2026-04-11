@@ -22,7 +22,6 @@ public class BaseKYCRequestMapper {
    */
   public static <T extends BaseKYCRequest> void mapUserToBaseKYCRequest(User user, T request) {
     request.setFirstName(user.getFirstName());
-    request.setLastName(user.getLastName());
     request.setDateOfBirth(user.getDateOfBirth());
     request.setGender(mapUserGenderToClientGender(user.getGender()));
     request.setPan(user.getPanNumber());

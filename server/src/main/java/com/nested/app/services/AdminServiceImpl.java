@@ -149,30 +149,6 @@ public class AdminServiceImpl implements AdminService {
     }
 
     /**
-     * Promotes an existing user to admin
-     */
-    private UserDTO promoteExistingUser(User existingUser, CreateAdminRequest request) {
-        log.info("Promoting existing user {} to admin", existingUser.getId());
-
-        existingUser.setRole(User.Role.ADMIN);
-
-        // Update optional fields if provided
-        if (request.getFirstName() != null && !request.getFirstName().isEmpty()) {
-            existingUser.setFirstName(request.getFirstName());
-        }
-        if (request.getLastName() != null && !request.getLastName().isEmpty()) {
-            existingUser.setLastName(request.getLastName());
-        }
-
-        User savedUser = userRepository.save(existingUser);
-
-        // Set Firebase custom claims
-        setFirebaseAdminClaims(savedUser.getFirebaseUid());
-
-        return mapToDTO(savedUser);
-    }
-
-    /**
      * Creates a new admin user in the database
      */
     private UserDTO createNewAdminUser(String firebaseUid, String email, CreateAdminRequest request) {
@@ -183,7 +159,6 @@ public class AdminServiceImpl implements AdminService {
                 .email(email)
                 .role(User.Role.ADMIN)
                 .firstName(request.getFirstName())
-                .lastName(request.getLastName())
                 .isActive(true)
                 .build();
 

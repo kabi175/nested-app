@@ -37,7 +37,6 @@ export default function UserScreen() {
   const api = useAuthAxios();
   const [formData, setFormData] = useState({
     firstName: user?.firstName || "",
-    lastName: user?.lastName || "",
     email: user?.email || "",
     phone_number: user?.phone_number || "",
     panNumber: user?.panNumber || "",
@@ -56,7 +55,6 @@ export default function UserScreen() {
   useEffect(() => {
     setFormData({
       firstName: user?.firstName || "",
-      lastName: user?.lastName || "",
       email: user?.email || "",
       phone_number: user?.phone_number || "",
       panNumber: user?.panNumber || "",
@@ -83,7 +81,6 @@ export default function UserScreen() {
       }
       return await updateUser(api, user.id, {
         firstName: formData.firstName,
-        lastName: formData.lastName,
         email: formData.email,
         phone_number: formData.phone_number,
         panNumber: formData.panNumber,
@@ -154,16 +151,6 @@ export default function UserScreen() {
                   onChangeText={(value) =>
                     handleFieldChange("firstName", value)
                   }
-                  disabled={!isEditing}
-                  style={styles.input}
-                  size="large"
-                />
-
-                <Input
-                  value={formData.lastName}
-                  label="Last Name"
-                  placeholder="Enter your last name"
-                  onChangeText={(value) => handleFieldChange("lastName", value)}
                   disabled={!isEditing}
                   style={styles.input}
                   size="large"
@@ -292,7 +279,6 @@ export default function UserScreen() {
                       // Reset form data to original values
                       setFormData({
                         firstName: user?.firstName || "",
-                        lastName: user?.lastName || "",
                         email: user?.email || "",
                         phone_number: user?.phone_number || "",
                         panNumber: user?.panNumber || "",

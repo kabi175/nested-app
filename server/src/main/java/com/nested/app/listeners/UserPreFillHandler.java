@@ -73,8 +73,8 @@ public record UserPreFillHandler(
       return;
     }
 
-    if (Objects.equals(user.getPrefillStatus(), User.PrefillStatus.COMPLETED)) {
-      log.info("Prefill already completed for userId={}, skipping prefill", user.getId());
+    if (!Objects.equals(user.getPrefillStatus(), User.PrefillStatus.INCOMPLETE)) {
+      log.info("Prefill already completed or failed for userId={}, skipping prefill", user.getId());
       return;
     }
 

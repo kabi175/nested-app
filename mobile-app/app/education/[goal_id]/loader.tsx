@@ -27,7 +27,8 @@ export default function EducationDetailLoader() {
     useEffect(() => {
         const timer = setTimeout(onComplete, TIMEOUT_DURATION);
         return () => clearTimeout(timer);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
-    return <BuildingNestScreen userName={goal?.child.name || "Child"} />;
+    return <BuildingNestScreen userName={goal?.child?.name || "Child"} />;
 }

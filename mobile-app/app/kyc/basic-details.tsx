@@ -43,10 +43,7 @@ export default function BasicDetailsScreen() {
     let mounted = true;
     (async () => {
       if (mounted && apiUser) {
-        const fullName = [apiUser.firstName, apiUser.lastName]
-          .filter(Boolean)
-          .join(" ")
-          .trim();
+        const fullName = (apiUser.firstName || "").trim();
         update("basic", {
           fullName: fullName,
           dateOfBirth: apiUser.dob || null,
@@ -77,6 +74,7 @@ export default function BasicDetailsScreen() {
     return () => {
       mounted = false;
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [update, apiUser]);
 
   const onContinue = async () => {
@@ -89,9 +87,7 @@ export default function BasicDetailsScreen() {
     if (!vBasic.isValid || !vIdentity.isValid) return;
 
     try {
-      const parts = (data.basic.fullName || "").trim().split(/\s+/);
-      const firstName = parts[0] || "";
-      const lastName = parts.slice(1).join(" ");
+      const firstName = (data.basic.fullName || "").trim();
       const genderLower = data.basic.gender;
       if (!apiUser) return;
 
@@ -99,7 +95,6 @@ export default function BasicDetailsScreen() {
         id: apiUser.id,
         payload: {
           firstName,
-          lastName,
           email: data.basic.email,
           phone_number: data.basic.mobile,
           dob: data.basic.dateOfBirth || null,
@@ -111,8 +106,8 @@ export default function BasicDetailsScreen() {
         },
       });
 
-      router.push("/kyc/address");
-    } catch (error) {
+      router.push("/kyc/basic-confirmation");
+    } catch (_err) {
       Alert.alert("Error", "Failed to update user. Please try again.");
     }
   };

@@ -3,7 +3,15 @@ import { Text } from "@ui-kitten/components";
 import { Stack } from "expo-router";
 import { StatusBar as ExpoStatusBar } from "expo-status-bar";
 import React from "react";
-import { Platform, StatusBar as RNStatusBar } from "react-native";
+import { Platform, StatusBar as RNStatusBar, StyleSheet } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
+
+const styles = StyleSheet.create({
+  safeArea: {
+    flex: 1,
+    backgroundColor: "#FFFFFF",
+  },
+});
 
 export default function KYCRootLayout() {
   return (
@@ -12,6 +20,7 @@ export default function KYCRootLayout() {
       {Platform.OS === "android" && (
         <RNStatusBar translucent={false} barStyle="dark-content" />
       )}
+      <SafeAreaView style={styles.safeArea} edges={["top"]}>
       <Stack
         screenOptions={{
           headerTitleAlign: "center",
@@ -24,6 +33,10 @@ export default function KYCRootLayout() {
         <Stack.Screen
           name="basic-details"
           options={{ title: "KYC • Basic Details" }}
+        />
+        <Stack.Screen
+          name="basic-confirmation"
+          options={{ title: "KYC • Confirm PAN Details" }}
         />
         <Stack.Screen name="address" options={{ title: "KYC • Address" }} />
         <Stack.Screen
@@ -68,6 +81,7 @@ export default function KYCRootLayout() {
         />
         <Stack.Screen name="kyc-success" options={{ title: "KYC • Success" }} />
       </Stack>
+      </SafeAreaView>
     </KycProvider>
   );
 }

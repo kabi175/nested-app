@@ -10,7 +10,7 @@ import {
     Text,
     View,
 } from "react-native";
-import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 import Button from "./Button";
 
@@ -71,8 +71,6 @@ export default function TestimonialScreen({
     onBack,
     onReadMore,
 }: TestimonialScreenProps) {
-    const insets = useSafeAreaInsets();
-
     return (
         <View style={styles.container}>
             {/* Background Gradient */}

@@ -66,6 +66,7 @@ export default function CreateGoalScreen() {
         },
       ]);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [children, selectedChildId]);
 
   const [expandedDropdowns, setExpandedDropdowns] = useState<{

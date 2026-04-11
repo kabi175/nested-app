@@ -29,7 +29,7 @@ export default function LaunchingSoon() {
           </Text>
           <Text category="p1" style={styles.cardDescription}>
             Curated list of olympiads, competitions and contests to build your
-            child's confidence
+            child&apos;s confidence
           </Text>
           <Pressable
             style={({ pressed }) => [
@@ -51,7 +51,7 @@ export default function LaunchingSoon() {
           <Text category="p1" style={styles.cardDescription}>
             Get peace of mind and ensure continuity even when you are not around
             for just <Text style={styles.priceText}>₹299/month</Text>.
-            Comprehensive coverage for your family's future.
+            Comprehensive coverage for your family&apos;s future.
           </Text>
           <Pressable
             style={({ pressed }) => [

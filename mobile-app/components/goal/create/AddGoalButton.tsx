@@ -2,7 +2,7 @@ import { ThemedText } from "@/components/ThemedText";
 import * as Haptics from "expo-haptics";
 import { Plus } from "lucide-react-native";
 import React from "react";
-import { Animated, StyleSheet, TouchableOpacity } from "react-native";
+import { StyleSheet, TouchableOpacity } from "react-native";
 
 interface AddGoalButtonProps {
   onPress: () => void;

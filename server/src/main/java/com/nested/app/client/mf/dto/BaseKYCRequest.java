@@ -17,7 +17,6 @@ public abstract class BaseKYCRequest {
   protected final String placeOfBirth = "IN";
 
   @JsonIgnore protected String firstName;
-  @JsonIgnore protected String lastName;
 
   @JsonProperty("date_of_birth")
   @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd")
@@ -53,9 +52,6 @@ public abstract class BaseKYCRequest {
 
   @JsonProperty("name")
   public String getName() {
-    if (lastName == null) {
-      return firstName;
-    }
-    return firstName + " " + lastName;
+    return firstName;
   }
 }

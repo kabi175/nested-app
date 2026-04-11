@@ -79,6 +79,7 @@ export default function SelectChildScreen({
 
   const selectedChild = children.find((c) => c.id === selectedChildId) ?? children[0];
   const displayName = selectedChild?.firstName ?? "";
+  const isChildPresent = children.length > 0;
 
   return (
     <SafeAreaView style={styles.safeArea} edges={["top", "bottom"]}>
@@ -97,15 +98,16 @@ export default function SelectChildScreen({
           </Pressable>
 
           <Text style={styles.title}>
-            {displayName}’s future starts today
+            {isChildPresent ? `${displayName}’s future starts today` : "Add a child"}
           </Text>
-          <Text style={styles.subtitle}>Let's figure out what it needs</Text>
+          <Text style={styles.subtitle}>Let&apos;s figure out what it needs</Text>
         </View>
 
         {/* ── Nest illustration area ────────────────────────── */}
         <View style={styles.nestArea}>
           {children.length > 0 ? (
             <NestEggs
+              // eslint-disable-next-line react/no-children-prop
               children={nestChildren}
               selectedChildId={selectedChildId}
               onSelectChild={setSelectedChildId}

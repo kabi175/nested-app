@@ -21,7 +21,7 @@ const T = {
 } as const;
 
 // ─── KYC order (excluding "failed" — treat as unknown) ─────────────────────
-const KYC_ORDER: Array<User["kycStatus"]> = [
+const KYC_ORDER: User["kycStatus"][] = [
   "unknown",
   "pending",
   "aadhaar_pending",

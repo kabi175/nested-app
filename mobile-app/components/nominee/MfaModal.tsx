@@ -144,7 +144,7 @@ export function MfaModal({
 
           {/* Subtitle */}
           <Text style={styles.subtitle}>
-            We've sent you a 6-digit code to your registered mobile number.
+            We&apos;ve sent you a 6-digit code to your registered mobile number.
           </Text>
 
           {/* Error */}

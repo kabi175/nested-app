@@ -33,7 +33,7 @@ export class CrashlyticsErrorBoundary extends React.Component<Props, State> {
       return (
         <View style={styles.container}>
           <Text style={styles.title}>Something went wrong</Text>
-          <Text style={styles.subtitle}>We've been notified and are looking into it.</Text>
+          <Text style={styles.subtitle}>We&apos;ve been notified and are looking into it.</Text>
           <Pressable style={styles.button} onPress={() => this.setState({ hasError: false })}>
             <Text style={styles.buttonText}>Try again</Text>
           </Pressable>

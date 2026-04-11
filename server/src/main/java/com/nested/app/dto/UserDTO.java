@@ -26,10 +26,6 @@ public class UserDTO {
   @JsonProperty("first_name")
   private String firstName;
 
-  @NotNull
-  @JsonProperty("last_name")
-  private String lastName;
-
   private String email;
 
   @JsonProperty("phone_number")
@@ -94,7 +90,6 @@ public class UserDTO {
     UserDTO dto = new UserDTO();
     dto.setId(entity.getId());
     dto.setFirstName(entity.getFirstName());
-    dto.setLastName(entity.getLastName());
     dto.setEmail(entity.getEmail());
     dto.setPhoneNumber(entity.getPhoneNumber());
     dto.setRole(entity.getRole().name().toLowerCase());
@@ -121,7 +116,6 @@ public class UserDTO {
     return User.builder()
         .id(dto.getId())
         .firstName(dto.getFirstName())
-        .lastName(dto.getLastName())
         .email(dto.getEmail())
         .role(dto.getRole() != null ? User.Role.valueOf(dto.getRole().toUpperCase()) : null)
         .address(AddressDto.toEntity(dto.getAddress()))

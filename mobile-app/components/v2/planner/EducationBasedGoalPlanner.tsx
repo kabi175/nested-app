@@ -56,6 +56,7 @@ function calculateFutureValue(lumpsum = 0, monthlySip = 0, years: number, annual
 
       // FV of a single SIP payment: P * (1 + r)^n
       totalValue += currentSip * Math.pow(1 + monthlyRate, monthsRemaining);
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
       totalInvested += currentSip;
     }
 
@@ -106,6 +107,7 @@ export default function EducationBasedGoalPlanner({
       Animated.timing(fadeAnim, { toValue: 1, duration: 400, useNativeDriver: true }),
       Animated.timing(slideAnim, { toValue: 0, duration: 400, useNativeDriver: true }),
     ]).start();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {
@@ -136,6 +138,7 @@ export default function EducationBasedGoalPlanner({
         setCustomMounted(false);
       });
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [mode]);
 
   const lumpsum = lumpSumEnabled ? parseFloat(lumpSumAmount) || 0 : 0;
@@ -169,7 +172,7 @@ export default function EducationBasedGoalPlanner({
         {/* Title + subtitle */}
         <Animated.View style={[styles.titleBlock, { transform: [{ translateY: slideAnim }] }]}>
           <Text style={styles.title}>
-            Here's what we're planning{'\n'}for{' '}
+            Here&apos;s what we&apos;re planning{'\n'}for{' '}
             <Text style={styles.titleBold}>{childName}</Text>
           </Text>
           <Animated.View style={{ maxHeight: subtitleMaxHeight, overflow: 'hidden' }}>
@@ -180,7 +183,7 @@ export default function EducationBasedGoalPlanner({
               ]}
             >
               Taking into account the possible inflation,{'\n'}
-              and based on the child's age & dream.
+              and based on the child&apos;s age & dream.
             </Animated.Text>
           </Animated.View>
         </Animated.View>

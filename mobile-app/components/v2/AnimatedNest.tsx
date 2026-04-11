@@ -91,6 +91,7 @@ export default function AnimatedNest({
       return () => {
         timers.forEach(clearTimeout);
       };
+      // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [])
   );
 

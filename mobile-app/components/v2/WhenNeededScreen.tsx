@@ -162,7 +162,7 @@ export default function WhenNeededScreen({ child, loading = false, onBack, onSta
         {yearsFromNow !== null && (
           <View style={styles.infoBox}>
             <Text style={styles.infoText}>
-              That's {yearsFromNow} years from now — plenty of time to build.
+              That&apos;s {yearsFromNow} years from now — plenty of time to build.
             </Text>
           </View>
         )}

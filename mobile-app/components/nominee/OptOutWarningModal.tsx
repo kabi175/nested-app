@@ -1,7 +1,7 @@
 import { Button, Layout, Text } from "@ui-kitten/components";
-import { AlertTriangle, X } from "lucide-react-native";
+import { AlertTriangle } from "lucide-react-native";
 import React from "react";
-import { Modal, StyleSheet, TouchableOpacity, View } from "react-native";
+import { Modal, StyleSheet, View } from "react-native";
 
 interface OptOutWarningModalProps {
   visible: boolean;

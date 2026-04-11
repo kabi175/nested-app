@@ -17,7 +17,6 @@ export const getUser = async (api: AxiosInstance): Promise<User | null> => {
   return {
     id: user.id,
     firstName: user.first_name,
-    lastName: user.last_name,
     email: user.email,
     phone_number: user.phone_number,
     role: user.role,
@@ -55,7 +54,6 @@ export const updateUser = async (
 ): Promise<User> => {
   const userDTO = {
     first_name: payload.firstName,
-    last_name: payload.lastName,
     email: payload.email,
     phone_number: payload.phone_number,
     pan_number: payload.panNumber,

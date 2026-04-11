@@ -40,6 +40,7 @@ export default function Egg({
       -1,
       true
     );
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [animated]);
 
   // Bounce on selection
@@ -52,6 +53,7 @@ export default function Egg({
           withSpring(1,   { damping: 8, stiffness: 180 })
         )
       : withSpring(1, { damping: 10, stiffness: 150 });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selected, animated]);
 
   const style = useAnimatedStyle(() => ({

@@ -17,8 +17,6 @@ public class CreateAdminRequest {
     
     private String firstName;
     
-    private String lastName;
-    
     /**
      * Validates that at least email or firebaseUid is provided
      */

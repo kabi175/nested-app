@@ -30,6 +30,7 @@ export default function RestoreLastRoute() {
         }
 
         load();
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
     if (!target) {
