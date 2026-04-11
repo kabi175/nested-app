@@ -13,10 +13,7 @@ import com.nested.app.entity.SIPOrder;
 import com.nested.app.enums.TransactionStatus;
 import com.nested.app.events.OrderItemsRefUpdatedEvent;
 import com.nested.app.exception.ExternalServiceException;
-import com.nested.app.repository.OrderItemsRepository;
-import com.nested.app.repository.PaymentRepository;
-import com.nested.app.repository.SIPOrderRepository;
-import com.nested.app.repository.TenantAwareGoalRepository;
+import com.nested.app.repository.*;
 
 import java.sql.Timestamp;
 import java.time.Instant;
@@ -48,6 +45,7 @@ public class SipOrderPaymentServiceImpl implements SipOrderPaymentService {
   private final SipOrderApiClient sipOrderApiClient;
   private final PaymentServiceImpl paymentServiceHelper;
   private final OrderItemsRepository orderItemsRepository;
+  private final OrderRepository orderRepository;
   private final TenantAwareGoalRepository goalRepository;
   private final SIPOrderRepository sipOrderRepository;
   private final ApplicationEventPublisher eventPublisher;
@@ -224,6 +222,13 @@ public class SipOrderPaymentServiceImpl implements SipOrderPaymentService {
         orderItem.setRef(orderResponseItem.getRef());
         orderItem.setPaymentRef(orderResponseItem.getPaymentRef());
       }
+
+      var sipOrders = payment.getOrders().stream()
+              .filter(SIPOrder.class::isInstance).toList();
+
+      sipOrders.forEach(o -> o.setPlaced(true));
+
+      orderRepository.saveAll(sipOrders);
 
       // Persist updated SIP order items (refs/paymentRefs) explicitly before saving payment
       orderItemsRepository.saveAll(orderItems);
