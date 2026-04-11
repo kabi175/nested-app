@@ -99,8 +99,7 @@ public class BulkpeWebhookService {
 
     User user = userOptional.get();
     String userFirstName = user.getFirstName();
-    String userLastName = user.getLastName();
-    String userFullName = (userFirstName + " " + (userLastName != null ? userLastName : "")).trim();
+    String userFullName = userFirstName.trim();
 
     double similarity = calculateNameSimilarity(userFullName, remitterName);
     log.info(

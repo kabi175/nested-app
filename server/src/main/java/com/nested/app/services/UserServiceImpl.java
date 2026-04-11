@@ -91,12 +91,6 @@ public class UserServiceImpl implements UserService {
       flushValidationData = true;
     }
 
-    if (!StringUtils.isBlank(userDTO.getLastName())
-        && !Objects.equals(userDTO.getLastName(), originalUser.getLastName())) {
-      updatedUser = originalUser.withLastName(userDTO.getLastName());
-      flushValidationData = true;
-    }
-
     if (!StringUtils.isBlank(userDTO.getEmail())
         && !Objects.equals(userDTO.getEmail(), originalUser.getEmail())) {
       updatedUser = originalUser.withEmail(userDTO.getEmail());

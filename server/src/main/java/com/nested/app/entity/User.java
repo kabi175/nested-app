@@ -119,8 +119,6 @@ public class User {
 
   @With private String firstName;
 
-  @With private String lastName;
-
   @With private String fatherName;
 
   @With private String birthPlace;
@@ -178,10 +176,7 @@ public class User {
   private String signatureFileID;
 
   public String getFullName() {
-    if (lastName == null) {
-      return firstName;
-    }
-    return firstName + " " + lastName;
+    return firstName;
   }
 
   // Helper methods to maintain both sides of the association
