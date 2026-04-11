@@ -17,7 +17,6 @@ export default function GoalPlannerScreen() {
 
     const { data: goal } = useGoal(goal_id);
     const { data: basket } = useBasketById(goal?.basket?.id ?? '');
-    console.log("Basket data:", basket?.funds);
 
     const createOrdersMutation = useCreateOrders();
     const setCart = useSetAtom(cartAtom);
