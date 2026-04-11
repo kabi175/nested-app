@@ -26,7 +26,16 @@ export default function PaymentSuccessScreen() {
 
   const { data: payment, isLoading } = usePayment(payment_id || "");
   const purchaseLoggedRef = useRef(false);
+  const countdownStartedRef = useRef(false);
+  const navigateFnRef = useRef<(() => void) | null>(null);
+  const countdownDurationRef = useRef(AUTO_REDIRECT_SECONDS);
   const [countdown, setCountdown] = useState(AUTO_REDIRECT_SECONDS);
+  const [shouldNavigate, setShouldNavigate] = useState(false);
+  const [countdownReady, setCountdownReady] = useState(false);
+  // Derived — used in render
+  const hasNextStep =
+    (type === "sip" && payment?.buy_status === "pending") ||
+    (type === "buy" && payment?.sip_status === "pending");
 
   const [scaleAnim] = useState(new Animated.Value(0.6));
   const [fadeAnim] = useState(new Animated.Value(0));
@@ -48,28 +57,59 @@ export default function PaymentSuccessScreen() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Auto-redirect countdown
+  // Setup — runs once when payment is ready. Captures nav target + duration.
+  // Separated from the interval so a payment background-refetch doesn't kill the timer.
   useEffect(() => {
-    if (isLoading) return;
+    if (isLoading || !payment || countdownStartedRef.current) return;
+    countdownStartedRef.current = true;
+
+    const nextStep =
+      (type === "sip" && payment.buy_status === "pending") ||
+      (type === "buy" && payment.sip_status === "pending");
+
+    navigateFnRef.current = () => {
+      if (nextStep) {
+        router.replace(`/payment/${payment_id}/processing` as any);
+      } else {
+        router.replace("/(tabs)");
+      }
+    };
+
+    const duration = nextStep ? 2 : AUTO_REDIRECT_SECONDS;
+    countdownDurationRef.current = duration;
+    setCountdown(duration);
+    setCountdownReady(true);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isLoading, payment]);
+
+  // Interval — starts exactly once when countdownReady flips to true.
+  // Not tied to payment, so background refetches never clear this interval.
+  useEffect(() => {
+    if (!countdownReady) return;
+    const countRef = { current: countdownDurationRef.current };
     const interval = setInterval(() => {
-      setCountdown((prev) => {
-        if (prev <= 1) {
-          clearInterval(interval);
-          handleContinue();
-          return 0;
-        }
-        return prev - 1;
-      });
+      countRef.current -= 1;
+      setCountdown(countRef.current);
+      if (countRef.current <= 0) {
+        clearInterval(interval);
+        setShouldNavigate(true);
+      }
     }, 1000);
     return () => clearInterval(interval);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isLoading]);
+  }, [countdownReady]);
+
+  // Trigger navigation after countdown hits 0 — runs in its own effect (safe)
+  useEffect(() => {
+    if (shouldNavigate && navigateFnRef.current) {
+      navigateFnRef.current();
+    }
+  }, [shouldNavigate]);
 
   // Log analytics once
   useEffect(() => {
     if (!payment_id || !payment || isLoading || purchaseLoggedRef.current) return;
-    const isBuyCompleted = payment.buy_status === "completed";
-    const isSipCompleted = payment.sip_status === "completed";
+    const isBuyCompleted = payment.buy_status === "completed" || payment.buy_status === "active";
+    const isSipCompleted = payment.sip_status === "completed" || payment.sip_status === "active";
     if (isBuyCompleted || isSipCompleted) {
       purchaseLoggedRef.current = true;
       const amount = (payment as { amount?: number }).amount ?? 0;
@@ -84,19 +124,10 @@ export default function PaymentSuccessScreen() {
     }
   }, [payment_id, payment, isLoading]);
 
+  // Used only by the manual "Back to home" tap
   const handleContinue = () => {
-    if (type === "buy" && payment?.sip_status === "pending") {
-      router.replace({
-        pathname: `/payment/${payment_id}/processing`,
-        params: { paymentId: payment_id },
-      });
-      return;
-    }
-    if (type === "sip" && payment?.buy_status === "pending") {
-      router.replace({
-        pathname: `/payment/${payment_id}/processing`,
-        params: { paymentId: payment_id },
-      });
+    if (hasNextStep) {
+      router.replace(`/payment/${payment_id}/processing` as any);
       return;
     }
     router.replace("/(tabs)");
@@ -105,20 +136,23 @@ export default function PaymentSuccessScreen() {
   const paymentType = useMemo((): "buy" | "sip" | undefined => {
     if (type) return type;
     if (payment) {
-      if (payment.buy_status === "completed") return "buy";
-      if (payment.sip_status === "completed") return "sip";
+      if (payment.buy_status === "completed" || payment.buy_status === "active") return "buy";
+      if (payment.sip_status === "completed" || payment.sip_status === "active") return "sip";
     }
     return undefined;
   }, [type, payment]);
 
   const { label, subtitle } = useMemo(() => {
+    if (paymentType === "sip" && payment?.buy_status === "pending") {
+      return { label: "SIP Activated!", subtitle: "Now completing your lumpsum payment…" };
+    }
     if (paymentType === "buy") {
       return { label: "Lumpsum invested", subtitle: "Your one-time investment is being processed." };
     } else if (paymentType === "sip") {
       return { label: "SIP activated", subtitle: "Investments will be debited automatically." };
     }
     return { label: "Payment received", subtitle: "Your payment was processed successfully." };
-  }, [paymentType]);
+  }, [paymentType, payment?.buy_status]);
 
   if (isLoading) {
     return (
@@ -159,10 +193,16 @@ export default function PaymentSuccessScreen() {
 
       {/* Bottom */}
       <View style={[styles.bottomContainer, { paddingBottom: Math.max(bottomInset, 32) }]}>
-        <Text style={styles.countdownHint}>Redirecting in {countdown}s</Text>
-        <TouchableOpacity onPress={handleContinue} activeOpacity={0.6}>
-          <Text style={styles.backLink}>Back to home</Text>
-        </TouchableOpacity>
+        {hasNextStep ? (
+          <Text style={styles.countdownHint}>Continuing in {countdown}s…</Text>
+        ) : (
+          <>
+            <Text style={styles.countdownHint}>Redirecting in {countdown}s</Text>
+            <TouchableOpacity onPress={handleContinue} activeOpacity={0.6}>
+              <Text style={styles.backLink}>Back to home</Text>
+            </TouchableOpacity>
+          </>
+        )}
       </View>
     </SafeAreaView>
   );

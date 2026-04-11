@@ -1,225 +1,150 @@
 import { Payment, PaymentStatus } from "@/api/paymentAPI";
-import { ThemedText } from "@/components/ThemedText";
 import { Ionicons } from "@expo/vector-icons";
-import { useState } from "react";
-import {
-  ActivityIndicator,
-  StyleSheet,
-  TouchableOpacity,
-  View,
-} from "react-native";
+import { ActivityIndicator, StyleSheet, Text, View } from "react-native";
 
 interface SIPAutoDebitCardProps {
-  onPress: () => Promise<void>;
   payment: Payment | undefined;
 }
 
-export function SIPAutoDebitCard({ onPress, payment }: SIPAutoDebitCardProps) {
-  const sipStatus: PaymentStatus | "loading" = payment?.sip_status ?? "loading";
-  const [isAuthorizing, setIsAuthorizing] = useState(false);
+type DisplayPhase = PaymentStatus | "loading";
 
-  const getStatusConfig = () => {
-    switch (sipStatus) {
-      case "loading":
-      case "submitted":
-        return {
-          icon: "refresh" as const,
-          iconColor: "#FFFFFF",
-          iconBgColor: "#10B981",
-          borderColor: "#E5E7EB",
-          statusText: "Processing mandate...",
-          statusTextColor: "#10B981",
-          showSpinner: true,
-          disabled: false,
-        };
-      case "pending":
-        return {
-          icon: "refresh" as const,
-          iconColor: "#FFFFFF",
-          iconBgColor: "#10B981",
-          borderColor: "#E5E7EB",
-          statusText: "Click here to authorize the mandate",
-          statusTextColor: "#2563EB",
-          showSpinner: false,
-          disabled: false,
-        };
-      case "completed":
-        return {
-          icon: "checkmark-circle" as const,
-          iconColor: "#FFFFFF",
-          iconBgColor: "#10B981",
-          borderColor: "#10B981",
-          statusText: "Mandate completed",
-          statusTextColor: "#10B981",
-          showSpinner: false,
-          disabled: true,
-        };
-      case "failed":
-        return {
-          icon: "close-circle" as const,
-          iconColor: "#FFFFFF",
-          iconBgColor: "#EF4444",
-          borderColor: "#EF4444",
-          statusText: "Mandate failed",
-          statusTextColor: "#EF4444",
-          showSpinner: false,
-          disabled: false,
-        };
-      case "cancelled":
-        return {
-          icon: "close-circle" as const,
-          iconColor: "#FFFFFF",
-          iconBgColor: "#6B7280",
-          borderColor: "#6B7280",
-          statusText: "Mandate cancelled",
-          statusTextColor: "#6B7280",
-          showSpinner: false,
-          disabled: false,
-        };
-      case "not_available":
-        return {
-          icon: "refresh" as const,
-          iconColor: "#FFFFFF",
-          iconBgColor: "#10B981",
-          borderColor: "#E5E7EB",
-          statusText: "Ready to authorize",
-          statusTextColor: "#10B981",
-          showSpinner: false,
-          disabled: false,
-        };
-      default:
-        return {
-          icon: "refresh" as const,
-          iconColor: "#FFFFFF",
-          iconBgColor: "#10B981",
-          borderColor: "#E5E7EB",
-          statusText: "Processing mandate...",
-          statusTextColor: "#10B981",
-          showSpinner: true,
-          disabled: false,
-        };
-    }
-  };
+const phaseConfig: Record<DisplayPhase, {
+  icon: string;
+  iconBg: string;
+  badgeBg: string;
+  badgeBorder: string;
+  badgeText: string;
+  badgeColor: string;
+  showSpinner: boolean;
+}> = {
+  loading: {
+    icon: "refresh-outline",
+    iconBg: "#3137D5",
+    badgeBg: "#EEF0FB", badgeBorder: "#C7CAF0",
+    badgeText: "Loading…", badgeColor: "#3137D5",
+    showSpinner: true,
+  },
+  pending: {
+    icon: "refresh-outline",
+    iconBg: "#3137D5",
+    badgeBg: "#EEF0FB", badgeBorder: "#C7CAF0",
+    badgeText: "Pending", badgeColor: "#3137D5",
+    showSpinner: false,
+  },
+  submitted: {
+    icon: "refresh-outline",
+    iconBg: "#3137D5",
+    badgeBg: "#EEF0FB", badgeBorder: "#C7CAF0",
+    badgeText: "Processing…", badgeColor: "#3137D5",
+    showSpinner: true,
+  },
+  completed: {
+    icon: "checkmark-circle",
+    iconBg: "#22C55E",
+    badgeBg: "#DCFCE7", badgeBorder: "#86EFAC",
+    badgeText: "Activated ✓", badgeColor: "#16A34A",
+    showSpinner: false,
+  },
+  failed: {
+    icon: "close-circle",
+    iconBg: "#EF4444",
+    badgeBg: "#FEF2F2", badgeBorder: "#FECACA",
+    badgeText: "Failed", badgeColor: "#DC2626",
+    showSpinner: false,
+  },
+  cancelled: {
+    icon: "close-circle",
+    iconBg: "#6B7280",
+    badgeBg: "#F3F4F6", badgeBorder: "#D1D5DB",
+    badgeText: "Cancelled", badgeColor: "#6B7280",
+    showSpinner: false,
+  },
+  not_available: {
+    icon: "refresh-outline",
+    iconBg: "#D1D5DB",
+    badgeBg: "#F3F4F6", badgeBorder: "#E5E7EB",
+    badgeText: "N/A", badgeColor: "#9CA3AF",
+    showSpinner: false,
+  },
+  expired: {
+    icon: "time-outline",
+    iconBg: "#9CA3AF",
+    badgeBg: "#F3F4F6", badgeBorder: "#D1D5DB",
+    badgeText: "Expired", badgeColor: "#6B7280",
+    showSpinner: false,
+  },
+};
 
-  const statusConfig = getStatusConfig();
+export function SIPAutoDebitCard({ payment }: SIPAutoDebitCardProps) {
+  const status: DisplayPhase = payment?.sip_status ?? "loading";
+  const cfg = phaseConfig[status] ?? phaseConfig.loading;
 
   return (
-    <TouchableOpacity
-      style={[
-        styles.stepCard,
-        { borderColor: statusConfig.borderColor },
-        statusConfig.disabled && styles.disabledCard,
-      ]}
-      onPress={async () => {
-        setIsAuthorizing(true);
-        await onPress();
-        setIsAuthorizing(false);
-      }}
-      activeOpacity={statusConfig.disabled ? 1 : 0.9}
-      disabled={statusConfig.disabled}
-    >
-      <View style={styles.stepContent}>
-        <View style={styles.stepLeft}>
-          <View
-            style={[
-              styles.stepIconContainer,
-              { backgroundColor: statusConfig.iconBgColor },
-            ]}
-          >
-            <Ionicons
-              name={statusConfig.icon}
-              size={20}
-              color={statusConfig.iconColor}
-            />
-          </View>
-          <View style={styles.stepDetails}>
-            <ThemedText style={styles.stepTitle}>SIP Auto-Debit</ThemedText>
-            <ThemedText style={styles.stepSubtitle}>
-              Authorize recurring payment
-            </ThemedText>
-            <View style={styles.processingContainer}>
-              {(statusConfig.showSpinner || isAuthorizing) && (
-                <ActivityIndicator
-                  size="small"
-                  color={statusConfig.statusTextColor}
-                />
-              )}
-              <ThemedText
-                style={[
-                  styles.processingText,
-                  { color: statusConfig.statusTextColor },
-                ]}
-              >
-                {statusConfig.statusText}
-              </ThemedText>
-            </View>
-          </View>
+    <View style={[styles.card, status === "not_available" && styles.dimmed]}>
+      <View style={styles.row}>
+        <View style={[styles.iconContainer, { backgroundColor: cfg.iconBg }]}>
+          <Ionicons name={cfg.icon as any} size={20} color="#FFFFFF" />
+        </View>
+        <View style={styles.info}>
+          <Text style={styles.title}>Activate SIP</Text>
+          <Text style={styles.subtitle}>Allow auto-debit for monthly investments</Text>
+        </View>
+        <View style={[styles.badge, { backgroundColor: cfg.badgeBg, borderColor: cfg.badgeBorder }]}>
+          {cfg.showSpinner && <ActivityIndicator size="small" color={cfg.badgeColor} style={{ marginRight: 4 }} />}
+          <Text style={[styles.badgeText, { color: cfg.badgeColor }]}>{cfg.badgeText}</Text>
         </View>
       </View>
-    </TouchableOpacity>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  stepCard: {
+  card: {
     backgroundColor: "#FFFFFF",
-    borderRadius: 16,
-    padding: 20,
-    marginBottom: 16,
-    shadowColor: "#000",
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.1,
-    shadowRadius: 8,
-    elevation: 4,
+    borderRadius: 14,
+    padding: 16,
+    marginBottom: 12,
+    borderWidth: 1.5,
+    borderColor: "#E5E7EB",
   },
-  step2Card: {
-    borderWidth: 1,
+  dimmed: {
+    opacity: 0.5,
   },
-  disabledCard: {
-    opacity: 0.7,
-  },
-  processingContainer: {
+  row: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 8,
-    marginTop: 12,
+    gap: 12,
   },
-  processingText: {
-    fontSize: 14,
-    fontWeight: "500",
-  },
-  stepContent: {
-    // Removed gap to match image layout
-  },
-  stepLeft: {
-    flexDirection: "row",
-    gap: 16,
-  },
-  stepIconContainer: {
-    width: 48,
-    height: 48,
+  iconContainer: {
+    width: 44,
+    height: 44,
     borderRadius: 12,
-    backgroundColor: "#2563EB",
     justifyContent: "center",
     alignItems: "center",
   },
-  step2Icon: {
-    backgroundColor: "#10B981",
-  },
-  stepDetails: {
+  info: {
     flex: 1,
-    gap: 8,
   },
-  stepTitle: {
-    fontSize: 16,
+  title: {
+    fontSize: 15,
     fontWeight: "600",
-    color: "#000000",
+    color: "#111827",
+    marginBottom: 3,
   },
-  stepSubtitle: {
-    fontSize: 14,
-    color: "#6B7280",
+  subtitle: {
+    fontSize: 13,
+    color: "#9CA3AF",
+  },
+  badge: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: 20,
+    borderWidth: 1.5,
+  },
+  badgeText: {
+    fontSize: 12,
+    fontWeight: "600",
   },
 });

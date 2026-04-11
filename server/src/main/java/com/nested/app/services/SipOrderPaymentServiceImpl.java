@@ -17,6 +17,9 @@ import com.nested.app.repository.OrderItemsRepository;
 import com.nested.app.repository.PaymentRepository;
 import com.nested.app.repository.SIPOrderRepository;
 import com.nested.app.repository.TenantAwareGoalRepository;
+
+import java.sql.Timestamp;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Stream;
@@ -150,6 +153,7 @@ public class SipOrderPaymentServiceImpl implements SipOrderPaymentService {
     }
 
     payment.setSipStatus(Payment.PaymentStatus.SUBMITTED);
+    payment.setSipSubmittedAt(Timestamp.from(Instant.now()));
     paymentRepository.save(payment);
 
     // Schedule the MandateProcessPoller job to publish events every 10 seconds for 10 minutes

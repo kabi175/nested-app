@@ -42,9 +42,15 @@ public class Payment {
   @Enumerated(EnumType.STRING)
   private PaymentStatus buyStatus = PaymentStatus.NOT_AVAILABLE;
 
+  @Column
+  private Timestamp buySubmittedAt;
+
   @Column(nullable = false)
   @Enumerated(EnumType.STRING)
   private PaymentStatus sipStatus = PaymentStatus.NOT_AVAILABLE;
+
+  @Column
+  private Timestamp sipSubmittedAt;
 
   @Column(nullable = false)
   @Enumerated(EnumType.STRING)

@@ -65,8 +65,10 @@ export type PaymentStatus =
   | "pending" // Payment is pending
   | "submitted" // Payment is submitted
   | "completed" // Payment is completed
+  | "active" // SIP mandate activated — server equivalent of completed for SIP
   | "failed" // Payment is failed
-  | "cancelled"; // Payment is cancelled
+  | "cancelled" // Payment is cancelled
+  | "expired"; // Submitted but not completed within 10 minutes — derived on server, never stored
 
 export type Payment = {
   id: string;
@@ -75,6 +77,8 @@ export type Payment = {
   mandate_id: string;
   verification_status: "pending" | "verified" | "failed";
   payment_method: "net_banking" | "upi";
+  buy_submitted_at: Date | null;
+  sip_submitted_at: Date | null;
 };
 
 export const createPayment = async (
@@ -139,7 +143,11 @@ export const fetchPayment = async (
   if (!payment) {
     throw new Error(`Payment with id ${paymentId} not found`);
   }
-  return payment;
+  return {
+    ...payment,
+    buy_submitted_at: payment.buy_submitted_at ? new Date(payment.buy_submitted_at) : null,
+    sip_submitted_at: payment.sip_submitted_at ? new Date(payment.sip_submitted_at) : null,
+  };
 };
 
 export const lumsumPostPayment = async (paymentId: string): Promise<void> => {

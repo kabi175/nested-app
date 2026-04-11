@@ -43,6 +43,7 @@ export default function PaymentMethodScreen() {
   );
   const [selectedBank, setSelectedBank] = useState<BankAccount | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
+  const [paymentError, setPaymentError] = useState<string | null>(null);
 
   // Auto-select bank account when bank accounts finish loading and a payment method is selected
   useEffect(() => {
@@ -102,6 +103,7 @@ export default function PaymentMethodScreen() {
       return;
     }
     setSelectedMethod(method);
+    setPaymentError(null);
 
     // Auto-select bank account if available and none is selected
     if (!selectedBank && bankAccounts.length > 0) {
@@ -126,6 +128,7 @@ export default function PaymentMethodScreen() {
       return;
     }
 
+    setPaymentError(null);
     setIsProcessing(true);
 
     try {
@@ -140,35 +143,28 @@ export default function PaymentMethodScreen() {
         },
       });
 
-      // Redirect to verification screen
-      router.replace({
-        pathname: `/payment/${payment.id}/verify`,
-      });
+      router.replace({ pathname: `/payment/${payment.id}/verify` });
     } catch (error: any) {
-      console.error("Failed to create payment", error);
+      const status = error?.response?.status;
+      let message: string;
 
-      // Extract error message from server response
-      let errorMessage = "Failed to process payment. Please try again.";
-
-      if (error?.response?.data?.message) {
-        errorMessage = error.response.data.message;
-      } else if (error?.response?.data?.error) {
-        errorMessage = error.response.data.error;
-      } else if (error?.message) {
-        errorMessage = error.message;
-      } else if (error?.response?.status === 400) {
-        errorMessage = "Invalid payment details. Please check and try again.";
-      } else if (error?.response?.status === 401) {
-        errorMessage = "Please log in to continue.";
-      } else if (error?.response?.status === 403) {
-        errorMessage = "You don't have permission to perform this action.";
-      } else if (error?.response?.status === 404) {
-        errorMessage = "Payment service not found. Please try again later.";
-      } else if (error?.response?.status >= 500) {
-        errorMessage = "Server error. Please try again later.";
+      if (status === 401) {
+        message = "Your session has expired. Please log in again.";
+      } else if (status === 403) {
+        message = "You don't have permission to do this. Contact support if the issue persists.";
+      } else if (status === 404) {
+        message = "Payment service unavailable. Please try again later.";
+      } else if (status >= 500) {
+        message = "Something went wrong on our end. Please try again in a moment.";
+      } else {
+        message =
+          error?.response?.data?.message ||
+          error?.response?.data?.error ||
+          error?.message ||
+          "Unable to process payment. Please try again.";
       }
 
-      Alert.alert("Error", errorMessage, [{ text: "OK", style: "cancel" }]);
+      setPaymentError(message);
     } finally {
       setIsProcessing(false);
     }
@@ -347,6 +343,12 @@ export default function PaymentMethodScreen() {
 
         {/* Proceed to Pay Button */}
         <View style={[styles.buttonContainer, { paddingBottom: Math.max(bottomInset, 20) }]}>
+          {paymentError && (
+            <View style={styles.errorBanner}>
+              <Ionicons name="alert-circle" size={16} color="#DC2626" />
+              <ThemedText style={styles.errorBannerText}>{paymentError}</ThemedText>
+            </View>
+          )}
           <Button
             onPress={handleConfirmOrder}
             disabled={!selectedMethod || !selectedBank || isProcessing}
@@ -557,7 +559,7 @@ const styles = StyleSheet.create({
     bottom: 0,
     left: 0,
     right: 0,
-    paddingTop: 16,
+    paddingTop: 12,
     paddingHorizontal: 20,
     backgroundColor: "#FFFFFF",
     borderTopWidth: 1,
@@ -570,5 +572,23 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.05,
     shadowRadius: 8,
     elevation: 5,
+    gap: 10,
+  },
+  errorBanner: {
+    flexDirection: "row",
+    alignItems: "flex-start",
+    gap: 8,
+    backgroundColor: "#FEF2F2",
+    borderWidth: 1,
+    borderColor: "#FECACA",
+    borderRadius: 10,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+  },
+  errorBannerText: {
+    flex: 1,
+    fontSize: 13,
+    color: "#DC2626",
+    lineHeight: 18,
   },
 });

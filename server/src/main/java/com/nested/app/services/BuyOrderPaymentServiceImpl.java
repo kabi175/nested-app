@@ -15,6 +15,9 @@ import com.nested.app.entity.OrderItems;
 import com.nested.app.entity.Payment;
 import com.nested.app.repository.OrderRepository;
 import com.nested.app.repository.PaymentRepository;
+
+import java.sql.Timestamp;
+import java.time.Instant;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -172,6 +175,7 @@ public class BuyOrderPaymentServiceImpl implements BuyOrderPaymentService {
       payment.setPaymentUrl(paymentResponse.getRedirectUrl());
       payment.setRef(paymentResponse.getPaymentId());
       payment.setBuyStatus(Payment.PaymentStatus.SUBMITTED);
+      payment.setBuySubmittedAt(Timestamp.from(Instant.now()));
       paymentRepository.save(payment);
 
       var buyOrderRefList =

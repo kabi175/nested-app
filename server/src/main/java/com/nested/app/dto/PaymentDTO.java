@@ -10,6 +10,7 @@ import java.util.List;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.Getter;
+import lombok.RequiredArgsConstructor;
 
 /**
  * Data Transfer Object for Payment entity Used for API requests and responses to transfer payment
@@ -24,10 +25,16 @@ public class PaymentDTO {
   private Long id;
 
   @JsonProperty("buy_status")
-  private Payment.PaymentStatus buyStatus;
+  private DtoPaymentStatus buyStatus;
+
+  @JsonProperty("buy_submitted_at")
+  private Timestamp buySubmittedAt;
 
   @JsonProperty("sip_status")
-  private Payment.PaymentStatus sipStatus;
+  private DtoPaymentStatus sipStatus;
+
+  @JsonProperty("sip_submitted_at")
+  private Timestamp sipSubmittedAt;
 
   @JsonProperty("verification_status")
   private Payment.VerificationStatus verificationStatus;
@@ -59,6 +66,20 @@ public class PaymentDTO {
 
   @JsonProperty("updated_at")
   private Timestamp updatedAt;
+
+  @RequiredArgsConstructor
+  public enum DtoPaymentStatus {
+    NOT_AVAILABLE("not_available"),
+    PENDING("pending"),
+    SUBMITTED("submitted"),
+    ACTIVE("active"),
+    COMPLETED("completed"),
+    FAILED("failed"),
+    CANCELLED("cancelled"),
+    EXPIRED("expired");  // derived only — never persisted
+
+    @JsonValue @Getter private final String value;
+  }
 
   @AllArgsConstructor
   public enum MandateType {
