@@ -278,14 +278,14 @@ export default function PaymentMethodScreen() {
                   style={styles.securityIcon}
                 />
                 <ThemedText style={styles.securityText}>
-                  You&apos;ll be redirected to complete payment each step securely
+                  Each step opens a secure page — complete it and you&apos;ll be brought back here automatically.
                 </ThemedText>
               </View>
 
               <ThemedText style={styles.stepsDescription}>
                 {buyOrdersAmount > 0 && sipOrdersAmount > 0
-                  ? "Complete both steps to finish your investment"
-                  : "Complete the step to finish your investment"}
+                  ? "Two steps to activate your investment"
+                  : "One step to activate your investment"}
               </ThemedText>
 
               <View style={styles.paymentSteps}>
@@ -301,14 +301,14 @@ export default function PaymentMethodScreen() {
                       <View style={styles.stepContent}>
                         <View style={styles.stepTitleRow}>
                           <ThemedText style={styles.stepTitle}>
-                            {sipOrdersAmount > 0 ? "Step 1: " : ""}Complete Purchase
+                            {sipOrdersAmount > 0 ? "Step 1: " : ""}Pay Now
                           </ThemedText>
                           <View style={styles.pendingBadge}>
                             <ThemedText style={styles.pendingBadgeText}>Pending</ThemedText>
                           </View>
                         </View>
                         <ThemedText style={styles.stepDescription}>
-                          One-time payment of{" "}
+                          One-time lumpsum of{" "}
                           <ThemedText style={styles.stepAmount}>
                             {formatCurrency(buyOrdersAmount)}
                           </ThemedText>
@@ -328,14 +328,14 @@ export default function PaymentMethodScreen() {
                     <View style={styles.stepContent}>
                       <View style={styles.stepTitleRow}>
                         <ThemedText style={styles.stepTitle}>
-                          {buyOrdersAmount > 0 ? "Step 2: " : ""}Setup SIP Auto-Debit
+                          {buyOrdersAmount > 0 ? "Step 2: " : ""}Activate SIP
                         </ThemedText>
                         <View style={styles.pendingBadge}>
                           <ThemedText style={styles.pendingBadgeText}>Pending</ThemedText>
                         </View>
                       </View>
                       <ThemedText style={styles.stepDescription}>
-                        Authorize recurring payment
+                        Allow auto-debit for monthly investments
                       </ThemedText>
                     </View>
                   </View>
