@@ -60,6 +60,7 @@ public class SipTransactionTracker implements Job {
       return;
     }
 
+    trackTransaction(orderItem, purchaseOrder);
     switch (purchaseOrder.getState()) {
       case COMPLETED:
         orderItem.setStatus(TransactionStatus.COMPLETED);
@@ -70,12 +71,14 @@ public class SipTransactionTracker implements Job {
         orderItem.setStatus(TransactionStatus.FAILED);
         break;
       case ACTIVE:
-        trackTransaction(orderItem, purchaseOrder);
+        orderItem.setStatus(TransactionStatus.ACTIVE);
         break;
 
       default:
         log.info("Unknown state {}", purchaseOrder.getState());
     }
+
+    orderItemsRepository.save(orderItem);
 
     log.info("Tracked order {}", orderRef);
   }
