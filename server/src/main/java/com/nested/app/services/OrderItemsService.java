@@ -1,10 +1,15 @@
 package com.nested.app.services;
 
+import com.nested.app.client.mf.SipOrderApiClient;
+import com.nested.app.client.mf.dto.SipOrderDetail;
 import com.nested.app.dto.OrderAllocationProjection;
 import com.nested.app.dto.OrderItemsDTO;
+import com.nested.app.entity.OrderItems;
+import com.nested.app.entity.SIPOrder;
 import com.nested.app.entity.User;
 import com.nested.app.enums.TransactionStatus;
 import com.nested.app.repository.OrderItemsRepository;
+import com.nested.app.repository.SIPOrderRepository;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
@@ -28,6 +33,9 @@ import org.springframework.stereotype.Service;
 public class OrderItemsService {
 
   private final OrderItemsRepository orderItemsRepository;
+  private final SIPOrderRepository sipOrderRepository;
+  private final SipOrderApiClient sipOrderApiClient;
+  private final SipOrderSchedulerService sipOrderSchedulerService;
 
   /**
    * Retrieves paginated SIP Order Items
@@ -106,5 +114,51 @@ public class OrderItemsService {
       log.error("Error retrieving allocations: {}", e.getMessage(), e);
       throw new RuntimeException("Failed to retrieve order allocations", e);
     }
+  }
+
+  public void cancelSipOrder(Long sipOrderId, String cancellationCode, String cancellationReason) {
+    log.info("Cancelling SIP order id={} with code={}", sipOrderId, cancellationCode);
+
+    SIPOrder sipOrder =
+        sipOrderRepository
+            .findById(sipOrderId)
+            .orElseThrow(
+                () -> new RuntimeException("SIP order not found: " + sipOrderId));
+
+    var orderItem = orderItemsRepository.findById(sipOrderId).orElseThrow();
+
+    var planDetail = sipOrderApiClient.fetchSipOrderDetail(orderItem.getRef()).block();
+    if (planDetail != null
+        && planDetail.getState() != SipOrderDetail.OrderState.ACTIVE
+        && planDetail.getState() != SipOrderDetail.OrderState.CREATED) {
+      log.warn(
+          "Skipping provider cancel for planRef={} — already in state={}",
+          orderItem.getRef(),
+          planDetail.getState());
+    } else {
+      sipOrderApiClient
+          .cancelSipOrder(orderItem.getRef(), cancellationCode, cancellationReason)
+          .block();
+    }
+
+    orderItem.setStatus(TransactionStatus.CANCELLED);
+
+    // If any sibling items are still mid-cycle (ACTIVE), set ERROR so the scheduler
+    // knows resolution is pending. Once all items settle the state becomes PAUSED.
+    boolean anyActive = sipOrder.getItems().stream()
+        .filter(i -> !i.getId().equals(orderItem.getId()))
+        .anyMatch(i -> i.getStatus() == TransactionStatus.ACTIVE);
+
+    if(!anyActive) {
+      sipOrder.setScheduleStatus(SIPOrder.ScheduleStatus.COMPLETED);
+      sipOrder.setActive(false);
+    }
+
+    sipOrderRepository.save(sipOrder);
+
+    orderItemsRepository.save(orderItem);
+    sipOrderSchedulerService.scheduleSipTransactionTrackerJob(orderItem, 0);
+
+    log.info("Successfully cancelled SIP order id={}", sipOrderId);
   }
 }

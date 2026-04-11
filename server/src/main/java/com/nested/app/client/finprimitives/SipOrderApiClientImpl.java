@@ -19,6 +19,7 @@ import reactor.core.publisher.Mono;
 public class SipOrderApiClientImpl implements SipOrderApiClient {
   private static final String SIP_ORDER_BATCH_API_URL = "/v2/mf_purchase_plans/batch";
   private static final String SIP_ORDER_API_URL = "/v2/mf_purchase_plans";
+  private static final String SIP_ORDER_CANCEL_API_URL = "/v2/mf_purchase_plans/cancel";
   private static final String SIP_ORDER_TXN_API_URL = "/v2/mf_purchases";
   private final FinPrimitivesAPI api;
   private final ObjectMapper objectMapper;
@@ -77,6 +78,22 @@ public class SipOrderApiClientImpl implements SipOrderApiClient {
         .uri(uriBuilder -> uriBuilder.path(SIP_ORDER_API_URL + "/" + orderRef).build())
         .retrieve()
         .bodyToMono(SipOrderDetail.class);
+  }
+
+  @Override
+  public Mono<Void> cancelSipOrder(String planRef, String cancellationCode, String cancellationReason) {
+    var request = new java.util.HashMap<String, String>();
+    request.put("id", planRef);
+    request.put("cancellation_code", cancellationCode);
+    if (cancellationReason != null && !cancellationReason.isBlank()) {
+      request.put("cancellation_reason", cancellationReason);
+    }
+    return api.withAuth()
+        .post()
+        .uri(SIP_ORDER_CANCEL_API_URL)
+        .bodyValue(request)
+        .retrieve()
+        .bodyToMono(Void.class);
   }
 
   @Override

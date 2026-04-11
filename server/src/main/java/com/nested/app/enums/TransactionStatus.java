@@ -12,7 +12,8 @@ public enum TransactionStatus {
   ACTIVE("active"), // only for SIP txn
   COMPLETED("completed"),
   FAILED("failed"),
-  REFUNDED("refunded");
+  REFUNDED("refunded"),
+  CANCELLED("cancelled");
 
   @Getter @JsonValue private final String value;
 }

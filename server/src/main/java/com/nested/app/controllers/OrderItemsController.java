@@ -1,6 +1,7 @@
 package com.nested.app.controllers;
 
 import com.nested.app.dto.OrderItemsDTO;
+import com.nested.app.dto.SipCancelRequest;
 import com.nested.app.services.OrderItemsService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -18,6 +19,9 @@ import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -94,6 +98,22 @@ public class OrderItemsController {
       log.error("Error retrieving SIP order items: {}", e.getMessage(), e);
       return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
           .body(Map.of("error", "Failed to retrieve SIP order items"));
+    }
+  }
+
+  @PostMapping("/sip/{sipOrderId}/actions/cancel")
+  @Operation(summary = "Cancel a SIP order", description = "Cancels the SIP plan at the provider and marks it as cancelled locally")
+  public ResponseEntity<?> cancelSipOrder(
+      @PathVariable Long sipOrderId,
+      @RequestBody SipCancelRequest request) {
+    log.info("POST /api/v1/order-items/sip/{}/actions/cancel - code={}", sipOrderId, request.getCancellationCode());
+    try {
+      orderItemsService.cancelSipOrder(sipOrderId, request.getCancellationCode(), request.getCancellationReason());
+      return ResponseEntity.ok(Map.of("message", "SIP cancelled successfully"));
+    } catch (RuntimeException e) {
+      log.error("Error cancelling SIP order id={}: {}", sipOrderId, e.getMessage(), e);
+      return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+          .body(Map.of("error", "Failed to cancel SIP order"));
     }
   }
 }

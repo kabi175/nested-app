@@ -1,13 +1,16 @@
 import { SipOrder } from "@/api/orders";
+import { CancelSipModal } from "@/components/sip/CancelSipModal";
 import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
+import { useCancelSipOrder } from "@/hooks/useCancelSipOrder";
 import { useSipOrders } from "@/hooks/useSipOrders";
 import { formatCurrency } from "@/utils/formatters";
 import { router } from "expo-router";
-import { ArrowLeft } from "lucide-react-native";
-import React from "react";
+import { ArrowLeft, Trash2 } from "lucide-react-native";
+import React, { useState } from "react";
 import {
   ActivityIndicator,
+  Alert,
   ScrollView,
   StyleSheet,
   TouchableOpacity,
@@ -67,8 +70,30 @@ function getTagTextColor(type: "SIP" | "STP" | "SWP"): string {
 
 export default function SIPScreen() {
   const { data: orders, isLoading } = useSipOrders(0);
+  const [showCancelModal, setShowCancelModal] = useState(false);
+  const [selectedOrder, setSelectedOrder] = useState<SipOrder | null>(null);
+  const cancelMutation = useCancelSipOrder();
 
   const displayOrders = orders && Array.isArray(orders) ? orders : [];
+
+  const handleCancelPress = (order: SipOrder) => {
+    setSelectedOrder(order);
+    setShowCancelModal(true);
+  };
+
+  const handleCancelConfirm = async () => {
+    if (!selectedOrder) return;
+    try {
+      await cancelMutation.mutateAsync({
+        sipOrderId: selectedOrder.order_id,
+        cancellationCode: "investment_returns_not_as_expected",
+      });
+      setShowCancelModal(false);
+      setSelectedOrder(null);
+    } catch {
+      Alert.alert("Error", "Failed to cancel SIP. Please try again.");
+    }
+  };
 
   return (
     <SafeAreaView style={styles.container} edges={["top"]}>
@@ -102,9 +127,7 @@ export default function SIPScreen() {
           </ThemedView>
         ) : (
           <ThemedView style={styles.ordersCard}>
-            <ThemedText style={styles.ordersCardTitle}>
-              Active Orders ({displayOrders.length})
-            </ThemedText>
+            <ThemedText style={styles.ordersCardTitle}>Active Orders</ThemedText>
             {displayOrders.map((order: SipOrder, index: number) => (
               <View
                 key={order.id}
@@ -113,9 +136,18 @@ export default function SIPScreen() {
                   index === displayOrders.length - 1 && styles.orderItemLast,
                 ]}
               >
-                <ThemedText style={styles.fundName}>
-                  {order.fund_name}
-                </ThemedText>
+                <View style={styles.orderItemHeader}>
+                  <ThemedText style={styles.fundName}>
+                    {order.fund_name}
+                  </ThemedText>
+                  <TouchableOpacity
+                    onPress={() => handleCancelPress(order)}
+                    style={styles.cancelButton}
+                    hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+                  >
+                    <Trash2 size={18} color="#EF4444" />
+                  </TouchableOpacity>
+                </View>
                 <ThemedText style={styles.scheduledDate}>
                   {formatScheduledDate(order.scheduled_date, order.frequency)}
                 </ThemedText>
@@ -142,20 +174,23 @@ export default function SIPScreen() {
                       {formatCurrency(order.amount)}
                     </ThemedText>
                   </View>
-                  <View style={[styles.tag, styles.frequencyTag]}>
-                    <ThemedText style={styles.tagText}>
-                      {formatScheduledDate(
-                        order.scheduled_date,
-                        order.frequency
-                      )}
-                    </ThemedText>
-                  </View>
                 </View>
               </View>
             ))}
           </ThemedView>
         )}
       </ScrollView>
+
+      <CancelSipModal
+        visible={showCancelModal}
+        sipOrder={selectedOrder}
+        onConfirm={handleCancelConfirm}
+        onCancel={() => {
+          setShowCancelModal(false);
+          setSelectedOrder(null);
+        }}
+        isSubmitting={cancelMutation.isPending}
+      />
     </SafeAreaView>
   );
 }
@@ -233,6 +268,15 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: "#F3F4F6",
   },
+  orderItemHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    marginBottom: 8,
+  },
+  cancelButton: {
+    padding: 4,
+  },
   orderItemLast: {
     marginBottom: 0,
     paddingBottom: 0,
@@ -242,7 +286,7 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: "600",
     color: "#1F2937",
-    marginBottom: 8,
+    flex: 1,
   },
   scheduledDate: {
     fontSize: 14,

@@ -3,6 +3,7 @@ import type { AxiosInstance } from "axios";
 
 export type SipOrder = {
   id: string;
+  order_id: string;
   fund_id: string;
   fund_name: string;
   amount: number;
@@ -10,9 +11,21 @@ export type SipOrder = {
   type: "SIP" | "STP" | "SWP";
   scheduled_date?: string;
   frequency?: string;
-  status: "pending" | "success" | "failed";
+  status: "pending" | "success" | "failed" | "cancelled";
   created_at: Date;
   updated_at: Date;
+};
+
+export const cancelSipOrder = async (
+  api: AxiosInstance,
+  sipOrderId: string,
+  cancellationCode: string,
+  cancellationReason?: string
+) => {
+  await api.post(`/order-items/sip/${sipOrderId}/actions/cancel`, {
+    cancellation_code: cancellationCode,
+    ...(cancellationReason ? { cancellation_reason: cancellationReason } : {}),
+  });
 };
 
 export const getSipOrders = async (api: AxiosInstance, page: number) => {
