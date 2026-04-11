@@ -105,7 +105,7 @@ export default function BasicDetailsScreen() {
         },
       });
 
-      router.push("/kyc/address");
+      router.push("/kyc/basic-confirmation");
     } catch (error) {
       Alert.alert("Error", "Failed to update user. Please try again.");
     }
