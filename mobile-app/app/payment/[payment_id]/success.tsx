@@ -1,9 +1,9 @@
 import { usePayment } from "@/hooks/usePayment";
-import { logPurchase } from "@/services/metaEvents";
 import { logPurchase as logFirebasePurchase } from "@/services/firebaseAnalytics";
+import { logPurchase } from "@/services/metaEvents";
+import { Ionicons } from "@expo/vector-icons";
 import { router, useLocalSearchParams } from "expo-router";
 import { StatusBar } from "expo-status-bar";
-import { Ionicons } from "@expo/vector-icons";
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import {
   ActivityIndicator,
@@ -79,7 +79,7 @@ export default function PaymentSuccessScreen() {
     countdownDurationRef.current = duration;
     setCountdown(duration);
     setCountdownReady(true);
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isLoading, payment]);
 
   // Interval — starts exactly once when countdownReady flips to true.

@@ -18,7 +18,7 @@ import { useForceUpdate } from "@/hooks/useForceUpdate";
 import { useOnboardingSeen } from "@/hooks/useOnboardingSeen";
 import { usePersistRoute } from "@/hooks/usePersistRoute";
 import { QueryProvider } from "@/providers/QueryProvider";
-import { RouteRestoredProvider } from "@/providers/RouteRestoredProvider";
+import { RouteRestoredProvider, useRouteRestored } from "@/providers/RouteRestoredProvider";
 import * as eva from "@eva-design/eva";
 import {
   InstrumentSans_400Regular,
@@ -136,7 +136,19 @@ function RootNavigator() {
   const { user } = useAuth0();
   const { seen } = useOnboardingSeen();
   const pathname = usePathname();
+  const { isRestored, markRestored } = useRouteRestored();
   usePersistRoute();
+
+  // When the app opens via deep link (e.g. browser returning after payment
+  // authorization), app/index.tsx is bypassed and RestoreLastRoute never runs.
+  // markRestored() would never be called, leaving isRestored=false and
+  // usePersistRoute saving nothing. Fix: mark restored as soon as we're at any
+  // non-index route so persistence kicks in regardless of entry point.
+  useEffect(() => {
+    if (!isRestored && pathname !== "/") {
+      markRestored();
+    }
+  }, [isRestored, pathname, markRestored]);
 
   useEffect(() => {
     if (!__DEV__) {

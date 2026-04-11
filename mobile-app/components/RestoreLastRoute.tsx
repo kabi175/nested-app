@@ -25,7 +25,7 @@ export default function RestoreLastRoute() {
                 console.log("no last route found, redirecting to (tabs)");
                 setTarget("/(tabs)"); // fallback
             }
-            console.log("marking route as restored");
+            console.log("marking route as restored", { fullRoute });
             markRestored();
         }
 
