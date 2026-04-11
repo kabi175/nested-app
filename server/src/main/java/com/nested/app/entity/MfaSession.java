@@ -2,6 +2,7 @@ package com.nested.app.entity;
 
 import com.nested.app.enums.MfaChannel;
 import com.nested.app.enums.MfaStatus;
+import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -10,8 +11,11 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Index;
+import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 import java.sql.Timestamp;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.UUID;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
@@ -92,4 +96,8 @@ public class MfaSession {
   @CreationTimestamp
   @Column(name = "created_at", nullable = false, updatable = false)
   private Timestamp createdAt;
+
+  @OneToMany(mappedBy = "mfaSession", cascade = CascadeType.ALL, orphanRemoval = true)
+  @Builder.Default
+  private List<MfaAttempt> attemptRecords = new ArrayList<>();
 }
