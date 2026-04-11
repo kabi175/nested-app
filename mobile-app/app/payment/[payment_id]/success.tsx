@@ -1,50 +1,71 @@
-import { ThemedText } from "@/components/ThemedText";
 import { usePayment } from "@/hooks/usePayment";
 import { logPurchase } from "@/services/metaEvents";
 import { logPurchase as logFirebasePurchase } from "@/services/firebaseAnalytics";
-import { LinearGradient } from "expo-linear-gradient";
 import { router, useLocalSearchParams } from "expo-router";
-import { CheckCircle } from "lucide-react-native";
+import { StatusBar } from "expo-status-bar";
+import { Ionicons } from "@expo/vector-icons";
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import {
   ActivityIndicator,
   Animated,
   StyleSheet,
+  Text,
   TouchableOpacity,
   View,
 } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
+import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
+
+const AUTO_REDIRECT_SECONDS = 10;
 
 export default function PaymentSuccessScreen() {
   const { payment_id, type } = useLocalSearchParams<{
     payment_id: string;
     type: "buy" | "sip";
   }>();
+  const { bottom: bottomInset } = useSafeAreaInsets();
 
   const { data: payment, isLoading } = usePayment(payment_id || "");
   const purchaseLoggedRef = useRef(false);
+  const [countdown, setCountdown] = useState(AUTO_REDIRECT_SECONDS);
 
+  const [scaleAnim] = useState(new Animated.Value(0.6));
   const [fadeAnim] = useState(new Animated.Value(0));
-  const [scaleAnim] = useState(new Animated.Value(0.5));
 
   useEffect(() => {
     Animated.parallel([
       Animated.timing(fadeAnim, {
         toValue: 1,
-        duration: 800,
+        duration: 500,
         useNativeDriver: true,
       }),
       Animated.spring(scaleAnim, {
         toValue: 1,
-        tension: 50,
-        friction: 8,
+        tension: 60,
+        friction: 7,
         useNativeDriver: true,
       }),
     ]).start();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Log Meta Purchase once when payment is completed
+  // Auto-redirect countdown
+  useEffect(() => {
+    if (isLoading) return;
+    const interval = setInterval(() => {
+      setCountdown((prev) => {
+        if (prev <= 1) {
+          clearInterval(interval);
+          handleContinue();
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+    return () => clearInterval(interval);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isLoading]);
+
+  // Log analytics once
   useEffect(() => {
     if (!payment_id || !payment || isLoading || purchaseLoggedRef.current) return;
     const isBuyCompleted = payment.buy_status === "completed";
@@ -52,7 +73,8 @@ export default function PaymentSuccessScreen() {
     if (isBuyCompleted || isSipCompleted) {
       purchaseLoggedRef.current = true;
       const amount = (payment as { amount?: number }).amount ?? 0;
-      const contentType = isBuyCompleted && isSipCompleted ? "buy_sip" : isBuyCompleted ? "buy" : "sip";
+      const contentType =
+        isBuyCompleted && isSipCompleted ? "buy_sip" : isBuyCompleted ? "buy" : "sip";
       logPurchase(amount, "INR", { content_type: contentType });
       logFirebasePurchase({
         transaction_id: payment_id,
@@ -66,28 +88,20 @@ export default function PaymentSuccessScreen() {
     if (type === "buy" && payment?.sip_status === "pending") {
       router.replace({
         pathname: `/payment/${payment_id}/processing`,
-        params: {
-          paymentId: payment_id,
-        },
+        params: { paymentId: payment_id },
       });
       return;
     }
-
     if (type === "sip" && payment?.buy_status === "pending") {
       router.replace({
         pathname: `/payment/${payment_id}/processing`,
-        params: {
-          paymentId: payment_id,
-        },
+        params: { paymentId: payment_id },
       });
       return;
     }
-
     router.replace("/(tabs)");
   };
 
-  // Determine success message based on type
-  // If type is not provided, infer from payment status
   const paymentType = useMemo((): "buy" | "sip" | undefined => {
     if (type) return type;
     if (payment) {
@@ -97,86 +111,69 @@ export default function PaymentSuccessScreen() {
     return undefined;
   }, [type, payment]);
 
-  const { title, subtitle } = useMemo(() => {
+  const { label, subtitle } = useMemo(() => {
     if (paymentType === "buy") {
-      return {
-        title: "Lumpsum Payment Successful!",
-        subtitle:
-          "Your one-time investment has been processed successfully. Your portfolio will be updated shortly.",
-      };
+      return { label: "Lumpsum invested", subtitle: "Your one-time investment is being processed." };
     } else if (paymentType === "sip") {
-      return {
-        title: "SIP Mandate Created Successfully!",
-        subtitle:
-          "Your Systematic Investment Plan has been set up. Your investments will be processed automatically as per the schedule.",
-      };
+      return { label: "SIP activated", subtitle: "Investments will be debited automatically." };
     }
-    return {
-      title: "Payment Successful!",
-      subtitle: "Your payment has been processed successfully.",
-    };
+    return { label: "Payment received", subtitle: "Your payment was processed successfully." };
   }, [paymentType]);
 
   if (isLoading) {
     return (
-      <SafeAreaView style={styles.container}>
-        <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color="#10B981" />
+      <SafeAreaView style={styles.safeArea}>
+        <StatusBar style="dark" />
+        <View style={styles.loadingScreen}>
+          <ActivityIndicator size="large" color="#22C55E" />
         </View>
       </SafeAreaView>
     );
   }
 
   return (
-    <SafeAreaView style={styles.container}>
-      <LinearGradient
-        colors={["#F0FDF4", "#FFFFFF"]}
-        style={styles.gradientBackground}
-      >
+    <SafeAreaView style={styles.safeArea} edges={["top", "left", "right"]}>
+      <StatusBar style="dark" />
+
+      {/* Centered content */}
+      <View style={styles.content}>
         <Animated.View
           style={[
-            styles.content,
-            {
-              opacity: fadeAnim,
-              transform: [{ scale: scaleAnim }],
-            },
+            styles.animatedContent,
+            { opacity: fadeAnim, transform: [{ scale: scaleAnim }] },
           ]}
         >
-          <View style={styles.iconContainer}>
-            <CheckCircle size={80} color="#10B981" />
+          {/* Check icon */}
+          <View style={styles.checkCircle}>
+            <Ionicons name="checkmark" size={36} color="#FFFFFF" />
           </View>
 
-          <View style={styles.textContainer}>
-            <ThemedText style={styles.title}>{title}</ThemedText>
-            <ThemedText style={styles.subtitle}>{subtitle}</ThemedText>
-          </View>
+          {/* Done */}
+          <Text style={styles.doneText}>Done.</Text>
 
-          <TouchableOpacity
-            style={styles.continueButton}
-            onPress={handleContinue}
-            activeOpacity={0.8}
-          >
-            <LinearGradient
-              colors={["#10B981", "#059669"]}
-              style={styles.buttonGradient}
-            >
-              <ThemedText style={styles.buttonText}>Continue</ThemedText>
-            </LinearGradient>
-          </TouchableOpacity>
+          {/* Label + subtitle */}
+          <Text style={styles.label}>{label}</Text>
+          <Text style={styles.subtitleText}>{subtitle}</Text>
         </Animated.View>
-      </LinearGradient>
+      </View>
+
+      {/* Bottom */}
+      <View style={[styles.bottomContainer, { paddingBottom: Math.max(bottomInset, 32) }]}>
+        <Text style={styles.countdownHint}>Redirecting in {countdown}s</Text>
+        <TouchableOpacity onPress={handleContinue} activeOpacity={0.6}>
+          <Text style={styles.backLink}>Back to home</Text>
+        </TouchableOpacity>
+      </View>
     </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
+  safeArea: {
     flex: 1,
+    backgroundColor: "#FAFAF8",
   },
-  gradientBackground: {
-    flex: 1,
-  },
-  loadingContainer: {
+  loadingScreen: {
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
@@ -187,40 +184,56 @@ const styles = StyleSheet.create({
     alignItems: "center",
     paddingHorizontal: 40,
   },
-  iconContainer: {
-    marginBottom: 40,
-  },
-  textContainer: {
-    alignItems: "center",
-    marginBottom: 60,
-  },
-  title: {
-    fontSize: 28,
-    fontWeight: "700",
-    color: "#1F2937",
-    textAlign: "center",
-    marginBottom: 16,
-  },
-  subtitle: {
-    fontSize: 16,
-    fontWeight: "400",
-    color: "#6B7280",
-    textAlign: "center",
-    lineHeight: 24,
-  },
-  continueButton: {
-    width: "100%",
-    borderRadius: 16,
-    overflow: "hidden",
-  },
-  buttonGradient: {
-    paddingVertical: 16,
-    paddingHorizontal: 32,
+  animatedContent: {
     alignItems: "center",
   },
-  buttonText: {
-    fontSize: 18,
+  checkCircle: {
+    width: 72,
+    height: 72,
+    borderRadius: 36,
+    backgroundColor: "#22C55E",
+    justifyContent: "center",
+    alignItems: "center",
+    marginBottom: 28,
+    shadowColor: "#22C55E",
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.25,
+    shadowRadius: 12,
+    elevation: 8,
+  },
+  doneText: {
+    fontSize: 32,
     fontWeight: "600",
-    color: "#FFFFFF",
+    color: "#111827",
+    marginBottom: 20,
+    letterSpacing: -0.5,
+  },
+  label: {
+    fontSize: 18,
+    fontWeight: "500",
+    color: "#374151",
+    marginBottom: 8,
+    textAlign: "center",
+  },
+  subtitleText: {
+    fontSize: 14,
+    color: "#9CA3AF",
+    textAlign: "center",
+    lineHeight: 20,
+  },
+  bottomContainer: {
+    alignItems: "center",
+    paddingTop: 16,
+    gap: 10,
+  },
+  countdownHint: {
+    fontSize: 13,
+    color: "#9CA3AF",
+  },
+  backLink: {
+    fontSize: 15,
+    fontWeight: "500",
+    color: "#374151",
+    textDecorationLine: "underline",
   },
 });
