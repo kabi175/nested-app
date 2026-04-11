@@ -26,8 +26,7 @@ export default function TestimonialRoute() {
             <TestimonialScreen
                 childName={child?.firstName}
                 onStartFund={() => {
-                    // Navigate to next screen or do action
-                    console.log("Start fund pressed for", child_id);
+                    router.replace("/payment");
                 }}
                 onBack={() => {
                     if (router.canGoBack()) {
