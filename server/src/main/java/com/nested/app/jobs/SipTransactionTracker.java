@@ -18,11 +18,17 @@ import java.util.List;
 import java.util.Objects;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.quartz.CronScheduleBuilder;
 import org.quartz.DisallowConcurrentExecution;
 import org.quartz.Job;
+import org.quartz.JobBuilder;
 import org.quartz.JobDataMap;
 import org.quartz.JobExecutionContext;
 import org.quartz.JobExecutionException;
+import org.quartz.JobKey;
+import org.quartz.Scheduler;
+import org.quartz.SchedulerException;
+import org.quartz.TriggerBuilder;
 import org.springframework.stereotype.Component;
 
 @Slf4j
@@ -35,6 +41,7 @@ public class SipTransactionTracker implements Job {
   private final SipOrderApiClient sipOrderApiClient;
   private final TransactionRepository transactionRepository;
   private final FolioRepository folioRepository;
+  private final Scheduler scheduler;
 
   @Override
   public void execute(JobExecutionContext context) throws JobExecutionException {
@@ -122,6 +129,7 @@ public class SipTransactionTracker implements Job {
       var txn = convert(orderData, orderItem);
       transactionRepository.save(txn);
       log.info("Saved transaction with externalRef {}", txn.getExternalRef());
+      scheduleFulfillmentJob(orderData.getRef());
     }
 
     // Update the last processed transaction ref to the newest one
@@ -166,6 +174,44 @@ public class SipTransactionTracker implements Job {
     }
 
     return txn;
+  }
+
+  private void scheduleFulfillmentJob(String transactionRef) {
+    try {
+      String jobIdentity = "sip-txn-fulfillment-" + transactionRef;
+      JobKey jobKey = new JobKey(jobIdentity);
+
+      if (scheduler.checkExists(jobKey)) {
+        log.info("SipTransactionFulfillmentJob already exists for transactionRef {}", transactionRef);
+        return;
+      }
+
+      var jobDetail =
+          JobBuilder.newJob(SipTransactionFulfillmentJob.class)
+              .withIdentity(jobIdentity)
+              .usingJobData("transactionRef", transactionRef)
+              .storeDurably()
+              .requestRecovery(true)
+              .build();
+
+      var trigger =
+          TriggerBuilder.newTrigger()
+              .withIdentity(jobIdentity + "-trigger")
+              .forJob(jobKey)
+              .startNow()
+              .withSchedule(
+                  CronScheduleBuilder.cronSchedule("0 0 */6 * * ?")
+                      .withMisfireHandlingInstructionFireAndProceed())
+              .build();
+
+      scheduler.scheduleJob(jobDetail, trigger);
+      log.info("Scheduled SipTransactionFulfillmentJob for transactionRef {}", transactionRef);
+    } catch (SchedulerException e) {
+      log.error(
+          "Failed to schedule SipTransactionFulfillmentJob for transactionRef {}",
+          transactionRef,
+          e);
+    }
   }
 
   private Folio getOrCreateFolio(String folioRef, List<OrderItems> orderItems) {
