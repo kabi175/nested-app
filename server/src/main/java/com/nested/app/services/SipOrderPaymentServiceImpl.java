@@ -65,7 +65,6 @@ public class SipOrderPaymentServiceImpl implements SipOrderPaymentService {
 
     try {
       var payment = paymentRepository.findById(paymentID).orElseThrow();
-      var user = payment.getUser();
 
       var sipOrders = payment.getOrders().stream().filter(SIPOrder.class::isInstance).toList();
       var sipOrderIds =
@@ -246,14 +245,14 @@ public class SipOrderPaymentServiceImpl implements SipOrderPaymentService {
         }
       }
 
-      if (!orderItemRefInfos.isEmpty()) {
-        var batchEvent = new OrderItemsRefUpdatedEvent(this, orderItemRefInfos, paymentID);
-        eventPublisher.publishEvent(batchEvent);
-        log.debug(
-            "Published OrderItemsRefUpdatedEvent for Payment ID: {} with {} order items",
-            paymentID,
-            orderItemRefInfos.size());
-      }
+//      if (!orderItemRefInfos.isEmpty()) {
+//        var batchEvent = new OrderItemsRefUpdatedEvent(this, orderItemRefInfos, paymentID);
+//        eventPublisher.publishEvent(batchEvent);
+//        log.debug(
+//            "Published OrderItemsRefUpdatedEvent for Payment ID: {} with {} order items",
+//            paymentID,
+//            orderItemRefInfos.size());
+//      }
 
       payment.setSipStatus(Payment.PaymentStatus.ACTIVE);
       paymentRepository.save(payment);
