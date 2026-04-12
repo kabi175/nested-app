@@ -57,6 +57,16 @@ public class GoalDTO {
   @JsonProperty("next_sip_date")
   private LocalDate nextSipDate;
 
+  @JsonFormat(shape = JsonFormat.Shape.STRING)
+  @JsonProperty("sip_order_id")
+  private Long sipOrderId;
+
+  @JsonProperty("has_pending_sip_modification")
+  private Boolean hasPendingSipModification;
+
+  @JsonProperty("step_up_percent")
+  private Double stepUpPercent;
+
   private Timestamp createdAt;
 
   private Timestamp updatedAt;

@@ -2,54 +2,23 @@ import { CreateOrderRequest } from "@/api/paymentAPI";
 import { cartAtom } from "@/atoms/cart";
 import BackButton from "@/components/v2/BackButton";
 import Button from "@/components/v2/Button";
-import Slider from "@/components/v2/Slider";
-import { LumpSumInput } from "@/components/v2/planner/LumpSumInput";
 import ModeToggle, { PlannerMode } from "@/components/v2/planner/ModeToggle";
-import NestGrowthCard from "@/components/v2/planner/NestGrowthCard";
+import SipBasedPlan from "@/components/v2/planner/SipBasedPlan";
+import TargetBasedPlan from "@/components/v2/planner/TargetBasedPlan";
 import { useCreateOrders } from "@/hooks/useCreateOrders";
 import { useGoal } from "@/hooks/useGoal";
 import { useGoalCreation } from "@/hooks/useGoalCreation";
 import { useUpdateGoal } from "@/hooks/useUpdateGoal";
-import { formatCurrency } from "@/utils/formatters";
-import { computeMinimumSIPAmount } from "@/utils/sip";
 import { router, useLocalSearchParams } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import { useSetAtom } from "jotai";
-import React, { useMemo, useState } from "react";
-import {
-    Alert,
-    Pressable,
-    ScrollView,
-    StyleSheet,
-    Text,
-    View,
-} from "react-native";
+import React, { useRef, useState } from "react";
+import { Alert, ScrollView, StyleSheet, Text, View } from "react-native";
 import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
 
 // ─── Constants ────────────────────────────────────────────────────────────────
-const EXPECTED_RETURNS = 12; // % p.a.
 const DEFAULT_TARGET_AMOUNT = 25_00_000; // ₹25L
 
-/**
- * Generates 4 evenly-spaced quick-select options starting from sipMin.
- * Step = sipMin * 0.5, rounded to nearest 500 (min step 500).
- * Each option is also rounded to nearest 500.
- */
-function computeQuickSelectOptions(sipMin: number): number[] {
-    const step = Math.max(500, Math.round((sipMin * 0.5) / 500) * 500);
-    return Array.from({ length: 4 }, (_, i) =>
-        Math.round((sipMin + i * step) / 500) * 500
-    );
-}
-
-/** Slider max = last quick-select option + one more step, rounded to nearest 1000. */
-function computeSliderMax(sipMin: number): number {
-    const step = Math.max(500, Math.round((sipMin * 0.5) / 500) * 500);
-    const lastOption = Math.round((sipMin + 3 * step) / 500) * 500;
-    return Math.round((lastOption + step) / 1000) * 1000;
-}
-
-// ─── Helpers ──────────────────────────────────────────────────────────────────
 function getSipStartDate(): Date {
     const d = new Date();
     if (d.getDate() > 28) {
@@ -59,18 +28,6 @@ function getSipStartDate(): Date {
     return d;
 }
 
-function computeTargetFromSIP(
-    sipAmount: number,
-    remainingYears: number,
-    lumpsum: number
-): number {
-    const r_m = EXPECTED_RETURNS / 12 / 100;
-    const n = remainingYears * 12;
-    const fvSip = sipAmount * ((Math.pow(1 + r_m, n) - 1) / r_m);
-    const fvLump = lumpsum * Math.pow(1 + r_m, n);
-    return Math.round(fvSip + fvLump);
-}
-
 // ─── Screen ───────────────────────────────────────────────────────────────────
 export default function Planner() {
     const { goal_id } = useLocalSearchParams<{ goal_id: string }>();
@@ -78,72 +35,27 @@ export default function Planner() {
 
     const { data: goal } = useGoal(goal_id);
     const child_id = goal?.child?.id;
-    // const { data: child } = useChild(child_id);
-    const createGoalMutation = useGoalCreation();
     const updateGoalMutation = useUpdateGoal();
+    const createGoalMutation = useGoalCreation();
     const createOrdersMutation = useCreateOrders();
     const setCart = useSetAtom(cartAtom);
 
-    const sipMin = goal?.basket.min_sip || 4000; //TODO: compute this value based on goal
-    const quickSelectOptions = computeQuickSelectOptions(sipMin);
-    const sliderMax = computeSliderMax(sipMin);
-
-    const targetYear = goal?.targetDate.getFullYear() || (new Date().getFullYear() + 1)
-
+    const sipMin = goal?.basket.min_sip || 4000;
+    const targetYear = goal?.targetDate.getFullYear() || (new Date().getFullYear() + 1);
     const remainingYears = targetYear - new Date().getFullYear();
 
-    // ── State ──
     const [mode, setMode] = useState<PlannerMode>("target");
-    const [targetAmount, setTargetAmount] = useState(DEFAULT_TARGET_AMOUNT);
-    const [sipAmount, setSipAmount] = useState(() =>
-        computeMinimumSIPAmount(remainingYears > 0 ? remainingYears : 1, 0, 0, EXPECTED_RETURNS, DEFAULT_TARGET_AMOUNT)
-    );
-    const [lumpSumEnabled, setLumpSumEnabled] = useState(false);
-    const [lumpSumStr, setLumpSumStr] = useState("");
 
-    const lumpSum = lumpSumEnabled ? (parseInt(lumpSumStr, 10) || 0) : 0;
-
-    // ── Derived values ──
-    const years = remainingYears > 0 ? remainingYears : 1;
-
-    const computedSip = useMemo(
-        () => computeMinimumSIPAmount(years, 0, lumpSum, EXPECTED_RETURNS, targetAmount),
-        [years, lumpSum, targetAmount]
-    );
-
-    const computedTarget = useMemo(
-        () => computeTargetFromSIP(sipAmount, years, lumpSum),
-        [sipAmount, years, lumpSum]
-    );
-
-    const displayTarget = mode === "target" ? targetAmount : computedTarget;
-    const displaySip = mode === "target" ? computedSip : sipAmount;
-    const totalInvested = displaySip * years * 12 + lumpSum;
-
-    // ── Handlers ──
-    const handleModeChange = (newMode: PlannerMode) => {
-        setMode(newMode);
-        if (newMode === "sip") {
-            // seed slider from current computed SIP
-            const clamped = Math.min(Math.max(computedSip, sipMin), sliderMax);
-            setSipAmount(clamped);
-        }
-    };
-
-    const handleTargetAmountChange = (amount: number) => {
-        setTargetAmount(amount);
-    };
-
-    const handleSipSliderChange = (value: number) => {
-        setSipAmount(value);
-    };
-
-    const handleLumpSumToggle = (enabled: boolean) => {
-        setLumpSumEnabled(enabled);
-        if (!enabled) setLumpSumStr("");
-    };
+    // Captured from whichever plan component is active
+    const planSip = useRef(0);
+    const planTarget = useRef(DEFAULT_TARGET_AMOUNT);
+    const planLumpsum = useRef(0);
 
     const handleSubmit = async () => {
+        const displaySip = planSip.current;
+        const displayTarget = planTarget.current;
+        const lumpSum = planLumpsum.current;
+
         if (remainingYears <= 0) {
             Alert.alert("Invalid date", "The target year has already passed.");
             return;
@@ -156,25 +68,22 @@ export default function Planner() {
             Alert.alert("SIP too low", "Monthly SIP must be at least ₹500.");
             return;
         }
-        if (lumpSumEnabled && lumpSum < 1_000) {
+        if (lumpSum > 0 && lumpSum < 1_000) {
             Alert.alert("Lump sum too low", "Lump sum must be at least ₹1,000.");
             return;
         }
 
         try {
-
-            if (!goal) {
-                return;
-            }
+            if (!goal) return;
 
             updateGoalMutation.mutateAsync({
                 goal: {
                     id: goal.id,
                     target_amount: displayTarget,
                     title: goal.title,
-                    target_date: goal.targetDate
-                }
-            })
+                    target_date: goal.targetDate,
+                },
+            });
 
             const orders: CreateOrderRequest[] = [
                 {
@@ -185,7 +94,7 @@ export default function Planner() {
                 },
             ];
 
-            if (lumpSumEnabled && lumpSum > 0) {
+            if (lumpSum > 0) {
                 orders.push({
                     type: "buy",
                     amount: lumpSum,
@@ -201,9 +110,7 @@ export default function Planner() {
         }
     };
 
-    const isLoading =
-        createGoalMutation.isPending || createOrdersMutation.isPending;
-
+    const isLoading = createGoalMutation.isPending || createOrdersMutation.isPending;
     const childName = goal?.child?.name ?? "your child";
 
     return (
@@ -225,79 +132,33 @@ export default function Planner() {
                 </View>
 
                 {/* Mode toggle */}
-                <ModeToggle mode={mode} onChange={handleModeChange} />
+                <ModeToggle mode={mode} onChange={setMode} />
 
-                {/* Growth card */}
-                <View style={styles.section}>
-                    <NestGrowthCard
-                        targetAmount={displayTarget}
-                        editable={mode === "target"}
-                        onAmountChange={handleTargetAmountChange}
+                {/* Active plan component */}
+                {mode === "target" ? (
+                    <TargetBasedPlan
+                        defaultTarget={DEFAULT_TARGET_AMOUNT}
                         targetYear={targetYear}
                         remainingYears={remainingYears}
-                        totalInvested={totalInvested}
+                        onSipChange={(v) => { planSip.current = v; }}
+                        onTargetChange={(v) => { planTarget.current = v; }}
+                        onLumpsumChange={(v) => { planLumpsum.current = v; }}
                     />
-                </View>
-
-                {/* Mode-specific section */}
-                {mode === "target" ? (
-                    <View style={styles.sipReadonlyCard}>
-                        <Text style={styles.sipReadonlyLabel}>MONTHLY SIP</Text>
-                        <Text style={styles.sipReadonlyValue}>{formatCurrency(computedSip)}</Text>
-                    </View>
                 ) : (
-                    <View style={styles.section}>
-                        <Slider
-                            variant="default"
-                            label="MONTHLY SIP"
-                            min={sipMin}
-                            max={sliderMax}
-                            step={100}
-                            value={sipAmount}
-                            onValueChange={handleSipSliderChange}
-                        />
-                        {/* Quick select */}
-                        <View style={styles.quickSelectHeader}>
-                            <Text style={styles.quickSelectLabel}>QUICK SELECT</Text>
-                        </View>
-                        <View style={styles.quickSelectRow}>
-                            {quickSelectOptions.map((opt) => (
-                                <Pressable
-                                    key={opt}
-                                    style={[
-                                        styles.quickChip,
-                                        sipAmount === opt && styles.quickChipActive,
-                                    ]}
-                                    onPress={() => setSipAmount(opt)}
-                                >
-                                    <Text
-                                        style={[
-                                            styles.quickChipText,
-                                            sipAmount === opt && styles.quickChipTextActive,
-                                        ]}
-                                    >
-                                        {formatCurrency(opt)}{"\n"}/mo
-                                    </Text>
-                                </Pressable>
-                            ))}
-                        </View>
-                    </View>
-                )}
-
-                {/* Lump sum */}
-                <View style={styles.section}>
-                    <LumpSumInput
-                        enabled={lumpSumEnabled}
-                        onToggle={handleLumpSumToggle}
-                        amount={lumpSumStr}
-                        onAmountChange={setLumpSumStr}
+                    <SipBasedPlan
+                        defaultTarget={DEFAULT_TARGET_AMOUNT}
+                        targetYear={targetYear}
+                        remainingYears={remainingYears}
+                        sipMin={sipMin}
+                        onSipChange={(v) => { planSip.current = v; }}
+                        onTargetChange={(v) => { planTarget.current = v; }}
+                        onLumpsumChange={(v) => { planLumpsum.current = v; }}
                     />
-                </View>
+                )}
 
                 {/* Push notice + CTA to bottom */}
                 <View style={{ flex: 1 }} />
 
-                {/* Notice + CTA */}
                 <View style={styles.section}>
                     <View style={styles.noticeCard}>
                         <Text style={styles.noticeText}>Small contribution, big growth</Text>
@@ -343,62 +204,6 @@ const styles = StyleSheet.create({
     },
     section: {
         marginTop: 16,
-    },
-    sipReadonlyCard: {
-        backgroundColor: "#F4F5F6",
-        borderRadius: 16,
-        padding: 16,
-        marginTop: 16,
-    },
-    sipReadonlyLabel: {
-        fontSize: 11,
-        fontWeight: "600",
-        color: "#6E6F7A",
-        letterSpacing: 0.5,
-        marginBottom: 6,
-    },
-    sipReadonlyValue: {
-        fontSize: 28,
-        fontWeight: "700",
-        color: "#1D1E20",
-    },
-    quickSelectHeader: {
-        marginTop: 20,
-        marginBottom: 10,
-    },
-    quickSelectLabel: {
-        fontSize: 11,
-        fontWeight: "600",
-        color: "#6E6F7A",
-        letterSpacing: 0.5,
-    },
-    quickSelectRow: {
-        flexDirection: "row",
-        gap: 10,
-    },
-    quickChip: {
-        flex: 1,
-        borderWidth: 1.5,
-        borderColor: "#E0E0E0",
-        borderRadius: 12,
-        paddingVertical: 10,
-        paddingHorizontal: 6,
-        alignItems: "center",
-        backgroundColor: "#FFFFFF",
-    },
-    quickChipActive: {
-        backgroundColor: "#3137D5",
-        borderColor: "#3137D5",
-    },
-    quickChipText: {
-        fontSize: 13,
-        fontWeight: "600",
-        color: "#1D1E20",
-        textAlign: "center",
-        lineHeight: 18,
-    },
-    quickChipTextActive: {
-        color: "#FFFFFF",
     },
     noticeCard: {
         borderWidth: 1,

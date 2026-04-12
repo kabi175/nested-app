@@ -1,10 +1,17 @@
 import Button from "@/components/v2/Button";
 import GoalHeader from "@/components/v2/goal/GoalHeader";
 import Slider from "@/components/v2/Slider";
-import { ChevronDown, ChevronUp } from "lucide-react-native";
+import { useGoal } from "@/hooks/useGoal";
+import { useModifySipOrder } from "@/hooks/useModifySipOrder";
+import { QUERY_KEYS } from "@/constants/queryKeys";
+import { useQueryClient } from "@tanstack/react-query";
 import { router, useLocalSearchParams } from "expo-router";
-import React, { useState } from "react";
+import { Linking } from "react-native";
+import { ChevronDown, ChevronUp } from "lucide-react-native";
+import React, { useEffect, useRef, useState } from "react";
 import {
+    ActivityIndicator,
+    Alert,
     Pressable,
     ScrollView,
     StyleSheet,
@@ -13,12 +20,12 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
-const STEP_UP_OPTIONS = [0, 5, 10, 15, 20, 25, 30];
+const STEP_UP_OPTIONS = [0, 500, 1000, 1500, 2000, 2500, 3000];
 const MIN_SIP = 3000;
-const MAX_SIP = 11000;
+const MAX_SIP = 1_00_000;
 const RATE_OF_RETURN = 0.12; // 12% annual
 
-function computeCorpus(monthlySip: number, stepUpPercent: number, years: number): number {
+function computeCorpus(monthlySip: number, stepUpAmount: number, years: number): number {
     let corpus = 0;
     let currentSip = monthlySip;
     const monthlyRate = RATE_OF_RETURN / 12;
@@ -26,17 +33,17 @@ function computeCorpus(monthlySip: number, stepUpPercent: number, years: number)
         for (let m = 0; m < 12; m++) {
             corpus = (corpus + currentSip) * (1 + monthlyRate);
         }
-        currentSip = currentSip * (1 + stepUpPercent / 100);
+        currentSip = currentSip + stepUpAmount;
     }
     return corpus;
 }
 
-function computeInvested(monthlySip: number, stepUpPercent: number, years: number): number {
+function computeInvested(monthlySip: number, stepUpAmount: number, years: number): number {
     let total = 0;
     let currentSip = monthlySip;
     for (let y = 0; y < years; y++) {
         total += currentSip * 12;
-        currentSip = currentSip * (1 + stepUpPercent / 100);
+        currentSip = currentSip + stepUpAmount;
     }
     return total;
 }
@@ -60,27 +67,114 @@ function formatLakhShort(amount: number): string {
     return `${Math.round(amount / 1000)}k`;
 }
 
-const CURRENT_YEAR = new Date().getFullYear();
-const TARGET_YEARS = 12; // placeholder — will come from goal data
-const TARGET_YEAR = CURRENT_YEAR + TARGET_YEARS;
-
 export default function EditSipScreen() {
-    useLocalSearchParams<{ goal_id: string }>();
+    const { goal_id, sip_order_id } = useLocalSearchParams<{ goal_id: string; sip_order_id: string }>();
+    const { data: goal, isLoading: goalLoading } = useGoal(goal_id);
 
-    const [monthlySip, setMonthlySip] = useState(5840);
-    const [stepUpIndex, setStepUpIndex] = useState(2); // 10%
+    const [monthlySip, setMonthlySip] = useState(MIN_SIP);
+    const [stepUpIndex, setStepUpIndex] = useState(0);
 
-    const stepUpPercent = STEP_UP_OPTIONS[stepUpIndex];
-    const corpus = computeCorpus(monthlySip, stepUpPercent, TARGET_YEARS);
-    const invested = computeInvested(monthlySip, stepUpPercent, TARGET_YEARS);
+    // Initialize slider and step-up from the fetched goal once available
+    useEffect(() => {
+        if (!goal) return;
+        if (goal.monthlySip != null) {
+            setMonthlySip(goal.monthlySip);
+        }
+        setStepUpIndex(0);
+    }, [goal]);
+
+    const modifyMutation = useModifySipOrder();
+    const queryClient = useQueryClient();
+    const [mandateAuthInProgress, setMandateAuthInProgress] = useState(false);
+    const pollIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+    // Poll goal every 5 sec while waiting for mandate authorization
+    useEffect(() => {
+        if (mandateAuthInProgress) {
+            pollIntervalRef.current = setInterval(() => {
+                queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.goal, goal_id] });
+            }, 5000);
+        } else {
+            if (pollIntervalRef.current) {
+                clearInterval(pollIntervalRef.current);
+                pollIntervalRef.current = null;
+            }
+        }
+        return () => {
+            if (pollIntervalRef.current) clearInterval(pollIntervalRef.current);
+        };
+    }, [mandateAuthInProgress]);
+
+    // Navigate back once modification is in PENDING state (mandate authorized)
+    useEffect(() => {
+        if (!mandateAuthInProgress || !goal) return;
+        if (goal.hasPendingSipModification) {
+            router.back();
+        }
+    }, [mandateAuthInProgress, goal?.hasPendingSipModification]);
+
+    const targetYears = goal
+        ? Math.max(1, new Date(goal.targetDate).getFullYear() - new Date().getFullYear())
+        : 12;
+    const targetYear = new Date().getFullYear() + targetYears;
+
+    const stepUpAmount = STEP_UP_OPTIONS[stepUpIndex];
+    const corpus = computeCorpus(monthlySip, stepUpAmount, targetYears);
+    const invested = computeInvested(monthlySip, stepUpAmount, targetYears);
     const returns = corpus - invested;
     // Clamp fraction so the bar is always visually meaningful
     const investedFraction = Math.min(Math.max(invested / corpus, 0.05), 0.95);
 
-    const handleSave = () => {
-        // TODO: wire up API
-        router.back();
+    const handleSave = async () => {
+        if (!sip_order_id) {
+            Alert.alert("Error", "SIP order not found. Please try again.");
+            return;
+        }
+        try {
+            const result = await modifyMutation.mutateAsync({ sipOrderId: sip_order_id, amount: monthlySip });
+            if (result.mandate_url) {
+                await Linking.openURL(result.mandate_url);
+                setMandateAuthInProgress(true);
+            } else {
+                router.back();
+            }
+        } catch (e: any) {
+            if (e?.response?.status === 409) {
+                Alert.alert(
+                    "Pending Modification",
+                    "A modification is already in progress. Please wait before submitting another."
+                );
+            } else {
+                Alert.alert("Error", e?.response?.data?.error ?? "Failed to update SIP");
+            }
+        }
     };
+
+    if (goalLoading) {
+        return (
+            <SafeAreaView style={styles.container} edges={["top"]}>
+                <GoalHeader title="Edit SIP" />
+                <View style={styles.loadingContainer}>
+                    <ActivityIndicator size="large" color="#3137D5" />
+                </View>
+            </SafeAreaView>
+        );
+    }
+
+    if (mandateAuthInProgress) {
+        return (
+            <SafeAreaView style={styles.container} edges={["top"]}>
+                <GoalHeader title="Edit SIP" />
+                <View style={styles.loadingContainer}>
+                    <ActivityIndicator size="large" color="#3137D5" />
+                    <Text style={styles.mandateText}>Authorizing mandate…</Text>
+                    <Text style={styles.mandateSubText}>
+                        Complete authorization in the browser. This screen will update automatically.
+                    </Text>
+                </View>
+            </SafeAreaView>
+        );
+    }
 
     return (
         <SafeAreaView style={styles.container} edges={["top"]}>
@@ -95,7 +189,7 @@ export default function EditSipScreen() {
                 <Slider
                     min={MIN_SIP}
                     max={MAX_SIP}
-                    step={10}
+                    step={1000}
                     value={monthlySip}
                     onValueChange={setMonthlySip}
                 />
@@ -105,7 +199,7 @@ export default function EditSipScreen() {
                     <Text style={styles.growthLabel}>YOUR NEST WILL GROW TO</Text>
                     <Text style={styles.growthAmount}>{formatLakh(corpus)}</Text>
                     <Text style={styles.growthSubtitle}>
-                        {"By "}{TARGET_YEAR}{"  •  "}{TARGET_YEARS}{" years from now"}
+                        {"By "}{targetYear}{"  •  "}{targetYears}{" years from now"}
                     </Text>
 
                     {/* Progress bar */}
@@ -134,7 +228,7 @@ export default function EditSipScreen() {
                 <View style={styles.stepUpCard}>
                     <View style={styles.stepUpLeft}>
                         <Text style={styles.stepUpTitle}>STEP-UP</Text>
-                        <Text style={styles.stepUpSubtitle}>Increase my SIP a little every year</Text>
+                        <Text style={styles.stepUpSubtitle}>Add a fixed amount to SIP each year</Text>
                     </View>
                     <View style={styles.stepper}>
                         <Pressable
@@ -145,7 +239,7 @@ export default function EditSipScreen() {
                         >
                             <ChevronUp size={13} color="#3A3A4A" strokeWidth={2.5} />
                         </Pressable>
-                        <Text style={styles.stepperValue}>{stepUpPercent}%</Text>
+                        <Text style={styles.stepperValue}>{stepUpAmount === 0 ? "₹0" : `+₹${stepUpAmount}`}</Text>
                         <Pressable
                             onPress={() => setStepUpIndex((i) => Math.max(i - 1, 0))}
                             hitSlop={10}
@@ -157,7 +251,11 @@ export default function EditSipScreen() {
             </ScrollView>
 
             <View style={styles.footer}>
-                <Button title="Save plan" onPress={handleSave} />
+                <Button
+                    title={modifyMutation.isPending ? "Saving..." : "Save plan"}
+                    onPress={handleSave}
+                    disabled={modifyMutation.isPending}
+                />
             </View>
         </SafeAreaView>
     );
@@ -167,6 +265,11 @@ const styles = StyleSheet.create({
     container: {
         flex: 1,
         backgroundColor: "#F5F4EF",
+    },
+    loadingContainer: {
+        flex: 1,
+        justifyContent: "center",
+        alignItems: "center",
     },
     scroll: {
         flex: 1,
@@ -271,6 +374,20 @@ const styles = StyleSheet.create({
         fontWeight: "600",
         color: "#1D1E20",
         paddingVertical: 2,
+    },
+    mandateText: {
+        fontSize: 17,
+        fontWeight: "600",
+        color: "#1D1E20",
+        marginTop: 16,
+        textAlign: "center",
+    },
+    mandateSubText: {
+        fontSize: 13,
+        color: "#6E6F7A",
+        marginTop: 8,
+        textAlign: "center",
+        paddingHorizontal: 32,
     },
     // ── Footer ───────────────────────────────────────────────────────────────────
     footer: {

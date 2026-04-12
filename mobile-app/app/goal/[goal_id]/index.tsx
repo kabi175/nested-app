@@ -15,6 +15,7 @@ import {
   Alert,
   ScrollView,
   StyleSheet,
+  Text,
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -70,8 +71,9 @@ export default function GoalDetailScreen() {
     }
     return goal?.title || "Goal";
   })()
+
   const goalSubtitle = [
-    goal?.education?.name ?? goal?.basket?.title ?? "",
+    goal?.education?.name ?? "Goal",
     goal?.targetDate ? new Date(goal.targetDate).getFullYear() : "",
   ]
     .filter(Boolean)
@@ -109,9 +111,17 @@ export default function GoalDetailScreen() {
           <GoalSipCard
             monthlySip={goal.monthlySip}
             nextSipDate={goal.nextSipDate}
-            stepUpPercent={goal.basket.min_step_up}
+            stepUpAmount={goal.basket.min_step_up}
           />
         ) : null}
+
+        {goal?.monthlySip && (!holdings || holdings.length === 0) && (
+          <View style={styles.sipActiveNotice}>
+            <Text style={styles.sipActiveNoticeText}>
+              Your SIP is active. Transactions will be reflected within 3 working days.
+            </Text>
+          </View>
+        )}
 
         <GoalHoldingsList goalId={goal_id} holdings={holdings || []} />
       </ScrollView>
@@ -121,7 +131,7 @@ export default function GoalDetailScreen() {
         onEditSip={() => {
           router.push({
             pathname: "goal/[goal_id]/edit-sip",
-            params: { goal_id },
+            params: { goal_id, sip_order_id: goal?.sipOrderId ?? "" },
           });
         }}
       />
@@ -154,5 +164,19 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     paddingTop: 16,
     paddingBottom: 16,
+  },
+  sipActiveNotice: {
+    marginTop: 16,
+    borderRadius: 12,
+    backgroundColor: "#EEF0FD",
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+  },
+  sipActiveNoticeText: {
+    fontSize: 13,
+    color: "#3137D5",
+    fontWeight: "500",
+    textAlign: "center",
+    lineHeight: 18,
   },
 });

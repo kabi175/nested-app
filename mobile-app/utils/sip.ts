@@ -41,3 +41,22 @@ export function computeMinimumSIPAmount(
   }
   return Math.round((low + high) / 2 / 500) * 500;
 }
+
+/**
+ * Returns the exact (unrounded) monthly SIP needed to reach `targetAmount`.
+ * Uses the closed-form SIP annuity formula:
+ *   SIP = (target - FV_lump) * r_m / ((1 + r_m)^n - 1)
+ */
+export function computeExactSIPAmount(
+  remainingYears: number,
+  lumpsum: number,
+  expectedReturns: number,
+  targetAmount: number
+): number {
+  const r_m = expectedReturns / 12 / 100;
+  const n = remainingYears * 12;
+  const FV_lump = lumpsum * Math.pow(1 + r_m, n);
+  const remaining = targetAmount - FV_lump;
+  if (remaining <= 0) return 0;
+  return (remaining * r_m) / (Math.pow(1 + r_m, n) - 1);
+}

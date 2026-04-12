@@ -1,18 +1,27 @@
 package com.nested.app.services;
 
+import com.nested.app.client.mf.MandateApiClient;
 import com.nested.app.client.mf.SipOrderApiClient;
+import com.nested.app.client.mf.dto.MandateDto;
 import com.nested.app.client.mf.dto.SipOrderDetail;
 import com.nested.app.dto.OrderAllocationProjection;
 import com.nested.app.dto.OrderItemsDTO;
 import com.nested.app.entity.OrderItems;
 import com.nested.app.entity.SIPOrder;
+import com.nested.app.entity.SipModification;
+import com.nested.app.entity.SipModificationItem;
 import com.nested.app.entity.User;
 import com.nested.app.enums.TransactionStatus;
 import com.nested.app.repository.OrderItemsRepository;
 import com.nested.app.repository.SIPOrderRepository;
+import com.nested.app.repository.SipModificationItemRepository;
+import com.nested.app.repository.SipModificationRepository;
+import java.time.LocalDate;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -36,6 +45,9 @@ public class OrderItemsService {
   private final SIPOrderRepository sipOrderRepository;
   private final SipOrderApiClient sipOrderApiClient;
   private final SipOrderSchedulerService sipOrderSchedulerService;
+  private final SipModificationRepository sipModificationRepository;
+  private final SipModificationItemRepository sipModificationItemRepository;
+  private final MandateApiClient mandateApiClient;
 
   /**
    * Retrieves paginated SIP Order Items
@@ -160,5 +172,135 @@ public class OrderItemsService {
     sipOrderSchedulerService.scheduleSipTransactionTrackerJob(orderItem, 0);
 
     log.info("Successfully cancelled SIP order id={}", sipOrderId);
+  }
+
+  /**
+   * Submits a SIP amount modification.
+   *
+   * @return null if submitted immediately (HTTP 200), or a mandate_url string if mandate
+   *     authorization is required first (HTTP 202).
+   */
+  @org.springframework.transaction.annotation.Transactional
+  public String modifySipOrder(Long sipOrderId, double newTotalAmount) {
+    log.info("Modifying SIP order id={} to new amount={}", sipOrderId, newTotalAmount);
+
+    SIPOrder sipOrder =
+        sipOrderRepository
+            .findById(sipOrderId)
+            .orElseThrow(() -> new RuntimeException("SIP order not found: " + sipOrderId));
+
+    var lockStatuses = List.of(
+        SipModification.Status.AWAITING_MANDATE,
+        SipModification.Status.PENDING,
+        SipModification.Status.CONFIRMING);
+    if (sipModificationRepository.existsBySipOrderAndStatusIn(sipOrder, lockStatuses)) {
+      throw new IllegalStateException("A modification is already in progress for this SIP order");
+    }
+
+    // Only ACTIVE order items can be modified
+    var orderItems =
+        sipOrder.getItems().stream()
+            .filter(i -> i.getStatus() == TransactionStatus.ACTIVE)
+            .toList();
+
+    if (orderItems.isEmpty()) {
+      throw new IllegalStateException("No active order items found for SIP order: " + sipOrderId);
+    }
+
+    // Compute per-item amounts using basket allocation (floor to nearest 100, last absorbs rounding)
+    var basketFunds = sipOrder.getGoal().getBasket().getBasketFunds();
+    var itemByFundId = orderItems.stream().collect(Collectors.toMap(i -> i.getFund().getId(), i -> i));
+
+    var allocations = new LinkedHashMap<OrderItems, Double>();
+    double runningTotal = 0;
+    var fundList = new java.util.ArrayList<>(basketFunds);
+    for (int i = 0; i < fundList.size(); i++) {
+      var bf = fundList.get(i);
+      var item = itemByFundId.get(bf.getFund().getId());
+      if (item == null) continue;
+      double newAmt;
+      if (i == fundList.size() - 1) {
+        newAmt = newTotalAmount - runningTotal;
+      } else {
+        newAmt = Math.floor(bf.getAllocationPercentage() / 100.0 * newTotalAmount / 100) * 100;
+      }
+      runningTotal += newAmt;
+      allocations.put(item, newAmt);
+    }
+
+    // Check current mandate limit
+    var payment = sipOrder.getPayment();
+    var currentMandate = mandateApiClient.fetchMandate(payment.getMandateID()).block();
+    double mandateLimit = currentMandate != null && currentMandate.getAmount() != null
+        ? currentMandate.getAmount() : 0;
+
+    if (newTotalAmount > mandateLimit) {
+      // Need a new mandate — create it using same bank account as existing mandate
+      var bank = payment.getBank();
+      var today = LocalDate.now();
+      var newMandate = mandateApiClient.createMandate(
+          MandateDto.builder()
+              .amount(newTotalAmount)
+              .bankAccount(bank.getPaymentRef().toString())
+              .startDate(today)
+              .endDate(today.plusYears(29))
+              .paymentType(MandateDto.PaymentType.E_MANDATE)
+              .build()
+      ).block();
+
+      if (newMandate == null) {
+        throw new RuntimeException("Failed to create new mandate for SIP modification");
+      }
+
+      var authAction = mandateApiClient.authorizeMandate(newMandate.getId()).block();
+      if (authAction == null) {
+        throw new RuntimeException("Failed to get mandate authorization URL");
+      }
+
+      var modification = new SipModification();
+      modification.setSipOrder(sipOrder);
+      modification.setRequestedAmount(newTotalAmount);
+      modification.setStatus(SipModification.Status.AWAITING_MANDATE);
+      modification.setMandateId(newMandate.getId());
+      sipModificationRepository.save(modification);
+
+      log.info("SIP modification id={} awaiting mandate authorization for sipOrderId={}",
+          modification.getId(), sipOrderId);
+      return authAction.getRedirectUrl();
+    }
+
+    // Existing mandate sufficient — submit batch PATCH immediately
+    var plans = allocations.entrySet().stream()
+        .map(e -> {
+          Map<String, Object> plan = new java.util.HashMap<>();
+          plan.put("id", e.getKey().getRef());
+          plan.put("amount", e.getValue());
+          return plan;
+        })
+        .collect(Collectors.toList());
+    sipOrderApiClient.updatePurchasePlanAmounts(plans).block();
+
+    var modification = new SipModification();
+    modification.setSipOrder(sipOrder);
+    modification.setRequestedAmount(newTotalAmount);
+    modification.setStatus(SipModification.Status.PENDING);
+    sipModificationRepository.save(modification);
+
+    for (var entry : allocations.entrySet()) {
+      var item = entry.getKey();
+      var newAmt = entry.getValue();
+      var modItem = new SipModificationItem();
+      modItem.setModification(modification);
+      modItem.setOrderItem(item);
+      modItem.setOldAmount(item.getAmount());
+      modItem.setNewAmount(newAmt);
+      modItem.setStatus(SipModificationItem.Status.PENDING);
+      sipModificationItemRepository.save(modItem);
+    }
+
+    sipOrderSchedulerService.scheduleModificationTrackerJob(modification.getId());
+
+    log.info("SIP modification submitted for sipOrderId={}, modificationId={}", sipOrderId, modification.getId());
+    return null;
   }
 }

@@ -2,6 +2,7 @@ package com.nested.app.controllers;
 
 import com.nested.app.dto.OrderItemsDTO;
 import com.nested.app.dto.SipCancelRequest;
+import com.nested.app.dto.SipModifyRequest;
 import com.nested.app.services.OrderItemsService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -114,6 +115,38 @@ public class OrderItemsController {
       log.error("Error cancelling SIP order id={}: {}", sipOrderId, e.getMessage(), e);
       return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
           .body(Map.of("error", "Failed to cancel SIP order"));
+    }
+  }
+
+  @PostMapping("/sip/{sipOrderId}/actions/modify")
+  @Operation(
+      summary = "Modify SIP order amount",
+      description =
+          "Submits a modification request to update the SIP total amount."
+              + " Returns 409 if a previous modification is still pending.")
+  @ApiResponses(
+      value = {
+        @ApiResponse(responseCode = "200", description = "Modification submitted successfully"),
+        @ApiResponse(responseCode = "409", description = "A previous modification is still pending"),
+        @ApiResponse(responseCode = "500", description = "Internal server error")
+      })
+  public ResponseEntity<?> modifySipOrder(
+      @PathVariable Long sipOrderId,
+      @RequestBody SipModifyRequest request) {
+    log.info("POST /api/v1/order-items/sip/{}/actions/modify - amount={}", sipOrderId, request.getAmount());
+    try {
+      String mandateUrl = orderItemsService.modifySipOrder(sipOrderId, request.getAmount());
+      if (mandateUrl != null) {
+        return ResponseEntity.status(HttpStatus.ACCEPTED).body(Map.of("mandate_url", mandateUrl));
+      }
+      return ResponseEntity.ok(Map.of("message", "SIP modification submitted"));
+    } catch (IllegalStateException e) {
+      log.warn("SIP modification conflict for id={}: {}", sipOrderId, e.getMessage());
+      return ResponseEntity.status(HttpStatus.CONFLICT).body(Map.of("error", e.getMessage()));
+    } catch (RuntimeException e) {
+      log.error("Error modifying SIP order id={}: {}", sipOrderId, e.getMessage(), e);
+      return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+          .body(Map.of("error", "Failed to submit SIP modification"));
     }
   }
 }

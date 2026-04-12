@@ -57,6 +57,7 @@ public class SipOrderDetail extends OrderDetail {
   public enum OrderState {
     CREATED("created"),
     ACTIVE("active"),
+    REVIEW_COMPLETED("review_completed"),
     CANCELLED("cancelled"),
     FAILED("failed"),
     COMPLETED("completed");

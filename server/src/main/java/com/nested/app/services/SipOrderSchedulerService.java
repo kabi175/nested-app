@@ -249,6 +249,48 @@ public class SipOrderSchedulerService {
   }
 
   /**
+   * Schedules a SipModificationTrackerJob to poll modification instruction statuses every 6 hours.
+   *
+   * @param modificationId The ID of the SipModification to track
+   */
+  public void scheduleModificationTrackerJob(Long modificationId) {
+    try {
+      String jobIdentity = "sip-modification-tracker-" + modificationId;
+      JobKey jobKey = new JobKey(jobIdentity);
+
+      org.quartz.CronTrigger trigger =
+          TriggerBuilder.newTrigger()
+              .withIdentity(jobIdentity + "-trigger")
+              .forJob(jobKey)
+              .startNow()
+              .withSchedule(
+                  org.quartz.CronScheduleBuilder.cronSchedule("0 0 */6 * * ?")
+                      .withMisfireHandlingInstructionFireAndProceed())
+              .build();
+
+      if (!scheduler.checkExists(jobKey)) {
+        JobDetail jobDetail =
+            JobBuilder.newJob(com.nested.app.jobs.SipModificationTrackerJob.class)
+                .withIdentity(jobIdentity)
+                .usingJobData("sipModificationId", modificationId)
+                .storeDurably()
+                .requestRecovery(true)
+                .build();
+        scheduler.scheduleJob(jobDetail, trigger);
+      } else {
+        scheduler.scheduleJob(trigger);
+      }
+
+      log.info("Scheduled SipModificationTrackerJob for modificationId={}", modificationId);
+    } catch (Exception e) {
+      log.warn(
+          "Failed to schedule SipModificationTrackerJob for modificationId={}: {}",
+          modificationId,
+          e.getMessage());
+    }
+  }
+
+  /**
    * Immediately triggers a SipTransactionTracker job for the given orderRef. Intended for admin
    * debug use in production. If the job already exists, adds a new immediate trigger; otherwise
    * creates the job first. Returns false if no OrderItem is found for the given ref.

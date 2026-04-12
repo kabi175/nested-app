@@ -95,12 +95,20 @@ export default function SIPScreen() {
     }
   };
 
+  const handleBackPress = () => {
+    if (router.canGoBack()) {
+      router.back();
+    } else {
+      router.replace("/(tabs)");
+    }
+  }
+
   return (
     <SafeAreaView style={styles.container} edges={["top"]}>
       {/* Header */}
       <View style={styles.header}>
         <TouchableOpacity
-          onPress={() => router.back()}
+          onPress={handleBackPress}
           style={styles.backButton}
         >
           <ArrowLeft size={24} color="#1F2937" />

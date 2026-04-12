@@ -41,6 +41,10 @@ public class OrderData {
   @JsonProperty("redeemed_amount")
   private Double redeemedAmount;
 
+  @Nullable
+  @JsonProperty("amount")
+  private Double amount;
+
   private OrderState state;
 
   @JsonProperty("folio_number")

@@ -16,6 +16,7 @@ import com.nested.app.repository.BasketRepository;
 import com.nested.app.repository.ChildRepository;
 import com.nested.app.repository.EducationRepository;
 import com.nested.app.repository.SIPOrderRepository;
+import com.nested.app.repository.SipModificationRepository;
 import com.nested.app.repository.TenantAwareGoalRepository;
 import java.sql.Timestamp;
 import java.time.LocalDate;
@@ -50,6 +51,7 @@ public class GoalServiceImpl implements GoalService {
   private final EducationRepository educationRepository;
   private final ChildRepository childRepository;
   private final SIPOrderRepository sipOrderRepository;
+  private final SipModificationRepository sipModificationRepository;
   private final PortfolioService portfolioService;
 
   /**
@@ -397,6 +399,16 @@ public class GoalServiceImpl implements GoalService {
         .ifPresent(sip -> {
           dto.setNextSipAmount(sip.getAmount());
           dto.setNextSipDate(sip.getNextRunDate());
+          dto.setSipOrderId(sip.getId());
+          dto.setHasPendingSipModification(
+              sipModificationRepository.existsBySipOrderAndStatusIn(
+                  sip, java.util.List.of(
+                      com.nested.app.entity.SipModification.Status.AWAITING_MANDATE,
+                      com.nested.app.entity.SipModification.Status.PENDING,
+                      com.nested.app.entity.SipModification.Status.CONFIRMING)));
+          if (sip.getSipStepUp() != null) {
+            dto.setStepUpPercent(sip.getSipStepUp().getStepUpAmount());
+          }
         });
 
     return dto;

@@ -13,10 +13,10 @@ export const StepUpInput: React.FC<StepUpInputProps> = ({
   value: controlledValue,
   onChange,
   min = 0,
-  max = 50,
-  step = 5,
+  max = 3000,
+  step = 500,
 }) => {
-  const [internalValue, setInternalValue] = useState(10);
+  const [internalValue, setInternalValue] = useState(500);
   const value = controlledValue !== undefined ? controlledValue : internalValue;
 
   const increment = () => {
@@ -35,10 +35,10 @@ export const StepUpInput: React.FC<StepUpInputProps> = ({
     <View style={styles.card}>
       <View style={styles.labelContainer}>
         <Text style={styles.title}>STEP-UP</Text>
-        <Text style={styles.subtitle}>Increase my SIP a little every year</Text>
+        <Text style={styles.subtitle}>Add a fixed amount to SIP each year</Text>
       </View>
       <View style={styles.stepper}>
-        <Text style={styles.stepperValue}>{value}%</Text>
+        <Text style={styles.stepperValue}>{value === 0 ? "₹0" : `+₹${value}`}</Text>
         <View style={styles.arrows}>
           <Pressable onPress={increment} hitSlop={8} style={styles.arrowBtn}>
             <Text style={styles.arrowText}>▲</Text>

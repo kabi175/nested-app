@@ -11,7 +11,7 @@ export const createChild = async (api: AxiosInstance, payload: Omit<Child, "id">
   };
 
   const { data } = await api.post("/children", { data: [childDTO] });
-  return data;
+  return data.data[0];
 };
 
 export const getChildren = async (api: AxiosInstance): Promise<Child[]> => {

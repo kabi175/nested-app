@@ -41,7 +41,7 @@ interface EducationBasedGoalPlannerProps {
   }) => void;
 }
 
-function calculateFutureValue(lumpsum = 0, monthlySip = 0, years: number, annualRate: number, stepUpPercent = 0) {
+function calculateFutureValue(lumpsum = 0, monthlySip = 0, years: number, annualRate: number, stepUpAmount = 0) {
   const monthlyRate = annualRate / 12 / 100;
   const totalMonths = years * 12;
 
@@ -61,7 +61,7 @@ function calculateFutureValue(lumpsum = 0, monthlySip = 0, years: number, annual
     }
 
     // Apply Step-up at the end of each year for the next year
-    currentSip += (currentSip * (stepUpPercent / 100));
+    currentSip += stepUpAmount;
   }
 
   return Math.round(totalValue);

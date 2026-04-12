@@ -5,7 +5,6 @@ export const getGoals = async (
   api: AxiosInstance,
   type: "education" | "super_fd",
 ): Promise<Goal[]> => {
-  console.debug("fetching goals for type", type);
   const { data } = await api.get(`/goals?type=${type}`);
   return (data.data ?? []).map((goal: GoalDTO): Goal => mapGoalToGoal(goal));
 };
@@ -128,6 +127,9 @@ export type GoalDTO = {
   };
   next_sip_amount: number | null;
   next_sip_date: string | null;
+  sip_order_id: string | null;
+  has_pending_sip_modification: boolean;
+  step_up_percent: number | null;
   target_date?: string;
   createdAt?: string;
   updatedAt?: string;
@@ -159,5 +161,8 @@ export function mapGoalToGoal(goal: GoalDTO): Goal {
 
     nextSipAmount: goal.next_sip_amount,
     nextSipDate: goal.next_sip_date ? new Date(goal.next_sip_date) : null,
+    sipOrderId: goal.sip_order_id ?? null,
+    hasPendingSipModification: goal.has_pending_sip_modification ?? false,
+    stepUpPercent: goal.step_up_percent ?? 0,
   };
 }

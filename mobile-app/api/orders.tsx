@@ -84,6 +84,20 @@ export const getTransactions = async (
   }
 };
 
+export type ModifySipResponse = {
+  message?: string;      // 200 — submitted immediately
+  mandate_url?: string;  // 202 — mandate authorization required
+};
+
+export const modifySipOrder = async (
+  api: AxiosInstance,
+  sipOrderId: string,
+  amount: number
+): Promise<ModifySipResponse> => {
+  const { data } = await api.post(`/order-items/sip/${sipOrderId}/actions/modify`, { amount });
+  return data;
+};
+
 export const getFundAllocationWithOrders = async (
   api: AxiosInstance,
   orderIds: string[]
