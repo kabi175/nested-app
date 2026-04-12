@@ -5,6 +5,7 @@ import com.nested.app.client.mf.dto.OrderConsentRequest;
 import com.nested.app.client.mf.dto.OrderData;
 import com.nested.app.client.mf.dto.SipOrderDetail;
 import java.util.List;
+import java.util.Map;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;
 
@@ -22,4 +23,11 @@ public interface SipOrderApiClient {
   Mono<List<OrderData>> fetchTransactionDetails(String orderRef);
 
   Mono<Void> cancelSipOrder(String planRef, String cancellationCode, String cancellationReason);
+
+  /**
+   * Sends a PATCH /v2/mf_purchase_plans/batch request with the given plans payload.
+   * Used for both amount updates ({ id, amount, payment_source? }) and
+   * state confirmations ({ id, state: "confirmed" }).
+   */
+  Mono<Void> updatePurchasePlanAmounts(List<Map<String, Object>> plans);
 }

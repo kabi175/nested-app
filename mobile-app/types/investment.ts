@@ -18,6 +18,9 @@ export type Goal = {
 
   nextSipAmount: number | null;
   nextSipDate: Date | null;
+  sipOrderId: string | null;
+  hasPendingSipModification: boolean;
+  stepUpPercent: number;
 
   targetDate: Date;
   status: "draft" | "payment_pending" | "active" | "completed" | "cancelled";

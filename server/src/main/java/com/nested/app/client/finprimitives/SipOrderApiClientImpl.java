@@ -97,6 +97,16 @@ public class SipOrderApiClientImpl implements SipOrderApiClient {
   }
 
   @Override
+  public Mono<Void> updatePurchasePlanAmounts(List<Map<String, Object>> plans) {
+    return api.withAuth()
+        .patch()
+        .uri(SIP_ORDER_BATCH_API_URL)
+        .bodyValue(Map.of("mf_purchase_plans", plans))
+        .retrieve()
+        .bodyToMono(Void.class);
+  }
+
+  @Override
   public Mono<List<OrderData>> fetchTransactionDetails(String orderRef) {
     if (orderRef == null) {
       return Mono.empty();
