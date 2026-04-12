@@ -121,7 +121,7 @@ export default function GoalDetailScreen() {
         onEditSip={() => {
           router.push({
             pathname: "goal/[goal_id]/edit-sip",
-            params: { goal_id },
+            params: { goal_id, sip_order_id: goal?.sipOrderId ?? "" },
           });
         }}
       />

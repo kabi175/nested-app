@@ -86,7 +86,7 @@ export default function Planner() {
 
     const sipMin = goal?.basket.min_sip || 4000; //TODO: compute this value based on goal
     const quickSelectOptions = computeQuickSelectOptions(sipMin);
-    const sliderMax = computeSliderMax(sipMin);
+    const sliderMax = 1_00_000;
 
     const targetYear = goal?.targetDate.getFullYear() || (new Date().getFullYear() + 1)
 

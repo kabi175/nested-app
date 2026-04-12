@@ -58,7 +58,6 @@ export const LumpSumInput: React.FC<LumpSumInputProps> = ({
           onValueChange={handleToggle}
           trackColor={{ false: "#C7C7CC", true: "#3137D5" }}
           thumbColor="#FFFFFF"
-          ios_backgroundColor="#C7C7CC"
         />
       </View>
 
@@ -96,16 +95,16 @@ const styles = StyleSheet.create({
     gap: 4,
   },
   title: {
-    fontSize: 14,
+    fontSize: 11,
     fontWeight: "600",
-    color: "#1D1E20",
+    color: "#6E6F7A",
     letterSpacing: 0.5,
     textTransform: "uppercase",
   },
   subtitle: {
-    fontSize: 13,
+    fontSize: 12,
     fontWeight: "400",
-    color: "#6E6F7A",
+    color: "#9CA3AF",
   },
   input: {
     height: 48,
