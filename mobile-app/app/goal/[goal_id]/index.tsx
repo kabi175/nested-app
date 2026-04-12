@@ -70,8 +70,9 @@ export default function GoalDetailScreen() {
     }
     return goal?.title || "Goal";
   })()
+
   const goalSubtitle = [
-    goal?.education?.name ?? goal?.basket?.title ?? "",
+    goal?.education?.name ?? "Goal",
     goal?.targetDate ? new Date(goal.targetDate).getFullYear() : "",
   ]
     .filter(Boolean)
@@ -88,6 +89,7 @@ export default function GoalDetailScreen() {
     );
   }
 
+  console.log("goalSubtitle", goalSubtitle)
   return (
     <SafeAreaView style={styles.container} edges={["top"]}>
       <StatusBar style="dark" backgroundColor="#FFFFFF" />
