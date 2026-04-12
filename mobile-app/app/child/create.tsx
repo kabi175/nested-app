@@ -158,8 +158,9 @@ export default function CreateChild() {
         investUnderChild: false,
       };
 
-      await createChildMutation(payload);
-      router.replace(`/child/select`);
+      const createdChild = await createChildMutation(payload);
+
+      router.push(`/child/${createdChild.id}/plan`);
     } catch (error: any) {
       console.error("Error creating child:", error);
       if (error.response?.status === 401) {

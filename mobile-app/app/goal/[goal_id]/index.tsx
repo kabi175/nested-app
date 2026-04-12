@@ -15,6 +15,7 @@ import {
   Alert,
   ScrollView,
   StyleSheet,
+  Text,
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -89,7 +90,6 @@ export default function GoalDetailScreen() {
     );
   }
 
-  console.log("goalSubtitle", goalSubtitle)
   return (
     <SafeAreaView style={styles.container} edges={["top"]}>
       <StatusBar style="dark" backgroundColor="#FFFFFF" />
@@ -114,6 +114,14 @@ export default function GoalDetailScreen() {
             stepUpAmount={goal.basket.min_step_up}
           />
         ) : null}
+
+        {goal?.monthlySip && (!holdings || holdings.length === 0) && (
+          <View style={styles.sipActiveNotice}>
+            <Text style={styles.sipActiveNoticeText}>
+              Your SIP is active. Transactions will be reflected within 3 working days.
+            </Text>
+          </View>
+        )}
 
         <GoalHoldingsList goalId={goal_id} holdings={holdings || []} />
       </ScrollView>
@@ -156,5 +164,19 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     paddingTop: 16,
     paddingBottom: 16,
+  },
+  sipActiveNotice: {
+    marginTop: 16,
+    borderRadius: 12,
+    backgroundColor: "#EEF0FD",
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+  },
+  sipActiveNoticeText: {
+    fontSize: 13,
+    color: "#3137D5",
+    fontWeight: "500",
+    textAlign: "center",
+    lineHeight: 18,
   },
 });
