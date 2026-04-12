@@ -2,7 +2,7 @@ import Slider from "@/components/v2/Slider";
 import { LumpSumInput } from "@/components/v2/planner/LumpSumInput";
 import NestGrowthCard from "@/components/v2/planner/NestGrowthCard";
 import { formatCurrency } from "@/utils/formatters";
-import { computeMinimumSIPAmount } from "@/utils/sip";
+import { computeExactSIPAmount } from "@/utils/sip";
 import React, { useEffect, useMemo, useState } from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 
@@ -46,8 +46,9 @@ export default function SipBasedPlan({
     const years = remainingYears > 0 ? remainingYears : 1;
 
     const [sipAmount, setSipAmount] = useState(() => {
-        const seed = computeMinimumSIPAmount(years, 0, 0, EXPECTED_RETURNS, defaultTarget);
-        return Math.min(Math.max(seed, sipMin), SLIDER_MAX);
+        const seed = computeExactSIPAmount(remainingYears, 0, EXPECTED_RETURNS, defaultTarget);
+        const rounded = Math.round(seed / 500) * 500;
+        return Math.min(Math.max(rounded, sipMin), SLIDER_MAX);
     });
     const [lumpSumEnabled, setLumpSumEnabled] = useState(false);
     const [lumpSumStr, setLumpSumStr] = useState("");
