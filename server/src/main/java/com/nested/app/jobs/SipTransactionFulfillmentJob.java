@@ -96,7 +96,12 @@ public class SipTransactionFulfillmentJob implements Job {
         double unitPrice = Objects.requireNonNullElse(orderData.getAllottedUnits(), 0d);
         txn.setUnits(units);
         txn.setUnitPrice(unitPrice);
-        txn.setAmount(Math.abs(units * unitPrice));
+        var amount = Math.abs(units * unitPrice);
+        if (orderData.getState() == OrderData.OrderState.SUBMITTED || amount == 0) {
+            txn.setAmount(orderData.getAmount());
+        } else {
+            txn.setAmount(amount);
+        }
         if (orderData.getSucceededAt() != null) {
             txn.setExecutedAt(orderData.getSucceededAt());
         } else if (txn.getExecutedAt() == null) {
