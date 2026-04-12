@@ -11,10 +11,10 @@ function formatNextSipDate(date: Date | null): string {
 interface GoalSipCardProps {
   monthlySip: number;
   nextSipDate: Date | null;
-  stepUpPercent: number;
+  stepUpAmount: number;
 }
 
-export default function GoalSipCard({ monthlySip, nextSipDate, stepUpPercent }: GoalSipCardProps) {
+export default function GoalSipCard({ monthlySip, nextSipDate, stepUpAmount }: GoalSipCardProps) {
   return (
     <View style={styles.sipCard}>
       <View style={styles.sipTopRow}>
@@ -28,7 +28,7 @@ export default function GoalSipCard({ monthlySip, nextSipDate, stepUpPercent }: 
       </View>
       <View style={[styles.sipRow, { marginBottom: 0 }]}>
         <Text style={styles.sipRowLabel}>STEP-UP</Text>
-        <Text style={styles.sipRowValue}>{stepUpPercent}%</Text>
+        <Text style={styles.sipRowValue}>{stepUpAmount > 0 ? `+₹${stepUpAmount}/yr` : "—"}</Text>
       </View>
     </View>
   );

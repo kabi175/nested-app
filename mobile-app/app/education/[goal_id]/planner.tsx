@@ -41,7 +41,7 @@ export default function GoalPlannerScreen() {
     }) => {
         setErrorMessage(undefined);
 
-        const stepUpAmount = stepUp !== undefined ? Math.round((stepUp / 100) * sipAmount) : undefined;
+        const stepUpAmount = stepUp !== undefined ? stepUp : undefined;
 
         // 1. Validate before creating goal
         if (sipAmount <= 0) {

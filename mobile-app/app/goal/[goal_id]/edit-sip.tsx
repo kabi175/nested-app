@@ -20,12 +20,12 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
-const STEP_UP_OPTIONS = [0, 5, 10, 15, 20, 25, 30];
+const STEP_UP_OPTIONS = [0, 500, 1000, 1500, 2000, 2500, 3000];
 const MIN_SIP = 3000;
 const MAX_SIP = 1_00_000;
 const RATE_OF_RETURN = 0.12; // 12% annual
 
-function computeCorpus(monthlySip: number, stepUpPercent: number, years: number): number {
+function computeCorpus(monthlySip: number, stepUpAmount: number, years: number): number {
     let corpus = 0;
     let currentSip = monthlySip;
     const monthlyRate = RATE_OF_RETURN / 12;
@@ -33,17 +33,17 @@ function computeCorpus(monthlySip: number, stepUpPercent: number, years: number)
         for (let m = 0; m < 12; m++) {
             corpus = (corpus + currentSip) * (1 + monthlyRate);
         }
-        currentSip = currentSip * (1 + stepUpPercent / 100);
+        currentSip = currentSip + stepUpAmount;
     }
     return corpus;
 }
 
-function computeInvested(monthlySip: number, stepUpPercent: number, years: number): number {
+function computeInvested(monthlySip: number, stepUpAmount: number, years: number): number {
     let total = 0;
     let currentSip = monthlySip;
     for (let y = 0; y < years; y++) {
         total += currentSip * 12;
-        currentSip = currentSip * (1 + stepUpPercent / 100);
+        currentSip = currentSip + stepUpAmount;
     }
     return total;
 }
@@ -80,8 +80,7 @@ export default function EditSipScreen() {
         if (goal.monthlySip != null) {
             setMonthlySip(goal.monthlySip);
         }
-        const matchedIndex = STEP_UP_OPTIONS.indexOf(goal.stepUpPercent);
-        setStepUpIndex(matchedIndex >= 0 ? matchedIndex : 0);
+        setStepUpIndex(0);
     }, [goal]);
 
     const modifyMutation = useModifySipOrder();
@@ -119,9 +118,9 @@ export default function EditSipScreen() {
         : 12;
     const targetYear = new Date().getFullYear() + targetYears;
 
-    const stepUpPercent = STEP_UP_OPTIONS[stepUpIndex];
-    const corpus = computeCorpus(monthlySip, stepUpPercent, targetYears);
-    const invested = computeInvested(monthlySip, stepUpPercent, targetYears);
+    const stepUpAmount = STEP_UP_OPTIONS[stepUpIndex];
+    const corpus = computeCorpus(monthlySip, stepUpAmount, targetYears);
+    const invested = computeInvested(monthlySip, stepUpAmount, targetYears);
     const returns = corpus - invested;
     // Clamp fraction so the bar is always visually meaningful
     const investedFraction = Math.min(Math.max(invested / corpus, 0.05), 0.95);
@@ -229,7 +228,7 @@ export default function EditSipScreen() {
                 <View style={styles.stepUpCard}>
                     <View style={styles.stepUpLeft}>
                         <Text style={styles.stepUpTitle}>STEP-UP</Text>
-                        <Text style={styles.stepUpSubtitle}>Increase my SIP a little every year</Text>
+                        <Text style={styles.stepUpSubtitle}>Add a fixed amount to SIP each year</Text>
                     </View>
                     <View style={styles.stepper}>
                         <Pressable
@@ -240,7 +239,7 @@ export default function EditSipScreen() {
                         >
                             <ChevronUp size={13} color="#3A3A4A" strokeWidth={2.5} />
                         </Pressable>
-                        <Text style={styles.stepperValue}>{stepUpPercent}%</Text>
+                        <Text style={styles.stepperValue}>{stepUpAmount === 0 ? "₹0" : `+₹${stepUpAmount}`}</Text>
                         <Pressable
                             onPress={() => setStepUpIndex((i) => Math.max(i - 1, 0))}
                             hitSlop={10}
