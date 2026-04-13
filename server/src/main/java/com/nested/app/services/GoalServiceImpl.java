@@ -368,8 +368,7 @@ public class GoalServiceImpl implements GoalService {
 
     // Compute live portfolio values to avoid sync delays
     var portfolio = portfolioService.getGoalPortfolio(goal.getId(), user);
-//    dto.setCurrentAmount(portfolio != null && portfolio.getCurrentValue() != null ? portfolio.getCurrentValue() : 0.0);
-    dto.setCurrentAmount(portfolio != null && portfolio.getInvestedAmount() != null ? portfolio.getInvestedAmount() : 0.0);
+    dto.setCurrentAmount(portfolio != null && portfolio.getCurrentValue() != null ? portfolio.getCurrentValue() : 0.0);
     dto.setInvestedAmount(portfolio != null && portfolio.getInvestedAmount() != null ? portfolio.getInvestedAmount() : 0.0);
 
     dto.setMonthlySip(portfolioService.getMonthlySip(goal.getId()));
