@@ -270,15 +270,14 @@ export default function EducationBasedGoalPlanner({
         {/* Projection */}
         {(() => {
           const timePeriod = Math.max(yearsFromNow, 3);
-          const nestedLakhs = goalAmount / 100_000;
-          const fdLakhs = calculateFutureValue(lumpsum, normalizedSipAmount, timePeriod, 7, stepUp) / 100_000;
-          const maxAmount = Math.max(nestedLakhs, fdLakhs) * 1.15;
+          const fdAmount = calculateFutureValue(lumpsum, normalizedSipAmount, timePeriod, 7, stepUp);
+          const maxAmount = Math.max(goalAmount, fdAmount) * 1.15;
           return (
             <PlanProjection
               year={goalYear}
               plans={[
-                { label: 'NESTED', amount: Math.round(nestedLakhs) },
-                { label: 'FD / RD', amount: Math.round(fdLakhs) },
+                { label: 'NESTED', amount: goalAmount },
+                { label: 'FD / RD', amount: fdAmount },
                 { label: 'No plan', amount: 0 },
               ]}
               maxAmount={maxAmount}
