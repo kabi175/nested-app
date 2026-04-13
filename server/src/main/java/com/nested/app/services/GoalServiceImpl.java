@@ -481,6 +481,11 @@ public class GoalServiceImpl implements GoalService {
       throw new IllegalArgumentException("Only draft goals can be deleted");
     }
 
+    var portfolio = portfolioService.getGoalPortfolio(goalId, user);
+    if (portfolio != null && portfolio.getInvestedAmount() != null && portfolio.getInvestedAmount() > 0) {
+      throw new IllegalArgumentException("Only draft goals can be deleted");
+    }
+
     // Mark source goal as deleted
     sourceGoal.setIsDeleted(true);
     sourceGoal.setDeletedAt(new Timestamp(System.currentTimeMillis()));
