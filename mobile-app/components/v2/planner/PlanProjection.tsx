@@ -1,6 +1,7 @@
-import React from 'react';
-import { View, Text, StyleSheet } from 'react-native';
+import { formatCompactCurrency } from '@/utils/formatters';
 import { LinearGradient } from 'expo-linear-gradient';
+import React from 'react';
+import { StyleSheet, Text, View } from 'react-native';
 
 interface PlanSummary {
   label: string;
@@ -14,8 +15,8 @@ interface PlanProjectionProps {
 }
 
 const DEFAULT_PLANS = [
-  { label: 'NESTED', amount: 51 },
-  { label: 'FD / RD', amount: 24 },
+  { label: 'NESTED', amount: 51_00_000 },
+  { label: 'FD / RD', amount: 24_00_000 },
   { label: 'No plan', amount: 0 },
 ];
 
@@ -35,7 +36,7 @@ export default function PlanProjection({
           return (
             <View key={index} style={styles.row}>
               <Text style={styles.label}>{plan.label}</Text>
-              
+
               <View style={styles.barTrack}>
                 <LinearGradient
                   colors={['#BBC8FF', '#FFFFFF']}
@@ -44,9 +45,9 @@ export default function PlanProjection({
                   style={[styles.barFill, { width: `${percentage}%` }]}
                 />
               </View>
-              
+
               <Text style={styles.value}>
-                ₹{plan.amount}{plan.amount > 0 ? 'L' : ''}
+                {formatCompactCurrency(plan.amount)}
               </Text>
             </View>
           );
@@ -79,7 +80,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   label: {
-    width: 80, 
+    width: 80,
     fontSize: 16,
     fontWeight: '600',
     color: '#8A8A8E',

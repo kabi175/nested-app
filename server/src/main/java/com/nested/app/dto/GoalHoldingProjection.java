@@ -1,5 +1,8 @@
 package com.nested.app.dto;
 
+import com.nested.app.entity.Transaction;
+import com.nested.app.enums.TransactionStatus;
+
 /**
  * Projection interface for goal holdings aggregated at the database level Used to efficiently
  * retrieve fund-wise holdings data with a single SQL query
@@ -19,4 +22,6 @@ public interface GoalHoldingProjection {
   Double getCurrentNav();
 
   Double getAverageNav();
+
+  Double getCurrentValue();
 }

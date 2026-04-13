@@ -4,7 +4,7 @@ import { router, useLocalSearchParams } from "expo-router";
 import { useEffect } from "react";
 
 
-const TIMEOUT_DURATION = 15 * 1000; // 15 seconds
+const TIMEOUT_DURATION = 5 * 1000; // 15 seconds
 
 export default function EducationDetailLoader() {
     const { child_id } = useLocalSearchParams<{

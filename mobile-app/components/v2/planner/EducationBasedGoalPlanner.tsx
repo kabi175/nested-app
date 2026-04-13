@@ -41,6 +41,32 @@ interface EducationBasedGoalPlannerProps {
   }) => void;
 }
 
+interface GoalPlanProjectionProps {
+  goalYear: number;
+  goalAmount: number;
+  yearsFromNow: number;
+  lumpsum: number;
+  sipAmount: number;
+  stepUp: number;
+}
+
+function GoalPlanProjection({ goalYear, goalAmount, yearsFromNow, lumpsum, sipAmount, stepUp }: GoalPlanProjectionProps) {
+  const timePeriod = Math.max(yearsFromNow, 3);
+  const fdAmount = calculateFutureValue(lumpsum, sipAmount, timePeriod, 7, stepUp);
+  const maxAmount = Math.max(goalAmount, fdAmount) * 1.15;
+  return (
+    <PlanProjection
+      year={goalYear}
+      plans={[
+        { label: 'NESTED', amount: goalAmount },
+        { label: 'FD / RD', amount: fdAmount },
+        { label: 'No plan', amount: 0 },
+      ]}
+      maxAmount={maxAmount}
+    />
+  );
+}
+
 function calculateFutureValue(lumpsum = 0, monthlySip = 0, years: number, annualRate: number, stepUpAmount = 0) {
   const monthlyRate = annualRate / 12 / 100;
   const totalMonths = years * 12;
@@ -147,7 +173,7 @@ export default function EducationBasedGoalPlanner({
     : goalAmount;
 
   const formattedSip = normalizedSipAmount.toLocaleString('en-IN');
-  const totalInvestedLakhs = ((normalizedSipAmount * 12 * yearsFromNow) / 100000).toFixed(1);
+  const totalInvestedLakhs = (((normalizedSipAmount * 12 * yearsFromNow) + lumpsum) / 1_00_000).toFixed(1);
 
   const handleBegin = () => {
     onBegin?.({
@@ -268,23 +294,14 @@ export default function EducationBasedGoalPlanner({
         )}
 
         {/* Projection */}
-        {(() => {
-          const timePeriod = Math.max(yearsFromNow, 3);
-          const nestedLakhs = goalAmount / 100_000;
-          const fdLakhs = calculateFutureValue(lumpsum, normalizedSipAmount, timePeriod, 7, stepUp) / 100_000;
-          const maxAmount = Math.max(nestedLakhs, fdLakhs) * 1.15;
-          return (
-            <PlanProjection
-              year={goalYear}
-              plans={[
-                { label: 'NESTED', amount: Math.round(nestedLakhs) },
-                { label: 'FD / RD', amount: Math.round(fdLakhs) },
-                { label: 'No plan', amount: 0 },
-              ]}
-              maxAmount={maxAmount}
-            />
-          );
-        })()}
+        <GoalPlanProjection
+          goalYear={goalYear}
+          goalAmount={displayAmount}
+          yearsFromNow={yearsFromNow}
+          lumpsum={lumpsum}
+          sipAmount={normalizedSipAmount}
+          stepUp={stepUp}
+        />
 
         {/* Fund Portfolio */}
         {funds.length > 0 && (

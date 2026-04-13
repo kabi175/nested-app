@@ -25,7 +25,7 @@ export interface BuildingNestScreenProps {
 
 export default function BuildingNestScreen({
   userName,
-  statusText = "2,500+ funds filtered. One portfolio. Built for your child.",
+  statusText = "2,500+ funds filtered. \nOne portfolio. Built for your child.",
   onComplete,
 }: BuildingNestScreenProps) {
   const [fontsLoaded] = useFonts({
@@ -128,7 +128,7 @@ export default function BuildingNestScreen({
           return () => clearTimeout(timer);
         }
         */
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [fontsLoaded]);
 
   // Use this factory to create float elements to avoid massive duplication

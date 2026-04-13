@@ -34,6 +34,10 @@ interface Props {
     onLumpsumChange: (lumpsum: number) => void;
 }
 
+function roundToNearest500(num: number): number {
+    return Math.round(num / 500) * 500;
+}
+
 export default function SipBasedPlan({
     defaultTarget,
     targetYear,
@@ -47,8 +51,7 @@ export default function SipBasedPlan({
 
     const [sipAmount, setSipAmount] = useState(() => {
         const seed = computeExactSIPAmount(remainingYears, 0, EXPECTED_RETURNS, defaultTarget);
-        const rounded = Math.round(seed / 500) * 500;
-        return Math.min(Math.max(rounded, sipMin), SLIDER_MAX);
+        return Math.min(Math.max(seed, sipMin), SLIDER_MAX);
     });
     const [lumpSumEnabled, setLumpSumEnabled] = useState(false);
     const [lumpSumStr, setLumpSumStr] = useState("");
@@ -63,7 +66,7 @@ export default function SipBasedPlan({
     const totalInvested = sipAmount * years * 12 + lumpSum;
     const quickSelectOptions = computeQuickSelectOptions(sipMin);
 
-    useEffect(() => { onSipChange(sipAmount); }, [sipAmount]);
+    useEffect(() => { onSipChange(roundToNearest500(sipAmount)); }, [sipAmount]);
     useEffect(() => { onTargetChange(computedTarget); }, [computedTarget]);
     useEffect(() => { onLumpsumChange(lumpSum); }, [lumpSum]);
 
@@ -91,7 +94,7 @@ export default function SipBasedPlan({
                     min={sipMin}
                     max={SLIDER_MAX}
                     step={100}
-                    value={sipAmount}
+                    value={roundToNearest500(sipAmount)}
                     onValueChange={setSipAmount}
                 />
                 <View style={styles.quickSelectHeader}>
