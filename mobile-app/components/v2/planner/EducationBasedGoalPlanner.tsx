@@ -173,7 +173,7 @@ export default function EducationBasedGoalPlanner({
     : goalAmount;
 
   const formattedSip = normalizedSipAmount.toLocaleString('en-IN');
-  const totalInvestedLakhs = ((normalizedSipAmount * 12 * yearsFromNow) / 100000).toFixed(1);
+  const totalInvestedLakhs = (((normalizedSipAmount * 12 * yearsFromNow) + lumpsum) / 1_00_000).toFixed(1);
 
   const handleBegin = () => {
     onBegin?.({
