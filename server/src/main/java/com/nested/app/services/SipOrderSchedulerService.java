@@ -5,6 +5,7 @@ import com.nested.app.entity.SIPOrder;
 import com.nested.app.entity.SIPOrder.ScheduleStatus;
 import com.nested.app.enums.TransactionStatus;
 import com.nested.app.jobs.SipOrderVerificationJob;
+import com.nested.app.jobs.SipRunDueOrdersJob;
 import com.nested.app.jobs.SipTransactionTracker;
 import com.nested.app.repository.OrderItemsRepository;
 import com.nested.app.repository.SIPOrderRepository;
@@ -196,6 +197,35 @@ public class SipOrderSchedulerService {
           orderItem.getId(),
           orderItem.getRef(),
           e.getMessage());
+    }
+  }
+
+  /**
+   * Schedules a SipRunDueOrdersJob to run 10 seconds after this method is called. Used after SIP
+   * order payment verification to immediately process newly-activated SIP orders.
+   */
+  public void scheduleRunDueOrdersJob() {
+    try {
+      String jobIdentity = "sip-run-due-orders-" + System.currentTimeMillis();
+      JobDetail jobDetail =
+          JobBuilder.newJob(SipRunDueOrdersJob.class)
+              .withIdentity(jobIdentity)
+              .storeDurably()
+              .build();
+      Trigger trigger =
+          TriggerBuilder.newTrigger()
+              .withIdentity(jobIdentity + "-trigger")
+              .forJob(jobDetail)
+              .startAt(DateBuilder.futureDate(30, DateBuilder.IntervalUnit.SECOND))
+              .withSchedule(
+                  SimpleScheduleBuilder.simpleSchedule()
+                      .withMisfireHandlingInstructionFireNow()
+                      .withRepeatCount(0))
+              .build();
+      scheduler.scheduleJob(jobDetail, trigger);
+      log.info("Scheduled SipRunDueOrdersJob to run in 10 seconds");
+    } catch (Exception e) {
+      log.warn("Failed to schedule SipRunDueOrdersJob: {}", e.getMessage());
     }
   }
 

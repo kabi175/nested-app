@@ -110,6 +110,15 @@ public class SipOrderPaymentServiceImpl implements SipOrderPaymentService {
       log.info(
           "Successfully verified {} SIP orders for payment ID: {}", sipOrderIds.size(), paymentID);
 
+      try {
+        sipOrderSchedulerService.scheduleRunDueOrdersJob();
+      } catch (Exception e) {
+        log.warn(
+            "Failed to schedule runDueOrders job for payment ID: {}. Error: {}",
+            paymentID,
+            e.getMessage());
+      }
+
     } catch (WebClientResponseException e) {
       log.error(
           "Error from MF provider while verifying SIP order payment: {}",
