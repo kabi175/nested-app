@@ -10,6 +10,15 @@ import { router, useLocalSearchParams } from "expo-router";
 import { useSetAtom } from "jotai";
 import { useState } from "react";
 
+const PATHS = {
+    "top-colleges": "Top colleges India",
+    "study-abroad": "Study Abroad",
+    "medical": "Medical/MBBS",
+    "mba": "MBA/IIM",
+    "arts": "Arts & Design",
+    "iits": "IITs/NITs",
+}
+
 export default function GoalPlannerScreen() {
     const { goal_id } = useLocalSearchParams<{
         goal_id: string;
@@ -114,12 +123,14 @@ export default function GoalPlannerScreen() {
     };
 
 
+    const collegeType = PATHS[goal.education?.name as keyof typeof PATHS] ?? goal.education?.name ?? "Education";
+
     return (
         <EducationBasedGoalPlanner
             childName={goal.child?.name ?? ""}
             goalYear={targetYear}
             goalAmount={targetAmount}
-            collegeType={goal.education?.name}
+            collegeType={collegeType}
             idealSipAmount={idealSipAmount}
             minSip={minSip}
             error={errorMessage}
