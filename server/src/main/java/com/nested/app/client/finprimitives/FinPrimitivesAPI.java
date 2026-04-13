@@ -6,13 +6,16 @@ import io.github.resilience4j.ratelimiter.RateLimiter;
 import io.github.resilience4j.ratelimiter.RateLimiterRegistry;
 import io.github.resilience4j.reactor.circuitbreaker.operator.CircuitBreakerOperator;
 import io.github.resilience4j.reactor.ratelimiter.operator.RateLimiterOperator;
+import java.time.Duration;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpHeaders;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.ExchangeFilterFunction;
 import org.springframework.web.reactive.function.client.WebClient;
+import org.springframework.web.reactive.function.client.WebClientResponseException;
 import reactor.core.publisher.Mono;
+import reactor.util.retry.Retry;
 
 @Slf4j
 @Service
@@ -70,6 +73,18 @@ public class FinPrimitivesAPI {
                   return Mono.just(clientResponse);
                 }))
         .build();
+  }
+
+  /**
+   * Wraps a Mono with retry-on-429 logic. Retries up to 3 times with exponential backoff starting
+   * at 2 seconds (jitter ±50%). Safe for idempotent (GET) calls only.
+   */
+  public <T> Mono<T> withRetryOn429(Mono<T> mono) {
+    return mono.retryWhen(
+        Retry.backoff(3, Duration.ofSeconds(2))
+            .jitter(0.5)
+            .filter(ex -> ex instanceof WebClientResponseException.TooManyRequests)
+            .onRetryExhaustedThrow((spec, signal) -> signal.failure()));
   }
 
   private ExchangeFilterFunction logRequestBodyFilter() {

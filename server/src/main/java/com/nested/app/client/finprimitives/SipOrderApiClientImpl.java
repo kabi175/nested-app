@@ -73,11 +73,12 @@ public class SipOrderApiClientImpl implements SipOrderApiClient {
 
   @Override
   public Mono<SipOrderDetail> fetchSipOrderDetail(String orderRef) {
-    return api.withAuth()
-        .get()
-        .uri(uriBuilder -> uriBuilder.path(SIP_ORDER_API_URL + "/" + orderRef).build())
-        .retrieve()
-        .bodyToMono(SipOrderDetail.class);
+    return api.withRetryOn429(
+        api.withAuth()
+            .get()
+            .uri(uriBuilder -> uriBuilder.path(SIP_ORDER_API_URL + "/" + orderRef).build())
+            .retrieve()
+            .bodyToMono(SipOrderDetail.class));
   }
 
   @Override
@@ -111,17 +112,18 @@ public class SipOrderApiClientImpl implements SipOrderApiClient {
     if (orderRef == null) {
       return Mono.empty();
     }
-    return api.withAuth()
-        .get()
-        .uri(
-            uriBuilder ->
-                uriBuilder
-                    .path(SIP_ORDER_TXN_API_URL)
-                    .queryParam("plan", orderRef)
-                    .build())
-        .retrieve()
-        .bodyToMono(new ParameterizedTypeReference<EntityListResponse<OrderData>>() {})
-        .map(EntityListResponse::getData)
+    return api.withRetryOn429(
+            api.withAuth()
+                .get()
+                .uri(
+                    uriBuilder ->
+                        uriBuilder
+                            .path(SIP_ORDER_TXN_API_URL)
+                            .queryParam("plan", orderRef)
+                            .build())
+                .retrieve()
+                .bodyToMono(new ParameterizedTypeReference<EntityListResponse<OrderData>>() {})
+                .map(EntityListResponse::getData))
         .onErrorResume(
             ex -> {
               log.warn(

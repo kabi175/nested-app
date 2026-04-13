@@ -40,11 +40,12 @@ public class BuyOrderApiClientImpl implements BuyOrderApiClient {
 
   @Override
   public Mono<OrderData> fetchOrderDetails(String orderRef) {
-    return api.withAuth()
-        .get()
-        .uri(uriBuilder -> uriBuilder.path(BUY_ORDER_API_URL + "/" + orderRef).build())
-        .retrieve()
-        .bodyToMono(new ParameterizedTypeReference<OrderData>() {});
+    return api.withRetryOn429(
+        api.withAuth()
+            .get()
+            .uri(uriBuilder -> uriBuilder.path(BUY_ORDER_API_URL + "/" + orderRef).build())
+            .retrieve()
+            .bodyToMono(new ParameterizedTypeReference<OrderData>() {}));
   }
 
   @Override
