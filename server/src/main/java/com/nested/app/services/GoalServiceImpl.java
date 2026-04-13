@@ -394,7 +394,7 @@ public class GoalServiceImpl implements GoalService {
 
     // Populate next SIP info from the earliest active SIPOrder for this goal
     sipOrderRepository.findByGoalIdOrderByNextRunDateAsc(goal.getId()).stream()
-        .filter(sip -> sip.isActive() && sip.getScheduleStatus() == SIPOrder.ScheduleStatus.ACTIVE)
+        .filter(sip -> sip.isActive() && List.of(SIPOrder.ScheduleStatus.ACTIVE, SIPOrder.ScheduleStatus.RUNNING).contains(sip.getScheduleStatus()))
         .findFirst()
         .ifPresent(sip -> {
           dto.setNextSipAmount(sip.getAmount());
