@@ -1,5 +1,6 @@
 package com.nested.app.controllers;
 
+import com.nested.app.context.UserContext;
 import com.nested.app.dto.OrderItemsDTO;
 import com.nested.app.dto.SipCancelRequest;
 import com.nested.app.dto.SipModifyRequest;
@@ -40,6 +41,8 @@ import org.springframework.web.bind.annotation.RestController;
 public class OrderItemsController {
 
   private final OrderItemsService orderItemsService;
+  private final UserContext userContext;
+
 
   /**
    * Retrieves all SIP Order Items
@@ -72,7 +75,7 @@ public class OrderItemsController {
         pageable.getPageSize());
 
     try {
-      Page<OrderItemsDTO> sipOrderItemsPage = orderItemsService.getSipOrderItems(pageable);
+      Page<OrderItemsDTO> sipOrderItemsPage = orderItemsService.getSipOrderItems(pageable, userContext.getUser());
       log.info(
           "Successfully retrieved {} SIP order items (Total: {})",
           sipOrderItemsPage.getContent().size(),
@@ -109,8 +112,11 @@ public class OrderItemsController {
       @RequestBody SipCancelRequest request) {
     log.info("POST /api/v1/order-items/sip/{}/actions/cancel - code={}", sipOrderId, request.getCancellationCode());
     try {
-      orderItemsService.cancelSipOrder(sipOrderId, request.getCancellationCode(), request.getCancellationReason());
+      orderItemsService.cancelSipOrder(sipOrderId, request.getCancellationCode(), request.getCancellationReason(), userContext.getUser());
       return ResponseEntity.ok(Map.of("message", "SIP cancelled successfully"));
+    } catch (SecurityException e) {
+      log.warn("Unauthorized cancel attempt for SIP order id={} by user={}", sipOrderId, userContext.getUser().getId());
+      return ResponseEntity.status(HttpStatus.FORBIDDEN).body(Map.of("error", "Access denied"));
     } catch (RuntimeException e) {
       log.error("Error cancelling SIP order id={}: {}", sipOrderId, e.getMessage(), e);
       return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
@@ -135,11 +141,14 @@ public class OrderItemsController {
       @RequestBody SipModifyRequest request) {
     log.info("POST /api/v1/order-items/sip/{}/actions/modify - amount={}", sipOrderId, request.getAmount());
     try {
-      String mandateUrl = orderItemsService.modifySipOrder(sipOrderId, request.getAmount());
+      String mandateUrl = orderItemsService.modifySipOrder(sipOrderId, request.getAmount(), userContext.getUser());
       if (mandateUrl != null) {
         return ResponseEntity.status(HttpStatus.ACCEPTED).body(Map.of("mandate_url", mandateUrl));
       }
       return ResponseEntity.ok(Map.of("message", "SIP modification submitted"));
+    } catch (SecurityException e) {
+      log.warn("Unauthorized modify attempt for SIP order id={} by user={}", sipOrderId, userContext.getUser().getId());
+      return ResponseEntity.status(HttpStatus.FORBIDDEN).body(Map.of("error", "Access denied"));
     } catch (IllegalStateException e) {
       log.warn("SIP modification conflict for id={}: {}", sipOrderId, e.getMessage());
       return ResponseEntity.status(HttpStatus.CONFLICT).body(Map.of("error", e.getMessage()));

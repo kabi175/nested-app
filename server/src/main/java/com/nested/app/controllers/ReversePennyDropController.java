@@ -1,8 +1,10 @@
 package com.nested.app.controllers;
 
 import com.nested.app.client.bulkpe.dto.ReversePennyDropResponse;
+import com.nested.app.context.UserContext;
 import com.nested.app.dto.UserActionRequest;
 import com.nested.app.services.ReversePennyDropService;
+import com.nested.app.utils.AuthorizationUtils;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -30,6 +32,8 @@ import org.springframework.web.bind.annotation.*;
 public class ReversePennyDropController {
 
   private final ReversePennyDropService reversePennyDropService;
+  private final UserContext userContext;
+  private final AuthorizationUtils authorizationUtils;
 
   @PostMapping(produces = MediaType.APPLICATION_JSON_VALUE)
   @Operation(
@@ -49,6 +53,9 @@ public class ReversePennyDropController {
       })
   public ResponseEntity<?> initiate(
       @Parameter(description = "User ID", required = true) @PathVariable("user_id") Long userID) {
+    if (!authorizationUtils.isAuthorized(userContext, userID)) {
+      return ResponseEntity.status(HttpStatus.FORBIDDEN).body(Map.of("error", "Access denied"));
+    }
     ReversePennyDropResponse resp = reversePennyDropService.initiate(userID);
     var body =
         UserActionRequest.builder()
@@ -78,7 +85,9 @@ public class ReversePennyDropController {
   public ResponseEntity<?> getStatusOfReversePennyDrop(
           @Parameter(description = "User ID", required = true) @PathVariable("user_id") Long userID,
           @Parameter(description = "Reference ID of penny drop", required = true) @PathVariable("reference_id") String referenceId) {
-
+    if (!authorizationUtils.isAuthorized(userContext, userID)) {
+      return ResponseEntity.status(HttpStatus.FORBIDDEN).body(Map.of("error", "Access denied"));
+    }
     try {
       log.info("Fetching Reverse Penny Drop status for userId={} and referenceId={}", userID, referenceId);
 

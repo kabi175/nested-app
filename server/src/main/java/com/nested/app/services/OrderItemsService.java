@@ -55,7 +55,7 @@ public class OrderItemsService {
    * @param pageable Pagination information (page number, size, sorting)
    * @return Page of OrderItemsDTO containing SIP order items for the requested page
    */
-  public Page<OrderItemsDTO> getSipOrderItems(Pageable pageable) {
+  public Page<OrderItemsDTO> getSipOrderItems(Pageable pageable, User user) {
     log.info(
         "Fetching SIP Order Items with pagination - Page: {}, Size: {}",
         pageable.getPageNumber(),
@@ -69,7 +69,7 @@ public class OrderItemsService {
               TransactionStatus.ACTIVE.name());
       Page<OrderItemsDTO> sipOrderItems =
           orderItemsRepository
-              .findAllSipOrderItems(statuses, pageable)
+              .findAllSipOrderItems(statuses, user.getId(), pageable)
               .map(OrderItemsDTO::fromEntity);
       log.info(
           "Successfully retrieved {} SIP Order Items (Total: {})",
@@ -128,7 +128,7 @@ public class OrderItemsService {
     }
   }
 
-  public void cancelSipOrder(Long sipOrderId, String cancellationCode, String cancellationReason) {
+  public void cancelSipOrder(Long sipOrderId, String cancellationCode, String cancellationReason, User user) {
     log.info("Cancelling SIP order id={} with code={}", sipOrderId, cancellationCode);
 
     SIPOrder sipOrder =
@@ -136,6 +136,10 @@ public class OrderItemsService {
             .findById(sipOrderId)
             .orElseThrow(
                 () -> new RuntimeException("SIP order not found: " + sipOrderId));
+
+    if (!sipOrder.getUser().getId().equals(user.getId())) {
+      throw new SecurityException("Access denied to SIP order: " + sipOrderId);
+    }
 
     var orderItem = orderItemsRepository.findById(sipOrderId).orElseThrow();
 
@@ -181,13 +185,17 @@ public class OrderItemsService {
    *     authorization is required first (HTTP 202).
    */
   @org.springframework.transaction.annotation.Transactional
-  public String modifySipOrder(Long sipOrderId, double newTotalAmount) {
+  public String modifySipOrder(Long sipOrderId, double newTotalAmount, User user) {
     log.info("Modifying SIP order id={} to new amount={}", sipOrderId, newTotalAmount);
 
     SIPOrder sipOrder =
         sipOrderRepository
             .findById(sipOrderId)
             .orElseThrow(() -> new RuntimeException("SIP order not found: " + sipOrderId));
+
+    if (!sipOrder.getUser().getId().equals(user.getId())) {
+      throw new SecurityException("Access denied to SIP order: " + sipOrderId);
+    }
 
     var lockStatuses = List.of(
         SipModification.Status.AWAITING_MANDATE,

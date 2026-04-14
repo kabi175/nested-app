@@ -18,12 +18,15 @@ public interface OrderItemsRepository extends JpaRepository<OrderItems, Long> {
   @Query(
       value =
           "SELECT oi.* FROM order_items oi JOIN orders o ON o.id = oi"
-              + ".order_id WHERE o.dtype = 'SIP' and oi.status in :statuses",
+              + ".order_id WHERE o.dtype = 'SIP' AND oi.status in :statuses AND oi.user_id = :userId",
       countQuery =
           "SELECT count(*) FROM order_items oi JOIN orders o ON o.id = oi"
-              + ".order_id WHERE o.dtype = 'SIP' and oi.status in :statuses",
+              + ".order_id WHERE o.dtype = 'SIP' AND oi.status in :statuses AND oi.user_id = :userId",
       nativeQuery = true)
-  Page<OrderItems> findAllSipOrderItems(@Param("statuses") List<String> statuses, Pageable pageable);
+  Page<OrderItems> findAllSipOrderItems(
+      @Param("statuses") List<String> statuses,
+      @Param("userId") Long userId,
+      Pageable pageable);
 
   @Query(
       value =

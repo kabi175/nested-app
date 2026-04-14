@@ -15,6 +15,7 @@ import com.nested.app.services.InvestorService;
 import com.nested.app.services.KycService;
 import com.nested.app.services.PreVerificationService;
 import com.nested.app.services.UserService;
+import com.nested.app.utils.AuthorizationUtils;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -44,6 +45,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.server.ResponseStatusException;
 import org.springframework.web.servlet.view.RedirectView;
 
 @Slf4j
@@ -58,6 +60,7 @@ public class UserController {
   private final KycService kycService;
   private final PreVerificationService preVerificationService;
   private final UserContext userContext;
+  private final AuthorizationUtils authorizationUtils;
 
   @GetMapping(produces = MediaType.APPLICATION_JSON_VALUE)
   @Operation(
@@ -104,6 +107,9 @@ public class UserController {
   @Operation(tags = "user")
   public ResponseEntity<UserDTO> updateUser(
       @PathVariable Long id, @org.springframework.web.bind.annotation.RequestBody UserDTO userDTO) {
+    if (!authorizationUtils.isAuthorized(userContext, id)) {
+      return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+    }
     userDTO.setId(id);
     User currentUser = userContext.getUser();
     UserDTO updatedUser = userService.updateUser(userDTO, currentUser);
@@ -135,6 +141,9 @@ public class UserController {
       })
   public ResponseEntity<?> createInvestor(
       @Parameter(description = "User ID", required = true) @PathVariable("user_id") Long userId) {
+    if (!authorizationUtils.isAuthorized(userContext, userId)) {
+      return ResponseEntity.status(HttpStatus.FORBIDDEN).body(Map.of("error", "Access denied"));
+    }
     var userDto = new MinifiedUserDTO();
     userDto.setId(userId);
     investorService.createInvestor(userDto);
@@ -168,6 +177,9 @@ public class UserController {
       })
   public ResponseEntity<?> initiateKyc(
       @Parameter(description = "User ID", required = true) @PathVariable("user_id") Long userId) {
+    if (!authorizationUtils.isAuthorized(userContext, userId)) {
+      return ResponseEntity.status(HttpStatus.FORBIDDEN).body(Map.of("error", "Access denied"));
+    }
     kycService.initiateKyc(userId);
 
     return ResponseEntity.ok().build();
@@ -199,6 +211,9 @@ public class UserController {
       })
   public ResponseEntity<UserActionRequest> uploadAadhaar(
       @Parameter(description = "User ID", required = true) @PathVariable("user_id") Long userId) {
+    if (!authorizationUtils.isAuthorized(userContext, userId)) {
+      return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+    }
     UserActionRequest response = userService.createAadhaarUploadRequest(userId);
 
     log.info("Aadhaar upload initiated for user ID: {}", userId);
@@ -236,6 +251,9 @@ public class UserController {
       })
   public ResponseEntity<UserActionRequest> uploadEsign(
       @Parameter(description = "User ID", required = true) @PathVariable("user_id") Long userId) {
+    if (!authorizationUtils.isAuthorized(userContext, userId)) {
+      return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+    }
     UserActionRequest response = userService.createEsignUploadRequest(userId);
 
     log.info("eSign upload initiated for user ID: {}", userId);
@@ -267,6 +285,9 @@ public class UserController {
       @Parameter(description = "User ID", required = true) @PathVariable("user_id") Long userID,
       @Validated @org.springframework.web.bind.annotation.RequestBody
           BankAccountDto bankAccountDto) {
+    if (!authorizationUtils.isAuthorized(userContext, userID)) {
+      return ResponseEntity.status(HttpStatus.FORBIDDEN).body(Map.of("error", "Access denied"));
+    }
     var bank = userService.addBankAccount(userID, bankAccountDto);
 
     return ResponseEntity.status(HttpStatus.CREATED).body(bank);
@@ -279,6 +300,9 @@ public class UserController {
   @GetMapping(value = "/{user_id}/banks", produces = MediaType.APPLICATION_JSON_VALUE)
   public ResponseEntity<Entity<BankAccountDto>> getBankAccounts(
       @Parameter(description = "User ID", required = true) @PathVariable("user_id") Long userID) {
+    if (!authorizationUtils.isAuthorized(userContext, userID)) {
+      return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+    }
     var banks = userService.fetchBankAccounts(userID);
     if (banks == null || banks.isEmpty()) {
       return ResponseEntity.noContent().build();
@@ -296,6 +320,9 @@ public class UserController {
       @Parameter(description = "User ID", required = true) @PathVariable("user_id") Long userID,
       @Parameter(description = "Bank Account ID", required = true) @PathVariable("bank_id")
           Long bankAccountID) {
+    if (!authorizationUtils.isAuthorized(userContext, userID)) {
+      return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+    }
     userService.deleteBankAccount(userID, bankAccountID);
 
     return ResponseEntity.accepted().build();
@@ -305,6 +332,9 @@ public class UserController {
   @Operation(tags = "user", summary = "Upload user signature")
   public ResponseEntity<?> uploadSignature(
       @PathVariable("user_id") Long userID, @RequestParam("file") MultipartFile file) {
+    if (!authorizationUtils.isAuthorized(userContext, userID)) {
+      return ResponseEntity.status(HttpStatus.FORBIDDEN).body(Map.of("error", "Access denied"));
+    }
     userService.uploadUserSignature(userID, file);
     return ResponseEntity.ok(Map.of("message", "Signature uploaded successfully"));
   }
@@ -312,6 +342,9 @@ public class UserController {
   @GetMapping(value = "/{user_id}/signature")
   @Operation(tags = "user", summary = "Upload user signature")
   public RedirectView getSignature(@PathVariable("user_id") Long userID) {
+    if (!authorizationUtils.isAuthorized(userContext, userID)) {
+      throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Access denied");
+    }
     var url = userService.fetchUserSignature(userID);
     return new RedirectView(url);
   }
@@ -347,6 +380,9 @@ public class UserController {
       @Valid @RequestBody EmailUpdateRequest request,
       @RequestHeader(value = "X-MFA-Token", required = false) String headerMfaToken,
       HttpServletRequest httpRequest) {
+    if (!authorizationUtils.isAuthorized(userContext, userId)) {
+      return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+    }
     // Get current user's Firebase UID
     String firebaseUid = MfaController.getCurrentUserId();
 
