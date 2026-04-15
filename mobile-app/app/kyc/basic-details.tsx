@@ -1,5 +1,4 @@
 import Button from "@/components/v2/Button";
-import DateInput from "@/components/v2/DateInput";
 import KycHeader from "@/components/v2/kyc/KycHeader";
 import KycSecurityNotice from "@/components/v2/kyc/KycSecurityNotice";
 import SelectInput from "@/components/v2/SelectInput";
@@ -39,14 +38,56 @@ export default function BasicDetailsScreen() {
   const maxDate = new Date();
   maxDate.setFullYear(maxDate.getFullYear() - 18);
 
+  const formatDateToText = (date: Date | null): string => {
+    if (!date) return "";
+    const d = date.getDate().toString().padStart(2, "0");
+    const m = (date.getMonth() + 1).toString().padStart(2, "0");
+    return `${d}/${m}/${date.getFullYear()}`;
+  };
+
+  const [dobText, setDobText] = useState(() =>
+    formatDateToText(data.basic.dateOfBirth)
+  );
+
+  const handleDobChange = (text: string) => {
+    const digits = text.replace(/\D/g, "").slice(0, 8);
+    let formatted = digits;
+    if (digits.length > 4) {
+      formatted = `${digits.slice(0, 2)}/${digits.slice(2, 4)}/${digits.slice(4)}`;
+    } else if (digits.length > 2) {
+      formatted = `${digits.slice(0, 2)}/${digits.slice(2)}`;
+    }
+    setDobText(formatted);
+
+    if (digits.length === 8) {
+      const day = parseInt(digits.slice(0, 2), 10);
+      const month = parseInt(digits.slice(2, 4), 10) - 1;
+      const year = parseInt(digits.slice(4, 8), 10);
+      const parsed = new Date(year, month, day);
+      if (
+        parsed.getFullYear() === year &&
+        parsed.getMonth() === month &&
+        parsed.getDate() === day
+      ) {
+        update("basic", { dateOfBirth: parsed });
+      } else {
+        update("basic", { dateOfBirth: null });
+      }
+    } else {
+      update("basic", { dateOfBirth: null });
+    }
+  };
+
   useEffect(() => {
     let mounted = true;
     (async () => {
       if (mounted && apiUser) {
         const fullName = (apiUser.firstName || "").trim();
+        const dob = apiUser.dob || null;
+        if (dob) setDobText(formatDateToText(dob));
         update("basic", {
           fullName: fullName,
-          dateOfBirth: apiUser.dob || null,
+          dateOfBirth: dob,
           gender: apiUser.gender || "",
           email: apiUser.email || "",
           mobile: apiUser.phone_number || "",
@@ -136,13 +177,13 @@ export default function BasicDetailsScreen() {
           touched={!!errors.fullName}
         />
 
-        <DateInput
+        <TextInput
           label="Date of Birth (As per PAN)"
-          value={data.basic.dateOfBirth ?? null}
-          onChange={(date) => update("basic", { dateOfBirth: date })}
-          min={new Date("1920-01-01")}
-          max={maxDate}
           placeholder="DD/MM/YYYY"
+          value={dobText}
+          onChangeText={handleDobChange}
+          keyboardType="number-pad"
+          maxLength={10}
           error={errors.dateOfBirth}
           touched={!!errors.dateOfBirth}
         />
