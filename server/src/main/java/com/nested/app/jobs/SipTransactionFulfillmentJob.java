@@ -93,7 +93,7 @@ public class SipTransactionFulfillmentJob implements Job {
         txn.setStatus(OrderStateMapper.toTransactionStatus(orderData.getState()));
 
         double units = Objects.requireNonNullElse(orderData.getAllottedUnits(), 0d);
-        double unitPrice = Objects.requireNonNullElse(orderData.getAllottedUnits(), 0d);
+        double unitPrice = Objects.requireNonNullElse(orderData.getPurchasedPrice(), 0d);
         txn.setUnits(units);
         txn.setUnitPrice(unitPrice);
         var amount = Math.abs(units * unitPrice);
