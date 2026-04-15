@@ -1,4 +1,5 @@
 import PendingActionScreen from "@/components/v2/PendingActionScreen";
+import { logBeginKycScreen, logStartKyc } from "@/services/analytics";
 import { useCreateInvestor } from "@/hooks/useCreateInvestor";
 import { useUser } from "@/hooks/useUser";
 import { useRouter } from "expo-router";
@@ -9,6 +10,8 @@ export default function KycIntroScreen() {
   const router = useRouter();
   const { data: user } = useUser();
   const createInvestorMutation = useCreateInvestor();
+
+  useEffect(() => { logBeginKycScreen(); }, []);
 
   useEffect(() => {
     if (user && user.kycStatus === "completed" && !user.is_ready_to_invest) {
@@ -24,6 +27,7 @@ export default function KycIntroScreen() {
   }, [user, createInvestorMutation, router]);
 
   const handleContinue = async () => {
+    logStartKyc();
     if (!user?.email) {
       router.replace("/user/email-update?redirectUrl=/kyc");
       return;

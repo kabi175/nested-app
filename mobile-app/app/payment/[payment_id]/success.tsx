@@ -1,6 +1,5 @@
 import { usePayment } from "@/hooks/usePayment";
-import { logPurchase as logFirebasePurchase } from "@/services/firebaseAnalytics";
-import { logPurchase } from "@/services/metaEvents";
+import { logPurchase } from "@/services/analytics";
 import { Ionicons } from "@expo/vector-icons";
 import { router, useLocalSearchParams } from "expo-router";
 import { StatusBar } from "expo-status-bar";
@@ -115,10 +114,10 @@ export default function PaymentSuccessScreen() {
       const amount = (payment as { amount?: number }).amount ?? 0;
       const contentType =
         isBuyCompleted && isSipCompleted ? "buy_sip" : isBuyCompleted ? "buy" : "sip";
-      logPurchase(amount, "INR", { content_type: contentType });
-      logFirebasePurchase({
+      logPurchase({
         transaction_id: payment_id,
         value: amount,
+        currency: "INR",
         items: [{ item_id: contentType, item_name: contentType, quantity: 1 }],
       });
     }

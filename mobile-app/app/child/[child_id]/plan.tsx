@@ -1,4 +1,5 @@
 import BackButton from "@/components/v2/BackButton";
+import { logChooseGoalType } from "@/services/analytics";
 import Button from "@/components/v2/Button";
 import ErrorScreen from "@/components/v2/ErrorScreen";
 import LoadingScreen from "@/components/v2/LoadingScreen";
@@ -49,6 +50,7 @@ export default function PlanScreen() {
 
   function handleContinue() {
     if (!selected) return;
+    logChooseGoalType({ goal_type: selected });
     if (selected === "field") {
       router.push({
         pathname: "/child/[child_id]/child-field-selection",

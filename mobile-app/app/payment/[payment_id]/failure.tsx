@@ -1,5 +1,5 @@
 import { usePayment } from "@/hooks/usePayment";
-import { logPurchaseFailed } from "@/services/firebaseAnalytics";
+import { logPurchaseFailed } from "@/services/analytics";
 import { Ionicons } from "@expo/vector-icons";
 import { router, useLocalSearchParams } from "expo-router";
 import { StatusBar } from "expo-status-bar";

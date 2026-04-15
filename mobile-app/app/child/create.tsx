@@ -17,6 +17,7 @@ import AnimatedNest from "@/components/v2/AnimatedNest";
 import Button from "@/components/v2/Button";
 import TextInput from "@/components/v2/TextInput";
 import { useCreateChild } from "@/hooks/useChildMutations";
+import { logAddToNest } from "@/services/analytics";
 import { StatusBar } from "expo-status-bar";
 
 const MIN_YEARS = 25;
@@ -149,6 +150,7 @@ export default function CreateChild() {
 
     setIsSubmitting(true);
     setSubmitError("");
+    logAddToNest({ child_name: values.name.trim(), date_of_birth: values.dob });
 
     try {
       const payload = {

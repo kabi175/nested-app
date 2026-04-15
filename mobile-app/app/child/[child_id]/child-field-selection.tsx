@@ -1,4 +1,5 @@
 import Button from "@/components/v2/Button";
+import { logChooseField } from "@/services/analytics";
 import ErrorScreen from "@/components/v2/ErrorScreen";
 import LoadingScreen from "@/components/v2/LoadingScreen";
 import PathCard from "@/components/v2/PathCard";
@@ -68,6 +69,7 @@ export default function ChildFieldSelectionScreen() {
 
   async function handleContinue() {
     if (!selectedPath || !child) return;
+    logChooseField({ field: selectedPath });
     const pathTitle = PATHS.find((p) => p.id === selectedPath)?.id;
     const education = courses?.find((c) => c.name === pathTitle);
     if (!education) return;

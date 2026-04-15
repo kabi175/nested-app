@@ -1,3 +1,4 @@
+import { logCustomPortfolioScreen, logProceedWithCustomPlan } from "@/services/analytics";
 import { CreateOrderRequest } from "@/api/paymentAPI";
 import { cartAtom } from "@/atoms/cart";
 import BackButton from "@/components/v2/BackButton";
@@ -46,6 +47,8 @@ export default function Planner() {
 
     const [mode, setMode] = useState<PlannerMode>("target");
 
+    React.useEffect(() => { logCustomPortfolioScreen(); }, []);
+
     // Captured from whichever plan component is active
     const planSip = useRef(0);
     const planTarget = useRef(DEFAULT_TARGET_AMOUNT);
@@ -55,6 +58,8 @@ export default function Planner() {
         const displaySip = planSip.current;
         const displayTarget = planTarget.current;
         const lumpSum = planLumpsum.current;
+
+        logProceedWithCustomPlan({ sip_amount: displaySip, lump_sum: lumpSum });
 
         if (remainingYears <= 0) {
             Alert.alert("Invalid date", "The target year has already passed.");

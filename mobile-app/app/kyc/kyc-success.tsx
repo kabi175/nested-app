@@ -1,4 +1,4 @@
-import { logKycCompletion } from "@/services/metaEvents";
+import { logKycCompletion } from "@/services/analytics";
 import { Button, Layout, Text } from "@ui-kitten/components";
 import { router } from "expo-router";
 import { CheckCircle } from "lucide-react-native";

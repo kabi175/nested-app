@@ -1,5 +1,5 @@
 import { useEducations } from "@/hooks/useEducations";
-import { logCalculatorViewContent } from "@/services/metaEvents";
+import { logCalculatorViewContent } from "@/services/analytics";
 import { Education } from "@/types/education";
 import { formatCurrency } from "@/utils/formatters";
 import { calculateFutureCost } from "@/utils/goalForm";

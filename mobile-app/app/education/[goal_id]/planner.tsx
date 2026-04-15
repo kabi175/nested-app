@@ -6,9 +6,10 @@ import { useCreateOrders } from "@/hooks/useCreateOrders";
 import { useGoal } from "@/hooks/useGoal";
 import { formatCurrency } from "@/utils/formatters";
 import { computeMinimumSIPAmount } from "@/utils/sip";
+import { logCustomPortfolioScreen, logProceedWithCustomPlan } from "@/services/analytics";
 import { router, useLocalSearchParams } from "expo-router";
 import { useSetAtom } from "jotai";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 const PATHS = {
     "top-colleges": "Top colleges India",
@@ -31,6 +32,8 @@ export default function GoalPlannerScreen() {
     const setCart = useSetAtom(cartAtom);
     const [errorMessage, setErrorMessage] = useState<string | undefined>();
 
+    useEffect(() => { logCustomPortfolioScreen(); }, []);
+
     if (!goal) {
         return null;
     }
@@ -49,6 +52,7 @@ export default function GoalPlannerScreen() {
         stepUp?: number;
     }) => {
         setErrorMessage(undefined);
+        logProceedWithCustomPlan({ sip_amount: sipAmount, lump_sum: lumpSum, step_up: stepUp });
 
         const stepUpAmount = stepUp !== undefined ? stepUp : undefined;
 

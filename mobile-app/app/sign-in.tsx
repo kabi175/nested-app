@@ -17,7 +17,7 @@ import {
   View,
 } from "react-native";
 import { useAuth0 } from "react-native-auth0";
-import { logLogin } from "@/services/firebaseAnalytics";
+import { logLogin } from "@/services/analytics";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function SignIn() {

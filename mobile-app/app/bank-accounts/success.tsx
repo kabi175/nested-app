@@ -4,7 +4,7 @@ import { goalsForCustomizeAtom } from "@/atoms/goals";
 import { FirstPendingActivityCard } from "@/components/FirstPendingActivityCard";
 import { useAuthAxios } from "@/hooks/useAuthAxios";
 import { usePendingActivities } from "@/hooks/usePendingActivities";
-import { logAddPaymentInfo } from "@/services/metaEvents";
+import { logAddPaymentInfo } from "@/services/analytics";
 import { handleActivityNavigation } from "@/utils/activityNavigation";
 import { useQueryClient } from "@tanstack/react-query";
 import { Button, Layout, Text } from "@ui-kitten/components";

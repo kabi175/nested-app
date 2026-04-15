@@ -3,8 +3,7 @@ import TextInput from "@/components/v2/TextInput";
 import { QUERY_KEYS } from "@/constants/queryKeys";
 import { useUser } from "@/hooks/useUser";
 import { useUpdateUser } from "@/hooks/useUserMutations";
-import { logSignUp } from "@/services/firebaseAnalytics";
-import { logCompleteRegistration } from "@/services/metaEvents";
+import { logSignUp } from "@/services/analytics";
 import { useQueryClient } from "@tanstack/react-query";
 import { Redirect, router } from "expo-router";
 import React, { useState } from "react";
@@ -44,7 +43,6 @@ export default function NameInputScreen() {
       });
 
       queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.user] });
-      logCompleteRegistration({ registration_method: "phone" });
       logSignUp("phone");
       router.replace("/view-story");
     } catch (error) {

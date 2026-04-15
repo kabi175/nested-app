@@ -1,6 +1,6 @@
 import { useInitKyc } from "@/hooks/useInitKyc";
 import { useUser } from "@/hooks/useUser";
-import { logKycInitiation } from "@/services/metaEvents";
+import { logKycInitiation } from "@/services/analytics";
 import Button from "@/components/v2/Button";
 import { useRouter } from "expo-router";
 import { CheckCircle } from "lucide-react-native";

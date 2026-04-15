@@ -83,6 +83,45 @@ export function logAddPaymentInfo(params?: { payment_info_type?: "upi" | "bank" 
 }
 
 /**
+ * User added a child to the nest.
+ */
+export function logStartKyc() {
+  AppEventsLogger.logEvent("start_kyc");
+}
+
+export function logBeginKycScreen() {
+  AppEventsLogger.logEvent("begin_kyc_screen");
+}
+
+export function logProceedWithCustomPlan(params?: { sip_amount?: number; lump_sum?: number; step_up?: number }) {
+  AppEventsLogger.logEvent("proceed_withCustomPlan", params as any);
+}
+
+export function logCustomPortfolioScreen() {
+  AppEventsLogger.logEvent("custom_portfolio_screen");
+}
+
+export function logChooseCollege(params?: { college?: string }) {
+  AppEventsLogger.logEvent("choose_college", params as any);
+}
+
+export function logChooseField(params?: { field?: string }) {
+  AppEventsLogger.logEvent("choose_field", params as any);
+}
+
+export function logChooseGoalType(params?: { goal_type?: string }) {
+  AppEventsLogger.logEvent("choose_goal_type", params as any);
+}
+
+export function logStartPlanning(params?: { child_id?: string }) {
+  AppEventsLogger.logEvent("start_planning", params as any);
+}
+
+export function logAddToNest(params?: { child_name?: string; date_of_birth?: string }) {
+  AppEventsLogger.logEvent("add_to_nest", params as any);
+}
+
+/**
  * Payment completed (purchase).
  */
 export function logPurchase(

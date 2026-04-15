@@ -8,8 +8,7 @@ import { useChildren } from "@/hooks/useChildren";
 import { useEducations } from "@/hooks/useEducations";
 import { useGoalCreation } from "@/hooks/useGoalCreation";
 import { useGoalFormAnimations } from "@/hooks/useGoalFormAnimations";
-import { logGoalCreation } from "@/services/metaEvents";
-import { logAddToCart } from "@/services/firebaseAnalytics";
+import { logGoalCreation } from "@/services/analytics";
 import { GoalForm } from "@/types/goalForm";
 import { calculateFutureCost } from "@/utils/goalForm";
 import * as Haptics from "expo-haptics";
@@ -250,8 +249,6 @@ export default function CreateGoalScreen() {
       logGoalCreation({
         num_items: createdGoals.length,
         content_type: "goal",
-      });
-      logAddToCart({
         items: createdGoals.map((g) => ({
           item_id: g.id,
           item_name: g.title ?? "goal",

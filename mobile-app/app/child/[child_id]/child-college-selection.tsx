@@ -1,4 +1,5 @@
 import Button from "@/components/v2/Button";
+import { logChooseCollege } from "@/services/analytics";
 import CollegeDropdown from "@/components/v2/CollegeDropdown";
 import ErrorScreen from "@/components/v2/ErrorScreen";
 import LoadingScreen from "@/components/v2/LoadingScreen";
@@ -26,6 +27,7 @@ export default function ChildCollegeSelectionScreen() {
 
   async function handleContinue() {
     if (!selectedCollege || !child) return;
+    logChooseCollege({ college: selectedCollege });
     const education = institutions?.find((i) => i.name === selectedCollege);
     if (!education) return;
     const currentYear = new Date().getFullYear();
