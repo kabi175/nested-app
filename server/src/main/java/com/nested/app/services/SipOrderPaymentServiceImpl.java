@@ -12,6 +12,7 @@ import com.nested.app.entity.Payment;
 import com.nested.app.entity.SIPOrder;
 import com.nested.app.enums.TransactionStatus;
 import com.nested.app.events.OrderItemsRefUpdatedEvent;
+import com.nested.app.events.SipActivatedEvent;
 import com.nested.app.exception.ExternalServiceException;
 import com.nested.app.repository.*;
 
@@ -101,6 +102,26 @@ public class SipOrderPaymentServiceImpl implements SipOrderPaymentService {
                   })
               .toList();
       sipOrderRepository.saveAll(activatedSipOrders);
+
+      // Publish async SIP activation email event
+      try {
+        var firstSipOrder = (SIPOrder) sipOrders.getFirst();
+        var goalForEmail = goalRepository.findById(firstSipOrder.getGoal().getId()).orElseThrow();
+        var child = goalForEmail.getChild();
+        var goalOrChildName = (child != null) ? child.getFirstName() : goalForEmail.getTitle();
+        var totalAmount = sipOrders.stream().mapToDouble(Order::getAmount).sum();
+        var fundNames =
+            goalForEmail.getBasket().getBasketFunds().stream()
+                .map(bf -> bf.getFund().getName())
+                .toList();
+        eventPublisher.publishEvent(
+            new SipActivatedEvent(payment.getUser(), totalAmount, goalOrChildName, fundNames));
+      } catch (Exception e) {
+        log.warn(
+            "Failed to publish SipActivatedEvent for payment ID: {}. Error: {}",
+            paymentID,
+            e.getMessage());
+      }
 
       var orderItems =
           payment.getOrders().stream().map(Order::getItems).flatMap(List::stream).toList();

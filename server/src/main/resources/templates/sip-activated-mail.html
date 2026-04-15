@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+</head>
+<body>
+<p>Hi <span th:text="${name}">Investor</span>,</p>
+
+<p>By starting a SIP today, you've taken one of the most meaningful steps a parent can take —
+    investing in your child's future before life gets in the way. That's not a small thing.
+    That's love in action.</p>
+
+<p>✅ <strong>Your AutoPay is confirmed.</strong> Here's what's set up:</p>
+
+<p>Your <strong>₹<span th:text="${sipAmount}">0</span>/month</strong> investment is spread across
+    <span th:text="${#lists.size(funds)}">0</span> carefully selected funds, built for long-term
+    growth:</p>
+
+<ol>
+    <li th:each="fund : ${funds}" th:text="${fund}">Fund Name</li>
+</ol>
+
+<p>You can track <strong><span th:text="${goalOrChildName}">your child</span></strong>'s portfolio
+    anytime on the Nested app.</p>
+
+<p>With gratitude,<br/>
+    <strong>The Nested Team</strong></p>
+</body>
+</html>

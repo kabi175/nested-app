@@ -1,6 +1,7 @@
 package com.nested.app.services;
 
 import com.nested.app.enums.TransactionType;
+import java.util.List;
 import com.sendgrid.Method;
 import com.sendgrid.Request;
 import com.sendgrid.Response;
@@ -189,6 +190,53 @@ public class EmailService {
       case SIP -> "SIP";
       case SWP -> "SWP";
     };
+  }
+
+  /**
+   * Sends SIP activation confirmation email to user when a SIP is successfully activated
+   *
+   * @param email Recipient email address
+   * @param name User's name to personalize the email
+   * @param amount Total monthly SIP amount
+   * @param goalOrChildName Child's first name, or goal title if no child
+   * @param fundNames List of fund names in the basket
+   */
+  public void sendSipActivatedEmail(
+      String email, String name, Double amount, String goalOrChildName, List<String> fundNames) {
+    try {
+      Email from = new Email(fromEmail);
+      Email to = new Email(email);
+      String subject =
+          "\uD83C\uDF89 Your ₹"
+              + formatAmount(amount)
+              + "/month SIP is live on Nested — "
+              + goalOrChildName
+              + "'s future just got secured!";
+
+      Context context = new Context();
+      context.setVariable("name", name != null ? name : "Investor");
+      context.setVariable("sipAmount", formatAmount(amount));
+      context.setVariable("goalOrChildName", goalOrChildName != null ? goalOrChildName : "your child");
+      context.setVariable("funds", fundNames);
+      String htmlContent = templateEngine.process("sip-activated-mail", context);
+
+      Content content = new Content("text/html", htmlContent);
+      Mail mail = new Mail(from, subject, to, content);
+      Request request = new Request();
+      request.setMethod(Method.POST);
+      request.setEndpoint("mail/send");
+      request.setBody(mail.build());
+      Response response = sg.api(request);
+
+      log.info(
+          "SIP activation email sent to {} (masked), status: {}",
+          maskEmail(email),
+          response.getStatusCode());
+    } catch (Exception e) {
+      log.error(
+          "Failed to send SIP activation email to {}: {}", maskEmail(email), e.getMessage(), e);
+      // Don't throw exception to avoid disrupting the SIP activation flow
+    }
   }
 
   /**
