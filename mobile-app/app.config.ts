@@ -65,7 +65,7 @@ module.exports = () => ({
         "react-native-auth0",
         {
           domain: "dev-yscagulfy0qamarm.us.auth0.com",
-          customScheme: "nested",
+          customScheme: "nextedauth",
         },
       ],
       ["expo-tracking-transparency"],
@@ -75,7 +75,7 @@ module.exports = () => ({
           appID: process.env.FB_APP_ID,
           clientToken: process.env.FB_CLIENT_TOKEN,
           displayName: "Nested",
-          scheme: "nested",
+          scheme: `fb${process.env.FB_APP_ID}`,
           advertiserIDCollectionEnabled: true,
           autoLogAppEventsEnabled: true,
           isAutoInitEnabled: true,
