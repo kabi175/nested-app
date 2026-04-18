@@ -26,6 +26,7 @@ module.exports = () => ({
       bundleIdentifier: "com.nexted.app",
       googleServicesFile: process.env.GOOGLE_SERVICES_INFO_PLIST ?? "./GoogleService-Info.plist",
       infoPlist: {
+        ITSAppUsesNonExemptEncryption: false,
         LSApplicationQueriesSchemes: ["whatsapp"],
         NSUserTrackingUsageDescription:
           "This identifier will be used to deliver personalized ads.",
