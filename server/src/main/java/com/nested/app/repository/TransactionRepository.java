@@ -6,6 +6,8 @@ import com.nested.app.entity.Transaction;
 import java.sql.Timestamp;
 import java.util.List;
 import java.util.Optional;
+
+import com.nested.app.enums.TransactionStatus;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -27,15 +29,15 @@ public interface TransactionRepository extends JpaRepository<Transaction, Long> 
 
   List<Transaction> findByExternalRef(String externalRef);
 
-  Page<Transaction> findByUserId(Long userId, Pageable pageable);
+  Page<Transaction> findByUserIdAndStatusIn(Long userId,List<TransactionStatus> statuses, Pageable pageable);
 
-  Page<Transaction> findByUserIdAndCreatedAtBetween(
-      Long userId, Timestamp startDate, Timestamp endDate, Pageable pageable);
+  Page<Transaction> findByUserIdAndStatusInAndCreatedAtBetween(
+      Long userId, List<TransactionStatus> statuses, Timestamp startDate, Timestamp endDate, Pageable pageable);
 
-  Page<Transaction> findByUserIdAndGoalChildId(Long userId, Long childId, Pageable pageable);
+  Page<Transaction> findByUserIdAndGoalChildIdAndStatusIn(Long userId, Long childId,List<TransactionStatus> statuses, Pageable pageable);
 
-  Page<Transaction> findByUserIdAndGoalChildIdAndCreatedAtBetween(
-      Long userId, Long childId, Timestamp startDate, Timestamp endDate, Pageable pageable);
+  Page<Transaction> findByUserIdAndGoalChildIdAndStatusInAndCreatedAtBetween(
+          Long userId, Long childId, List<TransactionStatus> statuses, Timestamp startDate, Timestamp endDate, Pageable pageable);
 
   /**
    * Retrieves aggregated holdings data for a specific goal using database-level grouping and
