@@ -7,7 +7,7 @@ import org.quartz.DisallowConcurrentExecution;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
-/** Quartz job that promotes due ACTIVE SIPOrders to RUNNING state each day. */
+/** Dispatches due ACTIVE SIPOrders to RUNNING state each day at 05:00. */
 @Slf4j
 @Component
 @RequiredArgsConstructor
@@ -15,11 +15,11 @@ import org.springframework.stereotype.Component;
 public class SipDueSchedulesJob {
   private final SipOrderSchedulerService sipOrderSchedulerService;
 
-  // runs  05:00:00 every day
+  // runs 05:00:00 every day — after SipCycleReconcilerJob at 04:50
   @Scheduled(cron = "0 0 5 * * ?")
   public void execute() {
     try {
-      sipOrderSchedulerService.runDueOrders();
+      sipOrderSchedulerService.dispatchDueOrders();
     } catch (Exception e) {
       log.error("Error executing SipDueSchedulesJob: {}", e.getMessage(), e);
     }

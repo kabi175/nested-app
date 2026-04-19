@@ -38,7 +38,7 @@ public class SipOrderDetail extends OrderDetail {
   @JsonProperty("installment_day")
   private String installmentDay;
 
-  @JsonProperty(value = "next_installment_date", access = JsonProperty.Access.READ_ONLY)
+  @JsonProperty(value = "next_installment_date", access = JsonProperty.Access.WRITE_ONLY)
   private Date nextRunDate;
 
   @JsonIgnore private String email;

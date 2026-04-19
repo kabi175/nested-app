@@ -24,7 +24,7 @@ public class SipRunDueOrdersJob implements Job {
   public void execute(JobExecutionContext context) throws JobExecutionException {
     try {
       log.info("Executing SipRunDueOrdersJob - running due SIP orders");
-      sipOrderSchedulerService.runDueOrders();
+      sipOrderSchedulerService.dispatchDueOrders();
       log.info("SipRunDueOrdersJob completed successfully");
     } catch (Exception e) {
       log.error("Error executing SipRunDueOrdersJob: {}", e.getMessage(), e);
