@@ -1,68 +1,71 @@
 package com.nested.app.services;
 
-import com.nested.app.entity.SIPOrder;
-import com.nested.app.entity.SIPOrder.ScheduleStatus;
-import com.nested.app.enums.TransactionStatus;
-import com.nested.app.repository.SIPOrderRepository;
-import java.time.LocalDate;
-import java.util.ArrayList;
-import java.util.List;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.batch.core.*;
+import org.springframework.batch.core.explore.JobExplorer;
+import org.springframework.batch.core.launch.JobLauncher;
+import org.springframework.batch.core.repository.JobExecutionAlreadyRunningException;
+import org.springframework.batch.core.repository.JobRepository;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
+
+import java.time.LocalDate;
 
 /**
- * Reconciles RUNNING SIPOrders whose tracker jobs failed to advance them. Runs as a safety net
- * before the dispatcher job each day.
+ * Triggers the Spring Batch reconciliation job that advances stuck RUNNING SIPOrders.
+ * Processing is chunk-oriented (100 rows per chunk, each with its own transaction).
+ * Handles stale STARTED executions left by crashed nodes before retrying.
  */
 @Slf4j
 @Service
-@RequiredArgsConstructor
 public class SipCycleReconcilerService {
-  private final SIPOrderRepository sipOrderRepository;
+    private static final String JOB_NAME = "sipCycleReconcilerJob";
+    private final JobLauncher jobLauncher;
+    private final JobExplorer jobExplorer;
+    private final JobRepository jobRepository;
+    private final Job sipCycleReconcilerJob;
 
-  @Transactional
-  public void advanceStuckCycles() {
-    List<SIPOrder> runningSips = sipOrderRepository.findByScheduleStatus(ScheduleStatus.RUNNING);
-    log.debug("Reconciler: {} RUNNING SIP orders to check for stuck cycles", runningSips.size());
-
-    List<SIPOrder> changed = new ArrayList<>();
-    for (SIPOrder sip : runningSips) {
-      boolean allTerminal =
-          sip.getItems().stream()
-              .allMatch(
-                  item ->
-                      item.getStatus() == TransactionStatus.COMPLETED
-                          || item.getStatus() == TransactionStatus.FAILED);
-
-      if (!allTerminal) {
-        log.debug("SIPOrder id={} still has in-progress items, skipping", sip.getId());
-        continue;
-      }
-
-      LocalDate next = computeNextRunDate(sip);
-      if (next.isAfter(sip.getEndDate())) {
-        sip.setScheduleStatus(ScheduleStatus.COMPLETED);
-        log.info("SIPOrder id={} completed — next {} is past endDate {}", sip.getId(), next, sip.getEndDate());
-      } else {
-        sip.setNextRunDate(next);
-        sip.setScheduleStatus(ScheduleStatus.ACTIVE);
-        log.info("SIPOrder id={} advanced nextRunDate to {} (stuck-cycle fallback)", sip.getId(), next);
-      }
-      changed.add(sip);
+    public SipCycleReconcilerService(JobLauncher jobLauncher, JobExplorer jobExplorer,
+            JobRepository jobRepository,
+            @Qualifier("sipCycleReconcilerBatchJob") Job sipCycleReconcilerJob) {
+        this.jobLauncher = jobLauncher;
+        this.jobExplorer = jobExplorer;
+        this.jobRepository = jobRepository;
+        this.sipCycleReconcilerJob = sipCycleReconcilerJob;
     }
 
-    if (!changed.isEmpty()) {
-      sipOrderRepository.saveAll(changed);
+    public void advanceStuckCycles() {
+        try {
+            JobParameters params = new JobParametersBuilder().addLocalDate("runDate", LocalDate.now()).toJobParameters();
+            var execution = jobLauncher.run(sipCycleReconcilerJob, params);
+            log.info("SipCycleReconcilerJob completed with status={}", execution.getStatus());
+        } catch (JobExecutionAlreadyRunningException e) {
+            log.warn("Stale job execution detected (node likely crashed). Abandoning and retrying.");
+            abandonStaleExecutions();
+            retryRun();
+        } catch (Exception e) {
+            log.error("SipCycleReconcilerJob failed: {}", e.getMessage(), e);
+            throw new RuntimeException("SipCycleReconcilerJob failed", e);
+        }
     }
-  }
 
-  LocalDate computeNextRunDate(SIPOrder order) {
-    LocalDate candidate = order.getNextRunDate().plusMonths(1);
-    int targetDay = order.getStartDate().getDayOfMonth();
-    int length = candidate.lengthOfMonth();
-    if (targetDay > length) targetDay = length;
-    return LocalDate.of(candidate.getYear(), candidate.getMonth(), targetDay);
-  }
+    private void abandonStaleExecutions() {
+        jobExplorer.findRunningJobExecutions(JOB_NAME).forEach(exec -> {
+            exec.setStatus(BatchStatus.ABANDONED);
+            exec.setExitStatus(ExitStatus.UNKNOWN);
+            jobRepository.update(exec);
+            log.warn("Abandoned stale JobExecution id={} startedAt={}", exec.getId(), exec.getStartTime());
+        });
+    }
+
+    private void retryRun() {
+        try {
+            JobParameters params = new JobParametersBuilder().addLocalDate("runDate", LocalDate.now()).toJobParameters();
+            var execution = jobLauncher.run(sipCycleReconcilerJob, params);
+            log.info("SipCycleReconcilerJob retry completed with status={}", execution.getStatus());
+        } catch (Exception e) {
+            log.error("SipCycleReconcilerJob retry failed: {}", e.getMessage(), e);
+            throw new RuntimeException("SipCycleReconcilerJob retry after stale-execution abandon failed", e);
+        }
+    }
 }

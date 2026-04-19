@@ -33,6 +33,7 @@ dependencies {
     implementation("org.springframework.boot:spring-boot-starter-webflux")
     testImplementation("org.springframework.boot:spring-boot-starter-test")
     implementation("org.springframework.boot:spring-boot-starter-quartz")
+    implementation("org.springframework.boot:spring-boot-starter-batch")
 
     implementation("org.springframework.boot:spring-boot-starter-thymeleaf")
 	implementation("org.apache.commons:commons-text:1.12.0")
