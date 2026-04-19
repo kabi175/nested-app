@@ -113,7 +113,7 @@ export default function GoalDetailScreen() {
           />
         ) : null}
 
-        {goal?.monthlySip && (!holdings || holdings.length === 0) && (
+        {!!goal?.monthlySip && (!holdings || holdings.length === 0) && (
           <View style={styles.sipActiveNotice}>
             <Text style={styles.sipActiveNoticeText}>
               Your SIP is active. Transactions will be reflected within 3 working days.
