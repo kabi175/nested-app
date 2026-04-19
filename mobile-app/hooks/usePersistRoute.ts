@@ -42,7 +42,7 @@ export function usePersistRoute() {
 
     const fullRoute = query ? `${pathname}?${query}` : pathname;
 
-    console.log("persisting last route", fullRoute);
+    // console.log("persisting last route", fullRoute);
     AsyncStorage.setItem(LAST_ROUTE_KEY, fullRoute);
   }, [isRestored, pathname, params]);
 }
