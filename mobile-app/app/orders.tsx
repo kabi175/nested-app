@@ -4,7 +4,6 @@ import { useTransactions } from "@/hooks/useTransactions";
 import { formatCurrency } from "@/utils/formatters";
 import { Datepicker, Text } from "@ui-kitten/components";
 import { router } from "expo-router";
-import { StatusBar } from "expo-status-bar";
 import { ArrowLeft, CalendarDays, CheckCircle, Clock, RotateCcw, XCircle } from "lucide-react-native";
 import { useCallback, useEffect, useRef, useState } from "react";
 import {
@@ -189,7 +188,6 @@ export default function OrdersScreen() {
 
   return (
     <SafeAreaView style={styles.container} edges={["top"]}>
-      <StatusBar style="auto" backgroundColor="#fff" />
 
       {/* Header */}
       <View style={styles.header}>

@@ -1,4 +1,3 @@
-import { logCustomPortfolioScreen, logProceedWithCustomPlan } from "@/services/analytics";
 import { CreateOrderRequest } from "@/api/paymentAPI";
 import { cartAtom } from "@/atoms/cart";
 import BackButton from "@/components/v2/BackButton";
@@ -10,8 +9,8 @@ import { useCreateOrders } from "@/hooks/useCreateOrders";
 import { useGoal } from "@/hooks/useGoal";
 import { useGoalCreation } from "@/hooks/useGoalCreation";
 import { useUpdateGoal } from "@/hooks/useUpdateGoal";
+import { logCustomPortfolioScreen, logProceedWithCustomPlan } from "@/services/analytics";
 import { router, useLocalSearchParams } from "expo-router";
-import { StatusBar } from "expo-status-bar";
 import { useSetAtom } from "jotai";
 import React, { useRef, useState } from "react";
 import { Alert, ScrollView, StyleSheet, Text, View } from "react-native";
@@ -120,7 +119,6 @@ export default function Planner() {
 
     return (
         <SafeAreaView style={styles.safe} edges={["top"]}>
-            <StatusBar style="dark" backgroundColor="#FAFAFA" />
 
             <ScrollView
                 style={styles.scroll}

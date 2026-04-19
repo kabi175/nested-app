@@ -1,14 +1,13 @@
 import Button from "@/components/v2/Button";
-import { logChooseField } from "@/services/analytics";
 import ErrorScreen from "@/components/v2/ErrorScreen";
 import LoadingScreen from "@/components/v2/LoadingScreen";
 import PathCard from "@/components/v2/PathCard";
 import { useChild } from "@/hooks/useChildren";
 import { useEducations } from "@/hooks/useEducations";
 import { useGoalCreation } from "@/hooks/useGoalCreation";
+import { logChooseField } from "@/services/analytics";
 import { calculateFutureCost } from "@/utils/goalForm";
 import { router, useLocalSearchParams } from "expo-router";
-import { StatusBar } from "expo-status-bar";
 import { ArrowLeft } from "lucide-react-native";
 import React, { useState } from "react";
 import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
@@ -98,7 +97,6 @@ export default function ChildFieldSelectionScreen() {
 
   return (
     <SafeAreaView style={styles.container} edges={["top"]}>
-      <StatusBar style="dark" backgroundColor="#FFFFFF" />
       <ScrollView
         style={styles.scrollView}
         contentContainerStyle={styles.scrollContent}

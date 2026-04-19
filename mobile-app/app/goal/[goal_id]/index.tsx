@@ -8,7 +8,6 @@ import { useDeleteGoal } from "@/hooks/useDeleteGoal";
 import { useGoal } from "@/hooks/useGoal";
 import { usePortfolioHoldings } from "@/hooks/usePortfolio";
 import { router, useLocalSearchParams } from "expo-router";
-import { StatusBar } from "expo-status-bar";
 import React, { useMemo, useState } from "react";
 import {
   ActivityIndicator,
@@ -92,7 +91,6 @@ export default function GoalDetailScreen() {
 
   return (
     <SafeAreaView style={styles.container} edges={["top"]}>
-      <StatusBar style="dark" backgroundColor="#FFFFFF" />
 
       <GoalHeader title={goalTitle} subtitle={goalSubtitle || undefined} />
 

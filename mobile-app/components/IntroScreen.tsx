@@ -7,7 +7,6 @@ import WhatParentsSay from "@/components/WhatParentsSay";
 import WhyParentTrustUs from "@/components/WhyParentTrustUs";
 import { useUser } from "@/hooks/useUser";
 import { Divider, Layout, Text } from "@ui-kitten/components";
-import { StatusBar } from "expo-status-bar";
 import React, { useRef } from "react";
 import { ScrollView, StyleSheet } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -31,7 +30,6 @@ export default function NestedIntro() {
 
   return (
     <SafeAreaView style={styles.rootContainer}>
-      <StatusBar style="auto" backgroundColor="#FFFFFF" />
 
       <Layout style={styles.container}>
         <ScrollView

@@ -8,7 +8,6 @@ import { useChildren } from "@/hooks/useChildren";
 import { useEducationGoals } from "@/hooks/useGoals";
 import { Button } from "@ui-kitten/components";
 import { Redirect, router } from "expo-router";
-import { StatusBar } from "expo-status-bar";
 import React, { useCallback } from "react";
 import { ActivityIndicator, ScrollView, StyleSheet, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -70,7 +69,6 @@ export default function GoalScreen() {
 
   return (
     <SafeAreaView style={styles.container}>
-      <StatusBar style="auto" backgroundColor="#F8F7FF" />
       <View style={styles.header}>
         <ThemedText style={styles.headerTitle}>My Portfolio</ThemedText>
       </View>

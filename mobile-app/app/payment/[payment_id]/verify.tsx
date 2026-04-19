@@ -12,7 +12,6 @@ import {
 } from "@/services/mfaService";
 import { Ionicons } from "@expo/vector-icons";
 import { Redirect, router, useLocalSearchParams } from "expo-router";
-import { StatusBar } from "expo-status-bar";
 import { useEffect, useState } from "react";
 import {
   ActivityIndicator,
@@ -77,7 +76,7 @@ export default function PaymentVerificationScreen() {
       try {
         const storedSessionId = await getStoredSessionId();
         if (storedSessionId) setMfaSessionId(storedSessionId);
-      } catch {}
+      } catch { }
     } finally {
       setIsLoading(false);
     }
@@ -152,7 +151,6 @@ export default function PaymentVerificationScreen() {
 
   return (
     <SafeAreaView style={styles.safeArea} edges={["top", "left", "right"]}>
-      <StatusBar style="dark" />
 
       {/* Header */}
       <View style={styles.header}>

@@ -1,9 +1,9 @@
 import { cartAtom } from "@/atoms/cart";
 import { ThemedText } from "@/components/ThemedText";
+import { SectionHeader } from "@/components/v2/profile/SectionHeader";
 import { BankAccountChip } from "@/components/v2/top-up/BankAccountChip";
 import { PaymentMethodRow } from "@/components/v2/top-up/PaymentMethodRow";
 import { PAYMENT_METHODS } from "@/components/v2/top-up/types";
-import { SectionHeader } from "@/components/v2/profile/SectionHeader";
 import { useBankAccounts } from "@/hooks/useBankAccount";
 import { useCreatePayment } from "@/hooks/usePaymentMutations";
 import { BankAccount } from "@/types/bank";
@@ -11,7 +11,6 @@ import { formatCurrency } from "@/utils/formatters";
 import { Ionicons } from "@expo/vector-icons";
 import { Button } from "@ui-kitten/components";
 import { Redirect, router } from "expo-router";
-import { StatusBar } from "expo-status-bar";
 import { useAtomValue } from "jotai";
 import { useEffect, useMemo, useState } from "react";
 import {
@@ -172,7 +171,6 @@ export default function PaymentMethodScreen() {
 
   return (
     <SafeAreaView style={styles.safeArea} edges={["top", "left", "right"]}>
-      <StatusBar style="dark" />
       <View style={styles.container}>
         {/* Header */}
         <View style={styles.header}>

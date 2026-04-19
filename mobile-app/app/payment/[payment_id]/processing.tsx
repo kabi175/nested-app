@@ -7,7 +7,6 @@ import {
 import { Ionicons } from "@expo/vector-icons";
 import * as Linking from "expo-linking";
 import { router, useLocalSearchParams } from "expo-router";
-import { StatusBar } from "expo-status-bar";
 import { useCallback, useEffect, useRef, useState } from "react";
 import {
   ActivityIndicator,
@@ -72,7 +71,7 @@ export default function PaymentProcessingScreen() {
   // ── Timer helpers ───────────────────────────────────────────────────────────
   const clearTimers = useCallback(() => {
     if (countdownRef.current) { clearInterval(countdownRef.current); countdownRef.current = null; }
-    if (pollRef.current)     { clearInterval(pollRef.current);     pollRef.current = null; }
+    if (pollRef.current) { clearInterval(pollRef.current); pollRef.current = null; }
   }, []);
 
   const startPoll = useCallback(() => {
@@ -153,7 +152,7 @@ export default function PaymentProcessingScreen() {
     }
 
     startPoll();
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [paymentId, clearTimers, startCountdown, startPoll]);
 
   const startSipStep = useCallback(async () => {
@@ -207,7 +206,7 @@ export default function PaymentProcessingScreen() {
     }
 
     startPoll();
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [paymentId, clearTimers, startCountdown, startPoll, startBuyStep]);
 
   // ── Initial flow trigger (runs once when payment loads) ─────────────────────
@@ -215,9 +214,9 @@ export default function PaymentProcessingScreen() {
     if (!payment || hasStartedRef.current) return;
     hasStartedRef.current = true;
 
-    const sipNA   = payment.sip_status === "not_available";
+    const sipNA = payment.sip_status === "not_available";
     const sipDone = payment.sip_status === "completed" || payment.sip_status === "active";
-    const buyNA   = payment.buy_status === "not_available";
+    const buyNA = payment.buy_status === "not_available";
     const buyDone = payment.buy_status === "completed" || payment.buy_status === "active";
 
     console.log("[Processing] initial flow", {
@@ -241,15 +240,15 @@ export default function PaymentProcessingScreen() {
       console.log("[Processing] → startSipStep()");
       startSipStep();
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [payment]);
 
   // ── Status watcher (poll / AppState updates) ────────────────────────────────
   useEffect(() => {
     if (!payment) return;
     const step = activeStepRef.current;
-    const sp   = sipPhaseRef.current;
-    const bp   = buyPhaseRef.current;
+    const sp = sipPhaseRef.current;
+    const bp = buyPhaseRef.current;
 
     // SIP step — watch for completion / failure
     if (step === "sip" && sp === "authorizing") {
@@ -303,7 +302,7 @@ export default function PaymentProcessingScreen() {
         clearTimers();
       }
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [payment?.sip_status, payment?.buy_status]);
 
   // ── AppState — immediate refresh when user returns from browser ─────────────
@@ -325,10 +324,10 @@ export default function PaymentProcessingScreen() {
     if (sipPhase === "idle" || sipPhase === "not_available") return null;
     const config: Record<string, { bg: string; border: string; text: string; color: string; icon: string }> = {
       authorizing: { bg: "#EFF6FF", border: "#BFDBFE", text: "SIP in progress", color: "#3137D5", icon: "refresh-outline" },
-      success:     { bg: "#DCFCE7", border: "#86EFAC", text: "SIP ✓ Activated", color: "#16A34A", icon: "checkmark-circle" },
-      failed:      { bg: "#FEF2F2", border: "#FECACA", text: "SIP — Failed",    color: "#DC2626", icon: "close-circle" },
-      expired:     { bg: "#F3F4F6", border: "#D1D5DB", text: "SIP — Expired",   color: "#6B7280", icon: "time-outline" },
-      opening:     { bg: "#EFF6FF", border: "#BFDBFE", text: "Opening SIP...",  color: "#3137D5", icon: "refresh-outline" },
+      success: { bg: "#DCFCE7", border: "#86EFAC", text: "SIP ✓ Activated", color: "#16A34A", icon: "checkmark-circle" },
+      failed: { bg: "#FEF2F2", border: "#FECACA", text: "SIP — Failed", color: "#DC2626", icon: "close-circle" },
+      expired: { bg: "#F3F4F6", border: "#D1D5DB", text: "SIP — Expired", color: "#6B7280", icon: "time-outline" },
+      opening: { bg: "#EFF6FF", border: "#BFDBFE", text: "Opening SIP...", color: "#3137D5", icon: "refresh-outline" },
     };
     const c = config[sipPhase];
     if (!c) return null;
@@ -344,7 +343,6 @@ export default function PaymentProcessingScreen() {
   if (isLoading) {
     return (
       <SafeAreaView style={styles.safeArea}>
-        <StatusBar style="dark" />
         <View style={styles.loadingScreen}>
           <ActivityIndicator size="large" color="#3137D5" />
         </View>
@@ -354,19 +352,18 @@ export default function PaymentProcessingScreen() {
 
   // ─── Determine current step display ──────────────────────────────────────────
   const isSipStep = activeStep === "sip";
-  const phase     = isSipStep ? sipPhase : buyPhase;
-  const color     = timerColor(timeRemaining);
+  const phase = isSipStep ? sipPhase : buyPhase;
+  const color = timerColor(timeRemaining);
 
   console.log("[Processing] render", { activeStep, sipPhase, buyPhase, phase, timeRemaining, isLoading });
 
   const stepConfig = isSipStep
-    ? { icon: "refresh-outline", title: "Activating your SIP",  subtitle: "We've opened the authorization page in your browser." }
-    : { icon: "cart-outline",   title: "Processing your payment", subtitle: "We've opened the payment page in your browser." };
+    ? { icon: "refresh-outline", title: "Activating your SIP", subtitle: "We've opened the authorization page in your browser." }
+    : { icon: "cart-outline", title: "Processing your payment", subtitle: "We've opened the payment page in your browser." };
 
   // ─── Render ───────────────────────────────────────────────────────────────────
   return (
     <SafeAreaView style={styles.safeArea} edges={["top", "left", "right"]}>
-      <StatusBar style="dark" />
 
       {/* Header — no back button to prevent accidental exit */}
       <View style={styles.header}>

@@ -17,7 +17,6 @@ import {
 } from "@ui-kitten/components";
 import * as Haptics from "expo-haptics";
 import { router } from "expo-router";
-import { StatusBar } from "expo-status-bar";
 import { CalendarDays } from "lucide-react-native";
 import { useEffect, useState } from "react";
 import {
@@ -113,7 +112,6 @@ export default function UserScreen() {
 
   return (
     <SafeAreaView style={styles.container} edges={["top"]}>
-      <StatusBar style="auto" backgroundColor="#F9FAFB" />
       <ThemedView style={styles.container}>
         <KeyboardAvoidingView
           behavior={Platform.OS === "ios" ? "padding" : "height"}

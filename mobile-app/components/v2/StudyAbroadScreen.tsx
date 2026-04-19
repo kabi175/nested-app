@@ -1,8 +1,8 @@
+import { EducationContent } from "@/constants/educationContent";
 import {
     InstrumentSans_700Bold,
     useFonts,
 } from "@expo-google-fonts/instrument-sans";
-import { StatusBar } from "expo-status-bar";
 import { ChevronLeft } from "lucide-react-native";
 import React, { useEffect } from "react";
 import {
@@ -22,7 +22,6 @@ import Animated, {
 } from "react-native-reanimated";
 import { SafeAreaView } from "react-native-safe-area-context";
 import Svg, { Defs, Line, LinearGradient, Path, Stop } from "react-native-svg";
-import { EducationContent } from "@/constants/educationContent";
 import Button from "./Button";
 
 // ─── Constants ────────────────────────────────────────────────────────────────
@@ -190,8 +189,6 @@ export default function StudyAbroadScreen({
     return (
         <SafeAreaView style={styles.safeArea}>
             {/* ── Back button ── */}
-            <StatusBar style="dark" backgroundColor="#FAFAF7" />
-
             <Pressable style={styles.backButton} onPress={onBack} hitSlop={10}>
                 <ChevronLeft size={20} color="#3C3C3C" strokeWidth={2.2} />
             </Pressable>

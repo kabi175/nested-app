@@ -9,7 +9,6 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-import { StatusBar } from 'expo-status-bar';
 import BackButton from '../BackButton';
 import Button from '../Button';
 import Slider from '../Slider';
@@ -186,7 +185,6 @@ export default function EducationBasedGoalPlanner({
 
   return (
     <SafeAreaView style={styles.safe}>
-      <StatusBar style="dark" backgroundColor="#FFFFFF" />
       <Animated.ScrollView
         style={{ opacity: fadeAnim }}
         contentContainerStyle={styles.content}

@@ -5,7 +5,6 @@ import {
   Text,
 } from "@ui-kitten/components";
 import { router } from "expo-router";
-import { StatusBar } from "expo-status-bar";
 import { useState } from "react";
 import { Alert, ScrollView, StyleSheet, TouchableOpacity, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -56,7 +55,6 @@ export default function AddManualScreen() {
 
   return (
     <SafeAreaView style={styles.safeArea} edges={["top", "bottom"]}>
-      <StatusBar style="dark" backgroundColor="#F8F9FA" />
 
       {/* Header */}
       <View style={styles.header}>

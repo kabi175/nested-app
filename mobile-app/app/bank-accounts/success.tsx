@@ -10,7 +10,6 @@ import { useQueryClient } from "@tanstack/react-query";
 import { Button, Layout, Text } from "@ui-kitten/components";
 import { LinearGradient } from "expo-linear-gradient";
 import { router } from "expo-router";
-import { StatusBar } from "expo-status-bar";
 import { useSetAtom } from "jotai";
 import { CheckCircle } from "lucide-react-native";
 import { useEffect } from "react";
@@ -46,7 +45,6 @@ export default function BankAccountSuccessScreen() {
 
   return (
     <SafeAreaView style={styles.safeArea} edges={["top", "bottom"]}>
-      <StatusBar style="auto" backgroundColor="#F8FAFC" />
       <Layout style={styles.container} level="1">
         <View style={styles.content}>
           {/* Success Icon */}

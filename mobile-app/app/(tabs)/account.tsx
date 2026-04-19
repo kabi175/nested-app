@@ -8,7 +8,6 @@ import { openWhatsApp } from "@/utils/whtsapp";
 import { useQueryClient } from "@tanstack/react-query";
 import Constants from "expo-constants";
 import { router } from "expo-router";
-import { StatusBar } from "expo-status-bar";
 import {
   BarChart2,
   Headphones,
@@ -79,7 +78,6 @@ export default function AccountScreen() {
 
   return (
     <SafeAreaView style={styles.container} edges={["top"]}>
-      <StatusBar style="dark" backgroundColor="#F3F4F6" />
       <ScrollView
         style={styles.scrollView}
         showsVerticalScrollIndicator={false}

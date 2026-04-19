@@ -2,7 +2,6 @@ import { usePayment } from "@/hooks/usePayment";
 import { logPurchase } from "@/services/analytics";
 import { Ionicons } from "@expo/vector-icons";
 import { router, useLocalSearchParams } from "expo-router";
-import { StatusBar } from "expo-status-bar";
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import {
   ActivityIndicator,
@@ -156,7 +155,6 @@ export default function PaymentSuccessScreen() {
   if (isLoading) {
     return (
       <SafeAreaView style={styles.safeArea}>
-        <StatusBar style="dark" />
         <View style={styles.loadingScreen}>
           <ActivityIndicator size="large" color="#22C55E" />
         </View>
@@ -166,7 +164,6 @@ export default function PaymentSuccessScreen() {
 
   return (
     <SafeAreaView style={styles.safeArea} edges={["top", "left", "right"]}>
-      <StatusBar style="dark" />
 
       {/* Centered content */}
       <View style={styles.content}>

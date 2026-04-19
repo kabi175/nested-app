@@ -6,7 +6,6 @@ import { useEducation } from "@/hooks/useEducation";
 import { useGoalCreation } from "@/hooks/useGoalCreation";
 import { calculateFutureCost } from "@/utils/goalForm";
 import { router, useLocalSearchParams } from "expo-router";
-import { StatusBar } from "expo-status-bar";
 
 export default function NeedAgeRoute() {
   const { child_id, education_id } = useLocalSearchParams<{ child_id: string, education_id?: string }>();
@@ -19,7 +18,6 @@ export default function NeedAgeRoute() {
 
   return (
     <>
-      <StatusBar style="dark" backgroundColor="#FAFAFA" />
       <WhenNeededScreen
         child={child}
         loading={createGoalMutation.isPending}

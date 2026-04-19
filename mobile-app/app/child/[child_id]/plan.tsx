@@ -1,10 +1,9 @@
 import BackButton from "@/components/v2/BackButton";
-import { logChooseGoalType } from "@/services/analytics";
 import Button from "@/components/v2/Button";
 import ErrorScreen from "@/components/v2/ErrorScreen";
 import LoadingScreen from "@/components/v2/LoadingScreen";
 import { useChild } from "@/hooks/useChildren";
-import { StatusBar } from "expo-status-bar";
+import { logChooseGoalType } from "@/services/analytics";
 import { router, useLocalSearchParams } from "expo-router";
 import { Building2, Compass, Telescope } from "lucide-react-native";
 import React, { useState } from "react";
@@ -19,25 +18,25 @@ const OPTIONS: {
   subtitle: string;
   Icon: React.ComponentType<{ size: number; color: string }>;
 }[] = [
-  {
-    id: "field",
-    title: "Choose a field",
-    subtitle: "Eg. MBBS/ MBA/ IIT etc",
-    Icon: Telescope,
-  },
-  {
-    id: "college",
-    title: "Have a college in mind",
-    subtitle: "IIM/ AIIMS/ DU etc",
-    Icon: Building2,
-  },
-  {
-    id: "not_sure",
-    title: "Not sure yet",
-    subtitle: "Help me explore all possible paths",
-    Icon: Compass,
-  },
-];
+    {
+      id: "field",
+      title: "Choose a field",
+      subtitle: "Eg. MBBS/ MBA/ IIT etc",
+      Icon: Telescope,
+    },
+    {
+      id: "college",
+      title: "Have a college in mind",
+      subtitle: "IIM/ AIIMS/ DU etc",
+      Icon: Building2,
+    },
+    {
+      id: "not_sure",
+      title: "Not sure yet",
+      subtitle: "Help me explore all possible paths",
+      Icon: Compass,
+    },
+  ];
 
 export default function PlanScreen() {
   const { child_id } = useLocalSearchParams<{ child_id: string }>();
@@ -71,7 +70,6 @@ export default function PlanScreen() {
 
   return (
     <SafeAreaView style={styles.container} edges={["top"]}>
-      <StatusBar style="dark" backgroundColor="#FAFAFA" />
 
       <View style={styles.content}>
         <BackButton onPress={() => router.back()} />

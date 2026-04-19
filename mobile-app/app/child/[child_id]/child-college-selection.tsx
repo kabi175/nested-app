@@ -1,14 +1,13 @@
 import Button from "@/components/v2/Button";
-import { logChooseCollege } from "@/services/analytics";
 import CollegeDropdown from "@/components/v2/CollegeDropdown";
 import ErrorScreen from "@/components/v2/ErrorScreen";
 import LoadingScreen from "@/components/v2/LoadingScreen";
 import { useChild } from "@/hooks/useChildren";
 import { useEducations } from "@/hooks/useEducations";
 import { useGoalCreation } from "@/hooks/useGoalCreation";
+import { logChooseCollege } from "@/services/analytics";
 import { calculateFutureCost } from "@/utils/goalForm";
 import { router, useLocalSearchParams } from "expo-router";
-import { StatusBar } from "expo-status-bar";
 import { ArrowLeft } from "lucide-react-native";
 import React, { useState } from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
@@ -54,7 +53,6 @@ export default function ChildCollegeSelectionScreen() {
 
   return (
     <SafeAreaView style={styles.container} edges={["top"]}>
-      <StatusBar style="dark" backgroundColor="#FFFFFF" />
 
       <View style={styles.content}>
         <Pressable

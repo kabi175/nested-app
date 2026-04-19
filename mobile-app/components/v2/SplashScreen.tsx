@@ -1,5 +1,4 @@
 import { LinearGradient } from "expo-linear-gradient";
-import { StatusBar } from "expo-status-bar";
 import React, { useEffect, useRef } from "react";
 import { Animated, StyleSheet } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -48,7 +47,6 @@ export default function SplashScreenComponent({
 
   return (
     <>
-      <StatusBar style="light" translucent backgroundColor="transparent" />
       <Animated.View style={[styles.container, { opacity }]}>
         {/* Gradient fills the ENTIRE screen, including behind status bar & nav bar */}
         <LinearGradient

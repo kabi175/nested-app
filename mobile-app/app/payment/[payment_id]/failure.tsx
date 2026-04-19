@@ -2,7 +2,6 @@ import { usePayment } from "@/hooks/usePayment";
 import { logPurchaseFailed } from "@/services/analytics";
 import { Ionicons } from "@expo/vector-icons";
 import { router, useLocalSearchParams } from "expo-router";
-import { StatusBar } from "expo-status-bar";
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import {
   ActivityIndicator,
@@ -90,7 +89,7 @@ export default function PaymentFailureScreen() {
       setCountdown(duration);
       setCountdownReady(true);
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isLoading, payment]);
 
   // Interval — starts exactly once, not tied to payment so refetches can't kill it
@@ -150,7 +149,6 @@ export default function PaymentFailureScreen() {
   if (isLoading) {
     return (
       <SafeAreaView style={styles.safeArea}>
-        <StatusBar style="dark" />
         <View style={styles.loadingScreen}>
           <ActivityIndicator size="large" color="#EF4444" />
         </View>
@@ -160,7 +158,6 @@ export default function PaymentFailureScreen() {
 
   return (
     <SafeAreaView style={styles.safeArea} edges={["top", "left", "right"]}>
-      <StatusBar style="dark" />
 
       {/* Centered content */}
       <View style={styles.content}>

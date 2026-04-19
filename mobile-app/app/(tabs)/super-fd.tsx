@@ -4,7 +4,6 @@ import {
   PortfolioSummaryCard
 } from "@/components/goal";
 import { useSuperFDGoals } from "@/hooks/useGoals";
-import { StatusBar } from "expo-status-bar";
 import React from "react";
 import { ActivityIndicator, ScrollView, StyleSheet, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -32,7 +31,6 @@ export default function SuperFDScreen() {
 
   return (
     <>
-      <StatusBar style="auto" backgroundColor="#F8F7FF" hidden={false} />
       <SafeAreaView style={styles.container}>
         <SuperFDListHeader />
         <ScrollView

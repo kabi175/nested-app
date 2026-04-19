@@ -1,6 +1,5 @@
 import { LinearGradient } from "expo-linear-gradient";
 import { router, useRouter } from "expo-router";
-import { StatusBar } from "expo-status-bar";
 import { useVideoPlayer, VideoView } from "expo-video";
 import { Baby, Bell, ChartColumnIncreasing, Phone, PiggyBank, ScrollText } from "lucide-react-native";
 import React from "react";
@@ -119,7 +118,6 @@ export default function HomeScreen() {
 
   return (
     <SafeAreaView style={styles.screen} edges={["left", "right", "bottom"]}>
-      <StatusBar style="light" backgroundColor="transparent" translucent />
       <ScrollView
         style={styles.scroll}
         contentContainerStyle={[

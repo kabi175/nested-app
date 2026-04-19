@@ -1,14 +1,13 @@
+import { LinkMethodCard } from "@/components/bank-accounts/LinkMethodCard";
+import { PendingOverlay } from "@/components/bank-accounts/PendingOverlay";
+import { useLinkBankAccount } from "@/hooks/useLinkBankAccount";
 import { useUser } from "@/hooks/useUser";
 import { Layout } from "@ui-kitten/components";
 import { Redirect, router } from "expo-router";
-import { StatusBar } from "expo-status-bar";
 import { Landmark, Smartphone } from "lucide-react-native";
 import { useState } from "react";
 import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { LinkMethodCard } from "@/components/bank-accounts/LinkMethodCard";
-import { PendingOverlay } from "@/components/bank-accounts/PendingOverlay";
-import { useLinkBankAccount } from "@/hooks/useLinkBankAccount";
 
 type LinkMethod = "upi" | "manual";
 
@@ -31,7 +30,6 @@ export default function BankAccountsScreen() {
 
   return (
     <SafeAreaView style={styles.safeArea} edges={["top"]}>
-      <StatusBar style="dark" backgroundColor="#FFFDF9" />
       <Layout style={styles.container} level="1">
         {isPending && <PendingOverlay />}
 
