@@ -158,8 +158,7 @@ export default function OrdersScreen() {
   );
 
   const handleChildSelect = (childId: string | undefined) => {
-    if (childId === selectedChildId) return;
-    resetAndFilter(childId, fromDate, toDate);
+    resetAndFilter(childId === selectedChildId ? undefined : childId, fromDate, toDate);
   };
 
   const handleDateChange = (date: Date | undefined, isFromDate: boolean) => {
