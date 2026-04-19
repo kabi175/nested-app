@@ -5,7 +5,7 @@ import { formatCurrency } from "@/utils/formatters";
 import { Datepicker, Text } from "@ui-kitten/components";
 import { router } from "expo-router";
 import { StatusBar } from "expo-status-bar";
-import { ArrowLeft, CalendarDays } from "lucide-react-native";
+import { ArrowLeft, CalendarDays, CheckCircle, Clock, RotateCcw, XCircle } from "lucide-react-native";
 import { useCallback, useEffect, useRef, useState } from "react";
 import {
   ActivityIndicator,
@@ -15,8 +15,32 @@ import {
   StyleSheet,
   TouchableOpacity,
   View,
+  unstable_batchedUpdates,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+
+type StatusConfig = {
+  label: string;
+  color: string;
+  bg: string;
+  Icon: React.ComponentType<{ size: number; color: string }>;
+};
+
+const getStatusConfig = (status: string): StatusConfig => {
+  switch (status) {
+    case "completed":
+      return { label: "Successful", color: "#16A34A", bg: "#DCFCE7", Icon: CheckCircle };
+    case "in_progress":
+    case "submitted":
+      return { label: "In progress", color: "#6B7280", bg: "#F3F4F6", Icon: Clock };
+    case "failed":
+      return { label: "Failed", color: "#DC2626", bg: "#FEE2E2", Icon: XCircle };
+    case "refunded":
+      return { label: "Refunded", color: "#D97706", bg: "#FEF3C7", Icon: RotateCcw };
+    default:
+      return { label: status, color: "#6B7280", bg: "#F3F4F6", Icon: Clock };
+  }
+};
 
 const getTypeLabel = (type: string): string => {
   switch (type) {
@@ -52,6 +76,17 @@ type MonthGroup = {
   label: string;
   date: Date;
   transactions: Transaction[];
+};
+
+const StatusBadge = ({ status }: { status: string }) => {
+  const cfg = getStatusConfig(status);
+  const Icon = cfg.Icon;
+  return (
+    <View style={[styles.statusBadge, { backgroundColor: cfg.bg }]}>
+      <Icon size={12} color={cfg.color} />
+      <Text style={[styles.statusText, { color: cfg.color }]}>{cfg.label}</Text>
+    </View>
+  );
 };
 
 const groupByMonth = (transactions: Transaction[]): MonthGroup[] => {
@@ -110,12 +145,14 @@ export default function OrdersScreen() {
   // Reset when filters change
   const resetAndFilter = useCallback(
     (childId: string | undefined, from: Date | undefined, to: Date | undefined) => {
-      setAllTransactions([]);
-      setHasMore(true);
-      setCurrentPage(0);
-      setSelectedChildId(childId);
-      setFromDate(from);
-      setToDate(to);
+      unstable_batchedUpdates(() => {
+        setAllTransactions([]);
+        setHasMore(true);
+        setCurrentPage(0);
+        setSelectedChildId(childId);
+        setFromDate(from);
+        setToDate(to);
+      });
     },
     []
   );
@@ -253,10 +290,11 @@ export default function OrdersScreen() {
                     {tx.member_name ? (
                       <Text style={styles.txMember}>{tx.member_name}</Text>
                     ) : null}
+                    <StatusBadge status={tx.status} />
                   </View>
                   <View style={styles.txRight}>
-                    <Text style={styles.txAmount}>
-                      +{formatCurrency(tx.amount)}
+                    <Text style={[styles.txAmount, tx.status === "failed" && styles.txAmountFailed]}>
+                      {tx.status !== "failed" ? "+" : ""}{formatCurrency(tx.amount)}
                     </Text>
                     <Text style={styles.txDate}>
                       {formatShortDate(tx.executed_at)}
@@ -420,6 +458,23 @@ const styles = StyleSheet.create({
     fontSize: 15,
     fontWeight: "700",
     color: "#16A34A",
+  },
+  txAmountFailed: {
+    color: "#DC2626",
+  },
+  statusBadge: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 4,
+    alignSelf: "flex-start",
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 20,
+    marginTop: 2,
+  },
+  statusText: {
+    fontSize: 12,
+    fontWeight: "500",
   },
   txDate: {
     fontSize: 13,

@@ -38,7 +38,7 @@ export const getSipOrders = async (api: AxiosInstance, page: number) => {
 };
 
 export type Transaction = {
-  status: "in_progress" | "completed" | "failed" | "refunded";
+  status: "in_progress" | "submitted" | "completed" | "failed" | "refunded";
   type: "SIP" | "BUY" | "SELL" | "STP" | "SWP";
   amount: number;
   units: number;

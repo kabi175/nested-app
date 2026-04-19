@@ -3,7 +3,7 @@ import type { AxiosInstance } from "axios";
 export type Transaction = {
   fund: string;
   type: "BUY" | "SELL" | "SIP";
-  status: "completed" | "in_progress" | "failed" | "refunded";
+  status: "completed" | "in_progress" | "submitted" | "failed" | "refunded";
   units: number;
   unit_price: number;
   amount: number;

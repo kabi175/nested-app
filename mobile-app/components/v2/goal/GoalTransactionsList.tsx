@@ -10,11 +10,13 @@ const BORDER_COLORS = ["#FBCFE8", "#FFE4B5", "#E6E6FA", "#D1FAE5", "#DBEAFE"];
 
 function getStatusConfig(status: Transaction["status"]) {
   switch (status) {
-    case "completed":   return { text: "Completed",   backgroundColor: "#10B981", textColor: "#FFFFFF" };
-    case "in_progress": return { text: "In Progress", backgroundColor: "#F59E0B", textColor: "#FFFFFF" };
-    case "failed":      return { text: "Failed",      backgroundColor: "#EF4444", textColor: "#FFFFFF" };
-    case "refunded":    return { text: "Refunded",    backgroundColor: "#6B7280", textColor: "#FFFFFF" };
-    default:            return { text: "Unknown",     backgroundColor: "#6B7280", textColor: "#FFFFFF" };
+    case "completed": return { text: "Completed", backgroundColor: "#10B981", textColor: "#FFFFFF" };
+    case "in_progress":
+    case "submitted":
+      return { text: "In Progress", backgroundColor: "#F59E0B", textColor: "#FFFFFF" };
+    case "failed": return { text: "Failed", backgroundColor: "#EF4444", textColor: "#FFFFFF" };
+    case "refunded": return { text: "Refunded", backgroundColor: "#6B7280", textColor: "#FFFFFF" };
+    default: return { text: "Unknown", backgroundColor: "#6B7280", textColor: "#FFFFFF" };
   }
 }
 
