@@ -129,7 +129,7 @@ export type GoalDTO = {
   next_sip_date: string | null;
   sip_order_id: string | null;
   has_pending_sip_modification: boolean;
-  step_up_percent: number | null;
+  step_up_amount: number | null;
   target_date?: string;
   createdAt?: string;
   updatedAt?: string;
@@ -163,6 +163,6 @@ export function mapGoalToGoal(goal: GoalDTO): Goal {
     nextSipDate: goal.next_sip_date ? new Date(goal.next_sip_date) : null,
     sipOrderId: goal.sip_order_id ?? null,
     hasPendingSipModification: goal.has_pending_sip_modification ?? false,
-    stepUpPercent: goal.step_up_percent ?? 0,
+    stepUpAmount: goal.step_up_amount ?? 0,
   };
 }

@@ -109,7 +109,7 @@ export default function GoalDetailScreen() {
           <GoalSipCard
             monthlySip={goal.monthlySip}
             nextSipDate={goal.nextSipDate}
-            stepUpAmount={goal.basket.min_step_up}
+            stepUpAmount={goal.stepUpAmount}
           />
         ) : null}
 
