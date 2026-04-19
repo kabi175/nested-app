@@ -5,6 +5,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonValue;
 import com.nested.app.utils.FormatterUtil;
 import java.time.LocalDate;
+import java.util.Date;
 import java.util.Map;
 import lombok.Builder;
 import lombok.Data;
@@ -36,6 +37,9 @@ public class SipOrderDetail extends OrderDetail {
 
   @JsonProperty("installment_day")
   private String installmentDay;
+
+  @JsonProperty(value = "next_installment_date", access = JsonProperty.Access.READ_ONLY)
+  private Date nextRunDate;
 
   @JsonIgnore private String email;
 
