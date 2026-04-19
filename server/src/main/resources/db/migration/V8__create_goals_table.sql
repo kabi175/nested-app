@@ -1,6 +1,0 @@
-
-ALTER TABLE goals
-ALTER COLUMN child_id DROP NOT NULL;
-
-ALTER TABLE goals
-ALTER COLUMN education_id DROP NOT NULL;
