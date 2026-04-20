@@ -34,6 +34,8 @@ dependencies {
     testImplementation("org.springframework.boot:spring-boot-starter-test")
     implementation("org.springframework.boot:spring-boot-starter-quartz")
     implementation("org.springframework.boot:spring-boot-starter-batch")
+    implementation("de.codecentric:spring-boot-admin-starter-server:3.4.5")
+    implementation("de.codecentric:spring-boot-admin-starter-client:3.4.5")
 
     implementation("org.springframework.boot:spring-boot-starter-thymeleaf")
 	implementation("org.apache.commons:commons-text:1.12.0")
