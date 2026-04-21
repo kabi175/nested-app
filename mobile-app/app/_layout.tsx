@@ -10,8 +10,6 @@ import "react-native-reanimated";
 
 import { CrashlyticsErrorBoundary } from "@/components/CrashlyticsErrorBoundary";
 import { ForceUpdateScreen } from "@/components/ForceUpdateScreen";
-import { getAnalytics, logScreenView } from "@react-native-firebase/analytics";
-import { getPerformance } from "@react-native-firebase/perf";
 import SplashScreenComponent from "@/components/v2/SplashScreen";
 import { useColorScheme } from "@/hooks/useColorScheme";
 import { useForceUpdate } from "@/hooks/useForceUpdate";
@@ -26,6 +24,8 @@ import {
   InstrumentSans_600SemiBold,
   InstrumentSans_700Bold,
 } from "@expo-google-fonts/instrument-sans";
+import { getAnalytics, logScreenView } from "@react-native-firebase/analytics";
+import { getPerformance } from "@react-native-firebase/perf";
 import { ApplicationProvider } from "@ui-kitten/components";
 import { requestTrackingPermissionsAsync } from 'expo-tracking-transparency';
 import React, { useEffect, useState } from "react";
@@ -64,12 +64,15 @@ export default function RootLayout() {
   useEffect(() => {
     Settings.initializeSDK();
     getPerformance().dataCollectionEnabled = !__DEV__;
-    requestTrackingPermissionsAsync().then(({ status }) => {
-      if (status === 'granted') {
-        Settings.setAdvertiserTrackingEnabled(true);
-      }
-    });
   }, []);
+
+  const handleSplashFinish = () => {
+    setShowSplash(false);
+    requestTrackingPermissionsAsync().then(({ status }) => {
+      console.log("Tracking permission status:", status);
+      Settings.setAdvertiserTrackingEnabled(status === 'granted');
+    });
+  };
 
   if (!loaded) {
     // Async font loading only occurs in development.
@@ -88,25 +91,25 @@ export default function RootLayout() {
       <ApplicationProvider {...eva} theme={eva.light} customMapping={customMapping}>
         <QueryProvider>
           <RouteRestoredProvider>
-          <Auth0Provider
-            domain={process.env.EXPO_PUBLIC_AUTH0_DOMAIN}
-            clientId={process.env.EXPO_PUBLIC_AUTH0_CLIENT_ID}
-          >
-            <ThemeProvider
-              value={colorScheme === "dark" ? DarkTheme : DefaultTheme}
+            <Auth0Provider
+              domain={process.env.EXPO_PUBLIC_AUTH0_DOMAIN}
+              clientId={process.env.EXPO_PUBLIC_AUTH0_CLIENT_ID}
             >
-              <SafeAreaProvider>
-                <VersionCheckGuard>
-                  <RootNavigator />
-                </VersionCheckGuard>
-              </SafeAreaProvider>
-              <StatusBar style="auto" backgroundColor="transparent" translucent />
-            </ThemeProvider>
-          </Auth0Provider>
+              <ThemeProvider
+                value={colorScheme === "dark" ? DarkTheme : DefaultTheme}
+              >
+                <SafeAreaProvider>
+                  <VersionCheckGuard>
+                    <RootNavigator />
+                  </VersionCheckGuard>
+                </SafeAreaProvider>
+                <StatusBar style="auto" backgroundColor="transparent" translucent />
+              </ThemeProvider>
+            </Auth0Provider>
           </RouteRestoredProvider>
         </QueryProvider>
         {showSplash && (
-          <SplashScreenComponent onFinish={() => setShowSplash(false)} />
+          <SplashScreenComponent onFinish={handleSplashFinish} />
         )}
       </ApplicationProvider>
     </CrashlyticsErrorBoundary>
