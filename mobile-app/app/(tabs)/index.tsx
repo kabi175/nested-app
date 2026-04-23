@@ -10,6 +10,7 @@ import CostCalculatorCard from "@/components/v2/CostCalculatorCard";
 import GoalPlanCard from "@/components/v2/GoalPlanCard";
 import HomeHeader from "@/components/v2/HomeHeader";
 import HowNestedHelpsSection from "@/components/v2/HowNestedHelpsSection";
+import MadeWithLoveSection from "@/components/v2/MadeWithLoveSection";
 import QuickActionsBar from "@/components/v2/QuickActionsBar";
 import ReferralCard from "@/components/v2/ReferralCard";
 import SuperFdCard from "@/components/v2/SuperFdCard";
@@ -119,6 +120,8 @@ export default function HomeScreen() {
         <TestimonialsSection />
 
         <ReferralCard />
+
+        <MadeWithLoveSection />
       </ScrollView>
     </SafeAreaView>
   );
