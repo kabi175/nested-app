@@ -85,18 +85,27 @@ export default function HomeScreen() {
 
           {isKycCompleted && hasGoals && (
             <View style={styles.planCardWrapper}>
-              {goals!.map((g) => (
-                <GoalPlanCard key={g.id} goal={g} />
-              ))}
-              {isInvestedInAnyGoal && (
-                <OutlineButton
-                  title="+ Add goal"
-                  onPress={() => router.push("/child/select")}
-                />
-              )}
+              <GoalPlanCard key={goals![0].id} goal={goals![0]} />
             </View>
           )}
         </LinearGradient>
+
+        {isKycCompleted && hasGoals && goals!.length > 1 && (
+          <View style={styles.planCardWrapper}>
+            {goals!.slice(1).map((g) => (
+              <GoalPlanCard key={g.id} goal={g} />
+            ))}
+          </View>
+        )}
+
+        {isKycCompleted && hasGoals && isInvestedInAnyGoal && (
+          <View style={styles.planCardWrapper}>
+            <OutlineButton
+              title="+ Add goal"
+              onPress={() => router.push("/child/select")}
+            />
+          </View>
+        )}
 
         <SuperFdCard onPress={() => router.push("/(tabs)/super-fd")} />
 
