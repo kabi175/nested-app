@@ -6,6 +6,7 @@ import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from "react-nati
 import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
 
 import CompleteKycComponent from "@/components/v2/CompleteKycComponent";
+import CostCalculatorCard from "@/components/v2/CostCalculatorCard";
 import GoalPlanCard from "@/components/v2/GoalPlanCard";
 import HomeHeader from "@/components/v2/HomeHeader";
 import HowNestedHelpsSection from "@/components/v2/HowNestedHelpsSection";
@@ -110,6 +111,8 @@ export default function HomeScreen() {
         )}
 
         <SuperFdCard onPress={() => router.push("/(tabs)/super-fd")} />
+
+        <CostCalculatorCard />
 
         <HowNestedHelpsSection />
 
