@@ -39,5 +39,6 @@ public class BasketDTO {
 
     private String name;
     private Double allocationPercentage;
+    private Double cagr;
   }
 }

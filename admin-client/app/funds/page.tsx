@@ -38,7 +38,7 @@ import {
   DialogTitle,
   DialogFooter,
 } from '@/components/ui/dialog';
-import { getFunds, updateFundLabel, Fund } from '@/lib/api';
+import { getFunds, updateFundLabel, updateFundCagr, Fund } from '@/lib/api';
 import { exportToCSV } from '@/lib/export-utils';
 import { useToast } from '@/hooks/use-toast';
 import type { PageInfo } from '@/lib/api-client';
@@ -68,6 +68,7 @@ export default function FundsPage() {
   // Edit state
   const [editingFundId, setEditingFundId] = useState<string | null>(null);
   const [editingLabel, setEditingLabel] = useState('');
+  const [editingCagr, setEditingCagr] = useState('');
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
 
@@ -184,6 +185,7 @@ export default function FundsPage() {
   const handleEdit = (fund: Fund) => {
     setEditingFundId(fund.id);
     setEditingLabel(fund.displayName || fund.name);
+    setEditingCagr(fund.cagr?.toString() ?? '');
     setIsEditDialogOpen(true);
   };
 
@@ -199,31 +201,34 @@ export default function FundsPage() {
 
     setIsSaving(true);
     try {
-      const updatedFund = await updateFundLabel(editingFundId, editingLabel.trim());
-      
-      // Update the fund in the list
-      setFunds(funds.map(fund => 
-        fund.id === editingFundId 
-          ? { ...fund, displayName: updatedFund.displayName }
+      const cagrValue = editingCagr.trim() ? parseFloat(editingCagr.trim()) : null;
+      const [updatedFund] = await Promise.all([
+        updateFundLabel(editingFundId, editingLabel.trim()),
+        updateFundCagr(editingFundId, cagrValue),
+      ]);
+
+      setFunds(funds.map(fund =>
+        fund.id === editingFundId
+          ? { ...fund, displayName: updatedFund.displayName, cagr: cagrValue ?? undefined }
           : fund
       ));
 
-      // Refresh stats after update
       fetchStats();
 
       toast({
         title: 'Success',
-        description: 'Fund label updated successfully',
+        description: 'Fund updated successfully',
       });
-      
+
       setIsEditDialogOpen(false);
       setEditingFundId(null);
       setEditingLabel('');
+      setEditingCagr('');
     } catch (err) {
-      console.error('Error updating fund label:', err);
+      console.error('Error updating fund:', err);
       toast({
         title: 'Error',
-        description: err instanceof Error ? err.message : 'Failed to update fund label',
+        description: err instanceof Error ? err.message : 'Failed to update fund',
         variant: 'destructive',
       });
     } finally {
@@ -235,6 +240,7 @@ export default function FundsPage() {
     setIsEditDialogOpen(false);
     setEditingFundId(null);
     setEditingLabel('');
+    setEditingCagr('');
   };
 
   const handleExport = async () => {
@@ -253,7 +259,7 @@ export default function FundsPage() {
         Name: fund.name,
         Description: fund.description || '',
         NAV: fund.nav,
-        'Min Amount': '',
+        CAGR: fund.cagr != null ? fund.cagr + '%' : '',
         Active: fund.isActive ? 'Yes' : 'No',
       }));
       
@@ -278,6 +284,7 @@ export default function FundsPage() {
           <TableCell><Skeleton className="h-4 w-32" /></TableCell>
           <TableCell><Skeleton className="h-4 w-48" /></TableCell>
           <TableCell><Skeleton className="h-4 w-20" /></TableCell>
+          <TableCell><Skeleton className="h-4 w-16" /></TableCell>
           <TableCell><Skeleton className="h-4 w-16" /></TableCell>
           <TableCell><Skeleton className="h-4 w-12" /></TableCell>
         </TableRow>
@@ -466,6 +473,7 @@ export default function FundsPage() {
                       <TableHead>Display Name (Label)</TableHead>
                       <TableHead>Name</TableHead>
                       <TableHead>NAV</TableHead>
+                      <TableHead>CAGR</TableHead>
                       <TableHead>Status</TableHead>
                       <TableHead className="text-right">Actions</TableHead>
                     </TableRow>
@@ -500,6 +508,7 @@ export default function FundsPage() {
                         <TableHead>Display Name (Label)</TableHead>
                         <TableHead>Name</TableHead>
                         <TableHead>NAV</TableHead>
+                        <TableHead>CAGR</TableHead>
                         <TableHead>Status</TableHead>
                         <TableHead className="text-right">Actions</TableHead>
                       </TableRow>
@@ -515,6 +524,9 @@ export default function FundsPage() {
                             {fund.name}
                           </TableCell>
                           <TableCell>₹{fund.nav.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</TableCell>
+                          <TableCell className="text-slate-600 dark:text-slate-400">
+                            {fund.cagr != null ? `${fund.cagr}%` : '—'}
+                          </TableCell>
                           <TableCell>
                             <Badge 
                               variant={fund.isActive ? "default" : "secondary"}
@@ -671,6 +683,19 @@ export default function FundsPage() {
                   value={editingLabel}
                   onChange={(e) => setEditingLabel(e.target.value)}
                   placeholder="Enter fund display name"
+                  className="w-full"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="fund-cagr">CAGR (%) <span className="text-slate-400 font-normal">— optional</span></Label>
+                <Input
+                  id="fund-cagr"
+                  type="number"
+                  step="0.01"
+                  min="0"
+                  value={editingCagr}
+                  onChange={(e) => setEditingCagr(e.target.value)}
+                  placeholder="e.g. 12.5"
                   className="w-full"
                 />
               </div>

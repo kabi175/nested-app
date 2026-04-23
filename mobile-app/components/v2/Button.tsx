@@ -1,3 +1,5 @@
+import type { LucideProps } from "lucide-react-native";
+import type { ComponentType } from "react";
 import React, { useState } from "react";
 import {
   ActivityIndicator,
@@ -36,6 +38,8 @@ export interface ButtonProps {
   /** Show a spinner and lock interaction while an async action is in-flight. */
   loading?: boolean;
   onPress?: () => void;
+  /** Optional icon rendered after the label. Pass a LucideIcon or a wrapper: `(props) => <ArrowRight {...props} strokeWidth={3} />` */
+  icon?: ComponentType<Partial<LucideProps>>;
 }
 
 // ─── Component ────────────────────────────────────────────────────────────────
@@ -56,6 +60,7 @@ export default function Button({
   disabled = false,
   loading = false,
   onPress,
+  icon: Icon,
 }: ButtonProps) {
   // Loading counts as disabled for interaction purposes
   const isDisabled = disabled || loading;
@@ -108,15 +113,24 @@ export default function Button({
         {loading ? (
           <ActivityIndicator size="small" color={T.textNormal} />
         ) : (
-          <Text
-            style={[
-              styles.label,
-              { color: disabled ? T.textDisabled : T.textNormal },
-            ]}
-            numberOfLines={1}
-          >
-            {title}
-          </Text>
+          <View style={styles.content}>
+            <Text
+              style={[
+                styles.label,
+                { color: disabled ? T.textDisabled : T.textNormal },
+              ]}
+              numberOfLines={1}
+            >
+              {title}
+            </Text>
+            {Icon && (
+              <Icon
+                size={18}
+                color={disabled ? T.textDisabled : T.textNormal}
+                strokeWidth={2}
+              />
+            )}
+          </View>
         )}
       </Pressable>
     </View>
@@ -142,6 +156,11 @@ const styles = StyleSheet.create({
     paddingHorizontal: 24,
   } as ViewStyle,
 
+  content: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+  } as ViewStyle,
   label: {
     fontSize: 17,
     fontWeight: "600",

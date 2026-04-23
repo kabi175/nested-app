@@ -173,13 +173,53 @@ public class FundController {
       FundDTO updatedFund = fundService.updateFundLabel(id, label);
       log.info("Successfully updated fund label for ID: {}", id);
       return ResponseEntity.ok(Entity.of(List.of(updatedFund)));
-      
+
     } catch (IllegalArgumentException e) {
       log.warn("Validation error updating fund label: {}", e.getMessage());
       return ResponseEntity.status(HttpStatus.BAD_REQUEST)
           .body(Map.<String, Object>of("error", e.getMessage()));
     } catch (Exception e) {
       log.error("Error updating fund label for ID {}: {}", id, e.getMessage(), e);
+      return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+    }
+  }
+
+  @PutMapping("/{id}/cagr")
+  @AdminOnly
+  @Operation(
+      summary = "Update fund CAGR (Admin only)",
+      description = "Updates the CAGR of a specific fund. Pass null to clear.")
+  @ApiResponses(
+      value = {
+        @ApiResponse(responseCode = "200", description = "Fund CAGR updated successfully"),
+        @ApiResponse(responseCode = "400", description = "Invalid input data"),
+        @ApiResponse(responseCode = "403", description = "Access denied - Admin role required"),
+        @ApiResponse(responseCode = "404", description = "Fund not found"),
+        @ApiResponse(responseCode = "500", description = "Internal server error")
+      })
+  public ResponseEntity<?> updateFundCagr(
+      @Parameter(description = "Fund ID", required = true) @PathVariable Long id,
+      @RequestBody Map<String, Object> request) {
+
+    log.info("PUT /api/v1/funds/{}/cagr - Updating fund CAGR", id);
+
+    try {
+      Double cagr = null;
+      Object cagrValue = request.get("cagr");
+      if (cagrValue != null) {
+        cagr = ((Number) cagrValue).doubleValue();
+      }
+
+      FundDTO updatedFund = fundService.updateFundCagr(id, cagr);
+      log.info("Successfully updated fund CAGR for ID: {}", id);
+      return ResponseEntity.ok(Entity.of(List.of(updatedFund)));
+
+    } catch (IllegalArgumentException e) {
+      log.warn("Validation error updating fund CAGR: {}", e.getMessage());
+      return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+          .body(Map.<String, Object>of("error", e.getMessage()));
+    } catch (Exception e) {
+      log.error("Error updating fund CAGR for ID {}: {}", id, e.getMessage(), e);
       return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
     }
   }

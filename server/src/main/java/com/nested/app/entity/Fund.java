@@ -49,6 +49,8 @@ public class Fund {
 
   private String schemeType;
 
+  private Double cagr;
+
   @CreationTimestamp
   @Column(nullable = false, updatable = false)
   private Timestamp createdAt;

@@ -248,6 +248,7 @@ public class BasketServiceImpl implements BasketService {
                     if (basketFund.getFund() != null) {
                       fundDTO.setFundId(basketFund.getFund().getId());
                       fundDTO.setName(basketFund.getFund().getLabel());
+                      fundDTO.setCagr(basketFund.getFund().getCagr());
                     }
                     fundDTO.setAllocationPercentage(basketFund.getAllocationPercentage());
                     return fundDTO;

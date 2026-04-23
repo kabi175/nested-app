@@ -17,6 +17,7 @@ interface HoldingCardProps {
   allocation_percentage: number;
   invested_amount: number;
   returns_amount: number;
+  cagr?: string;
   onPress?: () => void;
 }
 
@@ -27,6 +28,7 @@ export default function HoldingCard({
   allocation_percentage,
   invested_amount,
   returns_amount,
+  cagr,
   onPress,
 }: HoldingCardProps) {
   const returnsPercentage =
@@ -43,6 +45,7 @@ export default function HoldingCard({
           <Text style={styles.subtitle}>
             {category} · {allocation_percentage}%
           </Text>
+          {cagr ? <Text style={styles.cagrText}>{cagr} CAGR</Text> : null}
         </View>
         <Text style={[styles.returns, !isPositive && styles.returnsNegative]}>
           {sign}{Math.abs(returnsPercentage).toFixed(1)}%
@@ -82,6 +85,12 @@ const styles = StyleSheet.create({
     color: T.textMuted,
     lineHeight: 14.4,
     letterSpacing: 0.24
+  },
+  cagrText: {
+    fontSize: 11,
+    fontWeight: "400",
+    color: T.textMuted,
+    lineHeight: 13.2,
   },
   returns: {
     fontSize: 20,

@@ -15,6 +15,7 @@ export interface FundDTO {
   nav: number;
   isActive?: boolean;
   active?: boolean; // Jackson may serialize isActive as "active"
+  cagr?: number;
 }
 
 export interface Fund {
@@ -24,6 +25,7 @@ export interface Fund {
   description?: string;
   nav: number;
   isActive: boolean;
+  cagr?: number;
 }
 
 /**
@@ -56,6 +58,7 @@ export async function getFunds(
       description: fund.description,
       nav: fund.nav,
       isActive: fund.isActive !== undefined ? fund.isActive : (fund.active !== undefined ? fund.active : true), // Default to true if not specified
+      cagr: fund.cagr,
     }));
     
     // Backend Entity class doesn't include pagination info (totalElements, totalPages)
@@ -85,6 +88,30 @@ export async function getActiveFunds(): Promise<Fund[]> {
   }
 }
 
+
+/**
+ * Update fund CAGR
+ * @param id - Fund ID
+ * @param cagr - New CAGR value (null to clear)
+ * @returns Promise with updated fund
+ */
+export async function updateFundCagr(id: string, cagr: number | null): Promise<FundDTO> {
+  try {
+    const response = await apiClient.put<ApiResponse<FundDTO>>(
+      `/funds/${id}/cagr`,
+      { cagr }
+    );
+
+    if (!response.data || response.data.length === 0) {
+      throw new Error('No fund data returned from server');
+    }
+
+    return response.data[0];
+  } catch (error) {
+    console.error('Error updating fund CAGR:', error);
+    throw error;
+  }
+}
 
 /**
  * Update fund label (display name)

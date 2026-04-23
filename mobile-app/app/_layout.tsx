@@ -62,16 +62,15 @@ export default function RootLayout() {
   const [showSplash, setShowSplash] = useState(true);
 
   useEffect(() => {
-    Settings.initializeSDK();
     getPerformance().dataCollectionEnabled = !__DEV__;
+    requestTrackingPermissionsAsync().then(({ status }) => {
+      Settings.setAdvertiserTrackingEnabled(status === 'granted');
+      Settings.initializeSDK();
+    });
   }, []);
 
   const handleSplashFinish = () => {
     setShowSplash(false);
-    requestTrackingPermissionsAsync().then(({ status }) => {
-      console.log("Tracking permission status:", status);
-      Settings.setAdvertiserTrackingEnabled(status === 'granted');
-    });
   };
 
   if (!loaded) {

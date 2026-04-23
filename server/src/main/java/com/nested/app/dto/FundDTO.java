@@ -15,4 +15,6 @@ public class FundDTO {
   
   @JsonProperty("isActive")
   private boolean isActive;
+
+  private Double cagr;
 }

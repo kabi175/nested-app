@@ -46,5 +46,7 @@ public interface FundService {
    * @return Updated fund details
    */
   FundDTO updateFundLabel(Long id, String label);
+
+  FundDTO updateFundCagr(Long id, Double cagr);
 }
 
