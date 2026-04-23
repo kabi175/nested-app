@@ -189,6 +189,7 @@ const styles = StyleSheet.create({
     paddingBottom: 20,
     overflow: "hidden",
     borderWidth: 4,
+    borderBottomWidth: 11,
     borderColor: T.cardBorder,
   },
 

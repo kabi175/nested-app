@@ -1,14 +1,14 @@
 import { LinearGradient } from "expo-linear-gradient";
 import { router, useRouter } from "expo-router";
+import { Plus } from "lucide-react-native";
 import React from "react";
-import { ScrollView, StyleSheet, View } from "react-native";
+import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
 
 import CompleteKycComponent from "@/components/v2/CompleteKycComponent";
 import GoalPlanCard from "@/components/v2/GoalPlanCard";
 import HomeHeader from "@/components/v2/HomeHeader";
 import HowNestedHelpsSection from "@/components/v2/HowNestedHelpsSection";
-import OutlineButton from "@/components/v2/OutlineButton";
 import QuickActionsBar from "@/components/v2/QuickActionsBar";
 import ReferralCard from "@/components/v2/ReferralCard";
 import SuperFdCard from "@/components/v2/SuperFdCard";
@@ -99,12 +99,14 @@ export default function HomeScreen() {
         )}
 
         {isKycCompleted && hasGoals && isInvestedInAnyGoal && (
-          <View style={styles.planCardWrapper}>
-            <OutlineButton
-              title="+ Add goal"
-              onPress={() => router.push("/child/select")}
-            />
-          </View>
+          <TouchableOpacity
+            style={styles.addGoalButton}
+            onPress={() => router.push("/child/select")}
+            activeOpacity={0.7}
+          >
+            <Plus size={16} color="#2848F1" strokeWidth={2} />
+            <Text style={styles.addGoalText}>Add goal</Text>
+          </TouchableOpacity>
         )}
 
         <SuperFdCard onPress={() => router.push("/(tabs)/super-fd")} />
@@ -143,5 +145,24 @@ const styles = StyleSheet.create({
   planCardWrapper: {
     marginHorizontal: 16,
     gap: 12,
+  },
+  addGoalButton: {
+    marginHorizontal: 16,
+    height: 52,
+    borderRadius: 14,
+    borderWidth: 1.5,
+    borderStyle: "dashed",
+    borderColor: "#C4C4C4",
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 8,
+    backgroundColor: "#FFFDF9",
+  },
+  addGoalText: {
+    fontSize: 16,
+    fontWeight: "600",
+    color: "#2848F1",
+    letterSpacing: 0.2,
   },
 });
