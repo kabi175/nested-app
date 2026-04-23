@@ -7,6 +7,7 @@ import { clearNomineeAtoms } from "@/utils/nominee";
 import { openWhatsApp } from "@/utils/whtsapp";
 import { useQueryClient } from "@tanstack/react-query";
 import Constants from "expo-constants";
+import { LinearGradient } from "expo-linear-gradient";
 import { router } from "expo-router";
 import {
   BarChart2,
@@ -78,6 +79,14 @@ export default function AccountScreen() {
 
   return (
     <SafeAreaView style={styles.container} edges={["top"]}>
+      <LinearGradient
+        colors={["#2848F1", "#2848F1", "rgba(255,253,249,0)"]}
+        locations={[0, 0.15, 1.0]}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 0, y: 1 }}
+        style={StyleSheet.absoluteFill}
+        pointerEvents="none"
+      />
       <ScrollView
         style={styles.scrollView}
         showsVerticalScrollIndicator={false}
@@ -93,7 +102,8 @@ export default function AccountScreen() {
               left={<ProfileAvatar name={user?.firstName || "User"} />}
               title={user?.firstName || "User"}
             />
-            <View style={styles.divider} />
+          </View>
+          <View style={[styles.card, styles.cardSpacing]}>
             <MenuRow
               onPress={() => { }}
               left={
@@ -104,7 +114,8 @@ export default function AccountScreen() {
               title="KYC Status"
               subtitle={getKycSubtitle()}
             />
-            <View style={styles.divider} />
+          </View>
+          <View style={[styles.card, styles.cardSpacing]}>
             <MenuRow
               onPress={() => router.push("/bank-accounts/list")}
               left={
@@ -130,7 +141,8 @@ export default function AccountScreen() {
               }
               title="Manage Nominees"
             />
-            <View style={styles.divider} />
+          </View>
+          <View style={[styles.card, styles.cardSpacing]}>
             <MenuRow
               onPress={() => router.push("/sip")}
               left={
@@ -158,7 +170,8 @@ export default function AccountScreen() {
                 />
               }
             />
-            <View style={styles.fullDivider} />
+          </View>
+          <View style={[styles.card, styles.cardSpacing]}>
             <MenuRow
               title="Milestones alerts"
               right={
@@ -170,7 +183,8 @@ export default function AccountScreen() {
                 />
               }
             />
-            <View style={styles.fullDivider} />
+          </View>
+          <View style={[styles.card, styles.cardSpacing]}>
             <MenuRow
               title="Market updates"
               right={
@@ -243,7 +257,7 @@ export default function AccountScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#F3F4F6",
+    backgroundColor: "#FFFDF9",
   },
   scrollView: {
     flex: 1,
@@ -254,7 +268,7 @@ const styles = StyleSheet.create({
   headerTitle: {
     fontSize: 22,
     fontWeight: "700",
-    color: "#111827",
+    color: "#FFFFFF",
     textAlign: "center",
     paddingVertical: 20,
   },
@@ -272,14 +286,8 @@ const styles = StyleSheet.create({
     shadowRadius: 4,
     elevation: 2,
   },
-  divider: {
-    height: 1,
-    backgroundColor: "#F3F4F6",
-    marginLeft: 68,
-  },
-  fullDivider: {
-    height: 1,
-    backgroundColor: "#F3F4F6",
+  cardSpacing: {
+    marginTop: 8,
   },
   versionContainer: {
     alignItems: "center",
