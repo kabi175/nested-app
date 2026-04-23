@@ -371,7 +371,7 @@ const GoalPlanCard = ({ goal }: { goal: Goal }) => {
         goal.nextSipDate != null ? formatSipDate(goal.nextSipDate) : null
       }
       showDelete={!isInvestmentMade}
-      actionLabel={goal.currentAmount === 0 && goal.monthlySip == null ? "Make first payment →" : undefined}
+      actionLabel={goal.currentAmount === 0 ? "Start Saving Instantly ⚡" : undefined}
       onPressAction={goal.currentAmount === 0 ? onPressGoalCard : undefined}
       onPressDelete={onDeleteGoal}
       onPress={onPressGoalCard}

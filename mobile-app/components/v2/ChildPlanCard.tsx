@@ -4,6 +4,7 @@ import Mba from "@/assets/images/v2/education-plan/mba.svg";
 import Medical from "@/assets/images/v2/education-plan/medical.svg";
 import StudyAbroad from "@/assets/images/v2/education-plan/study-abroad.svg";
 import TopColleges from "@/assets/images/v2/education-plan/top-colleges.svg";
+import { LinearGradient } from "expo-linear-gradient";
 import React from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import { SvgProps } from "react-native-svg";
@@ -19,13 +20,15 @@ const EDUCATION_ICONS: Record<string, React.FC<SvgProps>> = {
 
 // ─── Tokens ─────────────────────────────────────────────────────────────────
 const T = {
-  cardBg: "#F4F4F4",
   primary: "#3137D5",
   textDark: "#111111",
   textMuted: "#8A8A9A",
   trackBg: "#D9D9D9",
   capIconBg: "#E8E8F4",
   divider: "#D9D9E3",
+  onTrackBg: "#E6F4EA",
+  onTrackText: "#1E7E34",
+  cardBorder: "#2848F1",
 } as const;
 
 // ─── Props ──────────────────────────────────────────────────────────────────
@@ -42,6 +45,8 @@ interface ChildPlanCardProps {
   nextSipAmount?: string | null;
   nextSipDate?: string | null;
   actionLabel?: string;
+  isOnTrack?: boolean;
+  sipLabel?: string;
   onPressAction?: () => void;
   onPressDelete?: () => void;
   onPress?: () => void;
@@ -60,6 +65,8 @@ export default function ChildPlanCard({
   nextSipAmount,
   nextSipDate,
   actionLabel,
+  isOnTrack,
+  sipLabel,
   showDelete,
   onPressAction,
   onPressDelete,
@@ -67,82 +74,123 @@ export default function ChildPlanCard({
 }: ChildPlanCardProps) {
   const clampedFraction = Math.min(Math.max(savedFraction, 0), 1);
   const hasSip = !!nextSipAmount && !!nextSipDate;
+  const isInvested = savedFraction > 0;
   const Icon = (educationId && EDUCATION_ICONS[educationId]) || TopColleges;
 
-  return (
-    <Pressable onPress={onPress} style={styles.card}>
-      {/* ── College icon (absolute top-right) ── */}
-      <View style={styles.capIconWrapper}>
-        <Icon width={40} height={40} />
-      </View>
+  console.log("[ChildPlanCard]", childName, { actionLabel, savedFraction, hasSip });
 
-      {/* ── Header row ── */}
-      <View style={styles.headerRow}>
-        <View style={styles.headerLeft}>
-          <Text style={styles.childName}>
-            <Text style={styles.nameBold}>{childName}</Text>
-            {`, Age ${childAge}`}
-          </Text>
-          <View style={styles.subtitleRow}>
-            <Text style={styles.capEmoji}>🎓</Text>
-            <Text style={styles.subtitle}>{`${collegeType} · ${goalYear}`}</Text>
+  return (
+    <Pressable onPress={onPress} style={styles.pressable}>
+      <LinearGradient
+        colors={["#FFFFFF", "#EEEFFE"]}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 0, y: 1 }}
+        style={styles.card}
+      >
+        {/* ── College icon (absolute top-right) ── */}
+        <View style={styles.capIconWrapper}>
+          <Icon width={40} height={40} />
+        </View>
+
+        {/* ── Header row ── */}
+        <View style={styles.headerRow}>
+          <View style={styles.headerLeft}>
+            <View style={styles.nameRow}>
+              <Text style={styles.childName}>
+                <Text style={styles.nameBold}>{childName}</Text>
+                {`, Age ${childAge}`}
+              </Text>
+              {isOnTrack && (
+                <View style={styles.onTrackBadge}>
+                  <Text style={styles.onTrackText}>• on track</Text>
+                </View>
+              )}
+            </View>
+            <View style={styles.subtitleRow}>
+              <Text style={styles.capEmoji}>🎓</Text>
+              <Text style={styles.subtitle}>{`${collegeType} · ${goalYear}`}</Text>
+            </View>
           </View>
         </View>
-      </View>
 
-      {/* ── Progress bar ── */}
-      <View style={styles.track}>
-        <View style={[styles.trackFill, { width: `${clampedFraction * 100}%` }]} />
-      </View>
+        {/* ── Progress bar ── */}
+        <View style={styles.track}>
+          <View style={[styles.trackFill, { width: `${clampedFraction * 100}%` }]} />
+        </View>
 
-      {/* ── Saved / Goal row ── */}
-      <View style={[styles.savingsRow, !hasSip && { marginBottom: 0 }]}>
-        <Text style={styles.savedText}>
-          <Text style={styles.savedAmount}>{savedAmount}</Text>
-          {" saved"}
-        </Text>
-        <Text style={styles.goalText}>
-          {"Goal "}
-          <Text style={styles.goalAmount}>{goalAmount}</Text>
-        </Text>
-      </View>
-
-      {/* ── Monthly SIP (only when data is available) ── */}
-      {hasSip && (
-        <>
-          <View style={styles.divider} />
-          <View style={styles.sipRow}>
-            <Text style={styles.sipLabel}>Monthly SIP</Text>
-            <Text style={styles.sipValue}>{`${nextSipAmount} · ${nextSipDate}`}</Text>
+        {/* ── Saved / Goal row ── */}
+        {isInvested ? (
+          <View style={[styles.savingsRow, !hasSip && { marginBottom: 0 }]}>
+            <Text style={styles.savedLarge}>
+              <Text style={styles.savedLargeAmount}>{savedAmount}</Text>
+              <Text style={styles.savedLargeSuffix}> saved</Text>
+            </Text>
+            <Text style={styles.goalTextSmall}>
+              {"Goal "}
+              <Text style={styles.goalAmountSmall}>{goalAmount}</Text>
+            </Text>
           </View>
-        </>
-      )}
+        ) : (
+          <View style={[styles.savingsRow, !hasSip && { marginBottom: 0 }]}>
+            <Text style={styles.savedText}>
+              <Text style={styles.savedAmount}>{savedAmount}</Text>
+              {" invested"}
+            </Text>
+            <Text style={styles.goalText}>
+              {"Goal "}
+              <Text style={styles.goalAmount}>{goalAmount}</Text>
+            </Text>
+          </View>
+        )}
 
-      {/* ── Action button ── */}
-      {!!actionLabel && (
-        <Pressable onPress={onPressAction} style={styles.actionButton}>
-          <Text style={styles.actionButtonText}>{actionLabel}</Text>
-        </Pressable>
-      )}
+        {/* ── SIP row (only when data is available) ── */}
+        {hasSip && (
+          <>
+            <View style={styles.divider} />
+            <View style={styles.sipRow}>
+              <Text style={styles.sipLabel}>{sipLabel ?? "Monthly SIP"}</Text>
+              <Text style={styles.sipValue}>{`${nextSipAmount} · ${nextSipDate}`}</Text>
+            </View>
+          </>
+        )}
 
-      {/* ── Delete link ── */}
-      {(!!onPressDelete && showDelete) && (
-        <Pressable onPress={onPressDelete} style={styles.deleteLink}>
-          <Text style={styles.deleteLinkText}>Delete goal</Text>
-        </Pressable>
-      )}
+        {/* ── Action button ── */}
+        {!!actionLabel && (
+          <Pressable onPress={onPressAction} style={styles.actionButtonWrapper}>
+            <LinearGradient
+              colors={["#5B70FF", "#2848F1"]}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 0 }}
+              style={styles.actionButton}
+            >
+              <Text style={styles.actionButtonText}>{actionLabel}</Text>
+            </LinearGradient>
+          </Pressable>
+        )}
+
+        {/* ── Delete link ── */}
+        {(!!onPressDelete && showDelete) && (
+          <Pressable onPress={onPressDelete} style={styles.deleteLink}>
+            <Text style={styles.deleteLinkText}>Delete goal</Text>
+          </Pressable>
+        )}
+      </LinearGradient>
     </Pressable>
   );
 }
 
 // ─── Styles ─────────────────────────────────────────────────────────────────
 const styles = StyleSheet.create({
+  pressable: {
+    borderRadius: 24,
+  },
   card: {
-    backgroundColor: T.cardBg,
     borderRadius: 24,
     padding: 20,
     paddingBottom: 20,
-    overflow: "visible",
+    overflow: "hidden",
+    borderWidth: 4,
+    borderColor: T.cardBorder,
   },
 
   // ── Header ──
@@ -151,13 +199,30 @@ const styles = StyleSheet.create({
     paddingRight: 72,
   },
   headerLeft: {},
+  nameRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    flexWrap: "wrap",
+    gap: 8,
+    marginBottom: 6,
+  },
   childName: {
     fontSize: 22,
     color: T.textDark,
-    marginBottom: 6,
   },
   nameBold: {
     fontWeight: "700",
+  },
+  onTrackBadge: {
+    backgroundColor: T.onTrackBg,
+    borderRadius: 999,
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+  },
+  onTrackText: {
+    fontSize: 11,
+    color: T.onTrackText,
+    fontWeight: "600",
   },
   subtitleRow: {
     flexDirection: "row",
@@ -197,7 +262,7 @@ const styles = StyleSheet.create({
     borderRadius: 5,
   },
 
-  // ── Savings row ──
+  // ── Savings row (not invested) ──
   savingsRow: {
     flexDirection: "row",
     justifyContent: "space-between",
@@ -222,6 +287,31 @@ const styles = StyleSheet.create({
     color: T.textDark,
   },
 
+  // ── Savings row (invested) ──
+  savedLarge: {
+    fontSize: 22,
+  },
+  savedLargeAmount: {
+    fontWeight: "700",
+    color: T.textDark,
+    fontSize: 22,
+  },
+  savedLargeSuffix: {
+    fontWeight: "400",
+    color: T.textMuted,
+    fontSize: 22,
+  },
+  goalTextSmall: {
+    fontSize: 13,
+    color: T.textMuted,
+    alignSelf: "flex-end",
+  },
+  goalAmountSmall: {
+    fontWeight: "700",
+    color: T.textDark,
+    fontSize: 13,
+  },
+
   // ── Divider ──
   divider: {
     height: 1,
@@ -229,7 +319,7 @@ const styles = StyleSheet.create({
     marginBottom: 14,
   },
 
-  // ── Monthly SIP ──
+  // ── SIP row ──
   sipRow: {
     flexDirection: "row",
     justifyContent: "space-between",
@@ -246,20 +336,21 @@ const styles = StyleSheet.create({
   },
 
   // ── Action button ──
-  actionButton: {
+  actionButtonWrapper: {
     marginTop: 16,
-    backgroundColor: "#2848F1",
-    borderRadius: 8,
+    borderRadius: 12,
+    overflow: "hidden",
+  },
+  actionButton: {
     height: 55,
     alignItems: "center",
     justifyContent: "center",
-    borderBottomWidth: 3,
-    borderBottomColor: "rgba(0,0,0,0.7)",
+    borderRadius: 12,
   },
   actionButtonText: {
-    color: "#FFF7FB",
+    color: "#FFFFFF",
     fontSize: 18,
-    fontWeight: "500",
+    fontWeight: "600",
   },
 
   // ── Delete link ──
@@ -270,7 +361,7 @@ const styles = StyleSheet.create({
   },
   deleteLinkText: {
     fontSize: 12,
-    color: "rgba(0,0,0,0.75)",
+    color: T.primary,
     textDecorationLine: "underline",
     letterSpacing: 0.24,
   },
