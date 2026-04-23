@@ -6,7 +6,6 @@ import com.nested.app.entity.Order;
 import com.nested.app.entity.Payment;
 import com.nested.app.enums.TransactionStatus;
 import com.nested.app.events.MandateProcessEvent;
-import com.nested.app.repository.OrderItemsRepository;
 import com.nested.app.repository.PaymentRepository;
 import com.nested.app.services.SipOrderPaymentService;
 import java.util.List;
@@ -34,7 +33,6 @@ public class MandateProcessEventListener {
   private final PaymentRepository paymentRepository;
   private final MandateApiClient mandateApiClient;
   private final SipOrderPaymentService sipOrderPaymentService;
-  private final OrderItemsRepository orderItemsRepository;
 
   /**
    * Handles MandateProcessEvent by verifying mandate status with MandateApiClient and updating
@@ -118,18 +116,14 @@ public class MandateProcessEventListener {
         log.info("sip orders placed for payment ID: {} sipStatus to SUBMITTED", payment.getId());
       } else if (mandate.getStatus() == MandateDto.State.CANCELLED) {
         payment.setSipStatus(Payment.PaymentStatus.CANCELLED);
-        var orderItems =
-            payment.getOrders().stream().map(Order::getItems).flatMap(List::stream).toList();
-        orderItems.forEach(orderItem -> orderItem.setStatus(TransactionStatus.FAILED));
-        orderItemsRepository.saveAll(orderItems);
+        payment.getOrders().stream().map(Order::getItems).flatMap(List::stream)
+            .forEach(item -> item.setStatus(TransactionStatus.FAILED));
         log.warn(
             "Mandate cancelled for mandate ID: {}, payment ID: {}", mandateId, payment.getId());
       } else if (mandate.getStatus() == MandateDto.State.REJECTED) {
         payment.setSipStatus(Payment.PaymentStatus.FAILED);
-        var orderItems =
-            payment.getOrders().stream().map(Order::getItems).flatMap(List::stream).toList();
-        orderItems.forEach(orderItem -> orderItem.setStatus(TransactionStatus.FAILED));
-        orderItemsRepository.saveAll(orderItems);
+        payment.getOrders().stream().map(Order::getItems).flatMap(List::stream)
+            .forEach(item -> item.setStatus(TransactionStatus.FAILED));
         log.warn("Mandate Rejected for mandate ID: {}, payment ID: {}", mandateId, payment.getId());
       }
       paymentRepository.saveAndFlush(payment);
