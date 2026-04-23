@@ -1,26 +1,21 @@
-import Button from "@/components/v2/Button";
 import { useBankAccounts } from "@/hooks/useBankAccount";
 import { useUser } from "@/hooks/useUser";
 import { User } from "@/types/auth";
+import { LinearGradient } from "expo-linear-gradient";
+import { ArrowRight } from "lucide-react-native";
 import React from "react";
-import { StyleSheet, Text, View } from "react-native";
+import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
 
 // ─── Tokens ────────────────────────────────────────────────────────────────
 const T = {
-  bg: "#EEEEF5",
-  primary: "#3137D5",
-  eyebrow: "#6E75CC",
-  textDark: "#111111",
-  textMuted: "#6B7280",
-  checkBg: "#D6F0DC",
-  checkColor: "#3DAB5C",
-  stepCircleBg: "#E3E3F5",
-  stepCircleText: "#4D52C4",
-  progressTrack: "#D9D9D9",
-  progressFill: "#3137D5",
+  gradStart: "#001BAB",
+  gradEnd: "#26E0F8",
+  text: "#FFFFFF",
+  eyebrow: "rgba(255,255,255,0.72)",
+  radius: 16,
 } as const;
 
-// ─── KYC order (excluding "failed" — treat as unknown) ─────────────────────
+// ─── KYC order ─────────────────────────────────────────────────────────────
 const KYC_ORDER: User["kycStatus"][] = [
   "unknown",
   "pending",
@@ -32,10 +27,10 @@ const KYC_ORDER: User["kycStatus"][] = [
 
 function getKycIndex(status: User["kycStatus"]): number {
   const idx = KYC_ORDER.indexOf(status);
-  return idx === -1 ? 0 : idx; // "failed" → 0
+  return idx === -1 ? 0 : idx;
 }
 
-// ─── Props ─────────────────────────────────────────────────────────────────
+// ─── Props ──────────────────────────────────────────────────────────────────
 interface CompleteKycComponentProps {
   childName?: string;
   monthlyAmount?: string;
@@ -52,195 +47,93 @@ export default function CompleteKycComponent({
   const { data: bankAccounts } = useBankAccounts();
 
   const kycStatus = user?.kycStatus ?? "unknown";
-  const isKycCompleted = kycStatus === "completed";
   const kycIndex = getKycIndex(kycStatus);
   const hasBankAccount = (bankAccounts?.length ?? 0) > 0;
 
-  const steps: { label: string; done: boolean }[] = [
-    { label: "Mobile verified", done: true },
-    { label: "PAN card linking", done: kycIndex >= 2 },
-    { label: "Aadhar verification", done: kycIndex >= 3 },
-    { label: "Verify your details", done: kycIndex >= 4 },
-    { label: "Link bank account", done: hasBankAccount },
+  const steps = [
+    { done: true },
+    { done: kycIndex >= 2 },
+    { done: kycIndex >= 3 },
+    { done: kycIndex >= 4 },
+    { done: hasBankAccount },
   ];
 
   const completedCount = steps.filter((s) => s.done).length;
-  const progressPercent = `${(completedCount / steps.length) * 100}%` as `${number}%`;
 
   return (
-    <View style={styles.container}>
-      {/* ── Eyebrow ── */}
-      <Text style={styles.eyebrow}>ONE STEP AWAY</Text>
+    <TouchableOpacity onPress={onPressContinue} activeOpacity={0.85}>
+      {/* Triangle indicator */}
+      {/* <View style={styles.triangleWrapper}>
+        <View style={styles.triangle} />
+      </View> */}
 
-      {/* ── Title ── */}
-      <Text style={styles.title}>
-        {"Activate your plan.\nFund "}
-        <Text>{childName}</Text>
-        {"'s education ."}
-      </Text>
-
-      {/* ── Subtitle ── */}
-      {monthlyAmount ? (
-        <Text style={styles.subtitle}>
-          {`Complete KYC under 2 min, your ${monthlyAmount}\nauto-balancing plan will begin immediately after.`}
-        </Text>
-      ) : (
-        <Text style={styles.subtitle}>
-          Complete KYC under 2 min and your auto-balancing plan will begin immediately after.
-        </Text>
-      )}
-
-      {/* ── Steps ── */}
-      <View style={styles.steps}>
-        {steps.map((step, index) => (
-          <StepRow
-            key={step.label}
-            number={index + 1}
-            label={step.label}
-            done={step.done}
-          />
-        ))}
-      </View>
-
-      {/* ── Progress bar ── */}
-      <Text style={styles.progressLabel}>KYC Progress</Text>
-      <View style={styles.progressTrack}>
-        <View style={[styles.progressFill, { width: progressPercent }]} />
-      </View>
-      <Text style={styles.progressText}>
-        {completedCount} of {steps.length} done
-      </Text>
-
-      {/* ── CTA ── */}
-      <Button title={isKycCompleted ? "Start Saving now →" : "Continue KYC "} onPress={onPressContinue} />
-    </View>
-  );
-}
-
-// ─── StepRow ────────────────────────────────────────────────────────────────
-function StepRow({
-  number,
-  label,
-  done,
-}: {
-  number: number;
-  label: string;
-  done: boolean;
-}) {
-  return (
-    <View style={styles.stepRow}>
-      {done ? (
-        <View style={styles.checkCircle}>
-          <Text style={styles.checkMark}>✓</Text>
+      <LinearGradient
+        colors={[T.gradStart, T.gradEnd]}
+        start={{ x: 0, y: 0.5 }}
+        end={{ x: 1, y: 0.5 }}
+        style={styles.card}
+      >
+        <View style={styles.row}>
+          <View style={styles.left}>
+            <Text style={styles.eyebrow}>
+              {`KYC UNDER 2 MIN · ${completedCount}/${steps.length} STEPS`}
+            </Text>
+            <Text style={styles.title}>
+              {"Activate your plan.\nFund "}
+              <Text style={styles.title}>{childName}</Text>
+              {"'s education ."}
+            </Text>
+          </View>
+          <ArrowRight size={24} color={T.text} />
         </View>
-      ) : (
-        <View style={styles.numberCircle}>
-          <Text style={styles.numberText}>{number}</Text>
-        </View>
-      )}
-      <Text style={[styles.stepLabel, done && styles.stepLabelDone]}>
-        {label}
-      </Text>
-    </View>
+      </LinearGradient>
+    </TouchableOpacity>
   );
 }
 
 // ─── Styles ─────────────────────────────────────────────────────────────────
 const styles = StyleSheet.create({
-  container: {
+  triangleWrapper: {
+    alignItems: "center",
+  },
+  triangle: {
+    width: 0,
+    height: 0,
+    borderStyle: "solid",
+    borderLeftWidth: 9,
+    borderRightWidth: 9,
+    borderBottomWidth: 11,
+    borderLeftColor: "transparent",
+    borderRightColor: "transparent",
+    borderBottomColor: T.gradStart,
+  },
+  card: {
+    borderRadius: T.radius,
+    paddingHorizontal: 20,
+    paddingVertical: 18,
+  },
+  row: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+  },
+  left: {
     flex: 1,
-    backgroundColor: T.bg,
-    paddingHorizontal: 24,
-    paddingTop: 32,
-    paddingBottom: 28,
+    gap: 8,
   },
   eyebrow: {
     fontSize: 12,
-    fontWeight: "600",
+    fontWeight: "500",
     color: T.eyebrow,
     letterSpacing: 1.2,
-    marginBottom: 12,
   },
   title: {
-    fontSize: 26,
+    fontSize: 20,
     fontWeight: "700",
-    color: T.textDark,
-    lineHeight: 34,
-    marginBottom: 14,
+    color: T.text,
+    lineHeight: 28,
   },
-  subtitle: {
-    fontSize: 15,
-    color: T.textMuted,
-    lineHeight: 22,
-    marginBottom: 32,
-  },
-  steps: {
-    gap: 20,
-    marginBottom: 32,
-  },
-  stepRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 16,
-  },
-  checkCircle: {
-    width: 34,
-    height: 34,
-    borderRadius: 17,
-    backgroundColor: T.checkBg,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  checkMark: {
-    color: T.checkColor,
-    fontSize: 16,
-    fontWeight: "700",
-  },
-  numberCircle: {
-    width: 34,
-    height: 34,
-    borderRadius: 17,
-    backgroundColor: T.stepCircleBg,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  numberText: {
-    color: T.stepCircleText,
-    fontSize: 14,
-    fontWeight: "600",
-  },
-  stepLabel: {
-    fontSize: 16,
-    color: T.textDark,
-    fontWeight: "400",
-  },
-  stepLabelDone: {
-    textDecorationLine: "line-through",
-    color: T.textMuted,
-  },
-  progressLabel: {
-    fontSize: 13,
-    fontWeight: "500",
-    color: T.textMuted,
-    marginBottom: 8,
-  },
-  progressTrack: {
-    height: 10,
-    borderRadius: 6,
-    backgroundColor: T.progressTrack,
-    overflow: "hidden",
-    marginBottom: 6,
-  },
-  progressFill: {
-    height: "100%",
-    borderRadius: 6,
-    backgroundColor: T.progressFill,
-  },
-  progressText: {
-    fontSize: 12,
-    fontWeight: "500",
-    color: T.primary,
-    textAlign: "right",
-    marginBottom: 24,
+  arrow: {
+    marginLeft: 16,
   },
 });
