@@ -21,7 +21,7 @@ import { calculateFutureCost } from "@/utils/goalForm";
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get("window");
 const CARD_WIDTH = SCREEN_WIDTH - 32;
-const CARD_HEIGHT = Math.round(SCREEN_HEIGHT * 0.44);
+const CARD_HEIGHT = Math.max(460, Math.round(SCREEN_HEIGHT * 0.44));
 
 const PATHS = [
   { id: "top-colleges", title: "Top colleges India" },
