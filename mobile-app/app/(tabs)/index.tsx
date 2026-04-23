@@ -15,6 +15,7 @@ import {
 import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
 
 import ChildPlanCard from "@/components/v2/ChildPlanCard";
+import SuperFdCard from "@/components/v2/SuperFdCard";
 import CompleteKycComponent from "@/components/v2/CompleteKycComponent";
 import OutlineButton from "@/components/v2/OutlineButton";
 import { useChild, useChildren } from "@/hooks/useChildren";
@@ -207,23 +208,7 @@ export default function HomeScreen() {
         )}
 
         {/* ── SuperFD Promo Card ── */}
-        <View style={styles.superFdCard}>
-          <Text style={styles.superFdTag}>Up to 11% p.a.</Text>
-          <View style={styles.superFdContent}>
-            <View style={styles.superFdTextBlock}>
-              <Text style={styles.superFdTitle}>Invest in SuperFD</Text>
-              <Text style={styles.superFdDesc}>
-                {"Don't be satisfied with bank FD,\nchoose superFD"}
-              </Text>
-            </View>
-            <TouchableOpacity
-              style={styles.superFdButton}
-              onPress={() => router.push("/(tabs)/super-fd")}
-            >
-              <Text style={styles.superFdButtonText}>Invest now →</Text>
-            </TouchableOpacity>
-          </View>
-        </View>
+        <SuperFdCard onPress={() => router.push("/(tabs)/super-fd")} />
 
         {/* ── How Nested Helps ── */}
         <View style={styles.sectionWrapper}>
@@ -528,54 +513,6 @@ const styles = StyleSheet.create({
   addGoalText: {
     fontSize: 16,
     color: "#444444",
-  },
-
-  // ── SuperFD Card ──
-  superFdCard: {
-    marginHorizontal: 16,
-    backgroundColor: "rgba(255,210,125,0.6)",
-    borderRadius: 8,
-    paddingHorizontal: 16,
-    paddingVertical: 20,
-    gap: 8,
-  },
-  superFdTag: {
-    color: "#6F85F5",
-    fontSize: 12,
-    letterSpacing: 0.24,
-    textTransform: "uppercase",
-  },
-  superFdContent: {
-    gap: 18,
-  },
-  superFdTextBlock: {
-    gap: 5,
-  },
-  superFdTitle: {
-    fontSize: 20,
-    fontWeight: "500",
-    color: "#000000",
-    letterSpacing: -0.6,
-  },
-  superFdDesc: {
-    fontSize: 14,
-    color: "rgba(0,0,0,0.6)",
-    letterSpacing: 0.28,
-    lineHeight: 14 * 1.6,
-  },
-  superFdButton: {
-    backgroundColor: "#2848F1",
-    borderRadius: 8,
-    height: 55,
-    alignItems: "center",
-    justifyContent: "center",
-    borderBottomWidth: 3,
-    borderBottomColor: "rgba(0,0,0,0.7)",
-  },
-  superFdButtonText: {
-    color: "#FFF7FB",
-    fontSize: 18,
-    fontWeight: "500",
   },
 
   // ── How Nested Helps ──

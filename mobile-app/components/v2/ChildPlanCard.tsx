@@ -77,7 +77,6 @@ export default function ChildPlanCard({
   const isInvested = savedFraction > 0;
   const Icon = (educationId && EDUCATION_ICONS[educationId]) || TopColleges;
 
-  console.log("[ChildPlanCard]", childName, { actionLabel, savedFraction, hasSip });
 
   return (
     <Pressable onPress={onPress} style={styles.pressable}>
