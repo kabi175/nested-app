@@ -17,6 +17,7 @@ import AnimatedNest from "@/components/v2/AnimatedNest";
 import Button from "@/components/v2/Button";
 import TextInput from "@/components/v2/TextInput";
 import { useCreateChild } from "@/hooks/useChildMutations";
+import { useChildren } from "@/hooks/useChildren";
 import { logAddToNest } from "@/services/analytics";
 
 const MIN_YEARS = 25;
@@ -69,6 +70,7 @@ export default function CreateChild() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [keyboardVisible, setKeyboardVisible] = useState(false);
   const { mutateAsync: createChildMutation } = useCreateChild();
+  const { data: existingChildren } = useChildren();
 
   useEffect(() => {
     const show = Keyboard.addListener("keyboardDidShow", () => setKeyboardVisible(true));
@@ -103,13 +105,21 @@ export default function CreateChild() {
   const getErrors = () => {
     const errs: Partial<Record<keyof ChildFormState, string>> = {};
 
-    // Name validation: 3-50 chars
+    // Name validation: 3-50 chars, no duplicates
     if (!values.name) {
       errs.name = "Name is required.";
     } else if (values.name.trim().length < 3) {
       errs.name = "Name must be at least 3 characters.";
     } else if (values.name.trim().length > 50) {
       errs.name = "Name must be less than 50 characters.";
+    } else {
+      const nameLower = values.name.trim().toLowerCase();
+      const duplicate = existingChildren?.some(
+        (c) => c.firstName.trim().toLowerCase() === nameLower
+      );
+      if (duplicate) {
+        errs.name = "A child with this name already exists.";
+      }
     }
 
     // DOB validation
