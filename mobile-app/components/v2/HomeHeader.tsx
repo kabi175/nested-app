@@ -1,6 +1,6 @@
-import { Bell } from "lucide-react-native";
-import React from "react";
-import { StyleSheet, Text, View } from "react-native";
+import { Bell, Eye, EyeOff } from "lucide-react-native";
+import React, { useState } from "react";
+import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
 
 import { formatIndianCompact } from "@/utils/formatters";
 
@@ -9,7 +9,6 @@ interface HomeHeaderProps {
   userInitial: string;
   firstName: string;
   totalCurrentAmount: number;
-  totalMonthlySip: number | undefined;
 }
 
 function getGreeting(): string {
@@ -24,8 +23,8 @@ export default function HomeHeader({
   userInitial,
   firstName,
   totalCurrentAmount,
-  totalMonthlySip,
 }: HomeHeaderProps) {
+  const [visible, setVisible] = useState(true);
   const totalCorpus = formatIndianCompact(totalCurrentAmount);
 
   return (
@@ -42,20 +41,24 @@ export default function HomeHeader({
         <Bell size={20} color="rgba(255,255,255,0.8)" />
       </View>
 
-      <View style={styles.statsCard}>
-        <View style={styles.corpusSection}>
-          <Text style={styles.statsLabel}>TOTAL CORPUS</Text>
-          <Text style={styles.corpusAmount}>
-            ₹{totalCurrentAmount === 0 ? "0.00" : totalCorpus}
+      <View style={styles.valueSection}>
+        <Text style={styles.valueLabel}>CURRENT VALUE</Text>
+        <View style={styles.amountRow}>
+          <Text style={styles.amountText}>
+            {visible
+              ? `₹${totalCurrentAmount === 0 ? "0.00" : totalCorpus}`
+              : "₹••••"}
           </Text>
-        </View>
-        <View style={styles.statsBottomRow}>
-          <View style={styles.statItem}>
-            <Text style={styles.statsLabel}>MONTHLY SIP</Text>
-            <Text style={styles.statValue}>
-              {totalMonthlySip ? `₹${formatIndianCompact(totalMonthlySip)}` : "—"}
-            </Text>
-          </View>
+          <TouchableOpacity
+            onPress={() => setVisible((v) => !v)}
+            hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+          >
+            {visible ? (
+              <Eye size={18} color="rgba(255,255,255,0.8)" />
+            ) : (
+              <EyeOff size={18} color="rgba(255,255,255,0.8)" />
+            )}
+          </TouchableOpacity>
         </View>
       </View>
     </View>
@@ -64,9 +67,8 @@ export default function HomeHeader({
 
 const styles = StyleSheet.create({
   header: {
-    backgroundColor: "#2848F1",
     paddingHorizontal: 16,
-    paddingBottom: 24,
+    paddingBottom: 8,
     gap: 12,
   },
   greetingRow: {
@@ -102,42 +104,26 @@ const styles = StyleSheet.create({
     letterSpacing: -0.54,
     flex: 1,
   },
-  statsCard: {
-    backgroundColor: "rgba(255,255,255,0.15)",
-    borderRadius: 36,
-    borderWidth: 1,
-    borderColor: "rgba(255,255,255,0.1)",
-    padding: 24,
-    gap: 16,
+  valueSection: {
+    gap: 6,
+    marginTop: 16,
   },
-  corpusSection: {
-    borderBottomWidth: 1,
-    borderBottomColor: "rgba(255,255,255,0.1)",
-    paddingBottom: 12,
-    gap: 4,
-  },
-  statsLabel: {
+  valueLabel: {
     color: "#F4F4F4",
     fontSize: 12,
     opacity: 0.8,
     letterSpacing: 0.24,
     textTransform: "uppercase",
   },
-  corpusAmount: {
+  amountRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+  },
+  amountText: {
     color: "#F4F4F4",
     fontSize: 36,
     fontWeight: "600",
     letterSpacing: 1.44,
-  },
-  statsBottomRow: {
-    flexDirection: "row",
-    alignItems: "center",
-  },
-  statItem: { gap: 6 },
-  statValue: {
-    color: "rgba(255,255,255,0.8)",
-    fontSize: 15,
-    fontWeight: "500",
-    letterSpacing: 0.3,
   },
 });

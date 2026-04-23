@@ -1,3 +1,4 @@
+import { LinearGradient } from "expo-linear-gradient";
 import { router, useRouter } from "expo-router";
 import React from "react";
 import { ScrollView, StyleSheet, View } from "react-native";
@@ -56,39 +57,46 @@ export default function HomeScreen() {
         contentContainerStyle={[styles.content, { paddingBottom: insets.bottom + 16 }]}
         showsVerticalScrollIndicator={false}
       >
-        <HomeHeader
-          paddingTop={insets.top + 16}
-          userInitial={user?.firstName?.[0]?.toUpperCase() ?? "U"}
-          firstName={user?.firstName ?? ""}
-          totalCurrentAmount={totalCurrentAmount}
-          totalMonthlySip={totalMonthlySip}
-        />
+        <LinearGradient
+          colors={["#2848F1", "#2848F1", "rgba(255,253,249,0)"]}
+          locations={[0, 0.2, 1.0]}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 0, y: 1 }}
+          style={styles.gradientSection}
+        >
+          <HomeHeader
+            paddingTop={insets.top + 16}
+            userInitial={user?.firstName?.[0]?.toUpperCase() ?? "U"}
+            firstName={user?.firstName ?? ""}
+            totalCurrentAmount={totalCurrentAmount}
+          />
 
-        <QuickActionsBar />
+          <QuickActionsBar />
 
-        {showKycCard && (
-          <View style={styles.kycCard}>
-            <CompleteKycComponent
-              childName={childName}
-              monthlyAmount={monthlyAmount}
-              onPressContinue={handleContinueKyc}
-            />
-          </View>
-        )}
-
-        {isKycCompleted && hasGoals && (
-          <View style={styles.planCardWrapper}>
-            {goals!.map((g) => (
-              <GoalPlanCard key={g.id} goal={g} />
-            ))}
-            {isInvestedInAnyGoal && (
-              <OutlineButton
-                title="+ Add goal"
-                onPress={() => router.push("/child/select")}
+          {showKycCard && (
+            <View style={styles.kycCard}>
+              <CompleteKycComponent
+                childName={childName}
+                monthlyAmount={monthlyAmount}
+                onPressContinue={handleContinueKyc}
               />
-            )}
-          </View>
-        )}
+            </View>
+          )}
+
+          {isKycCompleted && hasGoals && (
+            <View style={styles.planCardWrapper}>
+              {goals!.map((g) => (
+                <GoalPlanCard key={g.id} goal={g} />
+              ))}
+              {isInvestedInAnyGoal && (
+                <OutlineButton
+                  title="+ Add goal"
+                  onPress={() => router.push("/child/select")}
+                />
+              )}
+            </View>
+          )}
+        </LinearGradient>
 
         <SuperFdCard onPress={() => router.push("/(tabs)/super-fd")} />
 
@@ -112,6 +120,10 @@ const styles = StyleSheet.create({
   },
   content: {
     gap: 16,
+  },
+  gradientSection: {
+    gap: 16,
+    paddingBottom: 24,
   },
   kycCard: {
     marginHorizontal: 16,
