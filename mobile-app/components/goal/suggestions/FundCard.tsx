@@ -40,9 +40,13 @@ export function FundCard({
           </View>
           <View style={styles.fundInfo}>
             <ThemedText style={styles.fundName}>{fundName}</ThemedText>
-            {/* <ThemedText style={styles.cagr}>{cagr}</ThemedText>
-            <View style={styles.divider} />
-            <ThemedText style={styles.expenseRatio}>{expenseRatio}</ThemedText> */}
+            {cagr ? <ThemedText style={styles.cagr}>{cagr}</ThemedText> : null}
+            {expenseRatio ? (
+              <>
+                <View style={styles.divider} />
+                <ThemedText style={styles.expenseRatio}>{expenseRatio}</ThemedText>
+              </>
+            ) : null}
           </View>
         </View>
         <View style={styles.rightSection}>

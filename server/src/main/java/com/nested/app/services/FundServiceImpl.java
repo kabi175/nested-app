@@ -121,7 +121,31 @@ public class FundServiceImpl implements FundService {
     dto.setMinAmount(fund.getMimPurchaseAmount());
     dto.setNav(fund.getNav());
     dto.setActive(fund.isActive());
+    dto.setCagr(fund.getCagr());
     return dto;
+  }
+
+  @Override
+  @Transactional
+  public FundDTO updateFundCagr(Long id, Double cagr) {
+    log.info("Updating fund CAGR for ID: {} with cagr: {}", id, cagr);
+
+    try {
+      Fund fund = fundRepository.findById(id)
+          .orElseThrow(() -> new IllegalArgumentException("Fund not found with ID: " + id));
+
+      fund.setCagr(cagr);
+      Fund updatedFund = fundRepository.save(fund);
+
+      log.info("Successfully updated fund CAGR for ID: {}", id);
+      return convertToDTO(updatedFund);
+    } catch (IllegalArgumentException e) {
+      log.error("Validation error updating fund CAGR: {}", e.getMessage());
+      throw e;
+    } catch (Exception e) {
+      log.error("Error updating fund CAGR for ID {}: {}", id, e.getMessage(), e);
+      throw new RuntimeException("Failed to update fund CAGR", e);
+    }
   }
 }
 
