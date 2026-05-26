@@ -1,6 +1,6 @@
 import { Input, Layout } from "@ui-kitten/components";
 import React, { useRef, useState } from "react";
-import { StyleSheet } from "react-native";
+import { StyleSheet, TextInput } from "react-native";
 
 interface OtpInputProps {
   length?: number;
@@ -44,8 +44,32 @@ export const OtpInput: React.FC<OtpInputProps> = ({
     }
   };
 
+  const handleAutoFill = (value: string) => {
+    const digits = value.replace(/\D/g, "").slice(0, length).split("");
+    const newCode = new Array(length).fill("").map((_, i) => digits[i] ?? "");
+    setCode(newCode);
+    const otpString = newCode.join("");
+    onChange?.(otpString);
+    if (otpString.length === length && !otpString.includes("")) {
+      onComplete(otpString);
+    }
+  };
+
   return (
     <Layout style={styles.container}>
+      <TextInput
+        style={styles.hiddenInput}
+        value={code.join("")}
+        onChangeText={handleAutoFill}
+        textContentType="oneTimeCode"
+        autoComplete="sms-otp"
+        keyboardType="number-pad"
+        maxLength={length}
+        caretHidden
+        accessible={false}
+        importantForAccessibility="no"
+        editable={!disabled}
+      />
       {code.map((digit, index) => (
         <Input
           key={index}
@@ -96,5 +120,12 @@ const styles = StyleSheet.create({
   },
   otpInputBoxDisabled: {
     // UI Kitten handles disabled state styling
+  },
+  hiddenInput: {
+    position: "absolute",
+    width: 1,
+    height: 1,
+    opacity: 0,
+    pointerEvents: "none",
   },
 });
