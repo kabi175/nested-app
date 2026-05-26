@@ -4,8 +4,8 @@ module.exports = () => ({
   expo: {
     name: "NestEd",
     slug: "nested",
-    owner: "kabi175",
-    version: "1.8.4",
+    owner: "blue-bee",
+    version: "1.8.5",
     icon: "./assets/images/v2/logo-with-bg.png",
     scheme: "nested",
     android: {
